@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action as UtopiaAction;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends AppwriteAction
 {
     /**
      * @var string|null The current context (either 'row' or 'document')
@@ -21,11 +21,24 @@ abstract class Action extends UtopiaAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): AppwriteAction
     {
-        if (str_contains($path, '/:databaseId/grids/tables')) {
+        if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
         }
+
+        $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
+        $this->removableAttributes = [
+            '*' => [
+                '$sequence',
+                '$databaseId',
+                $contextId,
+            ],
+            'privileged' => [
+                '$createdAt',
+                '$updatedAt',
+            ],
+        ];
 
         return parent::setHttpPath($path);
     }
@@ -35,7 +48,7 @@ abstract class Action extends UtopiaAction
      *
      * Used for endpoints with multiple sdk methods.
      */
-    final protected function getBulkActionName(string $name): string
+    protected function getBulkActionName(string $name): string
     {
         return "{$name}s";
     }
@@ -43,7 +56,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the current context.
      */
-    final protected function getContext(): string
+    protected function getContext(): string
     {
         return $this->context;
     }
@@ -51,7 +64,7 @@ abstract class Action extends UtopiaAction
     /**
      * Returns true if current context is Collections API.
      */
-    final protected function isCollectionsAPI(): bool
+    protected function isCollectionsAPI(): bool
     {
         // rows in tables api context
         // documents in collections api context
@@ -63,7 +76,7 @@ abstract class Action extends UtopiaAction
      *
      * Can be used for XList operations as well!
      */
-    final protected function getSdkGroup(): string
+    protected function getSdkGroup(): string
     {
         return $this->isCollectionsAPI() ? 'documents' : 'rows';
     }
@@ -71,15 +84,15 @@ abstract class Action extends UtopiaAction
     /**
      * Get the SDK namespace for the current action.
      */
-    final protected function getSdkNamespace(): string
+    protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'databases' : 'grids';
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
 
     /**
      * Get the correct attribute/column structure context for errors.
      */
-    final protected function getStructureContext(): string
+    protected function getStructureContext(): string
     {
         return $this->isCollectionsAPI() ? 'attributes' : 'columns';
     }
@@ -87,7 +100,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate parent level not found exception.
      */
-    final protected function getParentNotFoundException(): string
+    protected function getParentNotFoundException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::COLLECTION_NOT_FOUND
@@ -97,7 +110,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate attribute/column not found exception.
      */
-    final protected function getStructureNotFoundException(): string
+    protected function getStructureNotFoundException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_NOT_FOUND
@@ -107,7 +120,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate not found exception.
      */
-    final protected function getNotFoundException(): string
+    protected function getNotFoundException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_NOT_FOUND
@@ -117,7 +130,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate already exists exception.
      */
-    final protected function getDuplicateException(): string
+    protected function getDuplicateException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_ALREADY_EXISTS
@@ -127,7 +140,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate conflict exception.
      */
-    final protected function getConflictException(): string
+    protected function getConflictException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_UPDATE_CONFLICT
@@ -137,7 +150,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate delete restricted exception.
      */
-    final protected function getRestrictedException(): string
+    protected function getRestrictedException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_DELETE_RESTRICTED
@@ -147,7 +160,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the correct invalid structure message.
      */
-    final protected function getInvalidStructureException(): string
+    protected function getInvalidStructureException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_INVALID_STRUCTURE
@@ -157,7 +170,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate missing data exception.
      */
-    final protected function getMissingDataException(): string
+    protected function getMissingDataException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_MISSING_DATA
@@ -167,7 +180,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the exception to throw when the resource limit is exceeded.
      */
-    final protected function getLimitException(): string
+    protected function getLimitException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_LIMIT_EXCEEDED
@@ -177,7 +190,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate missing payload exception.
      */
-    final protected function getMissingPayloadException(): string
+    protected function getMissingPayloadException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_MISSING_PAYLOAD
@@ -187,15 +200,34 @@ abstract class Action extends UtopiaAction
     /**
      * Get the correct collections context for Events queue.
      */
-    final protected function getCollectionsEventsContext(): string
+    protected function getCollectionsEventsContext(): string
     {
         return $this->isCollectionsAPI() ? 'collection' : 'table';
     }
 
     /**
+     * Remove configured removable attributes from a document.
+     * Used for relationship path handling to remove API-specific attributes.
+     */
+    protected function removeReadonlyAttributes(
+        Document|array $document,
+        bool $privileged = false,
+    ): Document|array {
+        foreach ($this->removableAttributes['*'] as $attribute) {
+            unset($document[$attribute]);
+        }
+        if (!$privileged) {
+            foreach ($this->removableAttributes['privileged'] ?? [] as $attribute) {
+                unset($document[$attribute]);
+            }
+        }
+        return $document;
+    }
+
+    /**
      * Resolves relationships in a document and attaches metadata.
      */
-    final protected function processDocument(
+    protected function processDocument(
         /* database */
         Document $database,
         Document $collection,
@@ -218,7 +250,7 @@ abstract class Action extends UtopiaAction
         $collectionId = $collection->getId();
         $document->removeAttribute('$collection');
         $document->setAttribute('$databaseId', $database->getId());
-        $document->setAttribute('$collectionId', $collectionId);
+        $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
 
         $relationships = $collectionsCache[$collectionId] ??= \array_filter(
             $collection->getAttribute('attributes', []),

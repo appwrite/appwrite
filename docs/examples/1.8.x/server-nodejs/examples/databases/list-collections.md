@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.listCollections(
-    '<DATABASE_ID>', // databaseId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const result = await databases.listCollections({
+    databaseId: '<DATABASE_ID>',
+    queries: [], // optional
+    search: '<SEARCH>' // optional
+});

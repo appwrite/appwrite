@@ -6,13 +6,13 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.createUrlAttribute(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '', // key
-    false, // required
-    'https://example.com', // default (optional)
-    false // array (optional)
-);
+const result = await databases.createUrlAttribute({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    key: '',
+    required: false,
+    default: 'https://example.com', // optional
+    array: false // optional
+});
 
 console.log(result);

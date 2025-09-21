@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.createRecovery(
-    'email@example.com', // email
-    'https://example.com' // url
-);
+const result = await account.createRecovery({
+    email: 'email@example.com',
+    url: 'https://example.com'
+});

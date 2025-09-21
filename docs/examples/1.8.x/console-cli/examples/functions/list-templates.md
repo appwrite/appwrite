@@ -1,5 +1,1 @@
-appwrite functions listTemplates \
-
-
-
-
+appwrite functions list-templates

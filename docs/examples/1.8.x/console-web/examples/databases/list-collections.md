@@ -6,10 +6,10 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.listCollections(
-    '<DATABASE_ID>', // databaseId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const result = await databases.listCollections({
+    databaseId: '<DATABASE_ID>',
+    queries: [], // optional
+    search: '<SEARCH>' // optional
+});
 
 console.log(result);

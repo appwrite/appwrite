@@ -1,2 +1,1 @@
-appwrite health getQueueWebhooks \
-
+appwrite health get-queue-webhooks

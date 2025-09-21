@@ -6,11 +6,11 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateDevKey(
-    '<PROJECT_ID>', // projectId
-    '<KEY_ID>', // keyId
-    '<NAME>', // name
-    '' // expire
-);
+const result = await projects.updateDevKey({
+    projectId: '<PROJECT_ID>',
+    keyId: '<KEY_ID>',
+    name: '<NAME>',
+    expire: ''
+});
 
 console.log(result);

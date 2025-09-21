@@ -6,11 +6,11 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const result = await storage.createFile(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    document.getElementById('uploader').files[0], // file
-    ["read("any")"] // permissions (optional)
-);
+const result = await storage.createFile({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    file: document.getElementById('uploader').files[0],
+    permissions: ["read("any")"] // optional
+});
 
 console.log(result);

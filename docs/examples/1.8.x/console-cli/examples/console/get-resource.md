@@ -1,3 +1,3 @@
-appwrite console getResource \
-        --value <VALUE> \
-        --type rules
+appwrite console get-resource \
+    --value <VALUE> \
+    --type rules

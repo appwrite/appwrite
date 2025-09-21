@@ -7,7 +7,7 @@ let client = Client()
 
 let messaging = Messaging(client)
 
-let provider = try await messaging.createApnsProvider(
+let provider = try await messaging.createAPNSProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>",
     authKey: "<AUTH_KEY>", // optional

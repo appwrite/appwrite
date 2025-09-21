@@ -9,6 +9,6 @@ Client client = new Client()
 
 Users users = new Users(client);
 
-MfaRecoveryCodes result = await users.UpdateMfaRecoveryCodes(
+MfaRecoveryCodes result = await users.UpdateMFARecoveryCodes(
     userId: "<USER_ID>"
 );

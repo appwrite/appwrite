@@ -10,6 +10,6 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-await account.DeleteMfaAuthenticator(
+await account.DeleteMFAAuthenticator(
     type: AuthenticatorType.Totp
 );

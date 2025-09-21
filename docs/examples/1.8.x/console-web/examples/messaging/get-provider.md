@@ -6,8 +6,8 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.getProvider(
-    '<PROVIDER_ID>' // providerId
-);
+const result = await messaging.getProvider({
+    providerId: '<PROVIDER_ID>'
+});
 
 console.log(result);

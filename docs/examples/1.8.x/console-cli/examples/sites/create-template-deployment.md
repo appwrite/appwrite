@@ -1,7 +1,6 @@
-appwrite sites createTemplateDeployment \
-        --siteId <SITE_ID> \
-        --repository <REPOSITORY> \
-        --owner <OWNER> \
-        --rootDirectory <ROOT_DIRECTORY> \
-        --version <VERSION> \
-
+appwrite sites create-template-deployment \
+    --site-id <SITE_ID> \
+    --repository <REPOSITORY> \
+    --owner <OWNER> \
+    --root-directory <ROOT_DIRECTORY> \
+    --version <VERSION>

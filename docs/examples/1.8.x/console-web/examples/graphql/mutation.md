@@ -6,8 +6,8 @@ const client = new Client()
 
 const graphql = new Graphql(client);
 
-const result = await graphql.mutation(
-    {} // query
-);
+const result = await graphql.mutation({
+    query: {}
+});
 
 console.log(result);

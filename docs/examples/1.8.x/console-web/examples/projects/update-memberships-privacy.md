@@ -6,11 +6,11 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateMembershipsPrivacy(
-    '<PROJECT_ID>', // projectId
-    false, // userName
-    false, // userEmail
-    false // mfa
-);
+const result = await projects.updateMembershipsPrivacy({
+    projectId: '<PROJECT_ID>',
+    userName: false,
+    userEmail: false,
+    mfa: false
+});
 
 console.log(result);

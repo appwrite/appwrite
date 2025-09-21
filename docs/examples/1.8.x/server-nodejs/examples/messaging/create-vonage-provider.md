@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const result = await messaging.createVonageProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '+12065550100', // from (optional)
-    '<API_KEY>', // apiKey (optional)
-    '<API_SECRET>', // apiSecret (optional)
-    false // enabled (optional)
-);
+const result = await messaging.createVonageProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    from: '+12065550100', // optional
+    apiKey: '<API_KEY>', // optional
+    apiSecret: '<API_SECRET>', // optional
+    enabled: false // optional
+});

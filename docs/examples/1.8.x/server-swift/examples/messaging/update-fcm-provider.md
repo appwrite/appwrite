@@ -7,7 +7,7 @@ let client = Client()
 
 let messaging = Messaging(client)
 
-let provider = try await messaging.updateFcmProvider(
+let provider = try await messaging.updateFCMProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>", // optional
     enabled: false, // optional

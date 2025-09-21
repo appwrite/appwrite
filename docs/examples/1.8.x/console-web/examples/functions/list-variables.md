@@ -6,8 +6,8 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = await functions.listVariables(
-    '<FUNCTION_ID>' // functionId
-);
+const result = await functions.listVariables({
+    functionId: '<FUNCTION_ID>'
+});
 
 console.log(result);

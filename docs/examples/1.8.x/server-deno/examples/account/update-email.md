@@ -7,7 +7,7 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updateEmail(
-    'email@example.com', // email
-    'password' // password
-);
+const response = await account.updateEmail({
+    email: 'email@example.com',
+    password: 'password'
+});

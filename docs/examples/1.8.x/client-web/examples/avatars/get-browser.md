@@ -6,11 +6,11 @@ const client = new Client()
 
 const avatars = new Avatars(client);
 
-const result = avatars.getBrowser(
-    Browser.AvantBrowser, // code
-    0, // width (optional)
-    0, // height (optional)
-    -1 // quality (optional)
-);
+const result = avatars.getBrowser({
+    code: Browser.AvantBrowser,
+    width: 0, // optional
+    height: 0, // optional
+    quality: -1 // optional
+});
 
 console.log(result);

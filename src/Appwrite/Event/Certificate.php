@@ -9,6 +9,7 @@ class Certificate extends Event
 {
     protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;
+    protected ?string $validationDomain = null;
 
     public function __construct(protected Publisher $publisher)
     {
@@ -55,6 +56,30 @@ class Certificate extends Event
         return $this;
     }
 
+
+    /**
+     * Set override for main domain used for validation
+     *
+     * @param string|null $validationDomain
+     * @return self
+     */
+    public function setValidationDomain(?string $validationDomain): self
+    {
+        $this->validationDomain = $validationDomain;
+
+        return $this;
+    }
+
+    /**
+     * Get validation domain
+     *
+     * @return string|null
+     */
+    public function getValidationDomain(): ?string
+    {
+        return $this->validationDomain;
+    }
+
     /**
      * Return if the certificate needs be validated.
      *
@@ -64,6 +89,7 @@ class Certificate extends Event
     {
         return $this->skipRenewCheck;
     }
+
 
     /**
      * Prepare the payload for the event
@@ -75,7 +101,8 @@ class Certificate extends Event
         return [
             'project' => $this->project,
             'domain' => $this->domain,
-            'skipRenewCheck' => $this->skipRenewCheck
+            'skipRenewCheck' => $this->skipRenewCheck,
+            'validationDomain' => $this->validationDomain
         ];
     }
 }

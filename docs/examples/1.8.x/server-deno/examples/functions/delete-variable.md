@@ -7,7 +7,7 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.deleteVariable(
-    '<FUNCTION_ID>', // functionId
-    '<VARIABLE_ID>' // variableId
-);
+const response = await functions.deleteVariable({
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>'
+});

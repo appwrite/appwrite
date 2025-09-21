@@ -474,7 +474,7 @@ App::get('/v1/avatars/favicon')
             $sanitizer->minify(true);
             $cleanSvg = $sanitizer->sanitize($data);
             if ($cleanSvg === false) {
-                throw new \Exception('SVG sanitization failed');
+                throw new Exception(Exception::AVATAR_SVG_SANITIZATION_FAILED);
             }
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days

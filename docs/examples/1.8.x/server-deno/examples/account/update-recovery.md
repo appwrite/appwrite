@@ -7,8 +7,8 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updateRecovery(
-    '<USER_ID>', // userId
-    '<SECRET>', // secret
-    '' // password
-);
+const response = await account.updateRecovery({
+    userId: '<USER_ID>',
+    secret: '<SECRET>',
+    password: ''
+});

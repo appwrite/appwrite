@@ -1,4 +1,2 @@
-appwrite sites listDeployments \
-        --siteId <SITE_ID> \
-
-
+appwrite sites list-deployments \
+    --site-id <SITE_ID>

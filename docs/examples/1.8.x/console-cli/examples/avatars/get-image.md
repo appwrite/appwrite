@@ -1,4 +1,2 @@
-appwrite avatars getImage \
-        --url https://example.com \
-
-
+appwrite avatars get-image \
+    --url https://example.com

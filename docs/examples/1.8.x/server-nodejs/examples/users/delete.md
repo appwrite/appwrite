@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.delete(
-    '<USER_ID>' // userId
-);
+const result = await users.delete({
+    userId: '<USER_ID>'
+});

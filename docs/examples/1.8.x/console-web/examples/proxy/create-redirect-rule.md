@@ -6,12 +6,12 @@ const client = new Client()
 
 const proxy = new Proxy(client);
 
-const result = await proxy.createRedirectRule(
-    '', // domain
-    'https://example.com', // url
-    .MovedPermanently301, // statusCode
-    '<RESOURCE_ID>', // resourceId
-    ProxyResourceType.Site // resourceType
-);
+const result = await proxy.createRedirectRule({
+    domain: '',
+    url: 'https://example.com',
+    statusCode: .MovedPermanently301,
+    resourceId: '<RESOURCE_ID>',
+    resourceType: ProxyResourceType.Site
+});
 
 console.log(result);

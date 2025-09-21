@@ -37,17 +37,16 @@ abstract class Action extends UtopiaAction
 
     public function setHttpPath(string $path): UtopiaAction
     {
-        if (str_contains($path, '/:databaseId/grids/tables')) {
+        if (\str_contains($path, '/tablesdb')) {
             $this->context = COLUMNS;
         }
-
         return parent::setHttpPath($path);
     }
 
     /**
      * Get the current context.
      */
-    final protected function getContext(): string
+    protected function getContext(): string
     {
         return $this->context;
     }
@@ -55,7 +54,7 @@ abstract class Action extends UtopiaAction
     /**
      * Returns true if current context is Collections API.
      */
-    final protected function isCollectionsAPI(): bool
+    protected function isCollectionsAPI(): bool
     {
         // columns in tables context
         // attributes in collections context
@@ -67,7 +66,7 @@ abstract class Action extends UtopiaAction
      *
      * Can be used for XList operations as well!
      */
-    final protected function getSdkGroup(): string
+    protected function getSdkGroup(): string
     {
         return $this->isCollectionsAPI() ? 'attributes' : 'columns';
     }
@@ -75,15 +74,15 @@ abstract class Action extends UtopiaAction
     /**
      * Get the SDK namespace for the current action.
      */
-    final protected function getSdkNamespace(): string
+    protected function getSdkNamespace(): string
     {
-        return $this->isCollectionsAPI() ? 'databases' : 'grids';
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
 
     /**
      * Get the appropriate parent level not found exception.
      */
-    final protected function getParentNotFoundException(): string
+    protected function getParentNotFoundException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::COLLECTION_NOT_FOUND
@@ -93,7 +92,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate not found exception.
      */
-    final protected function getNotFoundException(): string
+    protected function getNotFoundException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_NOT_FOUND
@@ -103,7 +102,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate not found exception.
      */
-    final protected function getIndexDependencyException(): string
+    protected function getIndexDependencyException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::INDEX_DEPENDENCY
@@ -113,7 +112,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate already exists exception.
      */
-    final protected function getDuplicateException(): string
+    protected function getDuplicateException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_ALREADY_EXISTS
@@ -123,7 +122,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the correct invalid structure message.
      */
-    final protected function getInvalidStructureException(): string
+    protected function getInvalidStructureException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_INVALID_STRUCTURE
@@ -133,7 +132,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate limit exceeded exception.
      */
-    final protected function getLimitException(): string
+    protected function getLimitException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_LIMIT_EXCEEDED
@@ -143,7 +142,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the appropriate index invalid exception.
      */
-    final protected function getInvalidIndexException(): string
+    protected function getInvalidIndexException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::INDEX_INVALID
@@ -153,7 +152,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the correct default unsupported message.
      */
-    final protected function getDefaultUnsupportedException(): string
+    protected function getDefaultUnsupportedException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED
@@ -163,7 +162,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the correct format unsupported message.
      */
-    final protected function getFormatUnsupportedException(): string
+    protected function getFormatUnsupportedException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_FORMAT_UNSUPPORTED
@@ -173,7 +172,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the exception for invalid type or format mismatch.
      */
-    final protected function getTypeInvalidException(): string
+    protected function getTypeInvalidException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_TYPE_INVALID
@@ -183,7 +182,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the exception for resizing invalid attributes/columns.
      */
-    final protected function getInvalidResizeException(): string
+    protected function getInvalidResizeException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_INVALID_RESIZE
@@ -193,7 +192,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the exception for invalid attributes/columns value.
      */
-    final protected function getInvalidValueException(): string
+    protected function getInvalidValueException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_VALUE_INVALID
@@ -203,7 +202,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the exception for non-available column/attribute.
      */
-    final protected function getNotAvailableException(): string
+    protected function getNotAvailableException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_NOT_AVAILABLE
@@ -211,9 +210,17 @@ abstract class Action extends UtopiaAction
     }
 
     /**
+     * Get the exception for spatial type attribute not supported by the database adapter
+    */
+    protected function getSpatialTypeNotSupportedException(): string
+    {
+        return $this->isCollectionsAPI() ? Exception::ATTRIBUTE_TYPE_NOT_SUPPORTED : Exception::COLUMN_TYPE_NOT_SUPPORTED;
+    }
+
+    /**
      * Get the correct collections context for Events queue.
      */
-    final protected function getCollectionsEventsContext(): string
+    protected function getCollectionsEventsContext(): string
     {
         return $this->isCollectionsAPI() ? 'collection' : 'table';
     }
@@ -221,7 +228,7 @@ abstract class Action extends UtopiaAction
     /**
      *  Get the proper column/attribute type based on set context.
      */
-    final protected function getModel(string $type, string $format): string
+    protected function getModel(string $type, string $format): string
     {
         $isCollections = $this->isCollectionsAPI();
 
@@ -245,6 +252,18 @@ abstract class Action extends UtopiaAction
             Database::VAR_RELATIONSHIP => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP
                 : UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
+
+            Database::VAR_POINT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_POINT
+                : UtopiaResponse::MODEL_COLUMN_POINT,
+
+            Database::VAR_LINESTRING => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_LINE
+                : UtopiaResponse::MODEL_COLUMN_LINE,
+
+            Database::VAR_POLYGON => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
+                : UtopiaResponse::MODEL_COLUMN_POLYGON,
 
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
@@ -273,7 +292,7 @@ abstract class Action extends UtopiaAction
         };
     }
 
-    final protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
+    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
     {
         $key = $attribute->getAttribute('key');
         $type = $attribute->getAttribute('type', '');
@@ -286,6 +305,10 @@ abstract class Action extends UtopiaAction
         $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
+
+        if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+            throw new Exception($this->getSpatialTypeNotSupportedException());
+        }
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -435,7 +458,7 @@ abstract class Action extends UtopiaAction
         return $attribute;
     }
 
-    final protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, string $type, int $size = null, string $filter = null, string|bool|int|float $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, string $type, int $size = null, string $filter = null, string|bool|int|float|array $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -615,14 +638,14 @@ abstract class Action extends UtopiaAction
              */
             foreach ($collection->getAttribute('indexes') as $index) {
                 /**
-                 * @var string[] $attribute
+                 * @var array<string> $attributes
                  */
-                $attribute = $index->getAttribute('attributes', []);
-                $found = \array_search($key, $attribute);
+                $attributes = $index->getAttribute('attributes', []);
+                $found = \array_search($key, $attributes);
 
                 if ($found !== false) {
-                    $attribute[$found] = $newKey;
-                    $index->setAttribute('attributes', $attribute);
+                    $attributes[$found] = $newKey;
+                    $index->setAttribute('attributes', $attributes);
                     $dbForProject->updateDocument('indexes', $index->getId(), $index);
                 }
             }

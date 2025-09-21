@@ -1,3 +1,3 @@
-appwrite account updateVerification \
-        --userId <USER_ID> \
-        --secret <SECRET>
+appwrite account update-verification \
+    --user-id <USER_ID> \
+    --secret <SECRET>

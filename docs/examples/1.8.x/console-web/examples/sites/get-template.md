@@ -6,8 +6,8 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = await sites.getTemplate(
-    '<TEMPLATE_ID>' // templateId
-);
+const result = await sites.getTemplate({
+    templateId: '<TEMPLATE_ID>'
+});
 
 console.log(result);

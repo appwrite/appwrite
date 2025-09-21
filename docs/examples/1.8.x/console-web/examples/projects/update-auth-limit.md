@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateAuthLimit(
-    '<PROJECT_ID>', // projectId
-    0 // limit
-);
+const result = await projects.updateAuthLimit({
+    projectId: '<PROJECT_ID>',
+    limit: 0
+});
 
 console.log(result);

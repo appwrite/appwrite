@@ -7,11 +7,11 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const result = await databases.updateCollection(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<NAME>', // name
-    ["read("any")"], // permissions (optional)
-    false, // documentSecurity (optional)
-    false // enabled (optional)
-);
+const result = await databases.updateCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: '<NAME>',
+    permissions: ["read("any")"], // optional
+    documentSecurity: false, // optional
+    enabled: false // optional
+});

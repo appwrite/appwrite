@@ -1,3 +1,2 @@
-appwrite messaging listTopicLogs \
-        --topicId <TOPIC_ID> \
-
+appwrite messaging list-topic-logs \
+    --topic-id <TOPIC_ID>

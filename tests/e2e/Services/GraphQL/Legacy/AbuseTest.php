@@ -33,7 +33,7 @@ class AbuseTest extends Scope
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::CREATE_DOCUMENT);
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
@@ -65,7 +65,7 @@ class AbuseTest extends Scope
     public function testComplexQueryBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$COMPLEX_QUERY_COLLECTION);
+        $query = $this->getQuery(self::COMPLEX_QUERY_COLLECTION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -103,7 +103,7 @@ class AbuseTest extends Scope
 
         $query = [];
         for ($i = 0; $i <= $maxQueries + 1; $i++) {
-            $query[] = ['query' => $this->getQuery(self::$LIST_COUNTRIES)];
+            $query[] = ['query' => $this->getQuery(self::LIST_COUNTRIES)];
         }
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -117,7 +117,7 @@ class AbuseTest extends Scope
     private function createCollection(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -134,7 +134,7 @@ class AbuseTest extends Scope
 
         $databaseId = $response['body']['data']['databasesCreate']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -157,7 +157,7 @@ class AbuseTest extends Scope
 
         $collectionId = $response['body']['data']['databasesCreateCollection']['_id'];
 
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [

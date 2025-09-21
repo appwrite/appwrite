@@ -7,8 +7,8 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const result = sites.getDeploymentDownload(
-    '<SITE_ID>', // siteId
-    '<DEPLOYMENT_ID>', // deploymentId
-    DeploymentDownloadType.Source // type (optional)
-);
+const result = sites.getDeploymentDownload({
+    siteId: '<SITE_ID>',
+    deploymentId: '<DEPLOYMENT_ID>',
+    type: DeploymentDownloadType.Source // optional
+});

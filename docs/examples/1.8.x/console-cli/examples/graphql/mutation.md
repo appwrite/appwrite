@@ -1,2 +1,2 @@
 appwrite graphql mutation \
-        --query '{ "key": "value" }'
+    --query '{ "key": "value" }'

@@ -21,7 +21,7 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "tag": "<TAG>",
   "badge": 0,
   "draft": false,
-  "scheduledAt": ,
+  "scheduledAt": "",
   "contentAvailable": false,
   "critical": false,
   "priority": "normal"

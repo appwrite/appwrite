@@ -7,6 +7,6 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const response = await storage.getBucket(
-    '<BUCKET_ID>' // bucketId
-);
+const response = await storage.getBucket({
+    bucketId: '<BUCKET_ID>'
+});

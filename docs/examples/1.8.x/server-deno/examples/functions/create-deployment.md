@@ -7,10 +7,10 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.createDeployment(
-    '<FUNCTION_ID>', // functionId
-    InputFile.fromPath('/path/to/file.png', 'file.png'), // code
-    false, // activate
-    '<ENTRYPOINT>', // entrypoint (optional)
-    '<COMMANDS>' // commands (optional)
-);
+const response = await functions.createDeployment({
+    functionId: '<FUNCTION_ID>',
+    code: InputFile.fromPath('/path/to/file.png', 'file.png'),
+    activate: false,
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>' // optional
+});

@@ -7,7 +7,7 @@ let client = Client()
 
 let messaging = Messaging(client)
 
-let provider = try await messaging.updateApnsProvider(
+let provider = try await messaging.updateAPNSProvider(
     providerId: "<PROVIDER_ID>",
     name: "<NAME>", // optional
     enabled: false, // optional

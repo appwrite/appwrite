@@ -6,8 +6,8 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.delete(
-    '<PROJECT_ID>' // projectId
-);
+const result = await projects.delete({
+    projectId: '<PROJECT_ID>'
+});
 
 console.log(result);

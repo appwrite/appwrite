@@ -1,3 +1,2 @@
-appwrite teams listLogs \
-        --teamId <TEAM_ID> \
-
+appwrite teams list-logs \
+    --team-id <TEAM_ID>

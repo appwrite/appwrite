@@ -7,7 +7,7 @@ Client client = Client()
 
 Messaging messaging = Messaging(client);
 
-Provider result = await messaging.createFcmProvider(
+Provider result = await messaging.createFCMProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>',
     serviceAccountJSON: {}, // (optional)

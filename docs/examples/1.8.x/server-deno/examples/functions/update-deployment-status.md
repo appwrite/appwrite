@@ -7,7 +7,7 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.updateDeploymentStatus(
-    '<FUNCTION_ID>', // functionId
-    '<DEPLOYMENT_ID>' // deploymentId
-);
+const response = await functions.updateDeploymentStatus({
+    functionId: '<FUNCTION_ID>',
+    deploymentId: '<DEPLOYMENT_ID>'
+});

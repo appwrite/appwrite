@@ -1,2 +1,2 @@
-appwrite teams getPrefs \
-        --teamId <TEAM_ID>
+appwrite teams get-prefs \
+    --team-id <TEAM_ID>

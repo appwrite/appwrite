@@ -8,11 +8,11 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.createDeployment(
-    '<SITE_ID>', // siteId
-    InputFile.fromPath('/path/to/file', 'filename'), // code
-    false, // activate
-    '<INSTALL_COMMAND>', // installCommand (optional)
-    '<BUILD_COMMAND>', // buildCommand (optional)
-    '<OUTPUT_DIRECTORY>' // outputDirectory (optional)
-);
+const result = await sites.createDeployment({
+    siteId: '<SITE_ID>',
+    code: InputFile.fromPath('/path/to/file', 'filename'),
+    activate: false,
+    installCommand: '<INSTALL_COMMAND>', // optional
+    buildCommand: '<BUILD_COMMAND>', // optional
+    outputDirectory: '<OUTPUT_DIRECTORY>' // optional
+});

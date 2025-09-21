@@ -1,3 +1,1 @@
-appwrite proxy listRules \
-
-
+appwrite proxy list-rules

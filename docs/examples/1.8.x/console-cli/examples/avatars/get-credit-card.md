@@ -1,5 +1,2 @@
-appwrite avatars getCreditCard \
-        --code amex \
-
-
-
+appwrite avatars get-credit-card \
+    --code amex

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updateEmail(
-    '<USER_ID>', // userId
-    'email@example.com' // email
-);
+const result = await users.updateEmail({
+    userId: '<USER_ID>',
+    email: 'email@example.com'
+});

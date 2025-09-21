@@ -7,23 +7,23 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.update(
-    '<FUNCTION_ID>', // functionId
-    '<NAME>', // name
-    .Node145, // runtime (optional)
-    ["any"], // execute (optional)
-    [], // events (optional)
-    '', // schedule (optional)
-    1, // timeout (optional)
-    false, // enabled (optional)
-    false, // logging (optional)
-    '<ENTRYPOINT>', // entrypoint (optional)
-    '<COMMANDS>', // commands (optional)
-    [], // scopes (optional)
-    '<INSTALLATION_ID>', // installationId (optional)
-    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId (optional)
-    '<PROVIDER_BRANCH>', // providerBranch (optional)
-    false, // providerSilentMode (optional)
-    '<PROVIDER_ROOT_DIRECTORY>', // providerRootDirectory (optional)
-    '' // specification (optional)
-);
+const response = await functions.update({
+    functionId: '<FUNCTION_ID>',
+    name: '<NAME>',
+    runtime: .Node145, // optional
+    execute: ["any"], // optional
+    events: [], // optional
+    schedule: '', // optional
+    timeout: 1, // optional
+    enabled: false, // optional
+    logging: false, // optional
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>', // optional
+    scopes: [], // optional
+    installationId: '<INSTALLATION_ID>', // optional
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
+    providerBranch: '<PROVIDER_BRANCH>', // optional
+    providerSilentMode: false, // optional
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
+    specification: '' // optional
+});

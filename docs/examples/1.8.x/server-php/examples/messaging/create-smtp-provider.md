@@ -10,7 +10,7 @@ $client = (new Client())
 
 $messaging = new Messaging($client);
 
-$result = $messaging->createSmtpProvider(
+$result = $messaging->createSMTPProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>',
     host: '<HOST>',

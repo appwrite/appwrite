@@ -1,5 +1,5 @@
 mutation {
-    messagingCreateSms(
+    messagingCreateSMS(
         messageId: "<MESSAGE_ID>",
         content: "<CONTENT>",
         topics: [],

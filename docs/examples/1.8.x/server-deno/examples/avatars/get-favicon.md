@@ -7,6 +7,6 @@ const client = new Client()
 
 const avatars = new Avatars(client);
 
-const result = avatars.getFavicon(
-    'https://example.com' // url
-);
+const result = avatars.getFavicon({
+    url: 'https://example.com'
+});

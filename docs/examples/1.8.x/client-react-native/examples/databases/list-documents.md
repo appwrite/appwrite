@@ -6,10 +6,10 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.listDocuments(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    [] // queries (optional)
-);
+const result = await databases.listDocuments({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [] // optional
+});
 
 console.log(result);

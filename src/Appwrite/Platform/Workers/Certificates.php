@@ -93,12 +93,13 @@ class Certificates extends Action
         $document = new Document($payload['domain'] ?? []);
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
+        $validationDomain = $payload['validationDomain'] ?? null;
 
         $log->addTag('domain', $domain->get());
 
         $domainType = $document->getAttribute('domainType');
 
-        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan);
+        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $validationDomain);
     }
 
     /**
@@ -112,6 +113,7 @@ class Certificates extends Action
      * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
      * @param array $plan
+     * @param string|null $validationDomain
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -128,7 +130,8 @@ class Certificates extends Action
         Log $log,
         CertificatesAdapter $certificates,
         bool $skipRenewCheck = false,
-        array $plan = []
+        array $plan = [],
+        ?string $validationDomain = null
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -171,9 +174,12 @@ class Certificates extends Action
         $success = false;
 
         try {
+            $date = \date('H:i:s');
+            $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
+
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $mainDomain = $this->getMainDomain();
+                $mainDomain = $validationDomain ?? $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
                 $this->validateDomain($domain, $isMainDomain, $log);
 
@@ -198,9 +204,11 @@ class Certificates extends Action
             $success = true;
         } catch (Throwable $e) {
             $logs = $e->getMessage();
+            $currentLogs = $certificate->getAttribute('logs', '');
+            $date = \date('H:i:s');
+            $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
 
-            // Set exception as log in certificate document
-            $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
+            $certificate->setAttribute('logs', $currentLogs . $errorMessage . \mb_strcut($logs, 0, 500000));// Limit to 500kb
 
             // Increase attempts count
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
@@ -373,6 +381,7 @@ class Certificates extends Action
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 
         // Send mail to administrator mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
@@ -380,22 +389,22 @@ class Certificates extends Action
         $template->setParam('{{error}}', \nl2br($errorMessage));
         $template->setParam('{{attempts}}', $attempt);
 
-        $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
-        $template->setParam('{{accentColor}}', $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR);
-        $template->setParam('{{twitterUrl}}', $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER);
-        $template->setParam('{{discordUrl}}', $plan['discordUrl'] ?? APP_SOCIAL_DISCORD);
-        $template->setParam('{{githubUrl}}', $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE);
-        $template->setParam('{{termsUrl}}', $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL);
-        $template->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
-
         $body = $template->render();
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
+            'domain' => $domain,
+            'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+            'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+            'twitterUrl' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+            'discordUrl' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+            'githubUrl' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+            'privacyUrl' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
         ];
 
-        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-        $preview = \sprintf($locale->getText("emails.certificate.preview"), $domain);
+        $subject = $locale->getText("emails.certificate.subject");
+        $preview = $locale->getText("emails.certificate.preview");
 
         $queueForMails
             ->setSubject($subject)

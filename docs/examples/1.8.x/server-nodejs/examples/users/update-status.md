@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updateStatus(
-    '<USER_ID>', // userId
-    false // status
-);
+const result = await users.updateStatus({
+    userId: '<USER_ID>',
+    status: false
+});

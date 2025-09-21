@@ -7,7 +7,7 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.deleteVariable(
-    '<SITE_ID>', // siteId
-    '<VARIABLE_ID>' // variableId
-);
+const response = await sites.deleteVariable({
+    siteId: '<SITE_ID>',
+    variableId: '<VARIABLE_ID>'
+});

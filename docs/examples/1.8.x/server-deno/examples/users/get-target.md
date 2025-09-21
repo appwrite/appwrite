@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.getTarget(
-    '<USER_ID>', // userId
-    '<TARGET_ID>' // targetId
-);
+const response = await users.getTarget({
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>'
+});

@@ -1,1 +1,1 @@
-appwrite account updateStatus
+appwrite account update-status

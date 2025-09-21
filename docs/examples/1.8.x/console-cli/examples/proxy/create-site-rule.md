@@ -1,4 +1,3 @@
-appwrite proxy createSiteRule \
-        --domain '' \
-        --siteId <SITE_ID> \
-
+appwrite proxy create-site-rule \
+    --domain '' \
+    --site-id <SITE_ID>

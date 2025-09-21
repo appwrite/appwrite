@@ -1,2 +1,2 @@
-appwrite account createMfaChallenge \
-        --factor email
+appwrite account create-mfa-challenge \
+    --factor email

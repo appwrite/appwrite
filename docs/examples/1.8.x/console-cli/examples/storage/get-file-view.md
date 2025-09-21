@@ -1,4 +1,3 @@
-appwrite storage getFileView \
-        --bucketId <BUCKET_ID> \
-        --fileId <FILE_ID> \
-
+appwrite storage get-file-view \
+    --bucket-id <BUCKET_ID> \
+    --file-id <FILE_ID>

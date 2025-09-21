@@ -9,7 +9,7 @@ Client client = new Client(context)
 
 Account account = new Account(client);
 
-account.deleteMfaAuthenticator(
+account.deleteMFAAuthenticator(
     AuthenticatorType.TOTP, // type 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

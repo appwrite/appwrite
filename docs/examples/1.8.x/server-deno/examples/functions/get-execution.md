@@ -7,7 +7,7 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.getExecution(
-    '<FUNCTION_ID>', // functionId
-    '<EXECUTION_ID>' // executionId
-);
+const response = await functions.getExecution({
+    functionId: '<FUNCTION_ID>',
+    executionId: '<EXECUTION_ID>'
+});

@@ -1,4 +1,3 @@
-appwrite account createPushTarget \
-        --targetId <TARGET_ID> \
-        --identifier <IDENTIFIER> \
-
+appwrite account create-push-target \
+    --target-id <TARGET_ID> \
+    --identifier <IDENTIFIER>

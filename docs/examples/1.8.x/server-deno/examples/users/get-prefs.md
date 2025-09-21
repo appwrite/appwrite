@@ -7,6 +7,6 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.getPrefs(
-    '<USER_ID>' // userId
-);
+const response = await users.getPrefs({
+    userId: '<USER_ID>'
+});

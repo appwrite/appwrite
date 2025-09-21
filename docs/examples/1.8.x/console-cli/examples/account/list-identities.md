@@ -1,2 +1,1 @@
-appwrite account listIdentities \
-
+appwrite account list-identities

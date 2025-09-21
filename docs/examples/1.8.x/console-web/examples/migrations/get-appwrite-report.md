@@ -6,11 +6,11 @@ const client = new Client()
 
 const migrations = new Migrations(client);
 
-const result = await migrations.getAppwriteReport(
-    [], // resources
-    'https://example.com', // endpoint
-    '<PROJECT_ID>', // projectID
-    '<KEY>' // key
-);
+const result = await migrations.getAppwriteReport({
+    resources: [],
+    endpoint: 'https://example.com',
+    projectID: '<PROJECT_ID>',
+    key: '<KEY>'
+});
 
 console.log(result);

@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateSessionAlerts(
-    '<PROJECT_ID>', // projectId
-    false // alerts
-);
+const result = await projects.updateSessionAlerts({
+    projectId: '<PROJECT_ID>',
+    alerts: false
+});
 
 console.log(result);

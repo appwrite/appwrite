@@ -1,7 +1,2 @@
-appwrite messaging updateTwilioProvider \
-        --providerId <PROVIDER_ID> \
-
-
-
-
-
+appwrite messaging update-twilio-provider \
+    --provider-id <PROVIDER_ID>

@@ -1,2 +1,2 @@
-appwrite messaging getMessage \
-        --messageId <MESSAGE_ID>
+appwrite messaging get-message \
+    --message-id <MESSAGE_ID>

@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const avatars = new sdk.Avatars(client);
 
-const result = await avatars.getCreditCard(
-    sdk.CreditCard.AmericanExpress, // code
-    0, // width (optional)
-    0, // height (optional)
-    -1 // quality (optional)
-);
+const result = await avatars.getCreditCard({
+    code: sdk.CreditCard.AmericanExpress,
+    width: 0, // optional
+    height: 0, // optional
+    quality: -1 // optional
+});

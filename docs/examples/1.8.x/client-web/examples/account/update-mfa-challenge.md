@@ -6,9 +6,9 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.updateMfaChallenge(
-    '<CHALLENGE_ID>', // challengeId
-    '<OTP>' // otp
-);
+const result = await account.updateMFAChallenge({
+    challengeId: '<CHALLENGE_ID>',
+    otp: '<OTP>'
+});
 
 console.log(result);

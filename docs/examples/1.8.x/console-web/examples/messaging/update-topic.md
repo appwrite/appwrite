@@ -6,10 +6,10 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.updateTopic(
-    '<TOPIC_ID>', // topicId
-    '<NAME>', // name (optional)
-    ["any"] // subscribe (optional)
-);
+const result = await messaging.updateTopic({
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>', // optional
+    subscribe: ["any"] // optional
+});
 
 console.log(result);

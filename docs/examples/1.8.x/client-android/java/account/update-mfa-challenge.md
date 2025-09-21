@@ -8,7 +8,7 @@ Client client = new Client(context)
 
 Account account = new Account(client);
 
-account.updateMfaChallenge(
+account.updateMFAChallenge(
     "<CHALLENGE_ID>", // challengeId 
     "<OTP>", // otp 
     new CoroutineCallback<>((result, error) -> {

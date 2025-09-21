@@ -218,7 +218,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $actors = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/grids/tables/' . $id, array_merge([
+        $actors = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -260,7 +260,7 @@ class WebhooksCustomServerTest extends Scope
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
-        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $data['actorsId'] . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['actorsId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -295,7 +295,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
 
         // Remove index
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $data['actorsId'] . '/indexes/' . $index['body']['key'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $data['actorsId'] . '/indexes/' . $index['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -341,7 +341,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -362,7 +362,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertNotEmpty($actors['body']['$id']);
 
-        $actors = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $actors['body']['$id'], array_merge([
+        $actors = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']

@@ -1,1 +1,1 @@
-appwrite health getStorage
+appwrite health get-storage

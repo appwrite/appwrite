@@ -7,7 +7,7 @@ Client client = Client()
 
 Users users = Users(client);
 
-User result = await users.updateMfa(
+User result = await users.updateMFA(
     userId: '<USER_ID>',
     mfa: false,
 );

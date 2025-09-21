@@ -15,6 +15,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
@@ -70,7 +71,11 @@ App::setResource('hooks', function ($register) {
 }, ['register']);
 
 App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+App::setResource('locale', function () {
+    $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+    $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+    return $locale;
+});
 
 App::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
@@ -80,27 +85,30 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-App::setResource('publisherDatabases', function (BrokerPool $publisher) {
+App::setResource('publisherDatabases', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherMigrations', function (BrokerPool $publisher) {
+App::setResource('publisherFunctions', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+App::setResource('publisherMigrations', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-App::setResource('consumer', function (Group $pools) {
-    return new BrokerPool(consumer: $pools->get('consumer'));
-}, ['pools']);
-App::setResource('consumerDatabases', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-App::setResource('consumerMigrations', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-App::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
+App::setResource('publisherStatsUsage', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMails', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherDeletes', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMessaging', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherWebhooks', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -139,6 +147,9 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 }, ['publisher']);
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
+}, ['publisher']);
+App::setResource('queueForStatsResources', function (Publisher $publisher) {
+    return new StatsResources($publisher);
 }, ['publisher']);
 App::setResource('platforms', function (Request $request, Document $console, Document $project) {
     $console->setAttribute('platforms', [ // Always allow current host
@@ -244,7 +255,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
                 $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
 
-               // var_dump(['Authorization users start::$status' =>  Authorization::$status]);
+                // var_dump(['Authorization users start::$status' =>  Authorization::$status]);
                 $user = $dbForProject->getDocument('users', Auth::$unique);
                 //var_dump(['Authorization users end::$status' =>  Authorization::$status]);
 

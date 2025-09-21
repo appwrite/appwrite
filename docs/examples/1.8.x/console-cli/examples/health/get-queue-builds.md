@@ -1,2 +1,1 @@
-appwrite health getQueueBuilds \
-
+appwrite health get-queue-builds

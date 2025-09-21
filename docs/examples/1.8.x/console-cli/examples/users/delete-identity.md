@@ -1,2 +1,2 @@
-appwrite users deleteIdentity \
-        --identityId <IDENTITY_ID>
+appwrite users delete-identity \
+    --identity-id <IDENTITY_ID>

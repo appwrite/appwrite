@@ -1,3 +1,3 @@
-appwrite users getTarget \
-        --userId <USER_ID> \
-        --targetId <TARGET_ID>
+appwrite users get-target \
+    --user-id <USER_ID> \
+    --target-id <TARGET_ID>

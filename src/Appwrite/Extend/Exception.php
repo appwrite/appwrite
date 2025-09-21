@@ -134,6 +134,7 @@ class Exception extends \Exception
     public const AVATAR_IMAGE_NOT_FOUND            = 'avatar_image_not_found';
     public const AVATAR_REMOTE_URL_FAILED          = 'avatar_remote_url_failed';
     public const AVATAR_ICON_NOT_FOUND             = 'avatar_icon_not_found';
+    public const AVATAR_SVG_SANITIZATION_FAILED    = 'avatar_svg_sanitization_failed';
 
     /** Storage */
     public const STORAGE_FILE_ALREADY_EXISTS       = 'storage_file_already_exists';
@@ -234,6 +235,8 @@ class Exception extends \Exception
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
     public const ATTRIBUTE_INVALID_RESIZE          = 'attribute_invalid_resize';
 
+    public const ATTRIBUTE_TYPE_NOT_SUPPORTED              = 'ATTRIBUTE_TYPE_NOT_SUPPORTED';
+
     /** Columns */
     public const COLUMN_NOT_FOUND                  = 'column_not_found';
     public const COLUMN_UNKNOWN                    = 'column_unknown';
@@ -245,6 +248,8 @@ class Exception extends \Exception
     public const COLUMN_VALUE_INVALID              = 'column_value_invalid';
     public const COLUMN_TYPE_INVALID               = 'column_type_invalid';
     public const COLUMN_INVALID_RESIZE             = 'column_invalid_resize';
+
+    public const COLUMN_TYPE_NOT_SUPPORTED              = 'COLUMN_TYPE_NOT_SUPPORTED';
 
     /** Relationship */
     public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';

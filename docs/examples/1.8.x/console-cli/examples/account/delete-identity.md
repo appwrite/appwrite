@@ -1,2 +1,2 @@
-appwrite account deleteIdentity \
-        --identityId <IDENTITY_ID>
+appwrite account delete-identity \
+    --identity-id <IDENTITY_ID>

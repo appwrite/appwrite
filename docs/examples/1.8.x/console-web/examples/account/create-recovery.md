@@ -6,9 +6,9 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.createRecovery(
-    'email@example.com', // email
-    'https://example.com' // url
-);
+const result = await account.createRecovery({
+    email: 'email@example.com',
+    url: 'https://example.com'
+});
 
 console.log(result);

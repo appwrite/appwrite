@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.updateEmail(
-    'email@example.com', // email
-    'password' // password
-);
+const result = await account.updateEmail({
+    email: 'email@example.com',
+    password: 'password'
+});

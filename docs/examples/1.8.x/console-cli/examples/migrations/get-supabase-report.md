@@ -1,8 +1,7 @@
-appwrite migrations getSupabaseReport \
-        --resources one two three \
-        --endpoint https://example.com \
-        --apiKey <API_KEY> \
-        --databaseHost <DATABASE_HOST> \
-        --username <USERNAME> \
-        --password <PASSWORD> \
-
+appwrite migrations get-supabase-report \
+    --resources one two three \
+    --endpoint https://example.com \
+    --api-key <API_KEY> \
+    --database-host <DATABASE_HOST> \
+    --username <USERNAME> \
+    --password <PASSWORD>

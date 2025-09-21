@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.updateEmail(
-    '<USER_ID>', // userId
-    'email@example.com' // email
-);
+const response = await users.updateEmail({
+    userId: '<USER_ID>',
+    email: 'email@example.com'
+});

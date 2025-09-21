@@ -7,17 +7,17 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.updateEmail(
-    '<MESSAGE_ID>', // messageId
-    [], // topics (optional)
-    [], // users (optional)
-    [], // targets (optional)
-    '<SUBJECT>', // subject (optional)
-    '<CONTENT>', // content (optional)
-    false, // draft (optional)
-    false, // html (optional)
-    [], // cc (optional)
-    [], // bcc (optional)
-    '', // scheduledAt (optional)
-    [] // attachments (optional)
-);
+const response = await messaging.updateEmail({
+    messageId: '<MESSAGE_ID>',
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    subject: '<SUBJECT>', // optional
+    content: '<CONTENT>', // optional
+    draft: false, // optional
+    html: false, // optional
+    cc: [], // optional
+    bcc: [], // optional
+    scheduledAt: '', // optional
+    attachments: [] // optional
+});

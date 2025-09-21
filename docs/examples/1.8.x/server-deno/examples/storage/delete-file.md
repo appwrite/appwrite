@@ -7,7 +7,7 @@ const client = new Client()
 
 const storage = new Storage(client);
 
-const response = await storage.deleteFile(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>' // fileId
-);
+const response = await storage.deleteFile({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>'
+});

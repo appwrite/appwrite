@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.updateStatus(
-    '<USER_ID>', // userId
-    false // status
-);
+const response = await users.updateStatus({
+    userId: '<USER_ID>',
+    status: false
+});

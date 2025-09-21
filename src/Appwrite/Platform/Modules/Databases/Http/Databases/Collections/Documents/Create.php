@@ -66,6 +66,7 @@ class Create extends Action
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: self::getName(),
+                    desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -84,13 +85,14 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRow',
+                        replaceWith: 'tablesDB.createRow',
                     ),
                 ),
                 new Method(
                     namespace: $this->getSdkNamespace(),
                     group: $this->getSdkGroup(),
                     name: $this->getBulkActionName(self::getName()),
+                    desc: 'Create documents',
                     description: '/docs/references/databases/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
@@ -107,14 +109,14 @@ class Create extends Action
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.createRows',
+                        replaceWith: 'tablesDB.createRows',
                     ),
                 )
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
-            ->param('data', [], new JSON(), 'Document data as JSON object.', true)
+            ->param('data', [], new JSON(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
             ->inject('response')
@@ -252,7 +254,7 @@ class Create extends Action
 
         $operations = 0;
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations) {
             $operations++;
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -305,6 +307,8 @@ class Create extends Action
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
+                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
+
                         $current = Authorization::skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
@@ -316,8 +320,6 @@ class Create extends Action
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $relation->removeAttribute('$collectionId');
-                            $relation->removeAttribute('$databaseId');
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
@@ -352,39 +354,27 @@ class Create extends Action
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
-
-            // Allowing to add createdAt and updatedAt timestamps if server side(api key
-            if (!$isAPIKey && !$isPrivilegedUser) {
-                if (isset($document['$createdAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-                }
-
-                if (isset($document['$updatedAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-                }
-            }
-
+            $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
-
             return $document;
         }, $documents);
 
         try {
-        $created = [];
-        $dbForProject->withPreserveDates(
-            function () use (&$created, $dbForProject, $database, $collection, $documents) {
-                $dbForProject->createDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    $documents,
-                    onNext: function ($doc) use (&$created) {
-                        $created[] = $doc;
-                    }
-                );
-            }
-        );
-        
+            $created = [];
+            $dbForProject->withPreserveDates(
+                function () use (&$created, $dbForProject, $database, $collection, $documents) {
+                    $dbForProject->createDocuments(
+                        'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                        $documents,
+                        onNext: function ($doc) use (&$created) {
+                            $created[] = $doc;
+                        }
+                    );
+                }
+            );
+
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (NotFoundException) {
@@ -418,7 +408,6 @@ class Create extends Action
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
-
 
         if ($isBulk) {
             $response->dynamic(new Document([

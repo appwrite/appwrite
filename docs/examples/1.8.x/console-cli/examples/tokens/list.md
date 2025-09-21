@@ -1,4 +1,3 @@
 appwrite tokens list \
-        --bucketId <BUCKET_ID> \
-        --fileId <FILE_ID> \
-
+    --bucket-id <BUCKET_ID> \
+    --file-id <FILE_ID>

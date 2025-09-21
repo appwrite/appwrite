@@ -7,4 +7,4 @@ Client client = Client()
 
 Account account = Account(client);
 
-MfaFactors result = await account.listMfaFactors();
+MfaFactors result = await account.listMFAFactors();

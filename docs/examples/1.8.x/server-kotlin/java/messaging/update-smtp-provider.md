@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.updateSmtpProvider(
+messaging.updateSMTPProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name (optional)
     "<HOST>", // host (optional)

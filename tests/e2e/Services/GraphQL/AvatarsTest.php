@@ -16,7 +16,7 @@ class AvatarsTest extends Scope
     public function testGetCreditCardIcon()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_CREDIT_CARD_ICON);
+        $query = $this->getQuery(self::GET_CREDIT_CARD_ICON);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -39,7 +39,7 @@ class AvatarsTest extends Scope
     public function testGetBrowserIcon()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_BROWSER_ICON);
+        $query = $this->getQuery(self::GET_BROWSER_ICON);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -62,7 +62,7 @@ class AvatarsTest extends Scope
     public function testGetCountryFlag()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COUNTRY_FLAG);
+        $query = $this->getQuery(self::GET_COUNTRY_FLAG);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -85,7 +85,7 @@ class AvatarsTest extends Scope
     public function testGetImageFromURL()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_IMAGE_FROM_URL);
+        $query = $this->getQuery(self::GET_IMAGE_FROM_URL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -108,7 +108,7 @@ class AvatarsTest extends Scope
     public function testGetFavicon()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_FAVICON);
+        $query = $this->getQuery(self::GET_FAVICON);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -131,7 +131,7 @@ class AvatarsTest extends Scope
     public function testGetQRCode()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_QRCODE);
+        $query = $this->getQuery(self::GET_QRCODE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -154,7 +154,7 @@ class AvatarsTest extends Scope
     public function testGetInitials()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_USER_INITIALS);
+        $query = $this->getQuery(self::GET_USER_INITIALS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

@@ -1,3 +1,3 @@
-appwrite users updatePassword \
-        --userId <USER_ID> \
-        --password ''
+appwrite users update-password \
+    --user-id <USER_ID> \
+    --password ''

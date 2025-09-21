@@ -9,7 +9,7 @@ Client client = new Client(context)
 
 Account account = new Account(client);
 
-account.createMfaChallenge(
+account.createMFAChallenge(
     AuthenticationFactor.EMAIL, // factor 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

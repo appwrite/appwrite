@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.createSmtpProvider(
+messaging.createSMTPProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name
     "<HOST>", // host

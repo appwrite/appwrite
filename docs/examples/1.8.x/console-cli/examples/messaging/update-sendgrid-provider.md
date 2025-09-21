@@ -1,9 +1,2 @@
-appwrite messaging updateSendgridProvider \
-        --providerId <PROVIDER_ID> \
-
-
-
-
-
-
-
+appwrite messaging update-sendgrid-provider \
+    --provider-id <PROVIDER_ID>

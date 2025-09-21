@@ -10,6 +10,6 @@ $client = (new Client())
 
 $account = new Account($client);
 
-$result = $account->createMfaChallenge(
+$result = $account->createMFAChallenge(
     factor: AuthenticationFactor::EMAIL()
 );

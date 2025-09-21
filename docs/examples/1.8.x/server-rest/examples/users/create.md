@@ -9,6 +9,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "userId": "<USER_ID>",
   "email": "email@example.com",
   "phone": "+12065550100",
-  "password": ,
+  "password": "",
   "name": "<NAME>"
 }

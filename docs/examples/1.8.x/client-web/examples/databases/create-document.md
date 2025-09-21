@@ -6,12 +6,18 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.createDocument(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>', // collectionId
-    '<DOCUMENT_ID>', // documentId
-    {}, // data
-    ["read("any")"] // permissions (optional)
-);
+const result = await databases.createDocument({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
+    data: {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 30,
+        "isAdmin": false
+    },
+    permissions: ["read("any")"] // optional
+});
 
 console.log(result);

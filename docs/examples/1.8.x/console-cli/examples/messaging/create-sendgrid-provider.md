@@ -1,9 +1,3 @@
-appwrite messaging createSendgridProvider \
-        --providerId <PROVIDER_ID> \
-        --name <NAME> \
-
-
-
-
-
-
+appwrite messaging create-sendgrid-provider \
+    --provider-id <PROVIDER_ID> \
+    --name <NAME>

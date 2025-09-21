@@ -1,5 +1,4 @@
-appwrite sites createVcsDeployment \
-        --siteId <SITE_ID> \
-        --type branch \
-        --reference <REFERENCE> \
-
+appwrite sites create-vcs-deployment \
+    --site-id <SITE_ID> \
+    --type branch \
+    --reference <REFERENCE>

@@ -1,3 +1,2 @@
-appwrite messaging listProviderLogs \
-        --providerId <PROVIDER_ID> \
-
+appwrite messaging list-provider-logs \
+    --provider-id <PROVIDER_ID>

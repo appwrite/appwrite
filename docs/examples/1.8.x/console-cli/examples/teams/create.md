@@ -1,4 +1,3 @@
 appwrite teams create \
-        --teamId <TEAM_ID> \
-        --name <NAME> \
-
+    --team-id <TEAM_ID> \
+    --name <NAME>

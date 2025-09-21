@@ -10,6 +10,7 @@ use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
+use Swoole\Timer;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
@@ -156,11 +157,16 @@ $http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
     Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
-$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
+    Timer::clearAll();
+    Console::success('Worker ' . ++$workerId . ' stopped successfully');
+});
+
+$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server) {
     Console::success('Starting reload...');
 });
 
-$http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
+$http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
     Console::success('Reload completed...');
 });
 
@@ -422,7 +428,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 });
 
 $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
-    
+
     App::setResource('swooleRequest', fn () => $swooleRequest);
     App::setResource('swooleResponse', fn () => $swooleResponse);
 
@@ -551,7 +557,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    Console::loop(function () use ($dbForPlatform, $domains, &$lastSyncUpdate) {
+    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate) {
         try {
             $time = DateTime::now();
             $limit = 1000;
@@ -590,8 +596,6 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }
-    }, DOMAIN_SYNC_TIMER, 0, function ($error) {
-        Console::error($error);
     });
 });
 

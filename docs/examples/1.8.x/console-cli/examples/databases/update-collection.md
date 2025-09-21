@@ -1,7 +1,4 @@
-appwrite databases updateCollection \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --name <NAME> \
-
-
-
+appwrite databases update-collection \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --name <NAME>

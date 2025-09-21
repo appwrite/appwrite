@@ -6,12 +6,12 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const result = await functions.createDeployment(
-    '<FUNCTION_ID>', // functionId
-    document.getElementById('uploader').files[0], // code
-    false, // activate
-    '<ENTRYPOINT>', // entrypoint (optional)
-    '<COMMANDS>' // commands (optional)
-);
+const result = await functions.createDeployment({
+    functionId: '<FUNCTION_ID>',
+    code: document.getElementById('uploader').files[0],
+    activate: false,
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>' // optional
+});
 
 console.log(result);

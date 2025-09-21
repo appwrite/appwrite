@@ -1,1 +1,1 @@
-appwrite locale listCodes
+appwrite locale list-codes

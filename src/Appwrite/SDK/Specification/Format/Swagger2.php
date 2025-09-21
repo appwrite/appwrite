@@ -3,15 +3,16 @@
 namespace Appwrite\SDK\Specification\Format;
 
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Spatial;
 use Utopia\Route;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
@@ -160,7 +161,7 @@ class Swagger2 extends Format
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
-                    'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
+                    'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
@@ -171,7 +172,7 @@ class Swagger2 extends Format
                 ],
             ];
 
-            if ($sdk->getDeprecated() instanceof Deprecated) {
+            if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [
                     'since' => $sdk->getDeprecated()->getSince(),
                     'replaceWith' => $sdk->getDeprecated()->getReplaceWith(),
@@ -225,15 +226,17 @@ class Swagger2 extends Format
                     $additionalMethod = [
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
+                        'desc' => $methodObj->getDesc() ?? '',
                         'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
                     ];
 
                     // add deprecation only if method has it!
-                    if ($methodObj->getDeprecated() instanceof Deprecated) {
+                    if ($methodObj->getDeprecated()) {
                         $additionalMethod['deprecated'] = [
                             'since' => $methodObj->getDeprecated()->getSince(),
                             'replaceWith' => $methodObj->getDeprecated()->getReplaceWith(),
@@ -348,11 +351,10 @@ class Swagger2 extends Format
                 }
             }
 
-            if (!empty($scope)) { //  && 'public' != $scope
+            if (!empty($scope)) {
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
-                    /** @var AuthType $security */
                     if (\array_key_exists($security->value, $this->keys)) {
                         $securities[$security->value] = [];
                     }
@@ -462,12 +464,26 @@ class Swagger2 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         break;
+                    case 'Utopia\Database\Validator\Spatial':
+                        /** @var Spatial $validator */
+                        $node['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'oneOf' => [
+                                ['type' => 'array']
+                            ]
+                        ];
+                        $node['x-example'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => '[1, 2]',
+                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
+                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                        };
+                        break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
                         $node['type'] = 'object';
                         $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
-                        $node['x-example'] = '{}';
+                        $node['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
@@ -676,6 +692,10 @@ class Swagger2 extends Format
 
                     case 'json':
                         $type = 'object';
+                        break;
+
+                    case 'array':
+                        $type = 'array';
                         break;
 
                     case 'integer':

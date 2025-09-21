@@ -1,2 +1,1 @@
-appwrite health getQueueDeletes \
-
+appwrite health get-queue-deletes

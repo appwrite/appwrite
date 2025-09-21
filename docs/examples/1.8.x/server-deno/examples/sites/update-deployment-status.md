@@ -7,7 +7,7 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.updateDeploymentStatus(
-    '<SITE_ID>', // siteId
-    '<DEPLOYMENT_ID>' // deploymentId
-);
+const response = await sites.updateDeploymentStatus({
+    siteId: '<SITE_ID>',
+    deploymentId: '<DEPLOYMENT_ID>'
+});

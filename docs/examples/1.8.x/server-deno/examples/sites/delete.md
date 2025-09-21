@@ -7,6 +7,6 @@ const client = new Client()
 
 const sites = new Sites(client);
 
-const response = await sites.delete(
-    '<SITE_ID>' // siteId
-);
+const response = await sites.delete({
+    siteId: '<SITE_ID>'
+});

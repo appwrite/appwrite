@@ -6,8 +6,8 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.createEmailToken(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    false // phrase (optional)
-);
+const result = await account.createEmailToken({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    phrase: false // optional
+});

@@ -7,7 +7,7 @@ Client client = Client()
 
 Users users = Users(client);
 
-await users.deleteMfaAuthenticator(
+await users.deleteMFAAuthenticator(
     userId: '<USER_ID>',
     type: AuthenticatorType.totp,
 );

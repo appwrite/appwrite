@@ -7,4 +7,4 @@ Client client = Client()
 
 Account account = Account(client);
 
-MfaRecoveryCodes result = await account.getMfaRecoveryCodes();
+MfaRecoveryCodes result = await account.getMFARecoveryCodes();

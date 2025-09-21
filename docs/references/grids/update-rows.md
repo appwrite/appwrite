@@ -1,1 +1,0 @@
-Update all rows that match your queries, if no queries are submitted then all rows are updated. You can pass only specific fields to be updated.

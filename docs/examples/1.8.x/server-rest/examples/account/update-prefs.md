@@ -7,5 +7,9 @@ X-Appwrite-Session:
 X-Appwrite-JWT: <YOUR_JWT>
 
 {
-  "prefs": {}
+  "prefs": {
+    "language": "en",
+    "timezone": "UTC",
+    "darkTheme": true
+  }
 }

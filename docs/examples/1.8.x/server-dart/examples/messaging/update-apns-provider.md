@@ -7,7 +7,7 @@ Client client = Client()
 
 Messaging messaging = Messaging(client);
 
-Provider result = await messaging.updateApnsProvider(
+Provider result = await messaging.updateAPNSProvider(
     providerId: '<PROVIDER_ID>',
     name: '<NAME>', // (optional)
     enabled: false, // (optional)

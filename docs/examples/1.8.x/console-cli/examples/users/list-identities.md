@@ -1,3 +1,1 @@
-appwrite users listIdentities \
-
-
+appwrite users list-identities

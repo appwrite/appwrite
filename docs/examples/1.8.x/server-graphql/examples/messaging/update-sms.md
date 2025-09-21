@@ -1,5 +1,5 @@
 mutation {
-    messagingUpdateSms(
+    messagingUpdateSMS(
         messageId: "<MESSAGE_ID>",
         topics: [],
         users: [],

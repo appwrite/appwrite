@@ -7,7 +7,7 @@ let client = Client()
 
 let account = Account(client)
 
-let user = try await account.updateMfaAuthenticator(
+let user = try await account.updateMFAAuthenticator(
     type: .totp,
     otp: "<OTP>"
 )

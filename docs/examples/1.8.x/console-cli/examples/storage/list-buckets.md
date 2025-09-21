@@ -1,3 +1,1 @@
-appwrite storage listBuckets \
-
-
+appwrite storage list-buckets

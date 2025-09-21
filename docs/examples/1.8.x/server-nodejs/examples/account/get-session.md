@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.getSession(
-    '<SESSION_ID>' // sessionId
-);
+const result = await account.getSession({
+    sessionId: '<SESSION_ID>'
+});

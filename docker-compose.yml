@@ -71,6 +71,9 @@ services:
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Only needed for tests
+      - ./docker-compose.yml:/usr/src/code/docker-compose.yml # Only needed for tests
+      - ./.env:/usr/src/code/.env # Only needed for tests
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -88,6 +91,7 @@ services:
       - ./dev:/usr/src/code/dev
       - ./vendor/utopia-php/mongo/src:/usr/src/code/vendor/utopia-php/mongo/src
       - ./vendor/utopia-php/database/src:/usr/src/code/vendor/utopia-php/database/src
+
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
@@ -99,6 +103,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_EDITION
+      - _APP_DB_ADAPTER=mariadb
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_COMPRESSION_MIN_SIZE_BYTES
@@ -219,7 +224,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.0.0-qa.8
+    image: appwrite/console:7.0.2
     restart: unless-stopped
     networks:
       - appwrite
@@ -991,7 +996,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.22
+    image: openruntimes/executor:0.11.0
     restart: unless-stopped
     networks:
       - appwrite

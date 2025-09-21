@@ -7,6 +7,6 @@ Client client = Client()
 
 Users users = Users(client);
 
-MfaFactors result = await users.listMfaFactors(
+MfaFactors result = await users.listMFAFactors(
     userId: '<USER_ID>',
 );

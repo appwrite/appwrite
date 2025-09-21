@@ -6,7 +6,7 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updatePhoneSession(
-    '<USER_ID>', // userId
-    '<SECRET>' // secret
-);
+const response = await account.updatePhoneSession({
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});

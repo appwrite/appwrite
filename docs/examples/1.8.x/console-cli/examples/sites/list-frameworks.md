@@ -1,1 +1,1 @@
-appwrite sites listFrameworks
+appwrite sites list-frameworks

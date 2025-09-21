@@ -272,7 +272,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Attributes
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -288,7 +288,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $actorsId = $actors['body']['$id'];
 
-        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/columns/string', array_merge([
+        $name = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -462,7 +462,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Indexes
          */
-        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -629,7 +629,7 @@ class RealtimeConsoleClientTest extends Scope
          * Test Delete Index
          */
         $indexKey = 'key_name';
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $actorsId . '/indexes/' . $indexKey, array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/indexes/' . $indexKey, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -783,7 +783,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Delete Attribute
          */
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/grids/tables/' . $data['actorsId'] . '/columns/' . $attributeKey, array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $data['actorsId'] . '/columns/' . $attributeKey, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

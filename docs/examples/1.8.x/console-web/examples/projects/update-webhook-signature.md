@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateWebhookSignature(
-    '<PROJECT_ID>', // projectId
-    '<WEBHOOK_ID>' // webhookId
-);
+const result = await projects.updateWebhookSignature({
+    projectId: '<PROJECT_ID>',
+    webhookId: '<WEBHOOK_ID>'
+});
 
 console.log(result);

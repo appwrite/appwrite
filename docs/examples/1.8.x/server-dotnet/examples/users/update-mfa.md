@@ -9,7 +9,7 @@ Client client = new Client()
 
 Users users = new Users(client);
 
-User result = await users.UpdateMfa(
+User result = await users.UpdateMFA(
     userId: "<USER_ID>",
     mfa: false
 );

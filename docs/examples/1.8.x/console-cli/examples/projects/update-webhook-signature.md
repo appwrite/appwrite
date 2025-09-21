@@ -1,3 +1,3 @@
-appwrite projects updateWebhookSignature \
-        --projectId <PROJECT_ID> \
-        --webhookId <WEBHOOK_ID>
+appwrite projects update-webhook-signature \
+    --project-id <PROJECT_ID> \
+    --webhook-id <WEBHOOK_ID>

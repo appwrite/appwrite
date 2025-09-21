@@ -7,9 +7,9 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.createVariable(
-    '<SITE_ID>', // siteId
-    '<KEY>', // key
-    '<VALUE>', // value
-    false // secret (optional)
-);
+const result = await sites.createVariable({
+    siteId: '<SITE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>',
+    secret: false // optional
+});

@@ -6,8 +6,8 @@ const client = new Client()
 
 const project = new Project(client);
 
-const result = await project.getVariable(
-    '<VARIABLE_ID>' // variableId
-);
+const result = await project.getVariable({
+    variableId: '<VARIABLE_ID>'
+});
 
 console.log(result);

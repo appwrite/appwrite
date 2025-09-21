@@ -22,7 +22,7 @@ class DatabaseServerTest extends Scope
     public function testCreateDatabase(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -50,7 +50,7 @@ class DatabaseServerTest extends Scope
     public function testCreateCollection($database): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -117,7 +117,7 @@ class DatabaseServerTest extends Scope
     public function testCreateStringAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -152,7 +152,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -185,7 +185,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIntegerAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INTEGER_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_INTEGER_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -220,7 +220,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_INTEGER_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_INTEGER_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -257,7 +257,7 @@ class DatabaseServerTest extends Scope
     public function testCreateBooleanAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_BOOLEAN_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_BOOLEAN_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -290,7 +290,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_BOOLEAN_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_BOOLEAN_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -323,7 +323,7 @@ class DatabaseServerTest extends Scope
     public function testCreateFloatAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_FLOAT_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_FLOAT_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -359,7 +359,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_FLOAT_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_FLOAT_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -396,7 +396,7 @@ class DatabaseServerTest extends Scope
     public function testCreateEmailAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_EMAIL_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_EMAIL_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -429,7 +429,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_EMAIL_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_EMAIL_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -462,7 +462,7 @@ class DatabaseServerTest extends Scope
     public function testCreateEnumAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_ENUM_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_ENUM_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -501,7 +501,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_ENUM_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_ENUM_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -541,7 +541,7 @@ class DatabaseServerTest extends Scope
     public function testCreateDatetimeAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATETIME_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_DATETIME_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -574,7 +574,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DATETIME_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_DATETIME_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -606,7 +606,7 @@ class DatabaseServerTest extends Scope
     public function testCreateRelationshipAttribute(array $data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_RELATIONSHIP_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_RELATIONSHIP_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -640,7 +640,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_RELATIONSHIP_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_RELATIONSHIP_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -670,7 +670,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIPAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_IP_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_IP_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -704,7 +704,7 @@ class DatabaseServerTest extends Scope
         sleep(3);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_IP_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_IP_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -737,7 +737,7 @@ class DatabaseServerTest extends Scope
     public function testCreateURLAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_URL_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_URL_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -771,7 +771,7 @@ class DatabaseServerTest extends Scope
         sleep(3);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_URL_ATTRIBUTE);
+        $query = $this->getQuery(self::UPDATE_URL_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -803,7 +803,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIndex($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INDEX);
+        $query = $this->getQuery(self::CREATE_INDEX);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -844,7 +844,7 @@ class DatabaseServerTest extends Scope
     public function testCreateDocument($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::CREATE_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -899,7 +899,7 @@ class DatabaseServerTest extends Scope
     //    public function testCreateCustomEntity(): array
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$CREATE_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::CREATE_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -929,7 +929,7 @@ class DatabaseServerTest extends Scope
     public function testGetDatabases(): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DATABASES);
+        $query = $this->getQuery(self::GET_DATABASES);
         $gqlPayload = [
             'query' => $query,
         ];
@@ -951,7 +951,7 @@ class DatabaseServerTest extends Scope
     public function testGetDatabase($database): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DATABASE);
+        $query = $this->getQuery(self::GET_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -976,7 +976,7 @@ class DatabaseServerTest extends Scope
     public function testGetCollections($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLLECTIONS);
+        $query = $this->getQuery(self::GET_COLLECTIONS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1001,7 +1001,7 @@ class DatabaseServerTest extends Scope
     public function testGetCollection($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_COLLECTION);
+        $query = $this->getQuery(self::GET_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1028,7 +1028,7 @@ class DatabaseServerTest extends Scope
     public function testGetAttributes($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ATTRIBUTES);
+        $query = $this->getQuery(self::GET_ATTRIBUTES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1054,7 +1054,7 @@ class DatabaseServerTest extends Scope
     public function testGetAttribute($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_ATTRIBUTE);
+        $query = $this->getQuery(self::GET_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1081,7 +1081,7 @@ class DatabaseServerTest extends Scope
     public function testGetIndexes($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_INDEXES);
+        $query = $this->getQuery(self::GET_INDEXES);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1107,7 +1107,7 @@ class DatabaseServerTest extends Scope
     public function testGetIndex($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_INDEX);
+        $query = $this->getQuery(self::GET_INDEX);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1134,7 +1134,7 @@ class DatabaseServerTest extends Scope
     public function testGetDocuments($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENTS);
+        $query = $this->getQuery(self::GET_DOCUMENTS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1160,7 +1160,7 @@ class DatabaseServerTest extends Scope
     public function testGetDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $query = $this->getQuery(self::GET_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1187,7 +1187,7 @@ class DatabaseServerTest extends Scope
     //    public function testGetCustomEntities($data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$GET_CUSTOM_ENTITIES);
+    //        $query = $this->getQuery(self::GET_CUSTOM_ENTITIES);
     //        $gqlPayload = [
     //            'query' => $query,
     //        ];
@@ -1209,7 +1209,7 @@ class DatabaseServerTest extends Scope
     //    public function testGetCustomEntity($data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$GET_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::GET_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -1234,7 +1234,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateDatabase($database)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DATABASE);
+        $query = $this->getQuery(self::UPDATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1260,7 +1260,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateCollection($data)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_COLLECTION);
+        $query = $this->getQuery(self::UPDATE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1288,7 +1288,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DOCUMENT);
+        $query = $this->getQuery(self::UPDATE_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1320,7 +1320,7 @@ class DatabaseServerTest extends Scope
     //    public function testUpdateCustomEntity(array $data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$UPDATE_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::UPDATE_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -1348,7 +1348,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $query = $this->getQuery(self::DELETE_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1374,7 +1374,7 @@ class DatabaseServerTest extends Scope
     //    public function testDeleteCustomEntity(array $data)
     //    {
     //        $projectId = $this->getProject()['$id'];
-    //        $query = $this->getQuery(self::$DELETE_CUSTOM_ENTITY);
+    //        $query = $this->getQuery(self::DELETE_CUSTOM_ENTITY);
     //        $gqlPayload = [
     //            'query' => $query,
     //            'variables' => [
@@ -1398,7 +1398,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteAttribute($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_ATTRIBUTE);
+        $query = $this->getQuery(self::DELETE_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1424,7 +1424,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteCollection($data)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_COLLECTION);
+        $query = $this->getQuery(self::DELETE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1449,7 +1449,7 @@ class DatabaseServerTest extends Scope
     public function testDeleteDatabase($database)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_DATABASE);
+        $query = $this->getQuery(self::DELETE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -1479,7 +1479,7 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders());
 
         // Step 1: Create database
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1492,7 +1492,7 @@ class DatabaseServerTest extends Scope
         $databaseId = $res['body']['data']['databasesCreate']['_id'];
 
         // Step 2: Create collection
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
@@ -1510,7 +1510,7 @@ class DatabaseServerTest extends Scope
         $collectionId = $res['body']['data']['databasesCreateCollection']['_id'];
 
         // Step 3: Create attribute
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
@@ -1524,7 +1524,7 @@ class DatabaseServerTest extends Scope
         sleep(1);
 
         // Step 4: Create documents
-        $query = $this->getQuery(self::$CREATE_DOCUMENTS);
+        $query = $this->getQuery(self::CREATE_DOCUMENTS);
         $documents = [];
         for ($i = 1; $i <= 10; $i++) {
             $documents[] = ['$id' => 'doc' . $i, 'name' => 'Doc #' . $i];
@@ -1564,7 +1564,7 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $data['projectId'],
         ], $this->getHeaders());
 
-        $query = $this->getQuery(self::$UPDATE_DOCUMENTS);
+        $query = $this->getQuery(self::UPDATE_DOCUMENTS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1594,7 +1594,7 @@ class DatabaseServerTest extends Scope
         ], $this->getHeaders());
 
         // Upsert: Update one, insert one
-        $query = $this->getQuery(self::$UPSERT_DOCUMENTS);
+        $query = $this->getQuery(self::UPSERT_DOCUMENTS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -1623,7 +1623,7 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $data['projectId'],
         ], $this->getHeaders());
 
-        $query = $this->getQuery(self::$DELETE_DOCUMENTS);
+        $query = $this->getQuery(self::DELETE_DOCUMENTS);
         $payload = [
             'query' => $query,
             'variables' => [

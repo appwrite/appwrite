@@ -7,13 +7,13 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.createApnsProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name
-    '<AUTH_KEY>', // authKey (optional)
-    '<AUTH_KEY_ID>', // authKeyId (optional)
-    '<TEAM_ID>', // teamId (optional)
-    '<BUNDLE_ID>', // bundleId (optional)
-    false, // sandbox (optional)
-    false // enabled (optional)
-);
+const response = await messaging.createAPNSProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    authKey: '<AUTH_KEY>', // optional
+    authKeyId: '<AUTH_KEY_ID>', // optional
+    teamId: '<TEAM_ID>', // optional
+    bundleId: '<BUNDLE_ID>', // optional
+    sandbox: false, // optional
+    enabled: false // optional
+});

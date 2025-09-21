@@ -1,4 +1,4 @@
-appwrite vcs createRepository \
-        --installationId <INSTALLATION_ID> \
-        --name <NAME> \
-        --private false
+appwrite vcs create-repository \
+    --installation-id <INSTALLATION_ID> \
+    --name <NAME> \
+    --private false

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.listLogs(
-    '<USER_ID>', // userId
-    [] // queries (optional)
-);
+const result = await users.listLogs({
+    userId: '<USER_ID>',
+    queries: [] // optional
+});

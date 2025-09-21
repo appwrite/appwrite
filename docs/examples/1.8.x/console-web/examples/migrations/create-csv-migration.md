@@ -6,10 +6,11 @@ const client = new Client()
 
 const migrations = new Migrations(client);
 
-const result = await migrations.createCsvMigration(
-    '<BUCKET_ID>', // bucketId
-    '<FILE_ID>', // fileId
-    '[ID1:ID2]' // resourceId
-);
+const result = await migrations.createCsvMigration({
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    resourceId: '[ID1:ID2]',
+    internalFile: false // optional
+});
 
 console.log(result);

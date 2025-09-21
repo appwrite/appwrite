@@ -9,7 +9,7 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-account.getMfaRecoveryCodes(new CoroutineCallback<>((result, error) -> {
+account.getMFARecoveryCodes(new CoroutineCallback<>((result, error) -> {
     if (error != null) {
         error.printStackTrace();
         return;

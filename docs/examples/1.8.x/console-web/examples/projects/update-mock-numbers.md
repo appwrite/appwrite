@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updateMockNumbers(
-    '<PROJECT_ID>', // projectId
-    [] // numbers
-);
+const result = await projects.updateMockNumbers({
+    projectId: '<PROJECT_ID>',
+    numbers: []
+});
 
 console.log(result);

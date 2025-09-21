@@ -7,4 +7,4 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.createMfaRecoveryCodes();
+const result = await account.createMFARecoveryCodes();

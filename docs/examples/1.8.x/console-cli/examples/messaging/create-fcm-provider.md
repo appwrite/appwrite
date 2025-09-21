@@ -1,5 +1,3 @@
-appwrite messaging createFcmProvider \
-        --providerId <PROVIDER_ID> \
-        --name <NAME> \
-
-
+appwrite messaging create-fcm-provider \
+    --provider-id <PROVIDER_ID> \
+    --name <NAME>

@@ -7,6 +7,6 @@ const client = new Client()
 
 const tokens = new Tokens(client);
 
-const response = await tokens.delete(
-    '<TOKEN_ID>' // tokenId
-);
+const response = await tokens.delete({
+    tokenId: '<TOKEN_ID>'
+});

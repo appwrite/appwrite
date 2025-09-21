@@ -1,2 +1,2 @@
 appwrite tokens get \
-        --tokenId <TOKEN_ID>
+    --token-id <TOKEN_ID>

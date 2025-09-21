@@ -6,25 +6,18 @@ import (
     "github.com/appwrite/sdk-for-go/databases"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithSession("") // The user session to authenticate with
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithSession("")
+)
 
-    service := databases.New(client)
-    response, error := service.UpsertDocument(
-        "<DATABASE_ID>",
-        "<COLLECTION_ID>",
-        "<DOCUMENT_ID>",
-        map[string]interface{}{},
-        databases.WithUpsertDocumentPermissions(interface{}{"read("any")"}),
-    )
+service := databases.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.UpsertDocument(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "<DOCUMENT_ID>",
+    map[string]interface{}{},
+    databases.WithUpsertDocumentPermissions(interface{}{"read("any")"}),
+)

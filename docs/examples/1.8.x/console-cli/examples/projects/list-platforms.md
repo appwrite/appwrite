@@ -1,2 +1,2 @@
-appwrite projects listPlatforms \
-        --projectId <PROJECT_ID>
+appwrite projects list-platforms \
+    --project-id <PROJECT_ID>

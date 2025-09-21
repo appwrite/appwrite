@@ -6,7 +6,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.updatePhoneSession(
-    '<USER_ID>', // userId
-    '<SECRET>' // secret
-);
+const result = await account.updatePhoneSession({
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});

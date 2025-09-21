@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const sites = new sdk.Sites(client);
 
-const result = await sites.delete(
-    '<SITE_ID>' // siteId
-);
+const result = await sites.delete({
+    siteId: '<SITE_ID>'
+});

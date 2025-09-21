@@ -6,9 +6,9 @@ const client = new Client()
 
 const projects = new Projects(client);
 
-const result = await projects.updatePersonalDataCheck(
-    '<PROJECT_ID>', // projectId
-    false // enabled
-);
+const result = await projects.updatePersonalDataCheck({
+    projectId: '<PROJECT_ID>',
+    enabled: false
+});
 
 console.log(result);

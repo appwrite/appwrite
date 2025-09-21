@@ -6,9 +6,9 @@ const client = new Client()
 
 const tokens = new Tokens(client);
 
-const result = await tokens.update(
-    '<TOKEN_ID>', // tokenId
-    '' // expire (optional)
-);
+const result = await tokens.update({
+    tokenId: '<TOKEN_ID>',
+    expire: '' // optional
+});
 
 console.log(result);

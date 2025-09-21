@@ -7,7 +7,7 @@ Client client = Client()
 
 Messaging messaging = Messaging(client);
 
-Message result = await messaging.updateSms(
+Message result = await messaging.updateSMS(
     messageId: '<MESSAGE_ID>',
     topics: [], // (optional)
     users: [], // (optional)

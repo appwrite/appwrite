@@ -1,2 +1,2 @@
 appwrite users delete \
-        --userId <USER_ID>
+    --user-id <USER_ID>

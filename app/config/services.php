@@ -66,15 +66,15 @@ return [
         'optional' => true,
         'icon' => '/images/services/databases.png',
     ],
-    'tables' => [
-        'key' => 'tables',
-        'name' => 'Tables',
-        'subtitle' => 'The Tables service allows you to create structured tables of rows, query and filter lists of rows',
-        'description' => '/docs/services/tables.md',
+    'tablesdb' => [
+        'key' => 'tablesdb',
+        'name' => 'TablesDB',
+        'subtitle' => 'The TablesDB service allows you to create structured tables of columns, query and filter lists of rows',
+        'description' => '/docs/services/tablesdb.md',
         'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
-        'docsUrl' => 'https://appwrite.io/docs/client/tables',
+        'docsUrl' => 'https://appwrite.io/docs/client/tablesdb',
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/databases.png',
@@ -214,7 +214,7 @@ return [
         'name' => 'Proxy',
         'subtitle' => 'The Proxy Service allows you to configure actions for your domains beyond DNS configuration.',
         'description' => '/docs/services/proxy.md',
-        'controller' => 'api/proxy.php',
+        'controller' => '',  // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/proxy',

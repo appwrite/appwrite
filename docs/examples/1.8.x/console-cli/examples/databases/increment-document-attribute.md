@@ -1,7 +1,5 @@
-appwrite databases incrementDocumentAttribute \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --documentId <DOCUMENT_ID> \
-        --attribute '' \
-
-
+appwrite databases increment-document-attribute \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --document-id <DOCUMENT_ID> \
+    --attribute ''

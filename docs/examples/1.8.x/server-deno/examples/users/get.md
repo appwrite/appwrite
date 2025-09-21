@@ -7,6 +7,6 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.get(
-    '<USER_ID>' // userId
-);
+const response = await users.get({
+    userId: '<USER_ID>'
+});

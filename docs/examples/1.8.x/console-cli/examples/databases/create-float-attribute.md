@@ -1,9 +1,5 @@
-appwrite databases createFloatAttribute \
-        --databaseId <DATABASE_ID> \
-        --collectionId <COLLECTION_ID> \
-        --key '' \
-        --required false \
-
-
-
-
+appwrite databases create-float-attribute \
+    --database-id <DATABASE_ID> \
+    --collection-id <COLLECTION_ID> \
+    --key '' \
+    --required false

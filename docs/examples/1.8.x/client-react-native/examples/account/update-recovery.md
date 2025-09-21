@@ -6,10 +6,10 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.updateRecovery(
-    '<USER_ID>', // userId
-    '<SECRET>', // secret
-    '' // password
-);
+const result = await account.updateRecovery({
+    userId: '<USER_ID>',
+    secret: '<SECRET>',
+    password: ''
+});
 
 console.log(result);

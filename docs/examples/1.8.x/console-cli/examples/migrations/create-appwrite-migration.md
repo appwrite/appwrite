@@ -1,5 +1,5 @@
-appwrite migrations createAppwriteMigration \
-        --resources one two three \
-        --endpoint https://example.com \
-        --projectId <PROJECT_ID> \
-        --apiKey <API_KEY>
+appwrite migrations create-appwrite-migration \
+    --resources one two three \
+    --endpoint https://example.com \
+    --project-id <PROJECT_ID> \
+    --api-key <API_KEY>

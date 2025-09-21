@@ -1,4 +1,2 @@
-appwrite databases listCollections \
-        --databaseId <DATABASE_ID> \
-
-
+appwrite databases list-collections \
+    --database-id <DATABASE_ID>

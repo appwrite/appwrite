@@ -432,11 +432,20 @@ class StatsResources extends Action
 
     protected function writeDocuments(Database $dbForLogs, Document $project): void
     {
-        $dbForLogs->createOrUpdateDocuments(
-            'stats',
-            $this->documents
-        );
-        $this->documents = [];
-        Console::success('Stats  written to logs db for project: ' . $project->getId() . '(' . $project->getSequence() . ')');
+        $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
+
+        try {
+            $dbForLogs->upsertDocuments(
+                'stats',
+                $this->documents
+            );
+
+            Console::success($message . ' | Documents: ' . count($this->documents));
+        } catch (\Throwable $e) {
+            Console::error('Error: ' . $message . ' | Exception: ' . $e->getMessage());
+            throw $e;
+        } finally {
+            $this->documents = [];
+        }
     }
 }

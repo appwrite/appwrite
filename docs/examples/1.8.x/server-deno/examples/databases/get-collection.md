@@ -7,7 +7,7 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.getCollection(
-    '<DATABASE_ID>', // databaseId
-    '<COLLECTION_ID>' // collectionId
-);
+const response = await databases.getCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>'
+});

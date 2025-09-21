@@ -1,2 +1,2 @@
-appwrite sites getTemplate \
-        --templateId <TEMPLATE_ID>
+appwrite sites get-template \
+    --template-id <TEMPLATE_ID>

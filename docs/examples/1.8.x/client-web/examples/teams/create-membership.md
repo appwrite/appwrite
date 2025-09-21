@@ -6,14 +6,14 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const result = await teams.createMembership(
-    '<TEAM_ID>', // teamId
-    [], // roles
-    'email@example.com', // email (optional)
-    '<USER_ID>', // userId (optional)
-    '+12065550100', // phone (optional)
-    'https://example.com', // url (optional)
-    '<NAME>' // name (optional)
-);
+const result = await teams.createMembership({
+    teamId: '<TEAM_ID>',
+    roles: [],
+    email: 'email@example.com', // optional
+    userId: '<USER_ID>', // optional
+    phone: '+12065550100', // optional
+    url: 'https://example.com', // optional
+    name: '<NAME>' // optional
+});
 
 console.log(result);

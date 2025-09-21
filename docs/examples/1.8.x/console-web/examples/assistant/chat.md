@@ -6,8 +6,8 @@ const client = new Client()
 
 const assistant = new Assistant(client);
 
-const result = await assistant.chat(
-    '<PROMPT>' // prompt
-);
+const result = await assistant.chat({
+    prompt: '<PROMPT>'
+});
 
 console.log(result);

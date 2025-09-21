@@ -194,10 +194,16 @@ CLI::setResource('publisher', function (Group $pools) {
 CLI::setResource('publisherDatabases', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
+CLI::setResource('publisherFunctions', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
 CLI::setResource('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
 CLI::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+CLI::setResource('publisherMessaging', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
 CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {

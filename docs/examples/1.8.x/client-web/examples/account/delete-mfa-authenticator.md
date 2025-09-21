@@ -6,8 +6,8 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.deleteMfaAuthenticator(
-    AuthenticatorType.Totp // type
-);
+const result = await account.deleteMFAAuthenticator({
+    type: AuthenticatorType.Totp
+});
 
 console.log(result);

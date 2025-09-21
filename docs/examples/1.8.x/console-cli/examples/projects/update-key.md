@@ -1,6 +1,5 @@
-appwrite projects updateKey \
-        --projectId <PROJECT_ID> \
-        --keyId <KEY_ID> \
-        --name <NAME> \
-        --scopes one two three \
-
+appwrite projects update-key \
+    --project-id <PROJECT_ID> \
+    --key-id <KEY_ID> \
+    --name <NAME> \
+    --scopes one two three

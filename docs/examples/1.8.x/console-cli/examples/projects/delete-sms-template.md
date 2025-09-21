@@ -1,4 +1,4 @@
-appwrite projects deleteSmsTemplate \
-        --projectId <PROJECT_ID> \
-        --type verification \
-        --locale af
+appwrite projects delete-sms-template \
+    --project-id <PROJECT_ID> \
+    --type verification \
+    --locale af

@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.createApnsProvider(
+messaging.createAPNSProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name
     "<AUTH_KEY>", // authKey (optional)

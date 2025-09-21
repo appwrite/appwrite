@@ -1,3 +1,2 @@
-appwrite users listTargets \
-        --userId <USER_ID> \
-
+appwrite users list-targets \
+    --user-id <USER_ID>

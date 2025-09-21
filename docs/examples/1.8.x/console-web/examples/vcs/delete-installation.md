@@ -6,8 +6,8 @@ const client = new Client()
 
 const vcs = new Vcs(client);
 
-const result = await vcs.deleteInstallation(
-    '<INSTALLATION_ID>' // installationId
-);
+const result = await vcs.deleteInstallation({
+    installationId: '<INSTALLATION_ID>'
+});
 
 console.log(result);

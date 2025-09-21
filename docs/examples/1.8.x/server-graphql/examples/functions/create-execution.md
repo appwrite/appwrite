@@ -13,6 +13,7 @@ mutation {
         _updatedAt
         _permissions
         functionId
+        deploymentId
         trigger
         status
         requestMethod

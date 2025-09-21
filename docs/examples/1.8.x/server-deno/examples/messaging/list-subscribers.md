@@ -7,8 +7,8 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.listSubscribers(
-    '<TOPIC_ID>', // topicId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const response = await messaging.listSubscribers({
+    topicId: '<TOPIC_ID>',
+    queries: [], // optional
+    search: '<SEARCH>' // optional
+});

@@ -6,9 +6,9 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.updatePushTarget(
-    '<TARGET_ID>', // targetId
-    '<IDENTIFIER>' // identifier
-);
+const result = await account.updatePushTarget({
+    targetId: '<TARGET_ID>',
+    identifier: '<IDENTIFIER>'
+});
 
 console.log(result);

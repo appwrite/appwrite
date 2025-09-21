@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const result = await teams.updateMembership(
-    '<TEAM_ID>', // teamId
-    '<MEMBERSHIP_ID>', // membershipId
-    [] // roles
-);
+const result = await teams.updateMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    roles: []
+});

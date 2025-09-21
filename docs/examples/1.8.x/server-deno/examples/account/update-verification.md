@@ -7,7 +7,7 @@ const client = new Client()
 
 const account = new Account(client);
 
-const response = await account.updateVerification(
-    '<USER_ID>', // userId
-    '<SECRET>' // secret
-);
+const response = await account.updateVerification({
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});

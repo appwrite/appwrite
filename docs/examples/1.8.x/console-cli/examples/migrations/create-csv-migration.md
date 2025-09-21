@@ -1,4 +1,4 @@
-appwrite migrations createCsvMigration \
-        --bucketId <BUCKET_ID> \
-        --fileId <FILE_ID> \
-        --resourceId [ID1:ID2]
+appwrite migrations create-csv-migration \
+    --bucket-id <BUCKET_ID> \
+    --file-id <FILE_ID> \
+    --resource-id [ID1:ID2]

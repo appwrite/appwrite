@@ -7,8 +7,8 @@ const client = new Client()
 
 const functions = new Functions(client);
 
-const response = await functions.listDeployments(
-    '<FUNCTION_ID>', // functionId
-    [], // queries (optional)
-    '<SEARCH>' // search (optional)
-);
+const response = await functions.listDeployments({
+    functionId: '<FUNCTION_ID>',
+    queries: [], // optional
+    search: '<SEARCH>' // optional
+});

@@ -7,7 +7,7 @@ const client = new Client()
 
 const users = new Users(client);
 
-const response = await users.deleteTarget(
-    '<USER_ID>', // userId
-    '<TARGET_ID>' // targetId
-);
+const response = await users.deleteTarget({
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>'
+});

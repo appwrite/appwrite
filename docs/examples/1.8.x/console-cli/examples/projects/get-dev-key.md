@@ -1,3 +1,3 @@
-appwrite projects getDevKey \
-        --projectId <PROJECT_ID> \
-        --keyId <KEY_ID>
+appwrite projects get-dev-key \
+    --project-id <PROJECT_ID> \
+    --key-id <KEY_ID>

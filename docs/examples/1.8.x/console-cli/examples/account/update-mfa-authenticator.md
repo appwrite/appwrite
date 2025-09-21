@@ -1,3 +1,3 @@
-appwrite account updateMfaAuthenticator \
-        --type totp \
-        --otp <OTP>
+appwrite account update-mfa-authenticator \
+    --type totp \
+    --otp <OTP>

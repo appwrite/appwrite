@@ -6,11 +6,11 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.create(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    '', // password
-    '<NAME>' // name (optional)
-);
+const result = await account.create({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: '',
+    name: '<NAME>' // optional
+});
 
 console.log(result);

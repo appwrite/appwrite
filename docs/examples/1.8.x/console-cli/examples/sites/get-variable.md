@@ -1,3 +1,3 @@
-appwrite sites getVariable \
-        --siteId <SITE_ID> \
-        --variableId <VARIABLE_ID>
+appwrite sites get-variable \
+    --site-id <SITE_ID> \
+    --variable-id <VARIABLE_ID>

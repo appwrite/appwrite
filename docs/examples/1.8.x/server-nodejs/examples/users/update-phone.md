@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updatePhone(
-    '<USER_ID>', // userId
-    '+12065550100' // number
-);
+const result = await users.updatePhone({
+    userId: '<USER_ID>',
+    number: '+12065550100'
+});

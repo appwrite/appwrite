@@ -7,9 +7,9 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const response = await teams.updateMembershipStatus(
-    '<TEAM_ID>', // teamId
-    '<MEMBERSHIP_ID>', // membershipId
-    '<USER_ID>', // userId
-    '<SECRET>' // secret
-);
+const response = await teams.updateMembershipStatus({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>',
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
+});

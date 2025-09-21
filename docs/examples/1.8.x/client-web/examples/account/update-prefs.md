@@ -6,8 +6,12 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.updatePrefs(
-    {} // prefs
-);
+const result = await account.updatePrefs({
+    prefs: {
+        "language": "en",
+        "timezone": "UTC",
+        "darkTheme": true
+    }
+});
 
 console.log(result);

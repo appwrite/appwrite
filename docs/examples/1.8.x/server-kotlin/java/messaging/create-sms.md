@@ -9,7 +9,7 @@ Client client = new Client()
 
 Messaging messaging = new Messaging(client);
 
-messaging.createSms(
+messaging.createSMS(
     "<MESSAGE_ID>", // messageId
     "<CONTENT>", // content
     listOf(), // topics (optional)

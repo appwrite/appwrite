@@ -7,7 +7,7 @@ let client = Client()
 
 let account = Account(client)
 
-let mfaType = try await account.createMfaAuthenticator(
+let mfaType = try await account.createMFAAuthenticator(
     type: .totp
 )
 

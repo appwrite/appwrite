@@ -1,4 +1,4 @@
-appwrite teams updateMembership \
-        --teamId <TEAM_ID> \
-        --membershipId <MEMBERSHIP_ID> \
-        --roles one two three
+appwrite teams update-membership \
+    --team-id <TEAM_ID> \
+    --membership-id <MEMBERSHIP_ID> \
+    --roles one two three

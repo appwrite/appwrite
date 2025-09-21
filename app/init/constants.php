@@ -46,6 +46,9 @@ const APP_DATABASE_ATTRIBUTE_DATETIME = 'datetime';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
+const APP_DATABASE_ATTRIBUTE_POINT = 'point';
+const APP_DATABASE_ATTRIBUTE_LINE = 'line';
+const APP_DATABASE_ATTRIBUTE_POLYGON = 'polygon';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
 const APP_DATABASE_TIMEOUT_MILLISECONDS_API = 15 * 1000; // 15 seconds
 const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
@@ -143,8 +146,10 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+const APP_FUNCTION_LOG_LENGTH_LIMIT = 1000000;
+const APP_FUNCTION_ERROR_LENGTH_LIMIT = 1000000;
 // Function headers
-const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
+const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host', 'x-appwrite-client-ip'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Message types
 const MESSAGE_TYPE_EMAIL = 'email';

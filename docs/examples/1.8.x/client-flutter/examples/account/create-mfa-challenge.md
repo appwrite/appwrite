@@ -6,6 +6,6 @@ Client client = Client()
 
 Account account = Account(client);
 
-MfaChallenge result = await account.createMfaChallenge(
+MfaChallenge result = await account.createMFAChallenge(
     factor: AuthenticationFactor.email,
 );

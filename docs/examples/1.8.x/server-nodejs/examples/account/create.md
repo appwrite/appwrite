@@ -6,9 +6,9 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.create(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    '', // password
-    '<NAME>' // name (optional)
-);
+const result = await account.create({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    password: '',
+    name: '<NAME>' // optional
+});

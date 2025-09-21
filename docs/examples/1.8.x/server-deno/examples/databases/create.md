@@ -7,8 +7,8 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const response = await databases.create(
-    '<DATABASE_ID>', // databaseId
-    '<NAME>', // name
-    false // enabled (optional)
-);
+const response = await databases.create({
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
+    enabled: false // optional
+});

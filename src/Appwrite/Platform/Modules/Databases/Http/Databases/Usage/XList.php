@@ -21,7 +21,7 @@ class XList extends Action
 {
     public static function getName(): string
     {
-        return 'listUsage';
+        return 'listDatabaseUsage';
     }
 
     public function __construct()
@@ -37,7 +37,7 @@ class XList extends Action
                 new Method(
                     namespace: 'databases',
                     group: null,
-                    name: self::getName(),
+                    name: 'listUsage',
                     description: '/docs/references/databases/list-usage.md',
                     auth: [AuthType::ADMIN],
                     responses: [
@@ -49,22 +49,8 @@ class XList extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.listDatabaseUsage'
+                        replaceWith: 'tablesDB.listUsage'
                     )
-                ),
-                new Method(
-                    namespace: 'grids',
-                    group: null,
-                    name: 'listDatabaseUsage',
-                    description: '/docs/references/grids/list-database-usage.md',
-                    auth: [AuthType::ADMIN],
-                    responses: [
-                        new SDKResponse(
-                            code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_USAGE_DATABASES,
-                        )
-                    ],
-                    contentType: ContentType::JSON
                 ),
             ])
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)

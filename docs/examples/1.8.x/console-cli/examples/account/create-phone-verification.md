@@ -1,1 +1,1 @@
-appwrite account createPhoneVerification
+appwrite account create-phone-verification

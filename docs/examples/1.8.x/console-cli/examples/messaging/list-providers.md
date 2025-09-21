@@ -1,3 +1,1 @@
-appwrite messaging listProviders \
-
-
+appwrite messaging list-providers

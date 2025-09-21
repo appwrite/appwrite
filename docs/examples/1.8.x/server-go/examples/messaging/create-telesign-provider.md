@@ -6,26 +6,19 @@ import (
     "github.com/appwrite/sdk-for-go/messaging"
 )
 
-func main() {
-    client := client.New(
-        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
-        client.WithKey("<YOUR_API_KEY>") // Your secret API key
-    )
+client := client.New(
+    client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithKey("<YOUR_API_KEY>")
+)
 
-    service := messaging.New(client)
-    response, error := service.CreateTelesignProvider(
-        "<PROVIDER_ID>",
-        "<NAME>",
-        messaging.WithCreateTelesignProviderFrom("+12065550100"),
-        messaging.WithCreateTelesignProviderCustomerId("<CUSTOMER_ID>"),
-        messaging.WithCreateTelesignProviderApiKey("<API_KEY>"),
-        messaging.WithCreateTelesignProviderEnabled(false),
-    )
+service := messaging.New(client)
 
-    if error != nil {
-        panic(error)
-    }
-
-    fmt.Println(response)
-}
+response, error := service.CreateTelesignProvider(
+    "<PROVIDER_ID>",
+    "<NAME>",
+    messaging.WithCreateTelesignProviderFrom("+12065550100"),
+    messaging.WithCreateTelesignProviderCustomerId("<CUSTOMER_ID>"),
+    messaging.WithCreateTelesignProviderApiKey("<API_KEY>"),
+    messaging.WithCreateTelesignProviderEnabled(false),
+)

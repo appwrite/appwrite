@@ -1,3 +1,3 @@
-appwrite projects updateAuthPasswordDictionary \
-        --projectId <PROJECT_ID> \
-        --enabled false
+appwrite projects update-auth-password-dictionary \
+    --project-id <PROJECT_ID> \
+    --enabled false

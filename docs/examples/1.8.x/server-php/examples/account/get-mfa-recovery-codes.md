@@ -10,4 +10,4 @@ $client = (new Client())
 
 $account = new Account($client);
 
-$result = $account->getMfaRecoveryCodes();
+$result = $account->getMFARecoveryCodes();

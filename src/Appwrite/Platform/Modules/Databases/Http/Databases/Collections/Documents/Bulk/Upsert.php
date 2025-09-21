@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
+use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -39,7 +40,7 @@ class Upsert extends Action
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/documents')
-            ->desc('Create or update documents')
+            ->desc('Upsert documents')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
@@ -64,7 +65,7 @@ class Upsert extends Action
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'grids.upsertRows',
+                        replaceWith: 'tablesDB.upsertRows',
                     ),
                 )
             ])
@@ -74,11 +75,15 @@ class Upsert extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
+            ->inject('queueForEvents')
+            ->inject('queueForRealtime')
+            ->inject('queueForFunctions')
+            ->inject('queueForWebhooks')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $documents, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $documents, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
@@ -100,6 +105,7 @@ class Upsert extends Action
         }
 
         foreach ($documents as $key => $document) {
+            $document = $this->removeReadonlyAttributes($document, privileged: true);
             $documents[$key] = new Document($document);
         }
 
@@ -107,7 +113,7 @@ class Upsert extends Action
 
         try {
             $modified = $dbForProject->withPreserveDates(function () use ($dbForProject, $database, $collection, $documents, $plan, &$upserted) {
-                return $dbForProject->createOrUpdateDocuments(
+                return $dbForProject->upsertDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documents,
                     onNext: function (Document $document) use ($plan, &$upserted) {
@@ -129,7 +135,7 @@ class Upsert extends Action
 
         foreach ($upserted as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
+            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage
@@ -140,5 +146,16 @@ class Upsert extends Action
             'total' => $modified,
             $this->getSdkGroup() => $upserted
         ]), $this->getResponseModel());
+
+        $this->triggerBulk(
+            'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert',
+            $database,
+            $collection,
+            $upserted,
+            $queueForEvents,
+            $queueForRealtime,
+            $queueForFunctions,
+            $queueForWebhooks
+        );
     }
 }

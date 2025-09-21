@@ -1,5 +1,4 @@
-appwrite storage createFile \
-        --bucketId <BUCKET_ID> \
-        --fileId <FILE_ID> \
-        --file 'path/to/file.png' \
-
+appwrite storage create-file \
+    --bucket-id <BUCKET_ID> \
+    --file-id <FILE_ID> \
+    --file 'path/to/file.png'

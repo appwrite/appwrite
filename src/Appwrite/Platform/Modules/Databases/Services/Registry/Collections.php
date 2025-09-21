@@ -18,6 +18,12 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\In
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Integer\Update as UpdateIntegerAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\IP\Create as CreateIPAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\IP\Update as UpdateIPAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Line\Create as CreateLineAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Line\Update as UpdateLineAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Point\Create as CreatePointAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Point\Update as UpdatePointAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Polygon\Create as CreatePolygonAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Polygon\Update as UpdatePolygonAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship\Create as CreateRelationshipAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship\Update as UpdateRelationshipAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Create as CreateStringAttribute;
@@ -131,6 +137,18 @@ class Collections extends Base
         // Attribute: IP
         $service->addAction(CreateIPAttribute::getName(), new CreateIPAttribute());
         $service->addAction(UpdateIPAttribute::getName(), new UpdateIPAttribute());
+
+        // Attribute: Line
+        $service->addAction(CreateLineAttribute::getName(), new CreateLineAttribute());
+        $service->addAction(UpdateLineAttribute::getName(), new UpdateLineAttribute());
+
+        // Attribute: Point
+        $service->addAction(CreatePointAttribute::getName(), new CreatePointAttribute());
+        $service->addAction(UpdatePointAttribute::getName(), new UpdatePointAttribute());
+
+        // Attribute: Polygon
+        $service->addAction(CreatePolygonAttribute::getName(), new CreatePolygonAttribute());
+        $service->addAction(UpdatePolygonAttribute::getName(), new UpdatePolygonAttribute());
 
         // Attribute: Relationship
         $service->addAction(CreateRelationshipAttribute::getName(), new CreateRelationshipAttribute());

@@ -1,8 +1,3 @@
-appwrite messaging createSms \
-        --messageId <MESSAGE_ID> \
-        --content <CONTENT> \
-
-
-
-
-
+appwrite messaging create-sms \
+    --message-id <MESSAGE_ID> \
+    --content <CONTENT>

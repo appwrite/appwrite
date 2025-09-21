@@ -1,3 +1,3 @@
-appwrite sites createDuplicateDeployment \
-        --siteId <SITE_ID> \
-        --deploymentId <DEPLOYMENT_ID>
+appwrite sites create-duplicate-deployment \
+    --site-id <SITE_ID> \
+    --deployment-id <DEPLOYMENT_ID>

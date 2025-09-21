@@ -6,9 +6,9 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const result = await databases.listLogs(
-    '<DATABASE_ID>', // databaseId
-    [] // queries (optional)
-);
+const result = await databases.listLogs({
+    databaseId: '<DATABASE_ID>',
+    queries: [] // optional
+});
 
 console.log(result);

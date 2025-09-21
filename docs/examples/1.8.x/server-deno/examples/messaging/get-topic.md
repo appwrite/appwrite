@@ -7,6 +7,6 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.getTopic(
-    '<TOPIC_ID>' // topicId
-);
+const response = await messaging.getTopic({
+    topicId: '<TOPIC_ID>'
+});

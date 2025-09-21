@@ -20,7 +20,7 @@ class DatabaseClientTest extends Scope
     public function testCreateDatabase(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -49,7 +49,7 @@ class DatabaseClientTest extends Scope
     public function testCreateCollection($database): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -89,7 +89,7 @@ class DatabaseClientTest extends Scope
     public function testCreateStringAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -120,7 +120,7 @@ class DatabaseClientTest extends Scope
     public function testCreateIntegerAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_INTEGER_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_INTEGER_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -155,7 +155,7 @@ class DatabaseClientTest extends Scope
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $query = $this->getQuery(self::CREATE_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -199,7 +199,7 @@ class DatabaseClientTest extends Scope
     public function testGetDocuments($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENTS);
+        $query = $this->getQuery(self::GET_DOCUMENTS);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -225,7 +225,7 @@ class DatabaseClientTest extends Scope
     public function testGetDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_DOCUMENT);
+        $query = $this->getQuery(self::GET_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -252,7 +252,7 @@ class DatabaseClientTest extends Scope
     public function testUpdateDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_DOCUMENT);
+        $query = $this->getQuery(self::UPDATE_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -285,7 +285,7 @@ class DatabaseClientTest extends Scope
     public function testDeleteDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $query = $this->getQuery(self::DELETE_DOCUMENT);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -318,7 +318,7 @@ class DatabaseClientTest extends Scope
         ];
 
         // Step 1: Create database
-        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $query = $this->getQuery(self::CREATE_DATABASE);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -331,7 +331,7 @@ class DatabaseClientTest extends Scope
         $databaseId = $res['body']['data']['databasesCreate']['_id'];
 
         // Step 2: Create collection
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
@@ -349,7 +349,7 @@ class DatabaseClientTest extends Scope
         $collectionId = $res['body']['data']['databasesCreateCollection']['_id'];
 
         // Step 3: Create attribute
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
@@ -363,7 +363,7 @@ class DatabaseClientTest extends Scope
         sleep(1);
 
         // Step 4: Create documents
-        $query = $this->getQuery(self::$CREATE_DOCUMENTS);
+        $query = $this->getQuery(self::CREATE_DOCUMENTS);
         $documents = [];
         for ($i = 1; $i <= 10; $i++) {
             $documents[] = ['$id' => 'doc' . $i, 'name' => 'Doc #' . $i];
@@ -404,7 +404,7 @@ class DatabaseClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        $query = $this->getQuery(self::$UPDATE_DOCUMENTS);
+        $query = $this->getQuery(self::UPDATE_DOCUMENTS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -435,7 +435,7 @@ class DatabaseClientTest extends Scope
         ];
 
         // Upsert: Update one, insert one
-        $query = $this->getQuery(self::$UPSERT_DOCUMENTS);
+        $query = $this->getQuery(self::UPSERT_DOCUMENTS);
         $payload = [
             'query' => $query,
             'variables' => [
@@ -465,7 +465,7 @@ class DatabaseClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        $query = $this->getQuery(self::$DELETE_DOCUMENTS);
+        $query = $this->getQuery(self::DELETE_DOCUMENTS);
         $payload = [
             'query' => $query,
             'variables' => [

@@ -6,9 +6,9 @@ const client = new Client()
 
 const teams = new Teams(client);
 
-const result = await teams.deleteMembership(
-    '<TEAM_ID>', // teamId
-    '<MEMBERSHIP_ID>' // membershipId
-);
+const result = await teams.deleteMembership({
+    teamId: '<TEAM_ID>',
+    membershipId: '<MEMBERSHIP_ID>'
+});
 
 console.log(result);

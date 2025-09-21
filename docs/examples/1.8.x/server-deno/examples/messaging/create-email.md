@@ -7,17 +7,17 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const response = await messaging.createEmail(
-    '<MESSAGE_ID>', // messageId
-    '<SUBJECT>', // subject
-    '<CONTENT>', // content
-    [], // topics (optional)
-    [], // users (optional)
-    [], // targets (optional)
-    [], // cc (optional)
-    [], // bcc (optional)
-    [], // attachments (optional)
-    false, // draft (optional)
-    false, // html (optional)
-    '' // scheduledAt (optional)
-);
+const response = await messaging.createEmail({
+    messageId: '<MESSAGE_ID>',
+    subject: '<SUBJECT>',
+    content: '<CONTENT>',
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    cc: [], // optional
+    bcc: [], // optional
+    attachments: [], // optional
+    draft: false, // optional
+    html: false, // optional
+    scheduledAt: '' // optional
+});

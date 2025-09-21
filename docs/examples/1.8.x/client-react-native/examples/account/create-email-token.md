@@ -6,10 +6,10 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.createEmailToken(
-    '<USER_ID>', // userId
-    'email@example.com', // email
-    false // phrase (optional)
-);
+const result = await account.createEmailToken({
+    userId: '<USER_ID>',
+    email: 'email@example.com',
+    phrase: false // optional
+});
 
 console.log(result);

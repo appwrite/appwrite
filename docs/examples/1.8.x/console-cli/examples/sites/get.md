@@ -1,2 +1,2 @@
 appwrite sites get \
-        --siteId <SITE_ID>
+    --site-id <SITE_ID>

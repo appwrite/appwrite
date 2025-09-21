@@ -9,6 +9,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val result = account.createMfaAuthenticator(
+val result = account.createMFAAuthenticator(
     type = AuthenticatorType.TOTP,
 )

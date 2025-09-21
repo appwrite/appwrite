@@ -6,11 +6,11 @@ const client = new Client()
 
 const messaging = new Messaging(client);
 
-const result = await messaging.updateFcmProvider(
-    '<PROVIDER_ID>', // providerId
-    '<NAME>', // name (optional)
-    false, // enabled (optional)
-    {} // serviceAccountJSON (optional)
-);
+const result = await messaging.updateFCMProvider({
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>', // optional
+    enabled: false, // optional
+    serviceAccountJSON: {} // optional
+});
 
 console.log(result);

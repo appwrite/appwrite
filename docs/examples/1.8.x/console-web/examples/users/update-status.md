@@ -6,9 +6,9 @@ const client = new Client()
 
 const users = new Users(client);
 
-const result = await users.updateStatus(
-    '<USER_ID>', // userId
-    false // status
-);
+const result = await users.updateStatus({
+    userId: '<USER_ID>',
+    status: false
+});
 
 console.log(result);

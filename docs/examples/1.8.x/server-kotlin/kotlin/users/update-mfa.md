@@ -9,7 +9,7 @@ val client = Client()
 
 val users = Users(client)
 
-val response = users.updateMfa(
+val response = users.updateMFA(
     userId = "<USER_ID>",
     mfa = false
 )

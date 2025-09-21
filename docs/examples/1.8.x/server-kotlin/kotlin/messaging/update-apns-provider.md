@@ -9,7 +9,7 @@ val client = Client()
 
 val messaging = Messaging(client)
 
-val response = messaging.updateApnsProvider(
+val response = messaging.updateAPNSProvider(
     providerId = "<PROVIDER_ID>",
     name = "<NAME>", // optional
     enabled = false, // optional

@@ -1,4 +1,4 @@
-appwrite projects getSmsTemplate \
-        --projectId <PROJECT_ID> \
-        --type verification \
-        --locale af
+appwrite projects get-sms-template \
+    --project-id <PROJECT_ID> \
+    --type verification \
+    --locale af

@@ -424,7 +424,7 @@ class StatsUsage extends Action
             try {
                 $dbForProject = $getProjectDB($projectStats['project']);
                 Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
-                $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
+                $dbForProject->upsertDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
                 Console::success('Batch successfully written to DB');
 
                 unset($this->projects[$sequence]);
@@ -468,7 +468,7 @@ class StatsUsage extends Action
 
         try {
             Console::log('Processing batch with ' . count($this->statDocuments) . ' stats');
-            $dbForLogs->createOrUpdateDocumentsWithIncrease(
+            $dbForLogs->upsertDocumentsWithIncrease(
                 'stats',
                 'value',
                 $this->statDocuments

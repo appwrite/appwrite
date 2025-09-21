@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.createMfaAuthenticator(
-    sdk.AuthenticatorType.Totp // type
-);
+const result = await account.createMFAAuthenticator({
+    type: sdk.AuthenticatorType.Totp
+});

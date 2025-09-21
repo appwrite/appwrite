@@ -1,15 +1,4 @@
-appwrite messaging createSmtpProvider \
-        --providerId <PROVIDER_ID> \
-        --name <NAME> \
-        --host <HOST> \
-
-
-
-
-
-
-
-
-
-
-
+appwrite messaging create-smtp-provider \
+    --provider-id <PROVIDER_ID> \
+    --name <NAME> \
+    --host <HOST>

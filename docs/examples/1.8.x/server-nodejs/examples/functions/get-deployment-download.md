@@ -7,8 +7,8 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const result = await functions.getDeploymentDownload(
-    '<FUNCTION_ID>', // functionId
-    '<DEPLOYMENT_ID>', // deploymentId
-    sdk.DeploymentDownloadType.Source // type (optional)
-);
+const result = await functions.getDeploymentDownload({
+    functionId: '<FUNCTION_ID>',
+    deploymentId: '<DEPLOYMENT_ID>',
+    type: sdk.DeploymentDownloadType.Source // optional
+});

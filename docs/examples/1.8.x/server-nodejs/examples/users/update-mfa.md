@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const result = await users.updateMfa(
-    '<USER_ID>', // userId
-    false // mfa
-);
+const result = await users.updateMFA({
+    userId: '<USER_ID>',
+    mfa: false
+});
