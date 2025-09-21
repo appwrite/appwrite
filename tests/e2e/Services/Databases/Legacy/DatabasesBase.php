@@ -7887,6 +7887,11 @@ trait DatabasesBase
 
     public function testSpatialColCreateOnExistingData(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8017,6 +8022,10 @@ trait DatabasesBase
 
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
+        
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
