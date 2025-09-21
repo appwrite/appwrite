@@ -132,6 +132,18 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('authBlockDisposableEmails', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to block registrations with disposable email domains.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authDisposableEmailAllowlist', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Comma-separated list of email domains to allow even if disposable (per project). Applies to domain and subdomains.',
+                'default' => '',
+                'example' => 'example.com,allow.test',
+            ])
             ->addRule('authPersonalDataCheck', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
@@ -209,7 +221,7 @@ class Project extends Model
                 'description' => 'Status for custom SMTP',
                 'default' => false,
                 'example' => false,
-                'array' => false
+                'array' => false,
             ])
             ->addRule('smtpSenderName', [
                 'type' => self::TYPE_STRING,
@@ -270,8 +282,7 @@ class Project extends Model
                 'description' => 'Last ping datetime in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
-        ;
+            ]);
 
         $services = Config::getParam('services', []);
         $auth = Config::getParam('auth', []);
@@ -286,8 +297,7 @@ class Project extends Model
                     'description' => $name . ' auth method status',
                     'example' => true,
                     'default' => true,
-                ])
-            ;
+                ]);
         }
 
         foreach ($services as $service) {
@@ -304,8 +314,7 @@ class Project extends Model
                     'description' => $name . ' service status',
                     'example' => true,
                     'default' => true,
-                ])
-            ;
+                ]);
         }
     }
 
@@ -370,7 +379,9 @@ class Project extends Model
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
+        $document->setAttribute('authBlockDisposableEmails', $authValues['blockDisposableEmails'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
+        $document->setAttribute('authDisposableEmailAllowlist', \is_array($authValues['disposableEmailAllowlist'] ?? null) ? \implode(',', $authValues['disposableEmailAllowlist']) : ($authValues['disposableEmailAllowlist'] ?? ''));
         $document->setAttribute('authMockNumbers', $authValues['mockNumbers'] ?? []);
         $document->setAttribute('authSessionAlerts', $authValues['sessionAlerts'] ?? false);
         $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
@@ -381,6 +392,11 @@ class Project extends Model
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
+        }
+
+        // Backward compatibility: ensure undefined defaults are present for new fields
+        if (!$document->isAttributeSet('authBlockDisposableEmails')) {
+            $document->setAttribute('authBlockDisposableEmails', false);
         }
 
         // OAuth Providers

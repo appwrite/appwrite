@@ -207,9 +207,9 @@ App::post('/v1/users')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', null, new Email(), 'User email.', true)
+    ->param('email', null, fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', true, ['project', 'disposableDomains'])
     ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -242,7 +242,7 @@ App::post('/v1/users/bcrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -277,7 +277,7 @@ App::post('/v1/users/md5')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using MD5.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -312,7 +312,7 @@ App::post('/v1/users/argon2')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Argon2.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -343,11 +343,11 @@ App::post('/v1/users/sha')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using SHA.')
     ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -389,7 +389,7 @@ App::post('/v1/users/phpass')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using PHPass.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -424,7 +424,7 @@ App::post('/v1/users/scrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false), allowlistedDomains: \array_flip(\is_array($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? null) ? ($project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? []) : (\array_filter(\explode(',', $project->getAttribute('auths', [])['disposableEmailAllowlist'] ?? ''))))), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
     ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
     ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.')
@@ -472,7 +472,7 @@ App::post('/v1/users/scrypt-modified')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', fn($project, $disposableDomains) => new Email(disposableDomains: $disposableDomains, blockDisposable: ($project->getAttribute('auths', [])['blockDisposableEmails'] ?? false)), 'User email.', false, ['project', 'disposableDomains'])
     ->param('password', '', new Password(), 'User password hashed using Scrypt Modified.')
     ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
     ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
@@ -736,7 +736,7 @@ App::get('/v1/users/:userId/targets/:targetId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TARGET,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -774,7 +774,7 @@ App::get('/v1/users/:userId/sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SESSION_LIST,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -821,7 +821,7 @@ App::get('/v1/users/:userId/memberships')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MEMBERSHIP_LIST,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -881,7 +881,7 @@ App::get('/v1/users/:userId/logs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOG_LIST,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -944,7 +944,7 @@ App::get('/v1/users/:userId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
             ]);
 
             $record = $geodb->get($log['ip']);
@@ -978,7 +978,7 @@ App::get('/v1/users/:userId/targets')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TARGET_LIST,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1049,7 +1049,7 @@ App::get('/v1/users/identities')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_IDENTITY_LIST,
-            )
+            ),
         ]
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
@@ -1124,7 +1124,7 @@ App::patch('/v1/users/:userId/status')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1140,7 +1140,7 @@ App::patch('/v1/users/:userId/status')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool)$status));
 
         $queueForEvents
             ->setParam('userId', $user->getId());
@@ -1165,7 +1165,7 @@ App::put('/v1/users/:userId/labels')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1181,7 +1181,7 @@ App::put('/v1/users/:userId/labels')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user->setAttribute('labels', (array) \array_values(\array_unique($labels)));
+        $user->setAttribute('labels', (array)\array_values(\array_unique($labels)));
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -1208,7 +1208,7 @@ App::patch('/v1/users/:userId/verification/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1250,7 +1250,7 @@ App::patch('/v1/users/:userId/name')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1293,11 +1293,11 @@ App::patch('/v1/users/:userId/password')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1376,7 +1376,7 @@ App::patch('/v1/users/:userId/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1417,8 +1417,7 @@ App::patch('/v1/users/:userId/email')
 
         $user
             ->setAttribute('email', $email)
-            ->setAttribute('emailVerification', false)
-        ;
+            ->setAttribute('emailVerification', false);
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -1476,7 +1475,7 @@ App::patch('/v1/users/:userId/phone')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1496,8 +1495,7 @@ App::patch('/v1/users/:userId/phone')
 
         $user
             ->setAttribute('phone', $number)
-            ->setAttribute('phoneVerification', false)
-        ;
+            ->setAttribute('phoneVerification', false);
 
         if (\strlen($number) !== 0) {
             $target = $dbForProject->findOne('targets', [
@@ -1566,7 +1564,7 @@ App::patch('/v1/users/:userId/verification')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1604,7 +1602,7 @@ App::patch('/v1/users/:userId/prefs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PREFERENCES,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1645,7 +1643,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TARGET,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1750,7 +1748,7 @@ App::patch('/v1/users/:userId/mfa')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USER,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1790,7 +1788,7 @@ App::get('/v1/users/:userId/mfa/factors')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MFA_FACTORS,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1808,7 +1806,7 @@ App::get('/v1/users/:userId/mfa/factors')
         $factors = new Document([
             Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
             Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
@@ -1829,7 +1827,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1849,7 +1847,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
         }
 
         $document = new Document([
-            'recoveryCodes' => $mfaRecoveryCodes
+            'recoveryCodes' => $mfaRecoveryCodes,
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
@@ -1874,7 +1872,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1901,7 +1899,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
         $queueForEvents->setParam('userId', $user->getId());
 
         $document = new Document([
-            'recoveryCodes' => $mfaRecoveryCodes
+            'recoveryCodes' => $mfaRecoveryCodes,
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
@@ -1926,7 +1924,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MFA_RECOVERY_CODES,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -1952,7 +1950,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
         $queueForEvents->setParam('userId', $user->getId());
 
         $document = new Document([
-            'recoveryCodes' => $mfaRecoveryCodes
+            'recoveryCodes' => $mfaRecoveryCodes,
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
@@ -1977,7 +1975,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2025,7 +2023,7 @@ App::post('/v1/users/:userId/sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SESSION,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -2110,7 +2108,7 @@ App::post('/v1/users/:userId/tokens')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOKEN,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -2138,7 +2136,7 @@ App::post('/v1/users/:userId/tokens')
             'secret' => Auth::hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP()
+            'ip' => $request->getIP(),
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
@@ -2173,7 +2171,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2224,7 +2222,7 @@ App::delete('/v1/users/:userId/sessions')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2274,7 +2272,7 @@ App::delete('/v1/users/:userId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2326,7 +2324,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2384,7 +2382,7 @@ App::delete('/v1/users/identities/:identityId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE,
     ))
@@ -2424,7 +2422,7 @@ App::post('/v1/users/:userId/jwts')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_JWT,
-            )
+            ),
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
@@ -2448,7 +2446,8 @@ App::post('/v1/users/:userId/jwts')
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {
             // Find by ID
-            foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
+            foreach ($sessions as $loopSession) {
+                /** @var Utopia\Database\Document $loopSession */
                 if ($loopSession->getId() == $sessionId) {
                     $session = $loopSession;
                     break;
@@ -2462,7 +2461,7 @@ App::post('/v1/users/:userId/jwts')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
                 'userId' => $user->getId(),
-                'sessionId' => $session->isEmpty() ? '' : $session->getId()
+                'sessionId' => $session->isEmpty() ? '' : $session->getId(),
             ])]), Response::MODEL_JWT);
     });
 
@@ -2480,7 +2479,7 @@ App::get('/v1/users/usage')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_USAGE_USERS,
-            )
+            ),
         ]
     ))
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
@@ -2499,9 +2498,9 @@ App::get('/v1/users/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $count => $metric) {
-                $result =  $dbForProject->findOne('stats', [
+                $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
-                    Query::equal('period', ['inf'])
+                    Query::equal('period', ['inf']),
                 ]);
 
                 $stats[$metric]['total'] = $result['value'] ?? 0;
@@ -2528,7 +2527,7 @@ App::get('/v1/users/usage')
         };
 
         foreach ($metrics as $metric) {
-            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['total'] = $stats[$metric]['total'];
             $usage[$metric]['data'] = [];
             $leap = time() - ($days['limit'] * $days['factor']);
             while ($leap < time()) {
@@ -2543,9 +2542,9 @@ App::get('/v1/users/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'usersTotal'   => $usage[$metrics[0]]['total'],
+            'usersTotal' => $usage[$metrics[0]]['total'],
             'sessionsTotal' => $usage[$metrics[1]]['total'],
-            'users'   => $usage[$metrics[0]]['data'],
+            'users' => $usage[$metrics[0]]['data'],
             'sessions' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_USERS);
     });

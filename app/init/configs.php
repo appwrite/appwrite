@@ -10,6 +10,7 @@ Config::load('auth', __DIR__ . '/../config/auth.php');
 Config::load('apis', __DIR__ . '/../config/apis.php');  // List of APIs
 Config::load('errors', __DIR__ . '/../config/errors.php');
 Config::load('oAuthProviders', __DIR__ . '/../config/oAuthProviders.php');
+Config::load('disposable-domains', __DIR__ . '/../config/disposable-domains.php');
 Config::load('platforms', __DIR__ . '/../config/platforms.php');
 Config::load('console', __DIR__ . '/../config/console.php');
 Config::load('collections', __DIR__ . '/../config/collections.php');
