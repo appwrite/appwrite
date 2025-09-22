@@ -1,0 +1,37 @@
+name: PR Preview Environment (Bunnyshell)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  bunnyshell-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Optional: Build Docker image if needed
+      # - name: Build Docker image
+      #   run: docker build -t appwrite-preview .
+
+      - name: Trigger Bunnyshell Preview Environment
+        env:
+          BUNNYSHELL_API_TOKEN: ${{ secrets.BUNNYSHELL_API_TOKEN }}
+        run: |
+          curl -X POST https://api.bunnyshell.com/v1/preview-environments \
+            -H "Authorization: Bearer $BUNNYSHELL_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "repository": "${{ github.repository }}",
+                  "pr_number": "${{ github.event.pull_request.number }}",
+                  "commit_sha": "${{ github.sha }}"
+                }'
+
+      - name: Post Preview URL to PR
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # This is a placeholder. Replace with actual logic to fetch and post the preview URL.
+          echo "Preview environment is being created by Bunnyshell."
