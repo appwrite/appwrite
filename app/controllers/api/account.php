@@ -3544,6 +3544,10 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
+        if (empty($user->getAttribute('email'))) {
+            throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
+        }
+
         $url = htmlentities($url);
         if ($user->getAttribute('emailVerification')) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);

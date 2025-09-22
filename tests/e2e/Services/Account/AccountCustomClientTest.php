@@ -1853,6 +1853,26 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testCreateAnonymousAccount
      */
+    public function testCreateAnonymousAccountVerification($session): array
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(500, $response['body']['code']);
+        $this->assertEquals('user_email_not_found', $response['body']['type']);
+
+        return [];
+    }
+
+    /**
+     * @depends testCreateAnonymousAccount
+     */
     public function testUpdateAnonymousAccountPassword($session)
     {
         /**
