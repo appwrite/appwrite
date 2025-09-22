@@ -85,6 +85,7 @@ const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
+const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
