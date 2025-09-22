@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Services;
 
+use Appwrite\Platform\Tasks\DevGenerateTranslations;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
@@ -42,6 +43,7 @@ class Tasks extends Service
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
             ->addAction(StatsResources::getName(), new StatsResources())
+            ->addAction(DevGenerateTranslations::getName(), new DevGenerateTranslations())
         ;
     }
 }
