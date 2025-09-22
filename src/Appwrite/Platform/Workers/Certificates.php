@@ -93,12 +93,13 @@ class Certificates extends Action
         $document = new Document($payload['domain'] ?? []);
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
+        $validationDomain = $payload['validationDomain'] ?? null;
 
         $log->addTag('domain', $domain->get());
 
         $domainType = $document->getAttribute('domainType');
 
-        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan);
+        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $validationDomain);
     }
 
     /**
@@ -112,6 +113,7 @@ class Certificates extends Action
      * @param CertificatesAdapter $certificates
      * @param bool $skipRenewCheck
      * @param array $plan
+     * @param string|null $validationDomain
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -128,7 +130,8 @@ class Certificates extends Action
         Log $log,
         CertificatesAdapter $certificates,
         bool $skipRenewCheck = false,
-        array $plan = []
+        array $plan = [],
+        ?string $validationDomain = null
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -171,9 +174,12 @@ class Certificates extends Action
         $success = false;
 
         try {
+            $date = \date('H:i:s');
+            $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
+
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $mainDomain = $this->getMainDomain();
+                $mainDomain = $validationDomain ?? $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
                 $this->validateDomain($domain, $isMainDomain, $log);
 
@@ -198,9 +204,11 @@ class Certificates extends Action
             $success = true;
         } catch (Throwable $e) {
             $logs = $e->getMessage();
+            $currentLogs = $certificate->getAttribute('logs', '');
+            $date = \date('H:i:s');
+            $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
 
-            // Set exception as log in certificate document
-            $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
+            $certificate->setAttribute('logs', $currentLogs . $errorMessage . \mb_strcut($logs, 0, 500000));// Limit to 500kb
 
             // Increase attempts count
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
