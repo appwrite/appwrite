@@ -3062,7 +3062,7 @@ trait DatabasesBase
 
     public function testInvalidRowStructure(): void
     {
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3735,7 +3735,7 @@ trait DatabasesBase
 
     public function testEnforceTableAndRowPermissions(): void
     {
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -3928,7 +3928,7 @@ trait DatabasesBase
 
     public function testEnforceTablePermissions(): void
     {
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -4284,7 +4284,7 @@ trait DatabasesBase
     public function testUpdatePermissionsWithEmptyPayload(): array
     {
         // Create Database
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -5197,8 +5197,8 @@ trait DatabasesBase
         $this->assertEquals(2, count($response['body']['rows']));
         $this->assertEquals(null, $response['body']['rows'][0]['fullName']);
         $this->assertArrayNotHasKey("libraries", $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$databaseId', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$tableId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$databaseId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$tableId', $response['body']['rows'][0]);
     }
 
     /**
@@ -5218,8 +5218,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('libraries', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$databaseId', $response['body']['rows'][0]);
-        $this->assertArrayNotHasKey('$tableId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$databaseId', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$tableId', $response['body']['rows'][0]);
 
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
             'content-type' => 'application/json',
@@ -5232,8 +5232,8 @@ trait DatabasesBase
         $row = $response['body']['rows'][0];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $row);
-        $this->assertArrayNotHasKey('$databaseId', $row);
-        $this->assertArrayNotHasKey('$tableId', $row);
+        $this->assertArrayHasKey('$databaseId', $row);
+        $this->assertArrayHasKey('$tableId', $row);
 
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows/' . $row['$id'], array_merge([
             'content-type' => 'application/json',
@@ -8826,6 +8826,271 @@ trait DatabasesBase
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}/tables/{$tableId}", $headers);
         $this->client->call(Client::METHOD_DELETE, "/tablesdb/{$databaseId}", $headers);
+    }
+
+    public function testSpatialColCreateOnExistingData(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial Distance Meters Database'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $tableId = ID::unique();
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => $tableId,
+            'name' => 'spatial-test',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+
+        $description = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'description',
+            'size' => 512,
+            'required' => false,
+            'default' => '',
+        ]);
+
+        $this->assertEquals(202, $description['headers']['status-code']);
+        sleep(2);
+
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'description' => 'description'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        $point = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'loc',
+            'required' => true,
+        ]);
+
+        $this->assertEquals(400, $point['headers']['status-code']);
+
+        $point = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'loc',
+            'required' => false,
+            'default' => null
+        ]);
+
+        $this->assertEquals(202, $point['headers']['status-code']);
+
+        $line = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/line', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'route',
+            'required' => true,
+        ]);
+
+        $this->assertEquals(400, $line['headers']['status-code']);
+
+        $line = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/line', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'route',
+            'required' => false,
+            'default' => null
+        ]);
+
+        $this->assertEquals(202, $line['headers']['status-code']);
+
+        $poly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/polygon', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'area',
+            'required' => true,
+        ]);
+
+        $this->assertEquals(400, $poly['headers']['status-code']);
+
+        $poly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/polygon', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'area',
+            'required' => false,
+            'default' => null
+        ]);
+
+        $this->assertEquals(202, $poly['headers']['status-code']);
+    }
+
+    public function testSpatialColCreateOnExistingDataWithDefaults(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Spatial With Defaults Database'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $tableId = ID::unique();
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => $tableId,
+            'name' => 'spatial-test-defaults',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+
+        $description = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'description',
+            'size' => 512,
+            'required' => false,
+            'default' => '',
+        ]);
+
+        $this->assertEquals(202, $description['headers']['status-code']);
+        sleep(2);
+
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'description' => 'description'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        // Test point with default value
+        $point = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'loc',
+            'required' => false,
+            'default' => [0.0, 0.0]
+        ]);
+
+        $this->assertEquals(202, $point['headers']['status-code']);
+
+        // Test line with default value
+        $line = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/line', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'route',
+            'required' => false,
+            'default' => [[0.0, 0.0], [1.0, 1.0]]
+        ]);
+
+        $this->assertEquals(202, $line['headers']['status-code']);
+
+        // Test polygon with default value
+        $poly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/polygon', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'area',
+            'required' => false,
+            'default' => [[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]]
+        ]);
+
+        $this->assertEquals(202, $poly['headers']['status-code']);
+
+        // Wait for columns to be available
+        sleep(2);
+
+        // Create a new row without spatial data to test default values
+        $newRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'description' => 'test default values'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $newRow['headers']['status-code']);
+
+        $newRowId = $newRow['body']['$id'];
+
+        // Fetch the row to verify default values are applied
+        $fetchedRow = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $newRowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $fetchedRow['headers']['status-code']);
+
+        // Verify default values are applied
+        $this->assertEquals([0.0, 0.0], $fetchedRow['body']['loc']);
+        $this->assertEquals([[0.0, 0.0], [1.0, 1.0]], $fetchedRow['body']['route']);
+        $this->assertEquals([[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]], $fetchedRow['body']['area']);
     }
 
 }

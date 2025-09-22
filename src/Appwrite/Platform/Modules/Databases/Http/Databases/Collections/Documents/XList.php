@@ -166,43 +166,6 @@ class XList extends Action
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
 
-        // Check if the SELECT query includes the removable attributes
-        $hasWildcard = false;
-        $hasSelectQueries = !empty($selectQueries);
-        $requestedAttributes = [];
-
-        if ($hasSelectQueries) {
-            foreach ($selectQueries as $query) {
-                if ($query->getMethod() !== Query::TYPE_SELECT) {
-                    continue;
-                }
-
-                $values = $query->getValues();
-                if (\in_array('*', $values, true)) {
-                    $hasWildcard = true;
-                    break;
-                }
-
-                // Check which removable attributes are explicitly requested
-                foreach ($this->removableAttributes['*'] as $attribute) {
-                    if (\in_array($attribute, $values, true)) {
-                        $requestedAttributes[$attribute] = true;
-                    }
-                }
-            }
-
-            if (!$hasWildcard) {
-                foreach ($documents as $document) {
-                    // Remove attributes that are not explicitly requested
-                    foreach ($this->removableAttributes['*'] as $attribute) {
-                        if (!isset($requestedAttributes[$attribute])) {
-                            $document->removeAttribute($attribute);
-                        }
-                    }
-                }
-            }
-        }
-
         $response->dynamic(new Document([
             'total' => $total,
             // rows or documents

@@ -160,7 +160,7 @@ abstract class Action extends AppwriteAction
     /**
      * Get the correct invalid structure message.
      */
-    protected function getInvalidStructureException(): string
+    protected function getStructureException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_INVALID_STRUCTURE
