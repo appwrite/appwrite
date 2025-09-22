@@ -279,3 +279,13 @@ const TOKENS_RESOURCE_TYPE_FILES = 'files';
 const TOKENS_RESOURCE_TYPE_SITES = 'sites';
 const TOKENS_RESOURCE_TYPE_FUNCTIONS = 'functions';
 const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
+
+// schedules types
+const SCHEDULE_TYPE_EXECUTION = 'execution';
+const SCHEDULE_TYPE_FUNCTION = 'function';
+const SCHEDULE_TYPE_MESSAGE = 'message';
+
+// collections types
+const COLLECTION_TYPE_EXECUTIONS = 'executions';
+const COLLECTION_TYPE_FUNCTIONS = 'functions';
+const COLLECTION_TYPE_MESSAGES = 'messages';
