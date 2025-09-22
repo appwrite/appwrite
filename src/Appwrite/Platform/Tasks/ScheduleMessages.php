@@ -17,12 +17,12 @@ class ScheduleMessages extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return SCHEDULE_TYPE_MESSAGE;
+        return SCHEDULE_RESOURCE_TYPE_MESSAGE;
     }
 
     public static function getCollectionId(): string
     {
-        return COLLECTION_TYPE_MESSAGES;
+        return RESOURCE_TYPE_MESSAGES;
     }
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void

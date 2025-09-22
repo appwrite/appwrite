@@ -28,12 +28,12 @@ class ScheduleFunctions extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return SCHEDULE_TYPE_FUNCTION;
+        return SCHEDULE_RESOURCE_TYPE_FUNCTION;
     }
 
     public static function getCollectionId(): string
     {
-        return COLLECTION_TYPE_FUNCTIONS;
+        return RESOURCE_TYPE_FUNCTIONS;
     }
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void

@@ -24,12 +24,12 @@ class ScheduleExecutions extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return SCHEDULE_TYPE_EXECUTION;
+        return SCHEDULE_RESOURCE_TYPE_EXECUTION;
     }
 
     public static function getCollectionId(): string
     {
-        return COLLECTION_TYPE_EXECUTIONS;
+        return RESOURCE_TYPE_EXECUTIONS;
     }
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
