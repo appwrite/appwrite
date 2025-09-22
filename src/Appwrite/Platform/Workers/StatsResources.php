@@ -434,18 +434,43 @@ class StatsResources extends Action
     {
         $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
 
+        /**
+         * sort by unique index key reduce locks/deadlocks
+         */
+        usort($this->documents, function ($a, $b) {
+            // Metric DESC
+            $cmp = strcmp($b['metric'], $a['metric']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            // Period ASC
+            $cmp = strcmp($a['period'], $b['period']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            // Time ASC, NULLs first
+            if ($a['time'] === null) {
+                return ($b['time'] === null) ? 0 : -1;
+            }
+            if ($b['time'] === null) {
+                return 1;
+            }
+
+            return strcmp($a['time'], $b['time']);
+        });
+
         try {
             $dbForLogs->createOrUpdateDocuments(
                 'stats',
-                $this->documents
+                $this->documents,
             );
 
             Console::success($message . ' | Documents: ' . count($this->documents));
         } catch (\Throwable $e) {
             Console::error('Error: ' . $message . ' | Exception: ' . $e->getMessage());
             throw $e;
-        } finally {
-            $this->documents = [];
         }
     }
 }
