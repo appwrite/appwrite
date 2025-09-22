@@ -219,14 +219,6 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
         }
     }
 
-    // Unsafe; Localhost is always safe for ease of local development
-    $project->setAttribute('platforms', [
-        '$collection' => ID::custom('platforms'),
-        'type' => Platform::TYPE_WEB,
-        'name' => "localhost",
-        'hostname' => "localhost",
-    ], Document::SET_TYPE_APPEND);
-
     return [
         ...$console->getAttribute('platforms', []),
         ...$project->getAttribute('platforms', []),
