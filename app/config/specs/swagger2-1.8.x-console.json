@@ -46405,7 +46405,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46500,7 +46501,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46597,7 +46599,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46694,7 +46697,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46774,7 +46778,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46861,7 +46866,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46958,7 +46964,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47045,7 +47052,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47132,7 +47140,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47219,7 +47228,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47334,7 +47344,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47420,7 +47431,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47518,7 +47530,8 @@
                         "deleting",
                         "stuck",
                         "failed"
-                    ]
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -53752,7 +53765,8 @@
                     "enum": [
                         "pass",
                         "fail"
-                    ]
+                    ],
+                    "x-enum-name": "HealthStatus"
                 }
             },
             "required": [
@@ -56584,7 +56598,14 @@
                 "status": {
                     "type": "string",
                     "description": "Status of delivery.",
-                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed.",
+                    "enum": [
+                        "draft",
+                        "processing",
+                        "scheduled",
+                        "sent",
+                        "failed"
+                    ]
                 }
             },
             "required": [

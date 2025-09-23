@@ -9,6 +9,7 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -559,8 +560,8 @@ class OpenAPI3 extends Format
 
                         if ($allowed) {
                             $node['schema']['enum'] = $validator->getList();
-                            $node['schema']['x-enum-name'] = $this->getEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                            $node['schema']['x-enum-keys'] = $this->getEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                            $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
+                            $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
                         }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
@@ -777,8 +778,16 @@ class OpenAPI3 extends Format
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['enum'] = $rule['enum'];
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
+                        }
                     } else {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = $rule['enum'];
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
+                        }
                     }
                 }
                 if (!in_array($name, $required)) {
@@ -786,6 +795,7 @@ class OpenAPI3 extends Format
                 }
             }
 
+            /** @var Any $model */
             if ($model->isAny() && !empty($model->getSampleData())) {
                 $examples = array_merge($examples, $model->getSampleData());
             }
