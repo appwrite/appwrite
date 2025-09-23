@@ -42,8 +42,8 @@ class V23 extends Migration
         foreach ($subQueries as $name) {
             Database::addFilter(
                 $name,
-                fn() => null,
-                fn() => []
+                fn () => null,
+                fn () => []
             );
         }
 
@@ -84,6 +84,10 @@ class V23 extends Migration
 
             Console::log("Migrating collection \"{$id}\"");
 
+            // Clear cache to ensure new $sequence is used
+            $this->dbForProject->purgeCachedCollection($id);
+            $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
+
             switch ($id) {
                 case 'databases':
                     $attributes = [
@@ -102,8 +106,6 @@ class V23 extends Migration
                     } catch (Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }
-                    break;
-
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
                 default:
