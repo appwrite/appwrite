@@ -899,7 +899,7 @@ class Builds extends Action
 
             Console::log('Build details stored');
 
-            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
+            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime);
             $logs = $deployment->getAttribute('buildLogs', '');
 
             /** Screenshot site */
@@ -1392,11 +1392,12 @@ class Builds extends Action
      * @param Document $deployment
      * @return void
      */
-    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime): void
     {
         assert($queueForRealtime instanceof Realtime);
         assert($dbForProject instanceof Database);
         assert($deployment instanceof Document);
+        assert(is_array($runtime));
     }
 
     protected function getRuntime(Document $resource, string $version): array
