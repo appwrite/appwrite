@@ -42,13 +42,21 @@ class V23 extends Migration
         foreach ($subQueries as $name) {
             Database::addFilter(
                 $name,
-                fn() => null,
-                fn() => []
+                fn () => null,
+                fn () => []
             );
         }
 
         Console::info('Migrating collections');
         $this->migrateCollections();
+
+        if ($this->project->getSequence() != 'console') {
+            Console::info('Migrating Databases');
+            $this->migrateDatabases();
+        }
+
+        Console::info('Migrating Buckets');
+        $this->migrateBuckets();
 
         Console::info('Migrating documents');
         $this->forEachDocument($this->migrateDocument(...));
@@ -84,6 +92,10 @@ class V23 extends Migration
 
             Console::log("Migrating collection \"{$id}\"");
 
+            // Clear cache to ensure new $sequence is used
+            $this->dbForProject->purgeCachedCollection($id);
+            $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
+
             switch ($id) {
                 case 'databases':
                     $attributes = [
@@ -102,14 +114,52 @@ class V23 extends Migration
                     } catch (Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }
-                    break;
-
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
                 default:
                     break;
             }
         }
+    }
+
+    /**
+     * Migrate all Database Table tables
+     *
+     * @return void
+     * @throws Exception
+     */
+    private function migrateDatabases(): void
+    {
+        $this->dbForProject->foreach('databases', function (Document $database) {
+            Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
+
+            $databaseTable = "database_{$database->getSequence()}";
+            $this->dbForProject->purgeCachedCollection($databaseTable);
+
+            $this->dbForProject->foreach($databaseTable, function (Document $collection) use ($databaseTable) {
+                Console::log("Migrating Collection of {$collection->getId()} ({$collection->getAttribute('name')})");
+
+                $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
+                $this->dbForProject->purgeCachedCollection($collectionTable);
+            });
+        });
+    }
+
+    /**
+     * Migrate all Bucket tables
+     *
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
+    protected function migrateBuckets(): void
+    {
+        $this->dbForProject->foreach('buckets', function (Document $bucket) {
+            Console::log("Migrating Bucket {$bucket->getId()} ({$bucket->getAttribute('name')})");
+
+            $bucketTable = "bucket_{$bucket->getSequence()}";
+            $this->dbForProject->purgeCachedCollection($bucketTable);
+        });
     }
 
     /**
