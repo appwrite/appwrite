@@ -3102,7 +3102,7 @@ App::post('/v1/messaging/messages/email')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => RESOURCE_TYPE_MESSAGES,
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3244,7 +3244,7 @@ App::post('/v1/messaging/messages/sms')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => RESOURCE_TYPE_MESSAGES,
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3462,7 +3462,7 @@ App::post('/v1/messaging/messages/push')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => RESOURCE_TYPE_MESSAGES,
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3863,7 +3863,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => RESOURCE_TYPE_MESSAGES,
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -4084,7 +4084,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => RESOURCE_TYPE_MESSAGES,
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -4258,7 +4258,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => RESOURCE_TYPE_MESSAGES,
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
