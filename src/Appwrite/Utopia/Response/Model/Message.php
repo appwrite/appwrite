@@ -34,6 +34,7 @@ class Message extends Model
                 'description' => 'Message provider type.',
                 'default' => '',
                 'example' => MESSAGE_TYPE_EMAIL,
+                'enum' => [MESSAGE_TYPE_EMAIL, MESSAGE_TYPE_SMS, MESSAGE_TYPE_PUSH],
             ])
             ->addRule('topics', [
                 'type' => self::TYPE_STRING,
@@ -50,7 +51,7 @@ class Message extends Model
                 'example' => ['5e5ea5c16897e'],
             ])
             ->addRule('targets', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Target IDs set as recipients.',
                 'default' => '',
                 'array' => true,
@@ -94,10 +95,11 @@ class Message extends Model
                 ],
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Status of delivery.',
                 'default' => 'draft',
                 'example' => 'Message status can be one of the following: draft, processing, scheduled, sent, or failed.',
+                'enum' => ['draft', 'processing', 'scheduled', 'sent', 'failed'],
             ]);
     }
 

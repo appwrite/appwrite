@@ -46398,7 +46398,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46486,7 +46494,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46576,7 +46592,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46666,7 +46690,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46739,7 +46771,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46819,7 +46859,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46909,7 +46957,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -46989,7 +47045,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47069,7 +47133,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47149,7 +47221,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47257,7 +47337,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47336,7 +47424,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -47427,7 +47523,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -48903,7 +49007,14 @@
                 "status": {
                     "type": "string",
                     "description": "Index status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ]
                 },
                 "error": {
                     "type": "string",
@@ -52139,7 +52250,14 @@
                 "status": {
                     "type": "string",
                     "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"ready\", and \"failed\".",
-                    "x-example": "ready"
+                    "x-example": "ready",
+                    "enum": [
+                        "waiting",
+                        "processing",
+                        "building",
+                        "ready",
+                        "failed"
+                    ]
                 },
                 "buildLogs": {
                     "type": "string",
@@ -52167,11 +52285,6 @@
                     "description": "The url of the vcs provider repository",
                     "x-example": "https:\/\/github.com\/vermakhushboo\/g4-node-function"
                 },
-                "providerBranch": {
-                    "type": "string",
-                    "description": "The branch of the vcs repository",
-                    "x-example": "0.7.x"
-                },
                 "providerCommitHash": {
                     "type": "string",
                     "description": "The commit hash of the vcs commit",
@@ -52196,6 +52309,11 @@
                     "type": "string",
                     "description": "The url of the vcs commit",
                     "x-example": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb"
+                },
+                "providerBranch": {
+                    "type": "string",
+                    "description": "The branch of the vcs repository",
+                    "x-example": "0.7.x"
                 },
                 "providerBranchUrl": {
                     "type": "string",
@@ -52224,12 +52342,12 @@
                 "providerRepositoryName",
                 "providerRepositoryOwner",
                 "providerRepositoryUrl",
-                "providerBranch",
                 "providerCommitHash",
                 "providerCommitAuthorUrl",
                 "providerCommitAuthor",
                 "providerCommitMessage",
                 "providerCommitUrl",
+                "providerBranch",
                 "providerBranchUrl"
             ],
             "example": {
@@ -52253,12 +52371,12 @@
                 "providerRepositoryName": "database",
                 "providerRepositoryOwner": "utopia",
                 "providerRepositoryUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function",
-                "providerBranch": "0.7.x",
                 "providerCommitHash": "7c3f25d",
                 "providerCommitAuthorUrl": "https:\/\/github.com\/vermakhushboo",
                 "providerCommitAuthor": "Khushboo Verma",
                 "providerCommitMessage": "Update index.js",
                 "providerCommitUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb",
+                "providerBranch": "0.7.x",
                 "providerBranchUrl": "https:\/\/github.com\/vermakhushboo\/appwrite\/tree\/0.7.x"
             }
         },
@@ -52304,12 +52422,23 @@
                 "trigger": {
                     "type": "string",
                     "description": "The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.",
-                    "x-example": "http"
+                    "x-example": "http",
+                    "enum": [
+                        "http",
+                        "schedule",
+                        "event"
+                    ]
                 },
                 "status": {
                     "type": "string",
                     "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.",
-                    "x-example": "processing"
+                    "x-example": "processing",
+                    "enum": [
+                        "waiting",
+                        "processing",
+                        "completed",
+                        "failed"
+                    ]
                 },
                 "requestMethod": {
                     "type": "string",
@@ -52323,7 +52452,7 @@
                 },
                 "requestHeaders": {
                     "type": "array",
-                    "description": "HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
+                    "description": "HTTP request headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/headers"
@@ -53268,7 +53397,16 @@
                 "type": {
                     "type": "string",
                     "description": "Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, and unity.",
-                    "x-example": "web"
+                    "x-example": "web",
+                    "enum": [
+                        "web",
+                        "flutter-web",
+                        "flutter-ios",
+                        "flutter-android",
+                        "ios",
+                        "android",
+                        "unity"
+                    ]
                 },
                 "key": {
                     "type": "string",
@@ -53283,7 +53421,7 @@
                 "hostname": {
                     "type": "string",
                     "description": "Web app hostname. Empty string for other platforms.",
-                    "x-example": true
+                    "x-example": "app.example.com"
                 },
                 "httpUser": {
                     "type": "string",
@@ -53316,7 +53454,7 @@
                 "type": "web",
                 "key": "com.company.appname",
                 "store": "",
-                "hostname": true,
+                "hostname": "app.example.com",
                 "httpUser": "username",
                 "httpPass": "password"
             }
@@ -53569,8 +53707,13 @@
                 },
                 "status": {
                     "type": "string",
-                    "description": "Antivirus status. Possible values can are: `disabled`, `offline`, `online`",
-                    "x-example": "online"
+                    "description": "Antivirus status. Possible values are: `disabled`, `offline`, `online`",
+                    "x-example": "online",
+                    "enum": [
+                        "disabled",
+                        "offline",
+                        "online"
+                    ]
                 }
             },
             "required": [
@@ -53617,8 +53760,13 @@
                 },
                 "status": {
                     "type": "string",
-                    "description": "Service status. Possible values can are: `pass`, `fail`",
-                    "x-example": "pass"
+                    "description": "Service status. Possible values are: `pass`, `fail`",
+                    "x-example": "pass",
+                    "enum": [
+                        "pass",
+                        "fail"
+                    ],
+                    "x-enum-name": "HealthStatus"
                 }
             },
             "required": [
@@ -55874,7 +56022,11 @@
                 "deploymentResourceType": {
                     "type": "string",
                     "description": "Type of deployment. Possible values are \"function\", \"site\". Used if rule's type is \"deployment\".",
-                    "x-example": "function"
+                    "x-example": "function",
+                    "enum": [
+                        "function",
+                        "site"
+                    ]
                 },
                 "deploymentResourceId": {
                     "type": "string",
@@ -55884,12 +56036,18 @@
                 "deploymentVcsProviderBranch": {
                     "type": "string",
                     "description": "Name of Git branch that updates rule. Used if type is \"deployment\"",
-                    "x-example": "function"
+                    "x-example": "main"
                 },
                 "status": {
                     "type": "string",
                     "description": "Domain verification status. Possible values are \"created\", \"verifying\", \"verified\" and \"unverified\"",
-                    "x-example": "verified"
+                    "x-example": "verified",
+                    "enum": [
+                        "created",
+                        "verifying",
+                        "verified",
+                        "unverified"
+                    ]
                 },
                 "logs": {
                     "type": "string",
@@ -55931,7 +56089,7 @@
                 "deploymentId": "n3u9feiwmf",
                 "deploymentResourceType": "function",
                 "deploymentResourceId": "n3u9feiwmf",
-                "deploymentVcsProviderBranch": "function",
+                "deploymentVcsProviderBranch": "main",
                 "status": "verified",
                 "logs": "HTTP challegne failed.",
                 "renewAt": "datetime"
@@ -56440,7 +56598,14 @@
                 "status": {
                     "type": "string",
                     "description": "Status of delivery.",
-                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed.",
+                    "enum": [
+                        "draft",
+                        "processing",
+                        "scheduled",
+                        "sent",
+                        "failed"
+                    ]
                 }
             },
             "required": [
