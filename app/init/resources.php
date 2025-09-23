@@ -389,11 +389,6 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         return $dbForPlatform;
     }
 
-    $uri = $request->getURI();
-    if (str_starts_with($uri, '/v1/documentsdb')) {
-        return $dbForDocuments;
-    }
-
     try {
         $dsn = new DSN($project->getAttribute('database'));
     } catch (\InvalidArgumentException) {
@@ -426,6 +421,17 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
 
     return $database;
 }, ['pools', 'dbForPlatform', 'dbForDocuments', 'cache', 'project', 'request']);
+
+App::setResource('dbForDatabaseRecords', function (Database $dbForProject, Database $dbForDocuments, Request $request) {
+    
+    $uri = $request->getURI();
+    if (str_starts_with($uri, '/v1/documentsdb')) {
+        return $dbForDocuments;
+    }
+    return $dbForProject;
+
+}, ['dbForProject','dbForDocuments','request']);
+
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = [];

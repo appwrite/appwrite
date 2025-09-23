@@ -16,7 +16,7 @@ class Get extends IndexGet
 {
     public static function getName(): string
     {
-        return 'getIndex';
+        return 'getDocumentsDBIndex';
     }
 
     protected function getResponseModel(): string

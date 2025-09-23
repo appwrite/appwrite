@@ -15,7 +15,7 @@ class Delete extends DatabaseDelete
 {
     public static function getName(): string
     {
-        return 'deleteDocumentsDatabase';
+        return 'deleteDocumentsDBDatabase';
     }
 
     public function __construct()

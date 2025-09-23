@@ -15,7 +15,7 @@ class Delete extends DocumentDelete
 {
     public static function getName(): string
     {
-        return 'deleteDocument';
+        return 'deleteDocumentsDBDocument';
     }
 
     /**
@@ -64,6 +64,7 @@ class Delete extends DocumentDelete
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));

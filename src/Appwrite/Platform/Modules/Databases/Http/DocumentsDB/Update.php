@@ -17,7 +17,7 @@ class Update extends DatabaseUpdate
 {
     public static function getName(): string
     {
-        return 'updateDocumentsDatabase';
+        return 'updateDocumentsDBDatabase';
     }
 
     public function __construct()

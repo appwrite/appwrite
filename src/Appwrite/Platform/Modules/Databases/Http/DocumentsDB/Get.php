@@ -15,7 +15,7 @@ class Get extends DatabaseGet
 {
     public static function getName(): string
     {
-        return 'getDocumentsDatabase';
+        return 'getDocumentsDBDatabase';
     }
 
     public function __construct()

@@ -17,7 +17,7 @@ class XList extends CollectionXList
 {
     public static function getName(): string
     {
-        return 'listCollections';
+        return 'listDocumentsDBCollections';
     }
 
     protected function getResponseModel(): string

@@ -16,7 +16,7 @@ class XList extends IndexXList
 {
     public static function getName(): string
     {
-        return 'listIndexes';
+        return 'listDocumentsDBIndexes';
     }
 
     protected function getResponseModel(): string

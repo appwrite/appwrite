@@ -80,12 +80,13 @@ class Update extends Action
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
@@ -111,7 +112,7 @@ class Update extends Action
 
         // Read permission should not be required for update
         /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+        $document = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException());
@@ -232,9 +233,9 @@ class Update extends Action
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         try {
-            $document = $dbForProject->withRequestTimestamp(
+            $document = $dbForDatabaseRecords->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument(
+                fn () => $dbForDatabaseRecords->withPreserveDates(fn () => $dbForDatabaseRecords->updateDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $document->getId(),
                     $newDocument

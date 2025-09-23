@@ -15,7 +15,7 @@ class Get extends CollectionGet
 {
     public static function getName(): string
     {
-        return 'getCollection';
+        return 'getDocumentsDBCollection';
     }
 
     protected function getResponseModel(): string

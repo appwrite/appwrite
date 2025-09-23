@@ -15,7 +15,7 @@ class Delete extends CollectionDelete
 {
     public static function getName(): string
     {
-        return 'deleteCollection';
+        return 'deleteDocumentsDBCollection';
     }
 
     protected function getResponseModel(): string
@@ -53,6 +53,7 @@ class Delete extends CollectionDelete
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->callback($this->action(...));

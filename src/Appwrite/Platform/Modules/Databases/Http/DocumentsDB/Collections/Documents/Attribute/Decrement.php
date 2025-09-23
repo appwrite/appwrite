@@ -17,7 +17,7 @@ class Decrement extends DecrementDocumentAttribute
 {
     public static function getName(): string
     {
-        return 'decrementDocumentAttribute';
+        return 'decrementDocumentsDBDocumentAttribute';
     }
 
     protected function getResponseModel(): string

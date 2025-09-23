@@ -16,7 +16,7 @@ class XList extends DatabaseXList
 {
     public static function getName(): string
     {
-        return 'listDocumentsDatabases';
+        return 'listDocumentsDBDatabases';
     }
 
     public function __construct()

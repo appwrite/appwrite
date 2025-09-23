@@ -16,7 +16,7 @@ class Delete extends IndexDelete
 {
     public static function getName(): string
     {
-        return 'deleteIndex';
+        return 'deleteDocumentsDBIndex';
     }
 
     /**

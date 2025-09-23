@@ -18,7 +18,7 @@ class Upsert extends DocumentUpsert
 {
     public static function getName(): string
     {
-        return 'upsertDocument';
+        return 'upsertDocumentsDBDocument';
     }
 
     protected function getResponseModel(): string
@@ -66,6 +66,7 @@ class Upsert extends DocumentUpsert
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));

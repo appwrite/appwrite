@@ -29,7 +29,7 @@ class XList extends Action
 {
     public static function getName(): string
     {
-        return 'listLogs';
+        return 'listDocumentsDBLogs';
     }
 
     public function __construct()

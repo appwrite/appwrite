@@ -76,11 +76,12 @@ class Create extends Action
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, Event $queueForEvents): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -109,32 +110,15 @@ class Create extends Action
         } catch (LimitException) {
             throw new Exception($this->getLimitException());
         } catch (NotFoundException $e) {
-            echo "Message: " . $e->getMessage() . PHP_EOL;
-            echo "File: " . $e->getFile() . PHP_EOL;
-            echo "Line: " . $e->getLine() . PHP_EOL;
-        
-            echo "Stack trace:" . PHP_EOL;
-        
-            foreach ($e->getTrace() as $index => $frame) {
-                $file = $frame['file'] ?? '[internal function]';
-                $line = $frame['line'] ?? '';
-                $class = $frame['class'] ?? '';
-                $type = $frame['type'] ?? '';
-                $function = $frame['function'] ?? '';
-                $args = isset($frame['args']) ? json_encode($frame['args']) : '';
-        
-                echo "#$index $file($line): $class$type$function($args)" . PHP_EOL;
-            }
-        
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         try {
-            $dbForProject->createCollection(
+            $dbForDatabaseRecords->createCollection(
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 permissions: $permissions,
                 documentSecurity: $documentSecurity
-            );
+            ); 
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {

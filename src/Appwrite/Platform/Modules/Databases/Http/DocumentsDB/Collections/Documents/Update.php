@@ -18,7 +18,7 @@ class Update extends DocumentUpdate
 {
     public static function getName(): string
     {
-        return 'updateDocument';
+        return 'updateDocumentsDBDocument';
     }
 
     protected function getResponseModel(): string
@@ -63,6 +63,7 @@ class Update extends DocumentUpdate
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));

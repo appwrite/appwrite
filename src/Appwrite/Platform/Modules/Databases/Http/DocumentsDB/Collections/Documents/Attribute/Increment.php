@@ -17,7 +17,7 @@ class Increment extends IncrementDocumentAttribute
 {
     public static function getName(): string
     {
-        return 'incrementDocumentAttribute';
+        return 'incrementDocumentsDBDocumentAttribute';
     }
 
     protected function getResponseModel(): string

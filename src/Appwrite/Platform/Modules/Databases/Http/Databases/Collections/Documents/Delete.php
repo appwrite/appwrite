@@ -74,12 +74,13 @@ class Delete extends Action
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -104,8 +105,8 @@ class Delete extends Action
         }
 
         try {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-                $dbForProject->deleteDocument(
+            $dbForDatabaseRecords->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabaseRecords, $database, $collection, $documentId) {
+                $dbForDatabaseRecords->deleteDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documentId
                 );

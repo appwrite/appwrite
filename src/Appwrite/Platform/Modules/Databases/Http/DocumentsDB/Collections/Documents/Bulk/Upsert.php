@@ -17,7 +17,7 @@ class Upsert extends DocumentsUpsert
 {
     public static function getName(): string
     {
-        return 'upsertDocuments';
+        return 'upsertDocumentsDBDocuments';
     }
 
     protected function getResponseModel(): string

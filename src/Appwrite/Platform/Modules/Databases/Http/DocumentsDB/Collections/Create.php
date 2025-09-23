@@ -19,7 +19,7 @@ class Create extends CollectionCreate
 {
     public static function getName(): string
     {
-        return 'createCollection';
+        return 'createDocumentsDBCollection';
     }
 
     protected function getResponseModel(): string
@@ -61,6 +61,7 @@ class Create extends CollectionCreate
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }

@@ -9,15 +9,16 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Platform\Action;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-class Create extends DatabaseCreate
+class Create extends Action
 {
     public static function getName(): string
     {
-        return 'createDocumentsDatabase';
+        return 'createDocumentsDBDatabase';
     }
 
     public function __construct()
@@ -51,11 +52,12 @@ class Create extends DatabaseCreate
             ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $name, bool $enabled, UtopiaResponse $response, \Utopia\Database\Database $dbForProject, \Appwrite\Event\Event $queueForEvents): void
+    public function action(string $databaseId, string $name, bool $enabled, UtopiaResponse $response,  \Utopia\Database\Database $dbForProject ,\Utopia\Database\Database $dbForDatabaseRecords, \Appwrite\Event\Event $queueForEvents): void
     {
         // Ensure the project's metadata 'databases' collection exists
         $metaDatabases = $dbForProject->getCollection('databases');
@@ -84,7 +86,7 @@ class Create extends DatabaseCreate
                 'name' => $name,
                 'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
-                'type' => $this->getDatabaseType(),
+                'type' => 'documentsdb',
             ]));
         } catch (\Utopia\Database\Exception\Duplicate) {
             throw new \Appwrite\Extend\Exception(\Appwrite\Extend\Exception::DATABASE_ALREADY_EXISTS);
@@ -111,6 +113,7 @@ class Create extends DatabaseCreate
 
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
+            $dbForDatabaseRecords->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
         } catch (\Utopia\Database\Exception\Duplicate) {
             throw new \Appwrite\Extend\Exception(\Appwrite\Extend\Exception::DATABASE_ALREADY_EXISTS);
         } catch (\Utopia\Database\Exception\Index) {

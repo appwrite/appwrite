@@ -17,7 +17,7 @@ class XList extends DocumentLogXList
 {
     public static function getName(): string
     {
-        return 'listDocumentLogs';
+        return 'listDocumentsDBDocumentLogs';
     }
 
     public function __construct()

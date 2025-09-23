@@ -18,6 +18,8 @@ class Http extends Service
         $this->addAction(Timeout::getName(), new Timeout());
 
         foreach ([
+            DatabasesRegistry::class,
+            CollectionsRegistry::class,
             TablesRegistry::class,
             DocumentsDBRegistry::class
         ] as $registrar) {

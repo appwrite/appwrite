@@ -17,7 +17,7 @@ class Delete extends DocumentsDelete
 {
     public static function getName(): string
     {
-        return 'deleteDocuments';
+        return 'deleteDocumentsDBDocuments';
     }
 
     protected function getResponseModel(): string

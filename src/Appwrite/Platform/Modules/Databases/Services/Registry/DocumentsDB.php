@@ -5,35 +5,6 @@ namespace Appwrite\Platform\Modules\Databases\Services\Registry;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Create as CreateTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Delete as DeleteTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Get as GetTablesDatabase;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Boolean\Create as CreateBoolean;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Boolean\Update as UpdateBoolean;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Datetime\Create as CreateDatetime;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Datetime\Update as UpdateDatetime;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Delete as DeleteColumn;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Email\Create as CreateEmail;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Email\Update as UpdateEmail;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Enum\Create as CreateEnum;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Enum\Update as UpdateEnum;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Float\Create as CreateFloat;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Float\Update as UpdateFloat;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Get as GetColumn;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Integer\Create as CreateInteger;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Integer\Update as UpdateInteger;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\IP\Create as CreateIP;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\IP\Update as UpdateIP;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Line\Create as CreateLine;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Line\Update as UpdateLine;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Point\Create as CreatePoint;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Point\Update as UpdatePoint;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Polygon\Create as CreatePolygon;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Polygon\Update as UpdatePolygon;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Relationship\Create as CreateRelationship;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\Relationship\Update as UpdateRelationship;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\String\Create as CreateString;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\String\Update as UpdateString;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\URL\Create as CreateURL;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\URL\Update as UpdateURL;
-use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Attributes\XList as ListColumns;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Create as CreateTable;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Delete as DeleteTable;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Get as GetTable;
@@ -69,7 +40,6 @@ class DocumentsDB extends Base
     {
         $this->registerDatabaseActions($service);
         $this->registerTableActions($service);
-        $this->registerColumnActions($service);
         $this->registerIndexActions($service);
         $this->registerRowActions($service);
     }
@@ -94,66 +64,6 @@ class DocumentsDB extends Base
         $service->addAction(ListTables::getName(), new ListTables());
         $service->addAction(ListTableLogs::getName(), new ListTableLogs());
         $service->addAction(GetTableUsage::getName(), new GetTableUsage());
-    }
-
-    private function registerColumnActions(Service $service): void
-    {
-        // Attribute top level actions
-        $service->addAction(GetColumn::getName(), new GetColumn());
-        $service->addAction(DeleteColumn::getName(), new DeleteColumn());
-        $service->addAction(ListColumns::getName(), new ListColumns());
-
-        // Attribute: Boolean
-        $service->addAction(CreateBoolean::getName(), new CreateBoolean());
-        $service->addAction(UpdateBoolean::getName(), new UpdateBoolean());
-
-        // Attribute: Datetime
-        $service->addAction(CreateDatetime::getName(), new CreateDatetime());
-        $service->addAction(UpdateDatetime::getName(), new UpdateDatetime());
-
-        // Attribute: Email
-        $service->addAction(CreateEmail::getName(), new CreateEmail());
-        $service->addAction(UpdateEmail::getName(), new UpdateEmail());
-
-        // Attribute: Enum
-        $service->addAction(CreateEnum::getName(), new CreateEnum());
-        $service->addAction(UpdateEnum::getName(), new UpdateEnum());
-
-        // Attribute: Float
-        $service->addAction(CreateFloat::getName(), new CreateFloat());
-        $service->addAction(UpdateFloat::getName(), new UpdateFloat());
-
-        // Attribute: Integer
-        $service->addAction(CreateInteger::getName(), new CreateInteger());
-        $service->addAction(UpdateInteger::getName(), new UpdateInteger());
-
-        // Attribute: IP
-        $service->addAction(CreateIP::getName(), new CreateIP());
-        $service->addAction(UpdateIP::getName(), new UpdateIP());
-
-        // Attribute: Line
-        $service->addAction(CreateLine::getName(), new CreateLine());
-        $service->addAction(UpdateLine::getName(), new UpdateLine());
-
-        // Attribute: Point
-        $service->addAction(CreatePoint::getName(), new CreatePoint());
-        $service->addAction(UpdatePoint::getName(), new UpdatePoint());
-
-        // Attribute: Polygon
-        $service->addAction(CreatePolygon::getName(), new CreatePolygon());
-        $service->addAction(UpdatePolygon::getName(), new UpdatePolygon());
-
-        // Attribute: Relationship
-        $service->addAction(CreateRelationship::getName(), new CreateRelationship());
-        $service->addAction(UpdateRelationship::getName(), new UpdateRelationship());
-
-        // Attribute: String
-        $service->addAction(CreateString::getName(), new CreateString());
-        $service->addAction(UpdateString::getName(), new UpdateString());
-
-        // Attribute: URL
-        $service->addAction(CreateURL::getName(), new CreateURL());
-        $service->addAction(UpdateURL::getName(), new UpdateURL());
     }
 
     private function registerIndexActions(Service $service): void

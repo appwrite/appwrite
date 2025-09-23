@@ -18,7 +18,7 @@ class Update extends DocumentsUpdate
 {
     public static function getName(): string
     {
-        return 'updateDocuments';
+        return 'updateDocumentsDBDocuments';
     }
 
     protected function getResponseModel(): string

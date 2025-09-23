@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Legacy;
+namespace Tests\E2E\Services\Databases\DocumentsDB;
 
 use Appwrite\Extend\Exception as AppwriteException;
 use Tests\E2E\Client;
