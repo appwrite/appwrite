@@ -624,6 +624,12 @@ abstract class Format
                         return 'AttributeStatus';
                 }
                 break;
+            case 'healthStatus':
+                switch ($param) {
+                    case 'status':
+                        return 'HealthStatus';
+                }
+                break;
         }
         return null;
     }

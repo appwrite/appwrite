@@ -40997,7 +40997,8 @@
                         "enum": [
                             "pass",
                             "fail"
-                        ]
+                        ],
+                        "x-enum-name": "HealthStatus"
                     }
                 },
                 "required": [
