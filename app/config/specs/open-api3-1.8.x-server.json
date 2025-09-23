@@ -35338,7 +35338,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -35433,7 +35434,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -35530,7 +35532,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -35627,7 +35630,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -35707,7 +35711,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -35794,7 +35799,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -35891,7 +35897,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -35978,7 +35985,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -36065,7 +36073,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -36152,7 +36161,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -36267,7 +36277,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -36353,7 +36364,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
@@ -36451,7 +36463,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "AttributeStatus"
                     },
                     "error": {
                         "type": "string",
