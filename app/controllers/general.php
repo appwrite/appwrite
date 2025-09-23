@@ -907,7 +907,7 @@ App::init()
                 $dbForProject = $getProjectDB($project);
                 $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
             }
-            if (version_compare($requestFormat, '1.8.1', '<')) {
+            if (version_compare($requestFormat, '1.9.0', '<')) {
                 $request->addFilter(new RequestV21());
             }
         }
