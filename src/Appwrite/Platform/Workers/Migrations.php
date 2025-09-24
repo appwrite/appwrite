@@ -516,5 +516,71 @@ class Migrations extends Action
             return;
         }
 
+        $user = $this->dbForPlatform->findOne('users', [
+            Query::equal('$sequence', [$userInternalId])
+        ]);
+
+        // Set up locale
+        $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+
+        // Generate JWT
+        $expiry = (new \DateTime())->add(new \DateInterval('PT1H'))->format('U');
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
+        $jwt = $encoder->encode([
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'projectId' => $project->getId(),
+        ]);
+
+        // Generate download URL with JWT
+        $endpoint = System::getEnv('_APP_DOMAIN', '');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
+        $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+
+        // Get localized email content
+        $subject = $locale->getText('emails.csvExport.subject');
+        $preview = $locale->getText('emails.csvExport.preview');
+        $hello = $locale->getText('emails.csvExport.hello');
+        $body = $locale->getText('emails.csvExport.body');
+        $footer = $locale->getText('emails.csvExport.footer');
+        $thanks = $locale->getText('emails.csvExport.thanks');
+        $buttonText = $locale->getText('emails.csvExport.buttonText');
+        $signature = $locale->getText('emails.csvExport.signature');
+
+        // Build email body using inner template
+        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
+        $message
+            ->setParam('{{body}}', $body, escapeHtml: false)
+            ->setParam('{{hello}}', $hello)
+            ->setParam('{{footer}}', $footer)
+            ->setParam('{{thanks}}', $thanks)
+            ->setParam('{{buttonText}}', $buttonText)
+            ->setParam('{{signature}}', $signature)
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
+            ->setParam('{{redirect}}', $downloadUrl);
+
+        $emailBody = $message->render();
+
+        $emailVariables = [
+            'direction' => $locale->getText('settings.direction'),
+            'project' => $project->getAttribute('name'),
+            'user' => $user->getAttribute('name', $user->getAttribute('email')),
+            'redirect' => $downloadUrl,
+        ];
+
+        $queueForMails
+            ->setSubject($subject)
+            ->setPreview($preview)
+            ->setBody($emailBody)
+            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
+            ->setVariables($emailVariables)
+            ->setName($user->getAttribute('name', $user->getAttribute('email')))
+            ->setRecipient($user->getAttribute('email'))
+            ->trigger();
+
+        Console::info('CSV export notification email sent to ' . $user->getAttribute('email'));
     }
 }
