@@ -53766,7 +53766,7 @@
                         "pass",
                         "fail"
                     ],
-                    "x-enum-name": "HealthStatus"
+                    "x-enum-name": "HealthCheckStatus"
                 }
             },
             "required": [
