@@ -1391,13 +1391,22 @@ class Builds extends Action
      * @param Database $dbForProject
      * @param Document $deployment
      * @return void
+     * @throws Exception
      */
     protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime): void
     {
-        assert($queueForRealtime instanceof Realtime);
-        assert($dbForProject instanceof Database);
-        assert($deployment instanceof Document);
-        assert(is_array($runtime));
+        if (!($queueForRealtime instanceof Realtime)) {
+            throw new Exception('queueForRealtime must be an instance of Realtime');
+        }
+        if (!($dbForProject instanceof Database)) {
+            throw new Exception('dbForProject must be an instance of Database');
+        }
+        if (!($deployment instanceof Document)) {
+            throw new Exception('deployment must be an instance of Document');
+        }
+        if (!is_array($runtime)) {
+            throw new Exception('runtime must be an array');
+        }
     }
 
     protected function getRuntime(Document $resource, string $version): array
