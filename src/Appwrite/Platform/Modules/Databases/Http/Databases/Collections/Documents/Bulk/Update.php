@@ -76,6 +76,7 @@ class Update extends Action
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
@@ -85,7 +86,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -132,8 +133,8 @@ class Update extends Action
         $documents = [];
 
         try {
-            $modified = $dbForProject->withPreserveDates(function () use ($plan, &$documents, $dbForProject, $database, $collection, $data, $queries) {
-                return $dbForProject->updateDocuments(
+            $modified = $dbForDatabaseRecords->withPreserveDates(function () use ($plan, &$documents, $dbForDatabaseRecords, $database, $collection, $data, $queries) {
+                return $dbForDatabaseRecords->updateDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     new Document($data),
                     $queries,

@@ -74,6 +74,7 @@ class Upsert extends Action
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
@@ -83,7 +84,7 @@ class Upsert extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $documents, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $documents, UtopiaResponse $response, Database $dbForProject,Database $databasebForDatabaseRecords, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
@@ -112,8 +113,8 @@ class Upsert extends Action
         $upserted = [];
 
         try {
-            $modified = $dbForProject->withPreserveDates(function () use ($dbForProject, $database, $collection, $documents, $plan, &$upserted) {
-                return $dbForProject->createOrUpdateDocuments(
+            $modified = $databasebForDatabaseRecords->withPreserveDates(function () use ($databasebForDatabaseRecords, $database, $collection, $documents, $plan, &$upserted) {
+                return $databasebForDatabaseRecords->upsertDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documents,
                     onNext: function (Document $document) use ($plan, &$upserted) {

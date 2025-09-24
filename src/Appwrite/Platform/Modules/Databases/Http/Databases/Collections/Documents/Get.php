@@ -100,7 +100,7 @@ class Get extends Action
                 $document = $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries);
             } else {
                 // has no selects, disable relationship looping on documents!
-                $document = $dbForDatabaseRecords->skipRelationships(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries));
+                $document = $dbForDatabaseRecords->skipRelationships(fn () => $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId, $queries));
             }
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());

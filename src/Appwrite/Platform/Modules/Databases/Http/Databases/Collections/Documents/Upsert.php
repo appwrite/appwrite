@@ -125,7 +125,7 @@ class Upsert extends Action
 
         // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
-            $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $oldDocument = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
             if ($oldDocument->isEmpty()) {
                 if (!empty($user->getId())) {
                     $defaultPermissions = [];
@@ -166,7 +166,7 @@ class Upsert extends Action
         $newDocument = new Document($data);
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject,$dbForDatabaseRecords,  $database, &$operations) {
             $operations++;
 
             $relationships = \array_filter(
@@ -207,7 +207,7 @@ class Upsert extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
+                        $oldDocument = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
