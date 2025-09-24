@@ -1390,10 +1390,12 @@ class Builds extends Action
      * @param Realtime $queueForRealtime
      * @param Database $dbForProject
      * @param Document $deployment
+     * @param array $runtime
+     * @param string|null $adapter
      * @return void
      * @throws Exception
      */
-    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime, string $adapter): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime, ?string $adapter): void
     {
         if (!($queueForRealtime instanceof Realtime)) {
             throw new Exception('queueForRealtime must be an instance of Realtime');
@@ -1407,8 +1409,8 @@ class Builds extends Action
         if (!is_array($runtime)) {
             throw new Exception('runtime must be an array');
         }
-        if (!is_string($adapter)) {
-            throw new Exception('adapter must be a string');
+        if (!is_string($adapter) && !is_null($adapter)) {
+            throw new Exception('adapter must be a string or null');
         }
     }
 
