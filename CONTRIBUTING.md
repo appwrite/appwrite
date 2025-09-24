@@ -9,7 +9,31 @@ You can [find issues using this query](https://github.com/search?q=org%3Aappwrit
 
 ## How to Start?
 
-If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite on Twitter](https://twitter.com/appwrite) or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
+Welcome! We're excited that you're interested in contributing to Appwrite. To make sure your time is valued and your contributions are successful, please follow these steps before writing any code:
+
+### 🔍 Step 1: Find an Issue
+
+Browse open issues and look for ones labeled [good first issue](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3A%22good+first+issue%22&type=issues) or [help wanted](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3A%22help+wanted%22&type=issues).
+
+If you're not sure which issue to pick, ask in our ⁠[maintainers channel](https://discord.com/channels/564160730845151244/636852860709240842) on Discord.
+
+### 📝 Step 2: Ask to Be Assigned
+
+Before working on an issue, comment on the GitHub issue asking to be assigned. This prevents multiple people working on the same task.
+
+Then, create a thread in the ⁠[maintainers channel](https://discord.com/channels/564160730845151244/636852860709240842) on Discord with a link to the issue.
+
+Our team is small and may not see your GitHub comment right away - posting in the ⁠[maintainers channel](https://discord.com/channels/564160730845151244/636852860709240842) ensures it gets seen.
+
+### 💬 Step 3: Don’t Submit Random PRs
+
+If you're not working on an assigned issue, create a GitHub issue first.
+
+PRs submitted without context or discussion may not align with our roadmap and may be closed without review.
+
+### ⚠️ Please Note
+
+We’re a very small team managing a large project. Many PRs are submitted, and while we appreciate every effort, we can only review contributions that follow the process above. This helps us keep things fair and organized.
 
 ## Code of Conduct
 

@@ -53,7 +53,7 @@ class XList extends Base
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

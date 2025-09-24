@@ -113,6 +113,16 @@ abstract class Format
     protected function getEnumName(string $service, string $method, string $param): ?string
     {
         switch ($service) {
+            case 'proxy':
+                switch ($method) {
+                    case 'createRedirectRule':
+                        switch ($param) {
+                            case 'resourceType':
+                                return 'ProxyResourceType';
+                        }
+                        break;
+                }
+                break;
             case 'console':
                 switch ($method) {
                     case 'getResource':
@@ -441,7 +451,13 @@ abstract class Format
             case 'proxy':
                 switch ($method) {
                     case 'createRedirectRule':
-                        return ['Moved Permanently 301', 'Found 302', 'Temporary Redirect 307', 'Permanent Redirect 308'];
+                        switch ($param) {
+                            case 'statusCode':
+                                return ['Moved Permanently 301', 'Found 302', 'Temporary Redirect 307', 'Permanent Redirect 308'];
+                            case 'resourceType':
+                                return ['Site', 'Function'];
+                        }
+                        break;
                 }
                 break;
             case 'functions':

@@ -26,8 +26,8 @@ class FunctionsClientTest extends Scope
             'variables' => [
                 'functionId' => ID::unique(),
                 'name' => 'Test Function',
-                'runtime' => 'php-8.0',
-                'entrypoint' => 'index.php',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
                 'execute' => [Role::any()->toString()],
             ]
         ];
@@ -96,7 +96,7 @@ class FunctionsClientTest extends Scope
             'map' => \json_encode([
                 'code' => ["variables.code"]
             ]),
-            'code' => $this->packageFunction('php')
+            'code' => $this->packageFunction('basic')
         ];
 
         $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [

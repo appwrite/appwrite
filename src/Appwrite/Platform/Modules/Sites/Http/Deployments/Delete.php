@@ -62,7 +62,7 @@ class Delete extends Action
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

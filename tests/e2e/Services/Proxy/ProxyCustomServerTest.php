@@ -131,7 +131,9 @@ class ProxyCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301);
+        $siteId = $this->setupSite()['siteId'];
+
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
         $this->assertNotEmpty($ruleId);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
@@ -147,7 +149,7 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
         $domain = \uniqid() . '-redirect-307.custom.localhost';
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307);
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307, 'site', $siteId);
         $this->assertNotEmpty($ruleId);
 
         $proxyClient = new Client();
@@ -158,6 +160,18 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(307, $response['headers']['status-code']);
         $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('type', ['redirect'])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
+                Query::equal('deploymentResourceType', ['site'])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(2, $rules['body']['total']);
+
+        $this->cleanupSite($siteId);
         $this->cleanupRule($ruleId);
     }
 

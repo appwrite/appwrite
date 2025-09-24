@@ -393,6 +393,16 @@ return [
         'description' => 'Membership is already confirmed.',
         'code' => 409,
     ],
+    Exception::MEMBERSHIP_DELETION_PROHIBITED => [
+        'name' => Exception::MEMBERSHIP_DELETION_PROHIBITED,
+        'description' => 'Membership deletion is prohibited.',
+        'code' => 400,
+    ],
+    Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED => [
+        'name' => Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED,
+        'description' => 'Membership role downgrade is prohibited.',
+        'code' => 400,
+    ],
 
     /** Avatars */
     Exception::AVATAR_SET_NOT_FOUND => [

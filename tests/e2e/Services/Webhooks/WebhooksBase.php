@@ -921,7 +921,10 @@ trait WebhooksBase
 
         $lastEmail = $this->getLastEmail();
 
-        $secret = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        // `$isAppUser` — no email expected;
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html'] ?? '');
+
+        $secret = $tokens['secret'] ?? '';
         $membershipId = $team['body']['$id'];
 
         $webhook = $this->getLastRequest();

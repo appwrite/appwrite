@@ -60,7 +60,7 @@ class Get extends Action
             ->inject('dbForProject')
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -99,12 +99,14 @@ class Get extends Action
         }
 
         if (!$device->exists($path)) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $response
             ->setContentType('application/gzip')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->addHeader('Expires', '0')
+            ->addHeader('Pragma', 'no-cache')
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 

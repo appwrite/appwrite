@@ -1286,6 +1286,7 @@ return [
             ]
         ],
     ],
+
     'deployments' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('deployments'),

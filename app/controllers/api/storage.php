@@ -18,6 +18,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -316,15 +317,15 @@ App::put('/v1/storage/buckets/:bucketId')
         $permissions = Permission::aggregate($permissions);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
-                ->setAttribute('name', $name)
-                ->setAttribute('$permissions', $permissions)
-                ->setAttribute('maximumFileSize', $maximumFileSize)
-                ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
-                ->setAttribute('fileSecurity', $fileSecurity)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('encryption', $encryption)
-                ->setAttribute('compression', $compression)
-                ->setAttribute('antivirus', $antivirus));
+            ->setAttribute('name', $name)
+            ->setAttribute('$permissions', $permissions)
+            ->setAttribute('maximumFileSize', $maximumFileSize)
+            ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
+            ->setAttribute('fileSecurity', $fileSecurity)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('encryption', $encryption)
+            ->setAttribute('compression', $compression)
+            ->setAttribute('antivirus', $antivirus));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 
@@ -953,17 +954,20 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     // NOTE: this is only for the sdk generator and is not used in the action below and is utilised in `resources.php` for `resourceToken`.
     ->param('token', '', new Text(512), 'File token for accessing this file.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('resourceToken')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, ?string $token, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal) {
+    ->inject('project')
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, ?string $token, Request $request, Response $response, Database $dbForProject, Document $resourceToken, Device $deviceForFiles, Device $deviceForLocal, Document $project) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
+        /* @type Document $bucket */
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -984,6 +988,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
+            /* @type Document $file */
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
@@ -1004,7 +1009,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
-        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
+        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
             } else {
@@ -1035,7 +1040,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
 
+        $startTime = \microtime(true);
+
         $source = $deviceForFiles->read($path);
+
+        $downloadTime = \microtime(true) - $startTime;
 
         if (!empty($cipher)) { // Decrypt
             $source = OpenSSL::decrypt(
@@ -1048,6 +1057,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             );
         }
 
+        $decryptionTime = \microtime(true) - $startTime - $downloadTime;
+
         switch ($algorithm) {
             case Compression::ZSTD:
                 $compressor = new Zstd();
@@ -1058,6 +1069,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $source = $compressor->decompress($source);
                 break;
         }
+
+        $decompressionTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime;
 
         try {
             $image = new Image($source);
@@ -1088,6 +1101,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         $data = $image->output($output, $quality);
+
+        $renderingTime = \microtime(true) - $startTime - $downloadTime - $decryptionTime - $decompressionTime;
+
+        $totalTime = \microtime(true) - $startTime;
+
+        Console::info("File preview rendered,project=" . $project->getId() . ",bucket=" . $bucketId . ",file=" . $file->getId() . ",uri=" . $request->getURI() . ",total=" . $totalTime . ",rendering=" . $renderingTime . ",decryption=" . $decryptionTime . ",decompression=" . $decompressionTime . ",download=" . $downloadTime);
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
@@ -1140,7 +1159,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('resourceToken')
     ->inject('deviceForFiles')
     ->action(function (string $bucketId, string $fileId, ?string $token, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
-
+        /* @type Document $bucket */
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1158,9 +1177,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($fileSecurity && !$valid) {
+        if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
+            /* @type Document $file */
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
@@ -1178,13 +1198,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
-        $response
-            ->setContentType($file->getAttribute('mimeType'))
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-        ;
-
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeader('range');
@@ -1193,7 +1206,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
-            if ($end === null) {
+            if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
                 $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
             }
 
@@ -1207,6 +1220,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
+
+        $response
+            ->setContentType($file->getAttribute('mimeType'))
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
+        ;
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
@@ -1300,6 +1320,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('resourceToken')
     ->inject('deviceForFiles')
     ->action(function (string $bucketId, string $fileId, ?string $token, Response $response, Request $request, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
+        /* @type Document $bucket */
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1317,9 +1338,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($fileSecurity && !$valid) {
+        if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
+            /* @type Document $file */
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
@@ -1345,15 +1367,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $contentType = $file->getAttribute('mimeType');
         }
 
-        $response
-            ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
-            ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-        ;
-
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeader('range');
@@ -1362,8 +1375,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
-            if ($end === null) {
-                $end = min(($start + 2000000 - 1), ($size - 1));
+            if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
+                $end = min(($start + APP_STORAGE_READ_BUFFER - 1), ($size - 1));
             }
 
             if ($unit != 'bytes' || $start >= $end || $end >= $size) {
@@ -1376,6 +1389,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
+
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('X-Content-Type-Options', 'nosniff')
+            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+        ;
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
@@ -1498,14 +1520,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             $contentType = $file->getAttribute('mimeType');
         }
 
-        $response
-            ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
-            ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage());
-
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeader('range');
@@ -1514,8 +1528,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             $end = $request->getRangeEnd();
             $unit = $request->getRangeUnit();
 
-            if ($end === null) {
-                $end = min(($start + 2000000 - 1), ($size - 1));
+            if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
+                $end = min(($start + APP_STORAGE_READ_BUFFER - 1), ($size - 1));
             }
 
             if ($unit != 'bytes' || $start >= $end || $end >= $size) {
@@ -1528,6 +1542,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
+
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('X-Content-Type-Options', 'nosniff')
+            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage());
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt

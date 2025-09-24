@@ -644,7 +644,6 @@ class DatabasesCustomServerTest extends Scope
      */
     public function testCreateEncryptedAttribute(array $data): void
     {
-
         $databaseId = $data['databaseId'];
 
         /**
@@ -674,7 +673,6 @@ class DatabasesCustomServerTest extends Scope
         /**
          * Test for creating encrypted attributes
          */
-
         $attributesPath = '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes';
 
         $firstName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
@@ -686,6 +684,7 @@ class DatabasesCustomServerTest extends Scope
             'size' => 256,
             'required' => true,
         ]);
+
         // checking size test
         $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
             'content-type' => 'application/json',
@@ -710,12 +709,15 @@ class DatabasesCustomServerTest extends Scope
             'encrypt' => true
         ]);
         $this->assertTrue($lastName['body']['encrypt']);
+
         sleep(1);
+
         $response = $this->client->call(Client::METHOD_GET, $attributesPath . '/lastName', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
+
         $this->assertTrue($response['body']['encrypt']);
 
         /**
@@ -1468,9 +1470,24 @@ class DatabasesCustomServerTest extends Scope
         $this->assertCount(64, $collection['body']['attributes']);
         $this->assertCount(0, $collection['body']['indexes']);
 
-        foreach ($collection['body']['attributes'] as $attribute) {
-            $this->assertEquals('available', $attribute['status'], 'attribute: ' . $attribute['key']);
-        }
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+
+            foreach ($collection['body']['attributes'] ?? [] as $attribute) {
+                $this->assertEquals(
+                    'available',
+                    $attribute['status'],
+                    'attribute: ' . $attribute['key']
+                );
+            }
+
+            return true;
+        }, 60000, 500);
+
 
         // Test indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 6 indexes per new collection

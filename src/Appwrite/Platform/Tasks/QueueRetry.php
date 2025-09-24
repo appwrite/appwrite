@@ -24,7 +24,7 @@ class QueueRetry extends Action
             ->param('name', '', new Text(100), 'Queue name')
             ->param('limit', 0, new Wildcard(), 'jobs limit', true)
             ->inject('publisher')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**

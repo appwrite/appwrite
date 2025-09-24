@@ -3,7 +3,10 @@
 namespace Appwrite\Platform;
 
 use Swoole\Coroutine as Co;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action as UtopiaAction;
 
@@ -15,6 +18,12 @@ class Action extends UtopiaAction
      * @var callable
      */
     protected mixed $logError;
+
+    protected array $filters = [
+        'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryProjectVariables', 'subQueryBlocks', 'subQueryDevKeys', // Project
+        'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
+        'subQueryVariables', // Sites
+    ];
 
     /**
      * Foreach Document
@@ -85,6 +94,59 @@ class Action extends UtopiaAction
             }
 
             $latestDocument = $results[array_key_last($results)];
+        }
+    }
+
+    public function disableSubqueries()
+    {
+        $filters = $this->filters;
+
+        foreach ($filters as $filter) {
+            Database::addFilter(
+                $filter,
+                function (mixed $value) {
+                    return;
+                },
+                function (mixed $value, Document $document, Database $database) {
+                    return [];
+                }
+            );
+        }
+    }
+
+    /**
+     * Dump Log Message
+     *
+     * Logs messages to console with timestamp, method context, and project details.
+     * Supports multiple log types: success, error, log, warning, and info (default).
+     *
+     * @param string $method The calling method name
+     * @param string $log The log message
+     * @param string $type The log type (success, error, log, warning, info)
+     * @param Document|null $project The project document for context
+     * @param string $collectionId The collection identifier
+     * @return void
+     */
+    public function dump(string $method, string $log, string $type = 'info', ?Document $project = null, string $collectionId = ''): void
+    {
+        if (empty($project)) {
+            $project = new Document([]);
+        }
+        switch ($type) {
+            case 'success':
+                Console::success("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'error':
+                Console::error("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'log':
+                Console::log("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'warning':
+                Console::warning("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            default:
+                Console::info("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
         }
     }
 }

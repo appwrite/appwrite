@@ -29,7 +29,7 @@ class Mails extends Action
             ->inject('message')
             ->inject('register')
             ->inject('log')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**

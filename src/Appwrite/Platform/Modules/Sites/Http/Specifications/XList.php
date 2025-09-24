@@ -48,7 +48,7 @@ class XList extends Base
             ))
             ->inject('response')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(Response $response, array $plan)
@@ -63,8 +63,8 @@ class XList extends Base
                 $spec['enabled'] = in_array($spec['slug'], $plan['runtimeSpecifications']);
             }
 
-            $maxCpus = System::getEnv('_APP_FUNCTIONS_CPUS', 0);
-            $maxMemory = System::getEnv('_APP_FUNCTIONS_MEMORY', 0);
+            $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
+            $maxMemory = System::getEnv('_APP_COMPUTE_MEMORY', 0);
 
             // Only add specs that are within the limits set by environment variables
             // Treat 0 as no limit

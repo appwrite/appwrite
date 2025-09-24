@@ -56,7 +56,7 @@ class XList extends Base
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(array $queries, string $search, Response $response, Database $dbForProject)

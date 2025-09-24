@@ -37,6 +37,7 @@ class Action extends UtopiaAction
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
+
         return [
             'bucket' => $bucket,
             'file' => $file,

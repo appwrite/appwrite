@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Migration extends Model
 {
@@ -106,5 +107,30 @@ class Migration extends Model
     public function getType(): string
     {
         return Response::MODEL_MIGRATION;
+    }
+
+    public function filter(Document $document): Document
+    {
+        $errors = $document->getAttribute('errors', []);
+        if (empty($errors)) {
+            return $document;
+        }
+
+        foreach ($errors as $index => $error) {
+            $decoded = json_decode($error, true);
+
+            // frontend doesn't need too many details.
+            if (is_array($decoded)) {
+                $errors[$index] = json_encode([
+                    'code' => $decoded['code'] ?? 0,
+                    'message' => $decoded['message'] ?? null,
+                ]);
+            }
+        }
+
+        // errors now only have code and message.
+        $document->setAttribute('errors', $errors);
+
+        return $document;
     }
 }
