@@ -4,14 +4,14 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Query;
+use Appwrite\Platform\Action;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -227,6 +227,73 @@ class Base extends Action
             ]))
         );
 
+        if (!empty($commitDetails['commitHash'])) {
+            $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
+            $ruleId = md5($domain);
+            try {
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getSequence(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getSequence(),
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+            } catch (Duplicate $err) {
+                // Ignore, rule already exists; will be updated by builds worker
+            }
+        }
+
+        // VCS branch preview
+        if (!empty($providerBranch)) {
+            $branchPrefix = substr($providerBranch, 0, 16);
+            if (strlen($providerBranch) > 16) {
+                $remainingChars = substr($providerBranch, 16);
+                $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
+            }
+            $resourceProjectHash = substr(hash('sha256', $site->getId() . $project->getId()), 0, 7);
+            $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+            $ruleId = md5($domain);
+            try {
+                Authorization::skip(
+                    fn () => $dbForPlatform->createDocument('rules', new Document([
+                        '$id' => $ruleId,
+                        'projectId' => $project->getId(),
+                        'projectInternalId' => $project->getSequence(),
+                        'domain' => $domain,
+                        'type' => 'deployment',
+                        'trigger' => 'deployment',
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                        'deploymentResourceType' => 'site',
+                        'deploymentResourceId' => $site->getId(),
+                        'deploymentResourceInternalId' => $site->getSequence(),
+                        'deploymentVcsProviderBranch' => $providerBranch,
+                        'status' => 'verified',
+                        'certificateId' => '',
+                        'search' => implode(' ', [$ruleId, $domain]),
+                        'owner' => 'Appwrite',
+                        'region' => $project->getAttribute('region')
+                    ]))
+                );
+            } catch (Duplicate $err) {
+                // Ignore, rule already exists; will be updated by builds worker
+            }
+        }
+
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($site)
@@ -234,39 +301,5 @@ class Base extends Action
             ->setTemplate($template);
 
         return $deployment;
-    }
-
-    protected function listRules(Document $project, array $queries, Database $database, callable $callback): void
-    {
-        $limit = 100;
-        $cursor = null;
-
-        do {
-            $queries = \array_merge([
-                Query::limit($limit),
-                Query::equal("projectInternalId", [$project->getSequence()])
-            ], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
-            }
-
-            $results = $database->find('rules', $queries);
-
-            $total = \count($results);
-            if ($total > 0) {
-                $cursor = $results[$total - 1];
-            }
-
-            if ($total < $limit) {
-                $cursor = null;
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-            }
-        } while (!\is_null($cursor));
     }
 }

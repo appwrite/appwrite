@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
 
 class ScheduleMessages extends ScheduleBase
 {
@@ -18,15 +17,15 @@ class ScheduleMessages extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return 'message';
+        return SCHEDULE_RESOURCE_TYPE_MESSAGE;
     }
 
     public static function getCollectionId(): string
     {
-        return 'messages';
+        return RESOURCE_TYPE_MESSAGES;
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {
@@ -40,8 +39,8 @@ class ScheduleMessages extends ScheduleBase
                 continue;
             }
 
-            \go(function () use ($schedule, $scheduledAt, $pools, $dbForPlatform) {
-                $queueForMessaging = new Messaging($this->publisher);
+            \go(function () use ($schedule, $scheduledAt, $dbForPlatform) {
+                $queueForMessaging = new Messaging($this->publisherMessaging);
 
                 $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 

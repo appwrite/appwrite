@@ -23,7 +23,10 @@ use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeFloat;
 use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributePoint;
+use Appwrite\Utopia\Response\Model\AttributePolygon;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeURL;
@@ -32,6 +35,22 @@ use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Collection;
+use Appwrite\Utopia\Response\Model\Column;
+use Appwrite\Utopia\Response\Model\ColumnBoolean;
+use Appwrite\Utopia\Response\Model\ColumnDatetime;
+use Appwrite\Utopia\Response\Model\ColumnEmail;
+use Appwrite\Utopia\Response\Model\ColumnEnum;
+use Appwrite\Utopia\Response\Model\ColumnFloat;
+use Appwrite\Utopia\Response\Model\ColumnIndex;
+use Appwrite\Utopia\Response\Model\ColumnInteger;
+use Appwrite\Utopia\Response\Model\ColumnIP;
+use Appwrite\Utopia\Response\Model\ColumnLine;
+use Appwrite\Utopia\Response\Model\ColumnList;
+use Appwrite\Utopia\Response\Model\ColumnPoint;
+use Appwrite\Utopia\Response\Model\ColumnPolygon;
+use Appwrite\Utopia\Response\Model\ColumnRelationship;
+use Appwrite\Utopia\Response\Model\ColumnString;
+use Appwrite\Utopia\Response\Model\ColumnURL;
 use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
@@ -88,12 +107,14 @@ use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryFramework;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\ResourceToken;
+use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Site;
 use Appwrite\Utopia\Response\Model\Specification;
 use Appwrite\Utopia\Response\Model\Subscriber;
+use Appwrite\Utopia\Response\Model\Table;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
@@ -115,6 +136,7 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageSite;
 use Appwrite\Utopia\Response\Model\UsageSites;
 use Appwrite\Utopia\Response\Model\UsageStorage;
+use Appwrite\Utopia\Response\Model\UsageTable;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
@@ -147,6 +169,7 @@ class Response extends SwooleResponse
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
@@ -162,10 +185,16 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_TABLE = 'table';
+    public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
     public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_COLUMN_INDEX = 'columnIndex';
+    public const MODEL_COLUMN_INDEX_LIST = 'columnIndexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_ROW = 'row';
+    public const MODEL_ROW_LIST = 'rowList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
@@ -180,6 +209,26 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
     public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
     public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
+    public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
+    public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
+    public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
+
+    // Database Columns
+    public const MODEL_COLUMN = 'column';
+    public const MODEL_COLUMN_LIST = 'columnList';
+    public const MODEL_COLUMN_STRING = 'columnString';
+    public const MODEL_COLUMN_INTEGER = 'columnInteger';
+    public const MODEL_COLUMN_FLOAT = 'columnFloat';
+    public const MODEL_COLUMN_BOOLEAN = 'columnBoolean';
+    public const MODEL_COLUMN_EMAIL = 'columnEmail';
+    public const MODEL_COLUMN_ENUM = 'columnEnum';
+    public const MODEL_COLUMN_IP = 'columnIp';
+    public const MODEL_COLUMN_URL = 'columnUrl';
+    public const MODEL_COLUMN_DATETIME = 'columnDatetime';
+    public const MODEL_COLUMN_RELATIONSHIP = 'columnRelationship';
+    public const MODEL_COLUMN_POINT = 'columnPoint';
+    public const MODEL_COLUMN_LINE = 'columnLine';
+    public const MODEL_COLUMN_POLYGON = 'columnPolygon';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -362,13 +411,17 @@ class Response extends SwooleResponse
      */
     protected static bool $showSensitive = false;
 
+    protected SwooleHTTPResponse $swoole;
+
     /**
      * Response constructor.
      *
-     * @param float $time
+     * @param SwooleHTTPResponse $response Native response to be passed to parent constructor
      */
     public function __construct(SwooleHTTPResponse $response)
     {
+        $this->swoole = $response;
+
         $this
             // General
             ->setModel(new None())
@@ -376,10 +429,13 @@ class Response extends SwooleResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
+            ->setModel(new BaseList('Rows List', self::MODEL_ROW_LIST, 'rows', self::MODEL_ROW))
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
+            ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
             ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
+            ->setModel(new BaseList('Column Indexes List', self::MODEL_COLUMN_INDEX_LIST, 'indexes', self::MODEL_COLUMN_INDEX))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Identities List', self::MODEL_IDENTITY_LIST, 'identities', self::MODEL_IDENTITY))
@@ -428,6 +484,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
             // Entities
             ->setModel(new Database())
+            // Collection API Models
             ->setModel(new Collection())
             ->setModel(new Attribute())
             ->setModel(new AttributeList())
@@ -441,7 +498,29 @@ class Response extends SwooleResponse
             ->setModel(new AttributeURL())
             ->setModel(new AttributeDatetime())
             ->setModel(new AttributeRelationship())
+            ->setModel(new AttributePoint())
+            ->setModel(new AttributeLine())
+            ->setModel(new AttributePolygon())
+            // Table API Models
+            ->setModel(new Table())
+            ->setModel(new Column())
+            ->setModel(new ColumnList())
+            ->setModel(new ColumnString())
+            ->setModel(new ColumnInteger())
+            ->setModel(new ColumnFloat())
+            ->setModel(new ColumnBoolean())
+            ->setModel(new ColumnEmail())
+            ->setModel(new ColumnEnum())
+            ->setModel(new ColumnIP())
+            ->setModel(new ColumnURL())
+            ->setModel(new ColumnDatetime())
+            ->setModel(new ColumnRelationship())
+            ->setModel(new ColumnPoint())
+            ->setModel(new ColumnLine())
+            ->setModel(new ColumnPolygon())
             ->setModel(new Index())
+            ->setModel(new ColumnIndex())
+            ->setModel(new Row())
             ->setModel(new ModelDocument())
             ->setModel(new Log())
             ->setModel(new User())
@@ -508,6 +587,7 @@ class Response extends SwooleResponse
             ->setModel(new MetricBreakdown())
             ->setModel(new UsageDatabases())
             ->setModel(new UsageDatabase())
+            ->setModel(new UsageTable())
             ->setModel(new UsageCollection())
             ->setModel(new UsageUsers())
             ->setModel(new UsageStorage())
@@ -558,7 +638,7 @@ class Response extends SwooleResponse
      *
      * @return self
      */
-    public function setModel(Model $instance)
+    public function setModel(Model $instance): Response
     {
         $this->models[$instance->getType()] = $instance;
 
@@ -836,7 +916,7 @@ class Response extends SwooleResponse
     /**
      * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param $filter the response filter to set
+     * @param $filter - the response filter to set
      *
      * @return void
      */
@@ -873,18 +953,6 @@ class Response extends SwooleResponse
     public function hasFilters(): bool
     {
         return !empty($this->filters);
-    }
-
-    /**
-     * Set Header
-     *
-     * @param  string  $key
-     * @param  string  $value
-     * @return void
-     */
-    public function setHeader(string $key, string $value): void
-    {
-        $this->sendHeader($key, $value);
     }
 
     /**

@@ -4,9 +4,8 @@ using Appwrite.Services;
 
 Client client = new Client()
     .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    .SetSession("") // The user session to authenticate with
-    .SetKey("<YOUR_API_KEY>") // Your secret API key
-    .SetJWT("<YOUR_JWT>"); // Your secret JSON Web Token
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetSession(""); // The user session to authenticate with
 
 Databases databases = new Databases(client);
 

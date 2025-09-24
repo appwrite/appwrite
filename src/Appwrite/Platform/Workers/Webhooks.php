@@ -38,7 +38,7 @@ class Webhooks extends Action
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -219,6 +219,7 @@ class Webhooks extends Action
         ]);
 
         $projectId = $project->getId();
+        $region = $project->getAttribute('region', 'default');
         $webhookId = $webhook->getId();
 
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
@@ -227,7 +228,7 @@ class Webhooks extends Action
         $template->setParam('{{project}}', $project->getAttribute('name'));
         $template->setParam('{{url}}', $webhook->getAttribute('url'));
         $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{path}}', "/console/project-$projectId/settings/webhooks/$webhookId");
+        $template->setParam('{{path}}', "/console/project-$region-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
         $template->setParam('{{logoUrl}}', $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL);
@@ -240,6 +241,7 @@ class Webhooks extends Action
 
         // TODO: Use setbodyTemplate once #7307 is merged
         $subject = 'Webhook deliveries have been paused';
+        $preview = 'Webhook deliveries to your endpoint have been paused.';
         $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
         $body
@@ -249,6 +251,7 @@ class Webhooks extends Action
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body->render());
 
         foreach ($users as $user) {

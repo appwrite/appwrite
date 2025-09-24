@@ -125,7 +125,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getSequence())
+                    ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -145,7 +145,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getSequence())
+                ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -167,7 +167,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
     return function (?Document $project = null) use ($pools, $cache, $database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $database->setTenant((int)$project->getSequence());
             return $database;
         }
 
@@ -182,22 +182,36 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $database->setTenant((int)$project->getSequence());
         }
 
         return $database;
     };
 }, ['pools', 'cache']);
-
+CLI::setResource('publisher', function (Group $pools) {
+    return new BrokerPool(publisher: $pools->get('publisher'));
+}, ['pools']);
+CLI::setResource('publisherDatabases', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+CLI::setResource('publisherFunctions', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+CLI::setResource('publisherMigrations', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+CLI::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+CLI::setResource('publisherMessaging', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
 CLI::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 CLI::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
-CLI::setResource('publisher', function (Group $pools) {
-    return new BrokerPool(publisher: $pools->get('publisher'));
-}, ['pools']);
 CLI::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
@@ -251,7 +265,7 @@ CLI::setResource('logError', function (Registry $register) {
     };
 }, ['register']);
 
-CLI::setResource('executor', fn () => new Executor(fn (string $projectId, string $deploymentId) => System::getEnv('_APP_EXECUTOR_HOST')));
+CLI::setResource('executor', fn () => new Executor());
 
 CLI::setResource('telemetry', fn () => new NoTelemetry());
 
@@ -284,6 +298,5 @@ $cli
 
 $cli->shutdown()->action(fn () => Timer::clearAll());
 
-// Enable coroutines, but disable TCP hooks. These don't work until we use `\Utopia\Cache\Adapter\Pool` and `\Utopia\Database\Adapter\Pool`.
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 run($cli->run(...));

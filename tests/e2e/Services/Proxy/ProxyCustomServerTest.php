@@ -71,9 +71,26 @@ class ProxyCustomServerTest extends Scope
         $this->assertNotEmpty($deploymentId);
 
         $rule = $this->createSiteRule('commit-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createSiteRule('branch-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createSiteRule('anything-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $domain =  \uniqid() . '-vcs.' . System::getEnv('_APP_DOMAIN_SITES', '');
+
+        $rule = $this->createSiteRule('commit-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
         $rule = $this->createSiteRule('branch-' . $domain, $siteId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createSiteRule('subdomain.anything-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
         $rule = $this->createSiteRule('anything-' . $domain, $siteId);
@@ -109,15 +126,11 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('https://' . $domain);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
-        // Unexpected I would say, but it is the current behaviour
         $rule = $this->createAPIRule('wss://' . $domain);
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
 
-        // Unexpected I would say, but it is the current behaviour
         $rule = $this->createAPIRule($domain . '/some-path');
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
     }
 
     public function testCreateRedirectRule(): void
@@ -131,7 +144,9 @@ class ProxyCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301);
+        $siteId = $this->setupSite()['siteId'];
+
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
         $this->assertNotEmpty($ruleId);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
@@ -147,7 +162,7 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
         $domain = \uniqid() . '-redirect-307.custom.localhost';
-        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307);
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 307, 'site', $siteId);
         $this->assertNotEmpty($ruleId);
 
         $proxyClient = new Client();
@@ -158,6 +173,18 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(307, $response['headers']['status-code']);
         $this->assertEquals('https://jsonplaceholder.typicode.com/todos/1', $response['headers']['location']);
 
+        $rules = $this->listRules([
+            'queries' => [
+                Query::equal('type', ['redirect'])->toString(),
+                Query::equal('trigger', ['manual'])->toString(),
+                Query::equal('deploymentResourceType', ['site'])->toString(),
+                Query::equal('deploymentResourceId', [$siteId])->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(2, $rules['body']['total']);
+
+        $this->cleanupSite($siteId);
         $this->cleanupRule($ruleId);
     }
 

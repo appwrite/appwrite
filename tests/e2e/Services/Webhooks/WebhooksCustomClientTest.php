@@ -894,9 +894,9 @@ class WebhooksCustomClientTest extends Scope
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('teams.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('teams.*.memberships.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('teams.*.memberships.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -919,8 +919,8 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['joined']));
-        $this->assertEquals(true, $webhook['data']['confirm']);
+        $this->assertTrue((new DatetimeValidator())->isValid($webhook['data']['joined']));
+        $this->assertTrue($webhook['data']['confirm']);
 
         /**
          * Test for FAILURE

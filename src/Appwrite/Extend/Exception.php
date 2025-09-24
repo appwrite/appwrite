@@ -48,7 +48,8 @@ class Exception extends \Exception
     public const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
     public const GENERAL_PHONE_DISABLED            = 'general_phone_disabled';
     public const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
-    public const GENERAL_QUERY_LIMIT_EXCEEDED      = 'general_query_limit_exceeded';
+    public const GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED      = 'general_column_query_limit_exceeded';
+    public const GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED   = 'general_attribute_query_limit_exceeded';
     public const GENERAL_QUERY_INVALID             = 'general_query_invalid';
     public const GENERAL_ROUTE_NOT_FOUND           = 'general_route_not_found';
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
@@ -124,6 +125,8 @@ class Exception extends \Exception
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
     public const MEMBERSHIP_ALREADY_CONFIRMED      = 'membership_already_confirmed';
+    public const MEMBERSHIP_DELETION_PROHIBITED    = 'membership_deletion_prohibited';
+    public const MEMBERSHIP_DOWNGRADE_PROHIBITED   = 'membership_downgrade_prohibited';
 
     /** Avatars */
     public const AVATAR_SET_NOT_FOUND              = 'avatar_set_not_found';
@@ -131,6 +134,7 @@ class Exception extends \Exception
     public const AVATAR_IMAGE_NOT_FOUND            = 'avatar_image_not_found';
     public const AVATAR_REMOTE_URL_FAILED          = 'avatar_remote_url_failed';
     public const AVATAR_ICON_NOT_FOUND             = 'avatar_icon_not_found';
+    public const AVATAR_SVG_SANITIZATION_FAILED    = 'avatar_svg_sanitization_failed';
 
     /** Storage */
     public const STORAGE_FILE_ALREADY_EXISTS       = 'storage_file_already_exists';
@@ -196,6 +200,11 @@ class Exception extends \Exception
     public const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
     public const COLLECTION_LIMIT_EXCEEDED         = 'collection_limit_exceeded';
 
+    /** Tables */
+    public const TABLE_NOT_FOUND                   = 'table_not_found';
+    public const TABLE_ALREADY_EXISTS              = 'table_already_exists';
+    public const TABLE_LIMIT_EXCEEDED              = 'table_limit_exceeded';
+
     /** Documents */
     public const DOCUMENT_NOT_FOUND                = 'document_not_found';
     public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
@@ -205,7 +214,16 @@ class Exception extends \Exception
     public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
     public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
-    /** Attribute */
+    /** Rows */
+    public const ROW_NOT_FOUND                     = 'row_not_found';
+    public const ROW_INVALID_STRUCTURE             = 'row_invalid_structure';
+    public const ROW_MISSING_DATA                  = 'row_missing_data';
+    public const ROW_MISSING_PAYLOAD               = 'row_missing_payload';
+    public const ROW_ALREADY_EXISTS                = 'row_already_exists';
+    public const ROW_UPDATE_CONFLICT               = 'row_update_conflict';
+    public const ROW_DELETE_RESTRICTED             = 'row_delete_restricted';
+
+    /** Attributes */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
     public const ATTRIBUTE_UNKNOWN                 = 'attribute_unknown';
     public const ATTRIBUTE_NOT_AVAILABLE           = 'attribute_not_available';
@@ -217,6 +235,22 @@ class Exception extends \Exception
     public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
     public const ATTRIBUTE_INVALID_RESIZE          = 'attribute_invalid_resize';
 
+    public const ATTRIBUTE_TYPE_NOT_SUPPORTED              = 'ATTRIBUTE_TYPE_NOT_SUPPORTED';
+
+    /** Columns */
+    public const COLUMN_NOT_FOUND                  = 'column_not_found';
+    public const COLUMN_UNKNOWN                    = 'column_unknown';
+    public const COLUMN_NOT_AVAILABLE              = 'column_not_available';
+    public const COLUMN_FORMAT_UNSUPPORTED         = 'column_format_unsupported';
+    public const COLUMN_DEFAULT_UNSUPPORTED        = 'column_default_unsupported';
+    public const COLUMN_ALREADY_EXISTS             = 'column_already_exists';
+    public const COLUMN_LIMIT_EXCEEDED             = 'column_limit_exceeded';
+    public const COLUMN_VALUE_INVALID              = 'column_value_invalid';
+    public const COLUMN_TYPE_INVALID               = 'column_type_invalid';
+    public const COLUMN_INVALID_RESIZE             = 'column_invalid_resize';
+
+    public const COLUMN_TYPE_NOT_SUPPORTED              = 'COLUMN_TYPE_NOT_SUPPORTED';
+
     /** Relationship */
     public const RELATIONSHIP_VALUE_INVALID        = 'relationship_value_invalid';
 
@@ -226,6 +260,13 @@ class Exception extends \Exception
     public const INDEX_ALREADY_EXISTS              = 'index_already_exists';
     public const INDEX_INVALID                     = 'index_invalid';
     public const INDEX_DEPENDENCY                  = 'index_dependency';
+
+    /** Column Indexes */
+    public const COLUMN_INDEX_NOT_FOUND            = 'column_index_not_found';
+    public const COLUMN_INDEX_LIMIT_EXCEEDED       = 'column_index_limit_exceeded';
+    public const COLUMN_INDEX_ALREADY_EXISTS       = 'column_index_already_exists';
+    public const COLUMN_INDEX_INVALID              = 'column_index_invalid';
+    public const COLUMN_INDEX_DEPENDENCY           = 'column_index_dependency';
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
@@ -314,7 +355,7 @@ class Exception extends \Exception
     public const MESSAGE_MISSING_SCHEDULE          = 'message_missing_schedule';
 
     /** Targets */
-    public const TARGET_PROVIDER_INVALID_TYPE       = 'target_provider_invalid_type';
+    public const TARGET_PROVIDER_INVALID_TYPE      = 'target_provider_invalid_type';
 
     /** Schedules */
     public const SCHEDULE_NOT_FOUND                = 'schedule_not_found';

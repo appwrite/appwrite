@@ -2,6 +2,8 @@
 
 use Utopia\Config\Config;
 
+require_once __DIR__ . '/../config/storage/resource_limits.php';
+
 Config::load('template-runtimes', __DIR__ . '/../config/template-runtimes.php');
 Config::load('events', __DIR__ . '/../config/events.php');
 Config::load('auth', __DIR__ . '/../config/auth.php');

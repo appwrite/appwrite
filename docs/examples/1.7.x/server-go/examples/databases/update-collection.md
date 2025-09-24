@@ -7,13 +7,13 @@ import (
 )
 
 func main() {
-    client := client.NewClient()
+    client := client.New(
+        client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        client.WithProject("<YOUR_PROJECT_ID>") // Your project ID
+        client.WithKey("<YOUR_API_KEY>") // Your secret API key
+    )
 
-    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
-    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
-    client.SetKey("<YOUR_API_KEY>") // Your secret API key
-
-    service := databases.NewDatabases(client)
+    service := databases.New(client)
     response, error := service.UpdateCollection(
         "<DATABASE_ID>",
         "<COLLECTION_ID>",

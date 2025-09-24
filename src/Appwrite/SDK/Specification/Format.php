@@ -24,6 +24,7 @@ abstract class Format
     protected array $services;
     protected array $keys;
     protected int $authCount;
+    protected string $platform;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -50,7 +51,7 @@ abstract class Format
         ]
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
         $this->app = $app;
         $this->services = $services;
@@ -58,6 +59,7 @@ abstract class Format
         $this->models = $models;
         $this->keys = $keys;
         $this->authCount = $authCount;
+        $this->platform = $platform;
     }
 
     /**
@@ -110,9 +112,20 @@ abstract class Format
         return $this->params[$key] ?? $default;
     }
 
-    protected function getEnumName(string $service, string $method, string $param): ?string
+    protected function getRequestEnumName(string $service, string $method, string $param): ?string
     {
+        /* `$service` is `$namespace` */
         switch ($service) {
+            case 'proxy':
+                switch ($method) {
+                    case 'createRedirectRule':
+                        switch ($param) {
+                            case 'resourceType':
+                                return 'ProxyResourceType';
+                        }
+                        break;
+                }
+                break;
             case 'console':
                 switch ($method) {
                     case 'getResource':
@@ -163,11 +176,11 @@ abstract class Format
             case 'databases':
                 switch ($method) {
                     case 'getUsage':
+                    case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
                         switch ($param) {
                             case 'range':
-                                return 'DatabaseUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createRelationshipAttribute':
@@ -193,13 +206,46 @@ abstract class Format
                         }
                 }
                 break;
+            case 'tablesDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getTableUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createRelationshipColumn':
+                        switch ($param) {
+                            case 'type':
+                                return 'RelationshipType';
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'updateRelationshipColumn':
+                        switch ($param) {
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'IndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
             case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'FunctionUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createExecution':
@@ -234,7 +280,7 @@ abstract class Format
                     case 'listUsage':
                         switch ($param) {
                             case 'range':
-                                return 'SiteUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createVcsDeployment':
@@ -357,7 +403,7 @@ abstract class Format
                     case 'getBucketUsage':
                         switch ($param) {
                             case 'range':
-                                return 'StorageUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'getFilePreview':
@@ -375,7 +421,7 @@ abstract class Format
                     case 'getUsage':
                         switch ($param) {
                             case 'range':
-                                return 'UserUsageRange';
+                                return 'UsageRange';
                         }
                         break;
                     case 'createMfaAuthenticator':
@@ -403,7 +449,8 @@ abstract class Format
         }
         return null;
     }
-    public function getEnumKeys(string $service, string $method, string $param): array
+
+    public function getRequestEnumKeys(string $service, string $method, string $param): array
     {
         $values = [];
         switch ($service) {
@@ -432,8 +479,17 @@ abstract class Format
             case 'databases':
                 switch ($method) {
                     case 'getUsage':
+                    case 'listUsage':
                     case 'getCollectionUsage':
-                    case 'getDatabaseUsage':
+                        // Range Enum Keys
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                }
+                break;
+            case 'tablesDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getTableUsage':
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
@@ -441,18 +497,17 @@ abstract class Format
             case 'proxy':
                 switch ($method) {
                     case 'createRedirectRule':
-                        return ['Moved Permanently 301', 'Found 302', 'Temporary Redirect 307', 'Permanent Redirect 308'];
-                }
-                break;
-            case 'functions':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'listUsage':
-                        // Range Enum Keys
-                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
+                        switch ($param) {
+                            case 'statusCode':
+                                return ['Moved Permanently 301', 'Found 302', 'Temporary Redirect 307', 'Permanent Redirect 308'];
+                            case 'resourceType':
+                                return ['Site', 'Function'];
+                        }
+                        break;
                 }
                 break;
             case 'sites':
+            case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
@@ -486,6 +541,97 @@ abstract class Format
                 break;
         }
         return $values;
+    }
+
+    public function getResponseEnumName(string $model, string $param): ?string
+    {
+        switch ($model) {
+            case 'attributeString':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeInteger':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeFloat':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeBoolean':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeEmail':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeEnum':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeIp':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeUrl':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeDatetime':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeRelationship':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributePoint':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeLine':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributePolygon':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'healthStatus':
+                switch ($param) {
+                    case 'status':
+                        return 'HealthCheckStatus';
+                }
+                break;
+        }
+        return null;
     }
 
     protected function getNestedModels(Model $model, array &$usedModels): void

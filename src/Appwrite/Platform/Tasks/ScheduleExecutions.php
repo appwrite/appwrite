@@ -5,8 +5,13 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Event\Func;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
 
+/**
+ * ScheduleExecutions
+ *
+ * Handles delayed executions by processing one-time scheduled tasks
+ * that are executed at a specific future time.
+ */
 class ScheduleExecutions extends ScheduleBase
 {
     public const UPDATE_TIMER = 3; // seconds
@@ -19,18 +24,19 @@ class ScheduleExecutions extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return 'execution';
+        return SCHEDULE_RESOURCE_TYPE_EXECUTION;
     }
 
     public static function getCollectionId(): string
     {
-        return 'executions';
+        return RESOURCE_TYPE_EXECUTIONS;
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queueForFunctions = new Func($this->publisher);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
+
+        $queueForFunctions = new Func($this->publisherFunctions);
 
         foreach ($this->schedules as $schedule) {
             if (!$schedule['active']) {

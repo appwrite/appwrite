@@ -46,7 +46,7 @@ class SDKs extends Action
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
             ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void
@@ -62,9 +62,33 @@ class SDKs extends Action
             $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
             $production = $production === 'Appwrite';
             $message ??= Console::confirm('Please enter your commit message:');
+
+            $createPr = Console::confirm('Should we create pull request automatically? (yes/no)');
+            $createPr = $createPr === 'yes';
         }
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', '1.4.x', '1.5.x', '1.6.x', '1.7.x', 'latest'])) {
+        if (!\in_array($version, [
+            '0.6.x',
+            '0.7.x',
+            '0.8.x',
+            '0.9.x',
+            '0.10.x',
+            '0.11.x',
+            '0.12.x',
+            '0.13.x',
+            '0.14.x',
+            '0.15.x',
+            '1.0.x',
+            '1.1.x',
+            '1.2.x',
+            '1.3.x',
+            '1.4.x',
+            '1.5.x',
+            '1.6.x',
+            '1.7.x',
+            '1.8.x',
+            'latest'
+        ])) {
             throw new \Exception('Unknown version given');
         }
 
@@ -98,7 +122,7 @@ class SDKs extends Action
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
                 $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
-                $changelog = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
+                $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
                 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';
@@ -250,8 +274,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '1.7.0',
-                    ]);
+                        'X-Appwrite-Response-Format' => '1.8.0',
+                    ])
+                    ->setExclude($language['exclude'] ?? []);
 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
@@ -271,6 +296,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
                 }
 
+                $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
@@ -278,8 +304,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git init && \
                         git remote add origin ' . $gitUrl . ' && \
                         git fetch origin && \
-                        git checkout main || git checkout -b main && \
-                        git pull origin main && \
+                        git checkout ' . $repoBranch . ' || git checkout -b ' . $repoBranch . ' && \
+                        git pull origin ' . $repoBranch . ' && \
                         git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
                         git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
@@ -291,6 +317,47 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
+
+                    if ($createPr) {
+                        $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
+                        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
+
+                        $repoName = $language['gitRepoName'];
+                        if (!$production) {
+                            $repoName = 'aw-tests/' . $language['gitRepoName'];
+                        } else {
+                            $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
+                        }
+
+                        Console::info("Creating pull request for {$language['name']} SDK...");
+
+                        $prCommand = 'cd ' . $target . ' && \
+                            gh pr create \
+                            --repo "' . $repoName . '" \
+                            --title "' . $prTitle . '" \
+                            --body "' . $prBody . '" \
+                            --base "' . $repoBranch . '" \
+                            --head "' . $gitBranch . '" \
+                            2>&1';
+
+                        $prOutput = [];
+                        $prReturnCode = 0;
+                        \exec($prCommand, $prOutput, $prReturnCode);
+
+                        if ($prReturnCode === 0) {
+                            Console::success("Successfully created pull request for {$language['name']} SDK");
+                            if (!empty($prOutput)) {
+                                Console::info("PR URL: " . end($prOutput));
+                            }
+                        } else {
+                            $errorMessage = implode("\n", $prOutput);
+                            if (strpos($errorMessage, 'already exists') !== false) {
+                                Console::warning("Pull request already exists for {$language['name']} SDK");
+                            } else {
+                                Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
+                            }
+                        }
+                    }
 
                     \exec('rm -rf ' . $target);
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");

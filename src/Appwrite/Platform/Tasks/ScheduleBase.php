@@ -11,7 +11,6 @@ use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -26,6 +25,9 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     protected BrokerPool $publisher;
+    protected BrokerPool $publisherMigrations;
+    protected BrokerPool $publisherFunctions;
+    protected BrokerPool $publisherMessaging;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -35,7 +37,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
-    abstract protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void;
+    abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -43,7 +45,10 @@ abstract class ScheduleBase extends Action
 
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('pools')
+            ->inject('publisher')
+            ->inject('publisherMigrations')
+            ->inject('publisherFunctions')
+            ->inject('publisherMessaging')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
@@ -66,12 +71,16 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
-        $this->publisher = new BrokerPool($pools->get('publisher'));
+        $this->publisher = $publisher;
+        $this->publisherMigrations = $publisherMigrations;
+        $this->publisherFunctions = $publisherFunctions;
+        $this->publisherMessaging = $publisherMessaging;
+
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
         $this->collectSchedulesTelemetryCount = $telemetry->createGauge('task.schedule.collect_schedules.count');
@@ -79,21 +88,21 @@ abstract class ScheduleBase extends Action
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
-        $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
+        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
 
         Console::success("Starting timers at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($pools, $dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($pools, $dbForPlatform, $getProjectDB, $lastSyncUpdate);
+            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
         });
 
         while (true) {
             try {
-                go(fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB));
+                go(fn () => $this->enqueueResources($dbForPlatform, $getProjectDB));
                 $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
                 sleep(static::ENQUEUE_TIMER);
             } catch (\Throwable $th) {
@@ -103,7 +112,7 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Group $pools, Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
+    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
@@ -115,7 +124,7 @@ abstract class ScheduleBase extends Action
          * @throws Exception
          * @var Document $schedule
          */
-        $getSchedule = function (Document $schedule) use ($pools, $dbForPlatform, $getProjectDB): array {
+        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
             $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
 
             $resource = $getProjectDB($project)->getDocument(

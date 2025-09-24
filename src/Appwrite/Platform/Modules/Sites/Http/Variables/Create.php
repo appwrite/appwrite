@@ -62,7 +62,7 @@ class Create extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $key, string $value, bool $secret, Response $response, Database $dbForProject, Document $project)

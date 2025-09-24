@@ -10,8 +10,15 @@ class Database extends Event
 {
     protected string $type = '';
     protected ?Document $database = null;
-    protected ?Document $collection = null;
+
+    // tables api
+    protected ?Document $row = null;
+    protected ?Document $table = null;
+
+    // collections api
     protected ?Document $document = null;
+    protected ?Document $collection = null;
+
 
     public function __construct(protected Publisher $publisher)
     {
@@ -52,6 +59,61 @@ class Database extends Event
     {
         $this->database = $database;
         return $this;
+    }
+
+    /**
+     * Returns set database for this event.
+     *
+     * @return null|Document
+     */
+    public function getDatabase(): ?Document
+    {
+        return $this->database;
+    }
+
+    /**
+     * Set the table for this database event.
+     *
+     * @param Document $table
+     * @return self
+     */
+    public function setTable(Document $table): self
+    {
+        $this->table = $table;
+
+        return $this;
+    }
+
+    /**
+     * Returns set table for this event.
+     *
+     * @return null|Document
+     */
+    public function getTable(): ?Document
+    {
+        return $this->table;
+    }
+
+    /**
+     * Set the row for this database event.
+     *
+     * @param Document $row
+     * @return self
+     */
+    public function setRow(Document $row): self
+    {
+        $this->row = $row;
+
+        return $this;
+    }
+
+    /**
+     * Returns set row for this database event.
+     * @return null|Document
+     */
+    public function getRow(): ?Document
+    {
+        return $this->row;
     }
 
     /**
@@ -99,17 +161,20 @@ class Database extends Event
         return $this->document;
     }
 
-    public function getQueue(): string
+    public function setProject(Document $project): self
     {
-        try {
-            $dsn = new DSN($this->getProject()->getAttribute('database'));
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $this->getProject()->getAttribute('database'));
+        $database = $project->getAttribute('database');
+        if (!empty($database)) {
+            try {
+                $dsn = new DSN($database);
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN("mysql://$database");
+            }
+            $this->queue = $dsn->getHost();
         }
 
-        $this->queue = $dsn->getHost();
-        return $this->queue;
+        return parent::setProject($project);
     }
 
     /**
@@ -123,6 +188,8 @@ class Database extends Event
             'project' => $this->project,
             'user' => $this->user,
             'type' => $this->type,
+            'table' => $this->table,
+            'row' => $this->row,
             'collection' => $this->collection,
             'document' => $this->document,
             'database' => $this->database,

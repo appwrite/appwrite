@@ -60,7 +60,7 @@ class HTTPTest extends Scope
             'origin' => 'http://localhost',
         ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code'], "Simple GET /robots.txt HTTP request failed: " . \json_encode($response));
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
     }
 
@@ -153,7 +153,6 @@ class HTTPTest extends Scope
         $this->assertIsString($body['client-flutter']);
         $this->assertIsString($body['console-web']);
         $this->assertIsString($body['server-nodejs']);
-        $this->assertIsString($body['server-deno']);
         $this->assertIsString($body['server-php']);
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);

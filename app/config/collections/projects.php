@@ -51,6 +51,16 @@ return [
                 'default' => null,
                 'array' => false,
             ],
+            [
+                '$id' => ID::custom('type'),
+                'type' => Database::VAR_STRING,
+                'size' => 128,
+                'required' => false,
+                'default' => 'tablesdb',
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -1286,6 +1296,7 @@ return [
             ]
         ],
     ],
+
     'deployments' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('deployments'),
@@ -1916,7 +1927,7 @@ return [
                 '$id' => ID::custom('errors'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1000000,
+                'size' => APP_FUNCTION_ERROR_LENGTH_LIMIT,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1927,7 +1938,7 @@ return [
                 '$id' => ID::custom('logs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1000000,
+                'size' => APP_FUNCTION_LOG_LENGTH_LIMIT,
                 'signed' => true,
                 'required' => false,
                 'default' => null,

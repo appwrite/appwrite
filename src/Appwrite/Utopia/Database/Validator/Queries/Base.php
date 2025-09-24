@@ -11,6 +11,7 @@ use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
+use Utopia\Database\Validator\Query\Select;
 
 class Base extends Queries
 {
@@ -25,7 +26,7 @@ class Base extends Queries
     {
         $config = Config::getParam('collections', []);
 
-        $collections = array_merge(
+        $collections = \array_merge(
             $config['projects'],
             $config['buckets'],
             $config['databases'],
@@ -34,57 +35,75 @@ class Base extends Queries
         );
 
         $collection = $collections[$collection];
-        // array for constant lookup time
+
         $allowedAttributesLookup = [];
         foreach ($allowedAttributes as $attribute) {
             $allowedAttributesLookup[$attribute] = true;
         }
 
+        $allAttributes = [];
         $attributes = [];
         foreach ($collection['attributes'] as $attribute) {
             $key = $attribute['$id'];
 
-            if (!isset($allowedAttributesLookup[$key])) {
-                continue;
-            }
-
-            $attributes[] = new Document([
+            $attributeDocument = new Document([
                 'key' => $key,
                 'type' => $attribute['type'],
                 'array' => $attribute['array'],
             ]);
+
+            $allAttributes[] = $attributeDocument;
+
+            if (isset($allowedAttributesLookup[$key])) {
+                $attributes[] = $attributeDocument;
+            }
         }
 
-        $attributes[] = new Document([
-            'key' => '$id',
-            'type' => Database::VAR_STRING,
-            'array' => false,
-        ]);
-        $attributes[] = new Document([
-            'key' => '$createdAt',
-            'type' => Database::VAR_DATETIME,
-            'array' => false,
-        ]);
-        $attributes[] = new Document([
-            'key' => '$updatedAt',
-            'type' => Database::VAR_DATETIME,
-            'array' => false,
-        ]);
+        $internalAttributes = [
+            new Document([
+                'key' => '$id',
+                'type' => Database::VAR_STRING,
+                'array' => false,
+            ]),
+            new Document([
+                'key' => '$createdAt',
+                'type' => Database::VAR_DATETIME,
+                'array' => false,
+            ]),
+            new Document([
+                'key' => '$updatedAt',
+                'type' => Database::VAR_DATETIME,
+                'array' => false,
+            ]),
+            new Document([
+                'key' => '$sequence',
+                'type' => Database::VAR_INTEGER,
+                'array' => false,
+            ])
+        ];
 
-        $sequence = new Document([
-            'key' => '$sequence',
-            'type' => Database::VAR_STRING,
-            'array' => false,
-        ]);
+        foreach ($internalAttributes as $attribute) {
+            $attributes[] = $attribute;
+            $allAttributes[] = $attribute;
+        }
 
         $validators = [
             new Limit(),
             new Offset(),
             new Cursor(),
             new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
-            new Order([...$attributes, $sequence]),
+            new Order($attributes),
         ];
 
+        if ($this->isSelectQueryAllowed()) {
+            $validators[] = new Select($allAttributes);
+        }
+
         parent::__construct($validators);
+    }
+
+    public function isSelectQueryAllowed(): bool
+    {
+        return false;
     }
 }

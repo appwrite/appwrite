@@ -9,6 +9,12 @@ use Utopia\System\System;
 
 class Executor
 {
+    // 0.8.6 is last version with object-based headers
+    public const RESPONSE_FORMAT_OBJECT_HEADERS = '0.10.0';
+
+    // 0.9.0 is first version with array-based headers
+    public const RESPONSE_FORMAT_ARRAY_HEADERS = '0.11.0';
+
     public const METHOD_GET = 'GET';
     public const METHOD_POST = 'POST';
     public const METHOD_PUT = 'PUT';
@@ -19,21 +25,14 @@ class Executor
     public const METHOD_CONNECT = 'CONNECT';
     public const METHOD_TRACE = 'TRACE';
 
-    private bool $selfSigned = false;
+    protected bool $selfSigned = false;
 
-    /**
-     * @var callable(string, string): string  $endpoint
-     */
-    private $endpointSelector;
-
+    protected string $endpoint;
     protected array $headers;
 
-    /**
-     * @param callable(string, string): string $endpointSelector
-     */
-    public function __construct(callable $endpointSelector)
+    public function __construct()
     {
-        $this->endpointSelector = $endpointSelector;
+        $this->endpoint = System::getEnv('_APP_EXECUTOR_HOST', '');
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . System::getEnv('_APP_EXECUTOR_SECRET', ''),
@@ -71,7 +70,8 @@ class Executor
         string $destination = '',
         array $variables = [],
         string $command = null,
-        string $outputDirectory = ''
+        string $outputDirectory = '',
+        string $runtimeEntrypoint = ''
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
@@ -94,11 +94,12 @@ class Executor
             'memory' => $memory,
             'version' => $version,
             'timeout' => $timeout,
-            'outputDirectory' => $outputDirectory
+            'outputDirectory' => $outputDirectory,
+            'runtimeEntrypoint' => $runtimeEntrypoint
         ];
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -128,8 +129,7 @@ class Executor
             'timeout' => $timeout
         ];
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $this->call($endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
+        $this->call($this->endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
     }
 
     /**
@@ -145,8 +145,7 @@ class Executor
         $runtimeId = "$projectId-$deploymentId" . $suffix;
         $route = "/runtimes/$runtimeId";
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_DELETE, $route, [
+        $response = $this->call($this->endpoint, self::METHOD_DELETE, $route, [
             'x-opr-addressing-method' => 'broadcast'
         ], [], true, 30);
 
@@ -177,6 +176,7 @@ class Executor
      * @param string $entrypoint
      * @param string $runtimeEntrypoint
      * @param bool $logging
+     * @param string $responseFormat
      *
      * @return array
      */
@@ -195,9 +195,10 @@ class Executor
         array $headers,
         float $cpus,
         int $memory,
-        string $runtimeEntrypoint = null,
         bool $logging,
-        int $requestTimeout = null
+        string $runtimeEntrypoint = '',
+        ?int $requestTimeout = null,
+        string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS
     ) {
         if (empty($headers['host'])) {
             $headers['host'] = System::getEnv('_APP_DOMAIN', '');
@@ -239,8 +240,7 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data' ], $params, true, $requestTimeout);
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -274,8 +274,7 @@ class Executor
             'timeout' => $timeout
         ];
 
-        $endpoint = $this->selectEndpoint($projectId, $deploymentId);
-        $response = $this->call($endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -464,10 +463,5 @@ class Executor
         }
 
         return $output;
-    }
-
-    private function selectEndpoint(string $projectId, string $deploymentId): string
-    {
-        return call_user_func($this->endpointSelector, $projectId, $deploymentId);
     }
 }
