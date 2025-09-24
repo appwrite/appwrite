@@ -2400,15 +2400,20 @@ App::post('/v1/account/tokens/email')
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
             'team' => '',
-            'heading' => $heading,
-            'accentColor' => APP_EMAIL_ACCENT_COLOR,
-            'logoUrl' => APP_EMAIL_LOGO_URL,
-            'twitterUrl' => APP_SOCIAL_TWITTER,
-            'discordUrl' => APP_SOCIAL_DISCORD,
-            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-            'termsUrl' => APP_EMAIL_TERMS_URL,
-            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
+
+        if ($customEmails && !empty($customTemplate)) {
+            $emailVariables = array_merge($emailVariables, [
+                'heading' => $heading,
+                'accentColor' => APP_EMAIL_ACCENT_COLOR,
+                'logoUrl' => APP_EMAIL_LOGO_URL,
+                'twitterUrl' => APP_SOCIAL_TWITTER,
+                'discordUrl' => APP_SOCIAL_DISCORD,
+                'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+                'termsUrl' => APP_EMAIL_TERMS_URL,
+                'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+            ]);
+        }
 
         $queueForMails
             ->setSubject($subject)
@@ -3706,15 +3711,20 @@ App::post('/v1/account/verification')
             'project' => $projectName,
             // TODO: remove unnecessary team variable from this email
             'team' => '',
-            'heading' => $heading,
-            'accentColor' => APP_EMAIL_ACCENT_COLOR,
-            'logoUrl' => APP_EMAIL_LOGO_URL,
-            'twitterUrl' => APP_SOCIAL_TWITTER,
-            'discordUrl' => APP_SOCIAL_DISCORD,
-            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-            'termsUrl' => APP_EMAIL_TERMS_URL,
-            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
         ];
+
+        if ($customEmails && !empty($customTemplate)) {
+            $emailVariables = array_merge($emailVariables, [
+                'heading' => $heading,
+                'accentColor' => APP_EMAIL_ACCENT_COLOR,
+                'logoUrl' => APP_EMAIL_LOGO_URL,
+                'twitterUrl' => APP_SOCIAL_TWITTER,
+                'discordUrl' => APP_SOCIAL_DISCORD,
+                'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+                'termsUrl' => APP_EMAIL_TERMS_URL,
+                'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+            ]);
+        }
 
         $queueForMails
             ->setSubject($subject)
@@ -4817,15 +4827,20 @@ App::post('/v1/account/mfa/challenge')
                     'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
                     'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
-                    'heading' => $heading,
-                    'accentColor' => APP_EMAIL_ACCENT_COLOR,
-                    'logoUrl' => APP_EMAIL_LOGO_URL,
-                    'twitterUrl' => APP_SOCIAL_TWITTER,
-                    'discordUrl' => APP_SOCIAL_DISCORD,
-                    'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-                    'termsUrl' => APP_EMAIL_TERMS_URL,
-                    'privacyUrl' => APP_EMAIL_PRIVACY_URL,
                 ];
+
+                if ($customEmails && !empty($customTemplate)) {
+                    $emailVariables = array_merge($emailVariables, [
+                        'heading' => $heading,
+                        'accentColor' => APP_EMAIL_ACCENT_COLOR,
+                        'logoUrl' => APP_EMAIL_LOGO_URL,
+                        'twitterUrl' => APP_SOCIAL_TWITTER,
+                        'discordUrl' => APP_SOCIAL_DISCORD,
+                        'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+                        'termsUrl' => APP_EMAIL_TERMS_URL,
+                        'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+                    ]);
+                }
 
                 $queueForMails
                     ->setSubject($subject)

@@ -188,6 +188,8 @@ trait AccountBase
         // Only Console project has branded logo in email.
         if ($isConsoleProject) {
             $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+        } else {
+            $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
         }
 
         // TODO: Remove this once OTP login is supported for Console.
