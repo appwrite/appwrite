@@ -627,7 +627,7 @@ abstract class Format
             case 'healthStatus':
                 switch ($param) {
                     case 'status':
-                        return 'HealthStatus';
+                        return 'HealthCheckStatus';
                 }
                 break;
         }
