@@ -104,26 +104,38 @@ switch ($type) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <link rel="icon" type="image/svg+xml" href="<?php echo $url; ?>/images/logos/appwrite-icon.svg" />
     <link rel="mask-icon" type="image/png" href="<?php echo $url; ?>/images/logos/appwrite-icon.png" />
-    <link
-        rel="preload"
-        href="/fonts/inter/inter-v8-latin-600.woff2"
-        as="font"
-        type="font/woff2"
-        crossorigin />
-    <link
-        rel="preload"
-        href="/fonts/inter/inter-v8-latin-regular.woff2"
-        as="font"
-        type="font/woff2"
-        crossorigin />
+
+    <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://assets.appwrite.io/fonts/inter/Inter-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'Fira Code';
+            src: url('https://assets.appwrite.io/fonts/fira-code/FiraCode-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+
     <title><?php echo $this->print($title); ?></title>
 
     <style>
-        @import url(https://fonts.bunny.net/css?family=fira-code:400|inter:400);
-
         * {
             margin: 0;
             padding: 0;
@@ -452,9 +464,9 @@ switch ($type) {
     </style>
 </head>
 
-<body x-data="{ page: 'error' }">
+<body>
     <div class="main">
-        <div x-show="page === 'error'" class="content <?php echo $isSimpleMessage ? 'large-error' : 'small-error' ?>">
+        <div id="views-error" class="content <?php echo $isSimpleMessage ? 'large-error' : 'small-error' ?>">
             <div class="center"><span class="<?php echo $this->print($labelClass); ?>"><?php echo $this->print($label); ?></span></div>
             <h1><?php echo $this->print($message); ?></h1>
             <?php if (!empty($type)): ?>
@@ -474,14 +486,14 @@ switch ($type) {
                 <?php endif; ?>
                     
                 <?php if ($development) : ?>
-                        <button class="<?php echo count($buttons) === 0 ? 'bordered-button' : 'button' ?>" x-on:click="page = 'trace'">View error trace</button>
+                        <button class="<?php echo count($buttons) === 0 ? 'bordered-button' : 'button' ?>" onclick="openTraceView()">View error trace</button>
                 <?php endif; ?>
             </div>
         </div>
 
         <?php if ($development) : ?>
-            <div x-show="page === 'trace'" class="error-trace">
-                <button class="back-button" x-on:click="page = 'error'">
+            <div id="views-trace" style="display: none;" class="error-trace">
+                <button class="back-button" onclick="openErrorView()">
                     Back
                 </button>
                 <div class="trace-grid-header">Error trace</div>
@@ -512,6 +524,17 @@ switch ($type) {
         <?php endif; ?>
     </div>
 
+    <script>
+        function openErrorView() {
+            document.getElementById('views-trace').style.display = 'none';
+            document.getElementById('views-error').style.display = 'block';
+        }
+
+        function openTraceView() {
+            document.getElementById('views-trace').style.display = 'block';
+            document.getElementById('views-error').style.display = 'none';
+        }
+    </script>
 </body>
 
 </html>

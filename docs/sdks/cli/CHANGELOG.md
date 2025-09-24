@@ -1,5 +1,26 @@
 # Change Log
 
+## 10.0.0
+
+* **Breaking:** Removed Avatars CLI command and all related subcommands; corresponding examples deleted
+* **Feat:** Geo defaults now accept coordinate arrays for Databases and Tables DB, with automatic normalization
+* **Feat:** Pull command skips deprecated resources by default and shows clearer totals/messages
+* **Feat:** Updated CLI descriptions: Databases marked legacy; added tables-db, projects, and project
+* Fix TypeScript type generation now quotes invalid property names to produce valid typings
+* Update documentation: Removed Avatars CLI examples and updated help text to reflect new geo defaults and terminology
+
+## 8.3.0
+
+* **Feat:** Add support for `appwrite.config.json` file
+  * All new projects will be initialized with this configuration file
+  * Resolves bundler conflicts (e.g., Vite) that incorrectly interpret `.json` files as library imports
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Type generation fixes:
+  * Fix relationships using the relatedCollection's id instead of name
+  * Update auto generated comment to show relative path instead of absolute path
+
+> **Note:** The existing `appwrite.json` file remains fully supported for backward compatibility
+
 ## 8.2.2
 
 * Fix object comparison logic when pushing settings

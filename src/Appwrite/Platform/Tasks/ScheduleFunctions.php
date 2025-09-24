@@ -7,9 +7,13 @@ use Cron\CronExpression;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Pools\Group;
-use Utopia\System\System;
 
+/**
+ * ScheduleFunctions
+ *
+ * Handles cron job related executions by processing cron expressions
+ * and scheduling function executions based on recurring schedules.
+ */
 class ScheduleFunctions extends ScheduleBase
 {
     public const UPDATE_TIMER = 10; // seconds
@@ -24,15 +28,15 @@ class ScheduleFunctions extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return 'function';
+        return SCHEDULE_RESOURCE_TYPE_FUNCTION;
     }
 
     public static function getCollectionId(): string
     {
-        return 'functions';
+        return RESOURCE_TYPE_FUNCTIONS;
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
+    protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
@@ -91,13 +95,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $isRedisFallback = \str_contains(System::getEnv('_APP_WORKER_REDIS_FALLBACK', ''), 'functions');
-
-                    $queueForFunctions = new Func(
-                        $isRedisFallback
-                        ? $this->publisherRedis
-                        : $this->publisher
-                    );
+                    $queueForFunctions = new Func($this->publisherFunctions);
 
                     $queueForFunctions
                         ->setType('schedule')

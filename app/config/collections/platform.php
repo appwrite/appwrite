@@ -407,7 +407,7 @@ return [
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => true,
+                'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
