@@ -1,4 +1,4 @@
-> We just announced API for spatial columns for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-spatial-columns)
+> We just announced Timestamp Overrides for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-timestamp-overrides)
 
 > Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
