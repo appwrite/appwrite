@@ -339,12 +339,20 @@ App::post('/v1/migrations/csv/imports')
     ->inject('deviceForMigrations')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, bool $internalFile, Response $response, Database $dbForProject, Document $project, Device $deviceForFiles, Device $deviceForMigrations, Event $queueForEvents, Migration $queueForMigrations) {
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        if ($internalFile && !$isPrivilegedUser) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+    ->action(function (
+        string $bucketId,
+        string $fileId,
+        string $resourceId,
+        bool $internalFile,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Device $deviceForFiles,
+        Device $deviceForMigrations,
+        Event $queueForEvents,
+        Migration $queueForMigrations
+    ) {
         $bucket = Authorization::skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
@@ -352,7 +360,7 @@ App::post('/v1/migrations/csv/imports')
             return $dbForProject->getDocument('buckets', $bucketId);
         });
 
-        if ($bucket->isEmpty() || (!$isAPIKey && !$isPrivilegedUser)) {
+        if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -366,7 +374,7 @@ App::post('/v1/migrations/csv/imports')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
-        // no encryption, compression on files above 20MB.
+        // No encryption or compression on files above 20MB.
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
         $compression = $file->getAttribute('algorithm', Compression::NONE);
         $hasCompression = $compression !== Compression::NONE;
@@ -377,7 +385,6 @@ App::post('/v1/migrations/csv/imports')
         if ($hasEncryption || $hasCompression) {
             $source = $deviceForFiles->read($path);
 
-            // 1. decrypt
             if ($hasEncryption) {
                 $source = OpenSSL::decrypt(
                     $source,
@@ -389,7 +396,6 @@ App::post('/v1/migrations/csv/imports')
                 );
             }
 
-            // 2. decompress
             if ($hasCompression) {
                 switch ($compression) {
                     case Compression::ZSTD:
@@ -401,12 +407,12 @@ App::post('/v1/migrations/csv/imports')
                 }
             }
 
-            // manual write after decryption and/or decompression
-            if (! $deviceForMigrations->write($newPath, $source, 'text/csv')) {
-                throw new \Exception("Unable to copy file");
+            // Manual write after decryption and/or decompression
+            if (!$deviceForMigrations->write($newPath, $source, 'text/csv')) {
+                throw new \Exception('Unable to copy file');
             }
-        } elseif (! $deviceForFiles->transfer($path, $newPath, $deviceForMigrations)) {
-            throw new \Exception("Unable to copy file");
+        } elseif (!$deviceForFiles->transfer($path, $newPath, $deviceForMigrations)) {
+            throw new \Exception('Unable to copy file');
         }
 
         $fileSize = $deviceForMigrations->getFileSize($newPath);
@@ -461,34 +467,68 @@ App::post('/v1/migrations/csv/exports')
             )
         ]
     ))
-    ->param('bucketId', '', new UID(), 'Storage bucket unique ID where the exported CSV will be stored.')
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.')
-    ->param('columns', [], new ArrayList(new Text(255)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.', true)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID where the exported CSV will be stored.')
+    ->param('filename', '', new Text(255), 'The name of the file to be created for the export, excluding the .csv extension.')
+    ->param('columns', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.', true)
+    ->param('delimiter', ',', new Text(1), 'The character that separates each column value. Default is comma ",".', true)
+    ->param('enclosure', '"', new Text(1), 'The character that encloses each column value. Default is double quotes \'"\'.', true)
+    ->param('escape', '\\', new Text(1), 'The escape character for the enclosure character. Default is backslash "\\".', true)
+    ->param('header', true, new Boolean(), 'Whether to include the header row with column names. Default is true.', true)
+    ->param('notify', true, new Boolean(), 'Set to true to receive an email when the export is complete. Default is true.', true)
+    ->inject('user')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $resourceId, array $columns, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Migration $queueForMigrations) {
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
+    ->action(function (
+        string $resourceId,
+        string $bucketId,
+        string $filename,
+        array $columns,
+        string $delimiter,
+        string $enclosure,
+        string $escape,
+        bool $header,
+        bool $notify,
+        Document $user,
+        Response $response,
+        Database $dbForProject,
+        Document $project,
+        Event $queueForEvents,
+        Migration $queueForMigrations
+    ) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-
-        if ($bucket->isEmpty() || (!$isAPIKey && !$isPrivilegedUser)) {
+        if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $migrationId = ID::unique();
-        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+        [$databaseId, $collectionId] = \explode(':', $resourceId, 2);
+        if (empty($databaseId)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+        if (empty($collectionId)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
 
         $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => $migrationId,
+            '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
             'destination' => CSV::getName(),
-            'resources' => $resources,
+            'resources' => Transfer::extractServices([Transfer::GROUP_DATABASES]),
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
             'statusCounters' => '{}',
@@ -496,7 +536,14 @@ App::post('/v1/migrations/csv/exports')
             'errors' => [],
             'options' => [
                 'bucketId' => $bucketId,
+                'filename' => $filename,
                 'columns' => $columns,
+                'delimiter' => $delimiter,
+                'enclosure' => $enclosure,
+                'escape' => $escape,
+                'header' => $header,
+                'notify' => $notify,
+                'userInternalId' => $user->getSequence(),
             ],
         ]));
 
