@@ -25,6 +25,20 @@ class Operation extends Validator
     ];
 
     /** @var array<string, bool> */
+    private array $requiresData = [
+        'create' => true,
+        'update' => true,
+        'upsert' => true,
+        'delete' => false,  // Delete doesn't need data
+        'increment' => true,
+        'decrement' => true,
+        'bulkCreate' => true,
+        'bulkUpdate' => true,
+        'bulkUpsert' => true,
+        'bulkDelete' => true,
+    ];
+
+    /** @var array<string, bool> */
     private array $actions = [
         'create' => true,
         'update' => true,
@@ -121,14 +135,23 @@ class Operation extends Validator
             return false;
         }
 
-        // Data must be present and must be array (can be empty)
-        if (!\array_key_exists('data', $value)) {
-            $this->description = "Missing required key: data";
-            return false;
-        }
-        if (!\is_array($value['data'])) {
-            $this->description = "Key 'data' must be an array";
-            return false;
+        // Data validation - only required for certain actions
+        if (isset($this->requiresData[$value['action']]) && $this->requiresData[$value['action']]) {
+            // Data is required for this action
+            if (!\array_key_exists('data', $value)) {
+                $this->description = "Missing required key: data";
+                return false;
+            }
+            if (!\is_array($value['data'])) {
+                $this->description = "Key 'data' must be an array";
+                return false;
+            }
+        } else if (\array_key_exists('data', $value)) {
+            // Data is optional but if provided, must be an array
+            if (!\is_array($value['data'])) {
+                $this->description = "Key 'data' must be an array";
+                return false;
+            }
         }
 
         return true;
