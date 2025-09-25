@@ -77,12 +77,13 @@ class Increment extends Action
             ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -95,7 +96,7 @@ class Increment extends Action
         }
 
         try {
-            $document = $dbForProject->increaseDocumentAttribute(
+            $document = $dbForDatabaseRecords->increaseDocumentAttribute(
                 collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 id: $documentId,
                 attribute: $attribute,
@@ -104,7 +105,8 @@ class Increment extends Action
             );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (NotFoundException) {
+        } catch (NotFoundException $e) {
+            var_dump($e->getTraceAsString());
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSdkNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);

@@ -110,7 +110,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -129,7 +129,7 @@ class XList extends Action
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
-                $documents = $dbForProject->skipRelationships(fn () => $dbForDatabaseRecords->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
+                $documents = $dbForDatabaseRecords->skipRelationships(fn () => $dbForDatabaseRecords->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
             }
 
             $total = $dbForDatabaseRecords->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries, APP_LIMIT_COUNT);

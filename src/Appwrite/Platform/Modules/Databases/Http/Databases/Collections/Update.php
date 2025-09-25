@@ -93,7 +93,7 @@ class Update extends Action
 
         $enabled ??= $collection->getAttribute('enabled', true);
 
-        $collection = $dbForDatabaseRecords->updateDocument(
+        $collection = $dbForProject->updateDocument(
             'database_' . $database->getSequence(),
             $collectionId,
             $collection
