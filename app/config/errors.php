@@ -798,7 +798,7 @@ return [
     ],
     Exception::ATTRIBUTES_NOT_FOUND => [
         'name' => Exception::ATTRIBUTES_NOT_FOUND,
-        'description' => 'No attributes exists for the requested collection.',
+        'description' => 'No attributes exist for the requested collection.',
         'code' => 404,
     ],
     Exception::ATTRIBUTE_UNKNOWN => [
@@ -868,7 +868,7 @@ return [
     ],
     Exception::COLUMNS_NOT_FOUND => [
         'name' => Exception::COLUMNS_NOT_FOUND,
-        'description' => 'No columns exists for the requested table.',
+        'description' => 'No columns exist for the requested table.',
         'code' => 404,
     ],
     Exception::COLUMN_UNKNOWN => [
