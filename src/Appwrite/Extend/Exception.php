@@ -225,6 +225,7 @@ class Exception extends \Exception
 
     /** Attributes */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
+    public const ATTRIBUTES_NOT_FOUND              = 'attributes_not_found';
     public const ATTRIBUTE_UNKNOWN                 = 'attribute_unknown';
     public const ATTRIBUTE_NOT_AVAILABLE           = 'attribute_not_available';
     public const ATTRIBUTE_FORMAT_UNSUPPORTED      = 'attribute_format_unsupported';
@@ -239,6 +240,7 @@ class Exception extends \Exception
 
     /** Columns */
     public const COLUMN_NOT_FOUND                  = 'column_not_found';
+    public const COLUMNS_NOT_FOUND                 = 'columns_not_found';
     public const COLUMN_UNKNOWN                    = 'column_unknown';
     public const COLUMN_NOT_AVAILABLE              = 'column_not_available';
     public const COLUMN_FORMAT_UNSUPPORTED         = 'column_format_unsupported';

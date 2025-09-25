@@ -796,6 +796,11 @@ return [
         'description' => 'Attribute with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::ATTRIBUTES_NOT_FOUND => [
+        'name' => Exception::ATTRIBUTES_NOT_FOUND,
+        'description' => 'No attributes exists for the requested collection.',
+        'code' => 404,
+    ],
     Exception::ATTRIBUTE_UNKNOWN => [
         'name' => Exception::ATTRIBUTE_UNKNOWN,
         'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
@@ -859,6 +864,11 @@ return [
     Exception::COLUMN_NOT_FOUND => [
         'name' => Exception::COLUMN_NOT_FOUND,
         'description' => 'Column with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::COLUMNS_NOT_FOUND => [
+        'name' => Exception::COLUMNS_NOT_FOUND,
+        'description' => 'No columns exists for the requested table.',
         'code' => 404,
     ],
     Exception::COLUMN_UNKNOWN => [
