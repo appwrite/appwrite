@@ -70,8 +70,6 @@ trait ProjectCustom
                 'databases.write',
                 'collections.read',
                 'collections.write',
-                'transactions.read',
-                'transactions.write',
                 'tables.read',
                 'tables.write',
                 'documents.read',

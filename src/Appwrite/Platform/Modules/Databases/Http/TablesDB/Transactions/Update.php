@@ -31,7 +31,7 @@ class Update extends TransactionsUpdate
             ->setHttpPath('/v1/tablesdb/transactions/:transactionId')
             ->desc('Update transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'transactions.write')
+            ->label('scope', 'rows.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'tablesDB',

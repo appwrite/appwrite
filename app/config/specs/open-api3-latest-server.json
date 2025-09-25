@@ -4842,7 +4842,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "documents.write",
                     "platforms": [
                         "server",
                         "client",
@@ -4976,7 +4976,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "documents.write",
                     "platforms": [
                         "server",
                         "client",
@@ -5054,7 +5054,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "documents.write",
                     "platforms": [
                         "server",
                         "client",
@@ -5120,7 +5120,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "documents.write",
                     "platforms": [
                         "server",
                         "client",
@@ -23888,7 +23888,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.read",
+                    "scope": "rows.read",
                     "platforms": [
                         "server",
                         "client",
@@ -23955,7 +23955,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "server",
                         "client",
@@ -24025,7 +24025,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.read",
+                    "scope": "rows.read",
                     "platforms": [
                         "server",
                         "client",
@@ -24089,7 +24089,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "server",
                         "client",
@@ -24167,7 +24167,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "server",
                         "client",
@@ -24233,7 +24233,7 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "transactions.write",
+                    "scope": "rows.write",
                     "platforms": [
                         "server",
                         "client",
