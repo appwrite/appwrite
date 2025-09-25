@@ -985,6 +985,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
+	Console::log("@@@debug-mustaq");
+	Console::log([
+	    "isToken" => $isToken,
+	    "resourceToken" => $resourceToken,
+	    "bucketInternalId" => $resourceToken->getAttribute("bucketInternalId"),
+	    "sequence" => $bucket->getSequence(),
+	    "fileSecurity" => $fileSecurity,
+	    "validator" => $validator,
+	    "bucketGetRead" => $bucket->getRead(),
+	    "valid" => $valid,
+	]);
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -995,6 +1006,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             /* @type Document $file */
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
+	
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
