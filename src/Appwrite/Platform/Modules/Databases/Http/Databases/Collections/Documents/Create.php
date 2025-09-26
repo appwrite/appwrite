@@ -382,7 +382,7 @@ class Create extends Action
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
-            throw new Exception($this->getInvalidStructureException(), $e->getMessage());
+            throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
         $queueForEvents
