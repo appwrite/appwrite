@@ -116,7 +116,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
             }
 
-            $commentStatus = $isAuthorized ? 'waiting' : 'failed';
+            $commentStatus = 'waiting';
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
 
@@ -259,14 +259,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                 }
                 $owner = $github->getOwnerName($providerInstallationId);
-                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
+                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
                 continue;
-            }
-
-            if ($external) {
-                $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
-                $providerRepositoryName = $pullRequestResponse['head']['repo']['owner']['login'];
-                $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
             }
 
             $commands = [];
@@ -1624,9 +1618,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
-            Query::equal('projectInternalId', [$project->getSequence()])
-        ]));
+        $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId));
 
         if ($repository->isEmpty()) {
             throw new Exception(Exception::REPOSITORY_NOT_FOUND);
@@ -1653,19 +1645,28 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
 
         $owner = $github->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-            if (empty($repositoryName)) {
+            $providerRepositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($providerRepositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
-        $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
+        $pullRequestResponse = $github->getPullRequest($owner, $providerRepositoryName, $providerPullRequestId);
 
+        $providerRepositoryUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
+        $providerRepositoryOwner = $pullRequestResponse['head']['repo']['owner']['login'] ?? '';
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
+        $providerBranchUrl = "$providerRepositoryUrl/tree/$providerBranch";
         $providerCommitHash = $pullRequestResponse['head']['sha'] ?? '';
 
-        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, $providerPullRequestId, true, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
+        $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+        $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
+        $providerCommitUrl = $commitDetails["commitUrl"] ?? '';
+        $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
+        $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
+
+        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
 
         $response->noContent();
     });
