@@ -538,6 +538,7 @@ App::setResource('deviceForBuilds', function ($project, Telemetry $telemetry) {
 function getDevice(string $root, string $connection = ''): Device
 {
     $connection = !empty($connection) ? $connection : System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+    Console::log("@@@debug-mustaq connection value is {$connection}");
 
     if (!empty($connection)) {
         $acl = 'private';
@@ -547,6 +548,7 @@ function getDevice(string $root, string $connection = ''): Device
         $bucket = '';
         $region = '';
         $url = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
+        Console::log("@@@debug-mustaq url {$url}");
 
         try {
             $dsn = new DSN($connection);
@@ -563,8 +565,10 @@ function getDevice(string $root, string $connection = ''): Device
             case Storage::DEVICE_S3:
                 if (!empty($url)) {
                     $bucketRoot = (!empty($bucket) ? $bucket . '/' : '') . \ltrim($root, '/');
+                    Console::log("@@@debug-mustaq connection device s3 {$bucketRoot}");
                     return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl);
                 } else {
+                    Console::log("@@@debug-mustaq connection device AWS");
                     return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 }
                 // no break
@@ -580,6 +584,7 @@ function getDevice(string $root, string $connection = ''): Device
                 return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
             case Storage::DEVICE_LOCAL:
             default:
+                Console::log("@@@debug-mustaq connection device local");
                 return new Local($root);
         }
     } else {
