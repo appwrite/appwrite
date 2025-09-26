@@ -196,15 +196,20 @@ class Create extends Action
         $supportForSpatialAttributes = $dbForProject->getAdapter()->getSupportForSpatialAttributes();
         $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
         $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
+        $supportForMultipleFulltextIndexes = $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes();
+        $supportForIdenticalIndexes = $dbForProject->getAdapter()->getSupportForIdenticalIndexes();
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
+            $collection->getAttribute('indexes'),
             $maxIndexLength,
             $internalIndexesKeys,
             $supportForIndexArray,
             $supportForSpatialAttributes,
             $supportForSpatialIndexNull,
-            $supportForSpatialIndexOrder
+            $supportForSpatialIndexOrder,
+            $supportForMultipleFulltextIndexes,
+            $supportForIdenticalIndexes
         );
 
         if (!$validator->isValid($index)) {

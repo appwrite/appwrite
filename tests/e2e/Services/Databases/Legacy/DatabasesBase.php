@@ -1499,10 +1499,12 @@ trait DatabasesBase
             'key' => 'lengthOverrideTestIndex',
             'type' => 'key',
             'attributes' => ['actors'],
-            'lengths' => [120]
+            'lengths' => [120],
+            'orders' => [Database::ORDER_DESC],
         ]);
-        $this->assertEquals(202, $create['headers']['status-code']);
 
+        $this->assertEquals(202, $create['headers']['status-code']);  
+      
         $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4232,6 +4234,7 @@ trait DatabasesBase
     public function testUniqueIndexDuplicate(array $data): array
     {
         $databaseId = $data['databaseId'];
+        
         $uniqueIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4240,10 +4243,11 @@ trait DatabasesBase
             'key' => 'unique_title',
             'type' => 'unique',
             'attributes' => ['title'],
+            'orders' => [Database::ORDER_DESC],
         ]);
-
-        $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
-
+  
+        $this->assertEquals(202, $uniqueIndex['headers']['status-code']);  
+        
         sleep(2);
 
         // test for failure
@@ -8022,7 +8026,7 @@ trait DatabasesBase
 
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
-        
+
         if ($this->isMongoDB()) {
             $this->markTestSkipped('MongoDB is not supported for this test');
         }
