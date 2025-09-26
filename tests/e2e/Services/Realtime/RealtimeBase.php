@@ -16,13 +16,6 @@ trait RealtimeBase
             $projectId = $this->getProject()['$id'];
         }
 
-        $headers = array_merge(
-            [
-                "Origin" => "appwrite.test",
-            ],
-            $headers
-        );
-
         $query = [
             "project" => $projectId,
             "channels" => $channels,
@@ -42,14 +35,14 @@ trait RealtimeBase
         /**
          * Test for SUCCESS
          */
-        $client = $this->getWebsocket(["documents"]);
+        $client = $this->getWebsocket(["rows"]);
         $this->assertNotEmpty($client->receive());
         $client->close();
     }
 
     public function testConnectionFailureMissingChannels(): void
     {
-        $client = $this->getWebsocket();
+        $client = $this->getWebsocket([]);
         $payload = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey("type", $payload);
@@ -58,20 +51,13 @@ trait RealtimeBase
         $this->assertEquals(1008, $payload["data"]["code"]);
         $this->assertEquals("Missing channels", $payload["data"]["message"]);
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
 
     public function testConnectionFailureUnknownProject(): void
     {
-        $client = new WebSocketClient(
-            "ws://appwrite-traefik/v1/realtime?project=123",
-            [
-                "headers" => [
-                    "Origin" => "appwrite.test",
-                ],
-            ]
-        );
+        $client = $this->getWebsocket(projectId: '123');
         $payload = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey("type", $payload);
@@ -83,7 +69,7 @@ trait RealtimeBase
             $payload["data"]["message"]
         );
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
 }

@@ -2751,7 +2751,7 @@
                 "tags": [
                     "account"
                 ],
-                "description": "Sends the user an email with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).",
+                "description": "Sends the user an email with a secret key for creating a session. If the email address has never been used, a **new account is created** using the provided `userId`. Otherwise, if the email address is already attached to an account, the **user ID is ignored**. Then, the user will receive an email with the one-time password. Use the returned user ID and secret and submit a request to the [POST \/v1\/account\/sessions\/token](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#createSession) endpoint to complete the login process. The secret sent to the user's email is valid for 15 minutes.\n\nA user is limited to 10 active sessions at a time by default. [Learn more about session limits](https:\/\/appwrite.io\/docs\/authentication-security#limits).\n",
                 "responses": {
                     "201": {
                         "description": "Token",
@@ -2799,7 +2799,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -2886,7 +2886,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -3111,7 +3111,7 @@
                             "properties": {
                                 "userId": {
                                     "type": "string",
-                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                    "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.",
                                     "default": null,
                                     "x-example": "<USER_ID>"
                                 },
@@ -3451,7 +3451,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3576,7 +3575,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3594,7 +3592,7 @@
                 "parameters": [
                     {
                         "name": "code",
-                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa, mir, maestro, rupay.",
+                        "description": "Credit Card Code. Possible values: amex, argencard, cabal, cencosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, unionpay, visa, mir, maestro, rupay.",
                         "required": true,
                         "type": "string",
                         "x-example": "amex",
@@ -3611,7 +3609,7 @@
                             "mastercard",
                             "naranja",
                             "targeta-shopping",
-                            "union-china-pay",
+                            "unionpay",
                             "visa",
                             "mir",
                             "maestro",
@@ -3631,7 +3629,7 @@
                             "Mastercard",
                             "Naranja",
                             "Tarjeta Shopping",
-                            "Union China Pay",
+                            "Union Pay",
                             "Visa",
                             "MIR",
                             "Maestro",
@@ -3707,7 +3705,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -3770,7 +3767,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4257,7 +4253,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4340,7 +4335,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4431,7 +4425,6 @@
                     "scope": "avatars.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4522,7 +4515,6 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4603,8 +4595,8 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4612,9 +4604,7 @@
                         {
                             "name": "createDocument",
                             "auth": {
-                                "Session": [],
-                                "Key": [],
-                                "JWT": []
+                                "Project": []
                             },
                             "parameters": [
                                 "databaseId",
@@ -4743,7 +4733,6 @@
                     "scope": "documents.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4809,7 +4798,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "**WARNING: Experimental Feature** - This endpoint is experimental and not yet officially supported. It may be subject to breaking changes or removal in future versions.\n\nCreate or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
+                "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                 "responses": {
                     "200": {
                         "description": "Document",
@@ -4833,7 +4822,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -4938,7 +4926,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5023,7 +5010,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 117,
+                    "weight": 119,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5035,7 +5022,6 @@
                     "scope": "documents.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5078,6 +5064,222 @@
                 ]
             }
         },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
+            "patch": {
+                "summary": "Decrement document attribute",
+                "operationId": "databasesDecrementDocumentAttribute",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Decrement a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "schema": {
+                            "$ref": "#\/definitions\/document"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "decrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 116,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/decrement-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server",
+                        "client"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to decrement the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "min": {
+                                    "type": "number",
+                                    "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
+            "patch": {
+                "summary": "Increment document attribute",
+                "operationId": "databasesIncrementDocumentAttribute",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "databases"
+                ],
+                "description": "Increment a specific attribute of a document by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "schema": {
+                            "$ref": "#\/definitions\/document"
+                        }
+                    }
+                },
+                "x-appwrite": {
+                    "method": "incrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 115,
+                    "cookies": false,
+                    "type": "",
+                    "deprecated": false,
+                    "demo": "databases\/increment-document-attribute.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server",
+                        "client"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DATABASE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<COLLECTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<DOCUMENT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "type": "string",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "number",
+                                    "description": "Value to increment the attribute by. The value must be a number.",
+                                    "default": 1,
+                                    "x-example": null
+                                },
+                                "max": {
+                                    "type": "number",
+                                    "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
         "\/functions\/{functionId}\/executions": {
             "get": {
                 "summary": "List executions",
@@ -5101,7 +5303,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 392,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5113,7 +5315,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5175,7 +5376,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 390,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5187,7 +5388,6 @@
                     "scope": "execution.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5261,7 +5461,7 @@
                                     "type": "string",
                                     "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": "<SCHEDULED_AT>"
                                 }
                             }
                         }
@@ -5292,7 +5492,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 391,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5304,7 +5504,6 @@
                     "scope": "execution.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5364,7 +5563,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 306,
+                    "weight": 308,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5376,8 +5575,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5438,7 +5636,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 305,
+                    "weight": 307,
                     "cookies": false,
                     "type": "graphql",
                     "deprecated": false,
@@ -5450,8 +5648,7 @@
                     "scope": "graphql",
                     "platforms": [
                         "server",
-                        "client",
-                        "server"
+                        "client"
                     ],
                     "packaging": false,
                     "auth": {
@@ -5510,7 +5707,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 122,
+                    "weight": 124,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5522,7 +5719,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5562,7 +5758,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 123,
+                    "weight": 125,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5574,7 +5770,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5614,7 +5809,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 127,
+                    "weight": 129,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5626,7 +5821,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5666,7 +5860,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 124,
+                    "weight": 126,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5678,7 +5872,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5718,7 +5911,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 125,
+                    "weight": 127,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5730,7 +5923,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5770,7 +5962,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 126,
+                    "weight": 128,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5782,7 +5974,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5822,7 +6013,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 128,
+                    "weight": 130,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5834,7 +6025,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5874,7 +6064,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 129,
+                    "weight": 131,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5886,7 +6076,6 @@
                     "scope": "locale.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -5928,7 +6117,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 352,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -5941,8 +6130,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -6013,7 +6201,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 356,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6026,8 +6214,7 @@
                     "platforms": [
                         "server",
                         "client",
-                        "console",
-                        "server"
+                        "console"
                     ],
                     "packaging": false,
                     "auth": {
@@ -6084,7 +6271,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 212,
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6096,7 +6283,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6167,7 +6353,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 211,
+                    "weight": 213,
                     "cookies": false,
                     "type": "upload",
                     "deprecated": false,
@@ -6179,7 +6365,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6257,7 +6442,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 213,
+                    "weight": 215,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6269,7 +6454,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6327,7 +6511,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 218,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6339,7 +6523,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6416,7 +6599,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 219,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6428,7 +6611,6 @@
                     "scope": "files.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6486,7 +6668,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 215,
+                    "weight": 217,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6498,7 +6680,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6565,7 +6746,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 214,
+                    "weight": 216,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6577,7 +6758,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6772,7 +6952,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 216,
+                    "weight": 218,
                     "cookies": false,
                     "type": "location",
                     "deprecated": false,
@@ -6784,7 +6964,6 @@
                     "scope": "files.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6851,7 +7030,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 223,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6863,7 +7042,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -6926,7 +7104,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 222,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -6938,7 +7116,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7016,7 +7193,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 224,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7028,7 +7205,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7078,7 +7254,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 226,
+                    "weight": 228,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7090,7 +7266,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7153,7 +7328,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 228,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7165,7 +7340,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7215,7 +7389,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 230,
+                    "weight": 232,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7227,7 +7401,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7298,7 +7471,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 229,
+                    "weight": 231,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7310,7 +7483,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7411,7 +7583,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 231,
+                    "weight": 233,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7423,7 +7595,6 @@
                     "scope": "teams.read",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7481,7 +7652,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 232,
+                    "weight": 234,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7493,7 +7664,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7567,7 +7737,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 234,
+                    "weight": 236,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7579,7 +7749,6 @@
                     "scope": "teams.write",
                     "platforms": [
                         "client",
-                        "server",
                         "server"
                     ],
                     "packaging": false,
@@ -7639,7 +7808,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 233,
+                    "weight": 235,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7733,7 +7902,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 225,
+                    "weight": 227,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7794,7 +7963,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 227,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "deprecated": false,
@@ -7925,7 +8094,8 @@
         "any": {
             "description": "Any",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": []
         },
         "documentList": {
             "description": "Documents List",
@@ -7950,7 +8120,11 @@
             "required": [
                 "total",
                 "documents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "documents": ""
+            }
         },
         "sessionList": {
             "description": "Sessions List",
@@ -7975,7 +8149,11 @@
             "required": [
                 "total",
                 "sessions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "sessions": ""
+            }
         },
         "identityList": {
             "description": "Identities List",
@@ -8000,7 +8178,11 @@
             "required": [
                 "total",
                 "identities"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "identities": ""
+            }
         },
         "logList": {
             "description": "Logs List",
@@ -8025,7 +8207,11 @@
             "required": [
                 "total",
                 "logs"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "logs": ""
+            }
         },
         "fileList": {
             "description": "Files List",
@@ -8050,7 +8236,11 @@
             "required": [
                 "total",
                 "files"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "files": ""
+            }
         },
         "teamList": {
             "description": "Teams List",
@@ -8075,7 +8265,11 @@
             "required": [
                 "total",
                 "teams"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "teams": ""
+            }
         },
         "membershipList": {
             "description": "Memberships List",
@@ -8100,7 +8294,11 @@
             "required": [
                 "total",
                 "memberships"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "memberships": ""
+            }
         },
         "executionList": {
             "description": "Executions List",
@@ -8125,7 +8323,11 @@
             "required": [
                 "total",
                 "executions"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "executions": ""
+            }
         },
         "countryList": {
             "description": "Countries List",
@@ -8150,7 +8352,11 @@
             "required": [
                 "total",
                 "countries"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "countries": ""
+            }
         },
         "continentList": {
             "description": "Continents List",
@@ -8175,7 +8381,11 @@
             "required": [
                 "total",
                 "continents"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "continents": ""
+            }
         },
         "languageList": {
             "description": "Languages List",
@@ -8200,7 +8410,11 @@
             "required": [
                 "total",
                 "languages"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "languages": ""
+            }
         },
         "currencyList": {
             "description": "Currencies List",
@@ -8225,7 +8439,11 @@
             "required": [
                 "total",
                 "currencies"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "currencies": ""
+            }
         },
         "phoneList": {
             "description": "Phones List",
@@ -8250,7 +8468,11 @@
             "required": [
                 "total",
                 "phones"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "phones": ""
+            }
         },
         "localeCodeList": {
             "description": "Locale codes list",
@@ -8275,7 +8497,11 @@
             "required": [
                 "total",
                 "localeCodes"
-            ]
+            ],
+            "example": {
+                "total": 5,
+                "localeCodes": ""
+            }
         },
         "document": {
             "description": "Document",
@@ -8286,15 +8512,24 @@
                     "description": "Document ID.",
                     "x-example": "5e5ea5c16897e"
                 },
+                "$sequence": {
+                    "type": "integer",
+                    "description": "Document automatically incrementing ID.",
+                    "x-example": 1,
+                    "format": "int32",
+                    "readOnly": true
+                },
                 "$collectionId": {
                     "type": "string",
                     "description": "Collection ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$databaseId": {
                     "type": "string",
                     "description": "Database ID.",
-                    "x-example": "5e5ea5c15117e"
+                    "x-example": "5e5ea5c15117e",
+                    "readOnly": true
                 },
                 "$createdAt": {
                     "type": "string",
@@ -8320,12 +8555,29 @@
             "additionalProperties": true,
             "required": [
                 "$id",
+                "$sequence",
                 "$collectionId",
                 "$databaseId",
                 "$createdAt",
                 "$updatedAt",
                 "$permissions"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$sequence": 1,
+                "$collectionId": "5e5ea5c15117e",
+                "$databaseId": "5e5ea5c15117e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "username": "john.doe",
+                "email": "john.doe@example.com",
+                "fullName": "John Doe",
+                "age": 30,
+                "isAdmin": false
+            }
         },
         "log": {
             "description": "Log",
@@ -8459,7 +8711,30 @@
                 "deviceModel",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "event": "account.sessions.create",
+                "userId": "610fc2f985ee0",
+                "userEmail": "john@appwrite.io",
+                "userName": "John Doe",
+                "mode": "admin",
+                "ip": "127.0.0.1",
+                "time": "2020-10-15T06:38:00.000+00:00",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "user": {
             "description": "User",
@@ -8622,7 +8897,33 @@
                 "prefs",
                 "targets",
                 "accessedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "John Doe",
+                "password": "$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L\/4LdgrVRXxE",
+                "hash": "argon2",
+                "hashOptions": {},
+                "registration": "2020-10-15T06:38:00.000+00:00",
+                "status": true,
+                "labels": [
+                    "vip"
+                ],
+                "passwordUpdate": "2020-10-15T06:38:00.000+00:00",
+                "email": "john@appwrite.io",
+                "phone": "+4930901820",
+                "emailVerification": true,
+                "phoneVerification": true,
+                "mfa": true,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                },
+                "targets": [],
+                "accessedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "algoMd5": {
             "description": "AlgoMD5",
@@ -8636,7 +8937,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "md5"
+            }
         },
         "algoSha": {
             "description": "AlgoSHA",
@@ -8650,7 +8954,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "sha"
+            }
         },
         "algoPhpass": {
             "description": "AlgoPHPass",
@@ -8664,7 +8971,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "phpass"
+            }
         },
         "algoBcrypt": {
             "description": "AlgoBcrypt",
@@ -8678,7 +8988,10 @@
             },
             "required": [
                 "type"
-            ]
+            ],
+            "example": {
+                "type": "bcrypt"
+            }
         },
         "algoScrypt": {
             "description": "AlgoScrypt",
@@ -8720,7 +9033,14 @@
                 "costMemory",
                 "costParallel",
                 "length"
-            ]
+            ],
+            "example": {
+                "type": "scrypt",
+                "costCpu": 8,
+                "costMemory": 14,
+                "costParallel": 1,
+                "length": 64
+            }
         },
         "algoScryptModified": {
             "description": "AlgoScryptModified",
@@ -8752,7 +9072,13 @@
                 "salt",
                 "saltSeparator",
                 "signerKey"
-            ]
+            ],
+            "example": {
+                "type": "scryptMod",
+                "salt": "UxLMreBr6tYyjQ==",
+                "saltSeparator": "Bw==",
+                "signerKey": "XyEKE9RcTDeLEsL\/RjwPDBv\/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=="
+            }
         },
         "algoArgon2": {
             "description": "AlgoArgon2",
@@ -8787,12 +9113,23 @@
                 "memoryCost",
                 "timeCost",
                 "threads"
-            ]
+            ],
+            "example": {
+                "type": "argon2",
+                "memoryCost": 65536,
+                "timeCost": 4,
+                "threads": 3
+            }
         },
         "preferences": {
             "description": "Preferences",
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "example": {
+                "language": "en",
+                "timezone": "UTC",
+                "darkTheme": true
+            }
         },
         "session": {
             "description": "Session",
@@ -8979,7 +9316,40 @@
                 "factors",
                 "secret",
                 "mfaUpdatedAt"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "provider": "email",
+                "providerUid": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "ip": "127.0.0.1",
+                "osCode": "Mac",
+                "osName": "Mac",
+                "osVersion": "Mac",
+                "clientType": "browser",
+                "clientCode": "CM",
+                "clientName": "Chrome Mobile iOS",
+                "clientVersion": "84.0",
+                "clientEngine": "WebKit",
+                "clientEngineVersion": "605.1.15",
+                "deviceName": "smartphone",
+                "deviceBrand": "Google",
+                "deviceModel": "Nexus 5",
+                "countryCode": "US",
+                "countryName": "United States",
+                "current": true,
+                "factors": [
+                    "email"
+                ],
+                "secret": "5e5bb8c16897e",
+                "mfaUpdatedAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "identity": {
             "description": "Identity",
@@ -9047,7 +9417,19 @@
                 "providerAccessToken",
                 "providerAccessTokenExpiry",
                 "providerRefreshToken"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5bb8c16897e",
+                "provider": "email",
+                "providerUid": "5e5bb8c16897e",
+                "providerEmail": "user@example.com",
+                "providerAccessToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3",
+                "providerAccessTokenExpiry": "2020-10-15T06:38:00.000+00:00",
+                "providerRefreshToken": "MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+            }
         },
         "token": {
             "description": "Token",
@@ -9091,7 +9473,15 @@
                 "secret",
                 "expire",
                 "phrase"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "secret": "",
+                "expire": "2020-10-15T06:38:00.000+00:00",
+                "phrase": "Golden Fox"
+            }
         },
         "jwt": {
             "description": "JWT",
@@ -9105,7 +9495,10 @@
             },
             "required": [
                 "jwt"
-            ]
+            ],
+            "example": {
+                "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            }
         },
         "locale": {
             "description": "Locale",
@@ -9155,7 +9548,16 @@
                 "continent",
                 "eu",
                 "currency"
-            ]
+            ],
+            "example": {
+                "ip": "127.0.0.1",
+                "countryCode": "US",
+                "country": "United States",
+                "continentCode": "NA",
+                "continent": "North America",
+                "eu": false,
+                "currency": "USD"
+            }
         },
         "localeCode": {
             "description": "LocaleCode",
@@ -9175,7 +9577,11 @@
             "required": [
                 "code",
                 "name"
-            ]
+            ],
+            "example": {
+                "code": "en-us",
+                "name": "US"
+            }
         },
         "file": {
             "description": "File",
@@ -9257,7 +9663,22 @@
                 "sizeOriginal",
                 "chunksTotal",
                 "chunksUploaded"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "bucketId": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "name": "Pink.png",
+                "signature": "5d529fd02b544198ae075bd57c1762bb",
+                "mimeType": "image\/png",
+                "sizeOriginal": 17890,
+                "chunksTotal": 17890,
+                "chunksUploaded": 17890
+            }
         },
         "team": {
             "description": "Team",
@@ -9309,7 +9730,18 @@
                 "name",
                 "total",
                 "prefs"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "VIP",
+                "total": 7,
+                "prefs": {
+                    "theme": "pink",
+                    "timezone": "UTC"
+                }
+            }
         },
         "membership": {
             "description": "Membership",
@@ -9400,7 +9832,24 @@
                 "confirm",
                 "mfa",
                 "roles"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c16897e",
+                "userName": "John Doe",
+                "userEmail": "john@appwrite.io",
+                "teamId": "5e5ea5c16897e",
+                "teamName": "VIP",
+                "invited": "2020-10-15T06:38:00.000+00:00",
+                "joined": "2020-10-15T06:38:00.000+00:00",
+                "confirm": false,
+                "mfa": false,
+                "roles": [
+                    "owner"
+                ]
+            }
         },
         "execution": {
             "description": "Execution",
@@ -9435,6 +9884,11 @@
                     "type": "string",
                     "description": "Function ID.",
                     "x-example": "5e5ea6g16897e"
+                },
+                "deploymentId": {
+                    "type": "string",
+                    "description": "Function's deployment ID used to create the execution.",
+                    "x-example": "5e5ea5c16897e"
                 },
                 "trigger": {
                     "type": "string",
@@ -9522,6 +9976,7 @@
                 "$updatedAt",
                 "$permissions",
                 "functionId",
+                "deploymentId",
                 "trigger",
                 "status",
                 "requestMethod",
@@ -9533,7 +9988,37 @@
                 "logs",
                 "errors",
                 "duration"
-            ]
+            ],
+            "example": {
+                "$id": "5e5ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "$permissions": [
+                    "any"
+                ],
+                "functionId": "5e5ea6g16897e",
+                "deploymentId": "5e5ea5c16897e",
+                "trigger": "http",
+                "status": "processing",
+                "requestMethod": "GET",
+                "requestPath": "\/articles?id=5",
+                "requestHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "responseStatusCode": 200,
+                "responseBody": "",
+                "responseHeaders": [
+                    {
+                        "Content-Type": "application\/json"
+                    }
+                ],
+                "logs": "",
+                "errors": "",
+                "duration": 0.4,
+                "scheduledAt": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "country": {
             "description": "Country",
@@ -9553,7 +10038,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "United States",
+                "code": "US"
+            }
         },
         "continent": {
             "description": "Continent",
@@ -9573,7 +10062,11 @@
             "required": [
                 "name",
                 "code"
-            ]
+            ],
+            "example": {
+                "name": "Europe",
+                "code": "EU"
+            }
         },
         "language": {
             "description": "Language",
@@ -9599,7 +10092,12 @@
                 "name",
                 "code",
                 "nativeName"
-            ]
+            ],
+            "example": {
+                "name": "Italian",
+                "code": "it",
+                "nativeName": "Italiano"
+            }
         },
         "currency": {
             "description": "Currency",
@@ -9651,7 +10149,16 @@
                 "rounding",
                 "code",
                 "namePlural"
-            ]
+            ],
+            "example": {
+                "symbol": "$",
+                "name": "US dollar",
+                "symbolNative": "$",
+                "decimalDigits": 2,
+                "rounding": 0,
+                "code": "USD",
+                "namePlural": "US dollars"
+            }
         },
         "phone": {
             "description": "Phone",
@@ -9677,7 +10184,12 @@
                 "code",
                 "countryCode",
                 "countryName"
-            ]
+            ],
+            "example": {
+                "code": "+1",
+                "countryCode": "US",
+                "countryName": "United States"
+            }
         },
         "headers": {
             "description": "Headers",
@@ -9697,7 +10209,11 @@
             "required": [
                 "name",
                 "value"
-            ]
+            ],
+            "example": {
+                "name": "Content-Type",
+                "value": "application\/json"
+            }
         },
         "mfaChallenge": {
             "description": "MFA Challenge",
@@ -9729,7 +10245,13 @@
                 "$createdAt",
                 "userId",
                 "expire"
-            ]
+            ],
+            "example": {
+                "$id": "bb8ea5c16897e",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "userId": "5e5ea5c168bb8",
+                "expire": "2020-10-15T06:38:00.000+00:00"
+            }
         },
         "mfaRecoveryCodes": {
             "description": "MFA Recovery Codes",
@@ -9749,7 +10271,13 @@
             },
             "required": [
                 "recoveryCodes"
-            ]
+            ],
+            "example": {
+                "recoveryCodes": [
+                    "a3kf0-s0cl2",
+                    "s0co1-as98s"
+                ]
+            }
         },
         "mfaType": {
             "description": "MFAType",
@@ -9769,7 +10297,11 @@
             "required": [
                 "secret",
                 "uri"
-            ]
+            ],
+            "example": {
+                "secret": true,
+                "uri": true
+            }
         },
         "mfaFactors": {
             "description": "MFAFactors",
@@ -9801,7 +10333,13 @@
                 "phone",
                 "email",
                 "recoveryCode"
-            ]
+            ],
+            "example": {
+                "totp": true,
+                "phone": true,
+                "email": true,
+                "recoveryCode": true
+            }
         },
         "subscriber": {
             "description": "Subscriber",
@@ -9876,7 +10414,27 @@
                 "userName",
                 "topicId",
                 "providerType"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "targetId": "259125845563242502",
+                "target": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "providerType": "email",
+                    "providerId": "259125845563242502",
+                    "name": "ageon-app-email",
+                    "identifier": "random-mail@email.org",
+                    "userId": "5e5ea5c16897e"
+                },
+                "userId": "5e5ea5c16897e",
+                "userName": "Aegon Targaryen",
+                "topicId": "259125845563242502",
+                "providerType": "email"
+            }
         },
         "target": {
             "description": "Target",
@@ -9938,7 +10496,18 @@
                 "providerType",
                 "identifier",
                 "expired"
-            ]
+            ],
+            "example": {
+                "$id": "259125845563242502",
+                "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                "name": "Apple iPhone 12",
+                "userId": "259125845563242502",
+                "providerId": "259125845563242502",
+                "providerType": "email",
+                "identifier": "token",
+                "expired": false
+            }
         }
     },
     "externalDocs": {

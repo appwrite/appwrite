@@ -109,6 +109,20 @@ class Client
     }
 
     /**
+     * Set Response Format
+     *
+     * @param string $value
+     *
+     * @return self $this
+     */
+    public function setResponseFormat(string $value): self
+    {
+        $this->addHeader('X-Appwrite-Response-Format', $value);
+
+        return $this;
+    }
+
+    /**
      * @param bool $status true
      * @return self $this
      */
@@ -216,7 +230,15 @@ class Client
             return $len;
         });
 
-        if ($method != self::METHOD_GET) {
+
+        if ($method === self::METHOD_HEAD) {
+            curl_setopt($ch, CURLOPT_NOBODY, true); // This is crucial for HEAD requests
+            curl_setopt($ch, CURLOPT_HEADER, false);
+        } else {
+            curl_setopt($ch, CURLOPT_NOBODY, false);
+        }
+
+        if ($method != self::METHOD_GET && $method != self::METHOD_HEAD) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         }
 
@@ -229,7 +251,7 @@ class Client
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($decode) {
+        if ($decode && $method !== self::METHOD_HEAD) {
             $strpos = strpos($responseType, ';');
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {
@@ -255,6 +277,9 @@ class Client
                     $json = null;
                     break;
             }
+        } elseif ($method === self::METHOD_HEAD) {
+            // For HEAD requests, always set body to empty string regardless of decode flag
+            $responseBody = '';
         }
 
         if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {

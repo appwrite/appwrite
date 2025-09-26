@@ -6,13 +6,8 @@ use Utopia\System\System;
  * List of Appwrite Sites templates
  */
 
-$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-$hostname = System::getEnv('_APP_DOMAIN');
-
-// TODO: Development override
-if (System::getEnv('_APP_ENV') === 'development') {
-    $hostname = 'localhost';
-}
+$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+$hostname = System::getEnv('_APP_DOMAIN', '');
 
 $url = $protocol . '://' . $hostname;
 
@@ -478,13 +473,13 @@ return [
         'frameworks' => [
             getFramework('FLUTTER', [
                 'providerRootDirectory' => './',
-                'buildCommand' => 'bash build.sh',
+                'buildCommand' => 'bash prepare-env.sh && flutter build web',
             ]),
         ],
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-flutter',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.1.*',
+        'providerVersion' => '0.2.*',
         'variables' => [
             [
                 'name' => 'APPWRITE_PUBLIC_ENDPOINT',
@@ -1011,7 +1006,7 @@ return [
             getFramework('NEXTJS', [
                 'providerRootDirectory' => './',
                 'installCommand' => 'pnpm install',
-                'buildCommand' => 'npm run build',
+                'buildCommand' => 'pnpm build',
             ]),
         ],
         'vcsProvider' => 'github',
@@ -1020,7 +1015,7 @@ return [
         'providerVersion' => '0.1.*',
         'variables' => [
             [
-                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_PROJECT_ID',
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
                 'description' => 'Endpoint of Appwrite server',
                 'value' => '{apiEndpoint}',
                 'placeholder' => '{apiEndpoint}',
@@ -1028,7 +1023,7 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
+                'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_PROJECT_ID',
                 'description' => 'Your Appwrite project ID',
                 'value' => '{projectId}',
                 'placeholder' => '{projectId}',

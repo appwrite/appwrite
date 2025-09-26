@@ -1117,6 +1117,9 @@ class Deletes extends Action
     ): void {
         $start = \microtime(true);
 
+        $deleteBatchSize = Database::DELETE_BATCH_SIZE;
+        $deleteBatchSize = 500; // TODO: Set right value in DB library after investigation
+
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
@@ -1124,7 +1127,7 @@ class Deletes extends Action
             $count = $database->deleteDocuments(
                 $collection,
                 $queries,
-                Database::DELETE_BATCH_SIZE,
+                $deleteBatchSize,
                 $callback
             );
         } catch (Throwable $th) {
@@ -1189,7 +1192,7 @@ class Deletes extends Action
      * @param Document $document rule document
      * @return void
      */
-    private function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates): void
+    protected function deleteRule(Database $dbForPlatform, Document $document, CertificatesAdapter $certificates): void
     {
         $domain = $document->getAttribute('domain');
         $certificates->deleteCertificate($domain);

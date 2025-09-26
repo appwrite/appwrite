@@ -11,6 +11,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -35,6 +36,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -50,7 +52,6 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -282,7 +283,13 @@ App::get('/v1/teams/:teamId/prefs')
 
         $prefs = $team->getAttribute('prefs', []);
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        try {
+            $prefs = new Document($prefs);
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
+
+        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
 App::put('/v1/teams/:teamId')
@@ -357,6 +364,11 @@ App::put('/v1/teams/:teamId/prefs')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
+        try {
+            $prefs = new Document($prefs);
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -364,11 +376,13 @@ App::put('/v1/teams/:teamId/prefs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
+        $team = $dbForProject->updateDocument('teams', $team->getId(), new Document([
+            'prefs' => $prefs->getArrayCopy()
+        ]));
 
         $queueForEvents->setParam('teamId', $team->getId());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
@@ -466,7 +480,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
         return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
     }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey']) // TODO add our own built-in confirm page
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -657,7 +671,8 @@ App::post('/v1/teams/:teamId/memberships')
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
                 $body = $locale->getText("emails.invitation.body");
-                $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+                $preview = $locale->getText("emails.invitation.preview");
+                $subject = $locale->getText("emails.invitation.subject");
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
@@ -729,6 +744,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $queueForMails
                     ->setSubject($subject)
                     ->setBody($body)
+                    ->setPreview($preview)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
