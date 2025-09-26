@@ -25305,7 +25305,7 @@
                             "properties": {
                                 "type": {
                                     "type": "string",
-                                    "description": "Platform type.",
+                                    "description": "Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.",
                                     "default": null,
                                     "x-example": "web",
                                     "enum": [
@@ -53396,16 +53396,24 @@
                 },
                 "type": {
                     "type": "string",
-                    "description": "Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, and unity.",
+                    "description": "Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.",
                     "x-example": "web",
                     "enum": [
                         "web",
                         "flutter-web",
                         "flutter-ios",
                         "flutter-android",
-                        "ios",
+                        "flutter-linux",
+                        "flutter-macos",
+                        "flutter-windows",
+                        "apple-ios",
+                        "apple-macos",
+                        "apple-watchos",
+                        "apple-tvos",
                         "android",
-                        "unity"
+                        "unity",
+                        "react-native-ios",
+                        "react-native-android"
                     ]
                 },
                 "key": {
