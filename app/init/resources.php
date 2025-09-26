@@ -547,7 +547,7 @@ function getDevice(string $root, string $connection = ''): Device
         $accessSecret = '';
         $bucket = '';
         $region = '';
-        $url = System::getEnv('_APP_CONNECTIONS_STORAGE', '');
+        $url = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
         Console::log("@@@debug-mustaq url {$url}");
 
         try {
@@ -568,8 +568,11 @@ function getDevice(string $root, string $connection = ''): Device
                     Console::log("@@@debug-mustaq connection device s3 {$bucketRoot}");
                     return new S3($bucketRoot, $accessKey, $accessSecret, $url, $region, $acl);
                 } else {
-                    Console::log("@@@debug-mustaq connection device AWS");
-                    return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                    Console::log(
+                        "@@@debug-mustaq connection device AWS " .
+                        "root => {$root}\taccesskey => {$accessKey}\tsecret => {$accessSecret}\tregion => {$region}\tacl => {$acl}"
+                    );
+                    return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 }
                 // no break
             case STORAGE::DEVICE_DO_SPACES:
