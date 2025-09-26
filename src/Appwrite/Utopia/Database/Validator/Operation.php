@@ -146,7 +146,7 @@ class Operation extends Validator
                 $this->description = "Key 'data' must be an array";
                 return false;
             }
-        } else if (\array_key_exists('data', $value)) {
+        } elseif (\array_key_exists('data', $value)) {
             // Data is optional but if provided, must be an array
             if (!\is_array($value['data'])) {
                 $this->description = "Key 'data' must be an array";
