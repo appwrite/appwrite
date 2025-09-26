@@ -563,7 +563,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
 
-        $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
+        $print_mime_type = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
+        Console::log('@@@debug-mustaq content type of file ' . $print_mime_type);
+        Console::log('@@@debug-mustaq device for files ' . json_encode($deviceForFiles));
+        Console::log('@@@debug-mustaq device for local ' . json_encode($deviceForLocal));
+        $metadata = ['content_type' => 'image/jpeg'];
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
             $uploaded = $file->getAttribute('chunksUploaded', 0);
@@ -985,18 +989,18 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-	Console::log("@@@debug-mustaq");
-	Console::log(json_encode([
-	    "isToken" => $isToken,
-	    "bucket" => $bucket,
-	    "resourceToken" => $resourceToken,
-	    "bucketInternalId" => $resourceToken->getAttribute("bucketInternalId"),
-	    "sequence" => $bucket->getSequence(),
-	    "fileSecurity" => $fileSecurity,
-	    "validator" => $validator,
-	    "bucketGetRead" => $bucket->getRead(),
-	    "valid" => $valid,
-	], JSON_PRETTY_PRINT));
+        Console::log("@@@debug-mustaq");
+        Console::log(json_encode([
+            "isToken" => $isToken,
+            "bucket" => $bucket,
+            "resourceToken" => $resourceToken,
+            "bucketInternalId" => $resourceToken->getAttribute("bucketInternalId"),
+            "sequence" => $bucket->getSequence(),
+            "fileSecurity" => $fileSecurity,
+            "validator" => $validator,
+            "bucketGetRead" => $bucket->getRead(),
+            "valid" => $valid,
+        ], JSON_PRETTY_PRINT));
         // if (!$fileSecurity && !$valid && !$isToken) {
         //     throw new Exception(Exception::USER_UNAUTHORIZED);
         // }

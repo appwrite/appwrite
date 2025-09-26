@@ -586,8 +586,10 @@ function getDevice(string $root, string $connection = ''): Device
         switch (strtolower(System::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
             case Storage::DEVICE_LOCAL:
             default:
+                Console::log("@@@debug-mustaq Selected local storage");
                 return new Local($root);
             case Storage::DEVICE_S3:
+                Console::log("@@@debug-mustaq Selected s3 storage");
                 $s3AccessKey = System::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
                 $s3SecretKey = System::getEnv('_APP_STORAGE_S3_SECRET', '');
                 $s3Region = System::getEnv('_APP_STORAGE_S3_REGION', '');
