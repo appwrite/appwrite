@@ -382,30 +382,15 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 ->setTenant(null)
                 ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
 
-            $adapterForDocumentsDB = new DatabasePool($pools->get('documentsDb'));
-            $dbForDocuments = new Database($adapterForDocumentsDB, $cache);
-
-            $dbForDocuments
-                ->setDatabase('appwrite')
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
-
             try {
                 Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                 $dbForProject->create();
-                $dbForDocuments->create();
             } catch (DuplicateException) {
                 Console::success('[Setup] - Skip: metadata table already exists');
             }
 
             if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
                 $audit = new Audit($dbForProject);
-                $audit->setup();
-            }
-
-            if ($dbForDocuments->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($dbForDocuments);
                 $audit->setup();
             }
 
@@ -423,21 +408,6 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 Console::success('[Setup] - Creating project collection: ' . $collection['$id'] . '...');
 
                 $dbForProject->createCollection($key, $attributes, $indexes);
-            }
-            foreach ($projectCollections as $key => $collection) {
-                if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                    continue;
-                }
-                if (!$dbForDocuments->getCollection($key)->isEmpty()) {
-                    continue;
-                }
-
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-
-                Console::success('[Setup] - Creating project collection: ' . $collection['$id'] . '...');
-
-                $dbForDocuments->createCollection($key, $attributes, $indexes);
             }
         }
 

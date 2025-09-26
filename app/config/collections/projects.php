@@ -61,6 +61,15 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('database'),
+                'type' => Database::VAR_STRING,
+                'size' => 128,
+                'required' => false,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

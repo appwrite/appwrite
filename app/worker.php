@@ -106,6 +106,37 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     return $database;
 }, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
 
+Server::setResource('dbForDocuments', function (Cache $cache, Registry $register, Document $project, Database $dbForPlatform) {
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForPlatform;
+    }
+    $pools = $register->get('pools');
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    $adapter = new DatabasePool($pools->get('documentsDb'));
+    $database = new Database($adapter, $cache);
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
+        $database
+            ->setSharedTables(true)
+            ->setTenant((int)$project->getSequence())
+            ->setNamespace($dsn->getParam('namespace'));
+    } else {
+        $database
+            ->setSharedTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getSequence());
+    }
+    $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+    return $database;
+}, ['cache', 'register', 'project', 'dbForPlatform']);
+
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 

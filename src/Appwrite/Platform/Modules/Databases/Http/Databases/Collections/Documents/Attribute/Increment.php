@@ -106,7 +106,6 @@ class Increment extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException $e) {
-            var_dump($e->getTraceAsString());
             throw new Exception($this->getStructureNotFoundException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSdkNamespace() . ' "' . $attribute . '" has reached the maximum value of ' . $max);
