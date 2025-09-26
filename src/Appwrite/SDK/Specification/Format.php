@@ -112,7 +112,7 @@ abstract class Format
         return $this->params[$key] ?? $default;
     }
 
-    protected function getEnumName(string $service, string $method, string $param): ?string
+    protected function getRequestEnumName(string $service, string $method, string $param): ?string
     {
         /* `$service` is `$namespace` */
         switch ($service) {
@@ -450,7 +450,7 @@ abstract class Format
         return null;
     }
 
-    public function getEnumKeys(string $service, string $method, string $param): array
+    public function getRequestEnumKeys(string $service, string $method, string $param): array
     {
         $values = [];
         switch ($service) {
@@ -541,6 +541,97 @@ abstract class Format
                 break;
         }
         return $values;
+    }
+
+    public function getResponseEnumName(string $model, string $param): ?string
+    {
+        switch ($model) {
+            case 'attributeString':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeInteger':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeFloat':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeBoolean':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeEmail':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeEnum':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeIp':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeUrl':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeDatetime':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeRelationship':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributePoint':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributeLine':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'attributePolygon':
+                switch ($param) {
+                    case 'status':
+                        return 'AttributeStatus';
+                }
+                break;
+            case 'healthStatus':
+                switch ($param) {
+                    case 'status':
+                        return 'HealthCheckStatus';
+                }
+                break;
+        }
+        return null;
     }
 
     protected function getNestedModels(Model $model, array &$usedModels): void

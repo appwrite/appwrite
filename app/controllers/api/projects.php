@@ -1756,7 +1756,28 @@ App::post('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Platform::TYPE_WEB, Platform::TYPE_FLUTTER_WEB, Platform::TYPE_FLUTTER_IOS, Platform::TYPE_FLUTTER_ANDROID, Platform::TYPE_FLUTTER_LINUX, Platform::TYPE_FLUTTER_MACOS, Platform::TYPE_FLUTTER_WINDOWS, Platform::TYPE_APPLE_IOS, Platform::TYPE_APPLE_MACOS,  Platform::TYPE_APPLE_WATCHOS, Platform::TYPE_APPLE_TVOS, Platform::TYPE_ANDROID, Platform::TYPE_UNITY, Platform::TYPE_REACT_NATIVE_IOS, Platform::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
+    ->param(
+        'type',
+        null,
+        new WhiteList([
+            Platform::TYPE_WEB,
+            Platform::TYPE_FLUTTER_WEB,
+            Platform::TYPE_FLUTTER_IOS,
+            Platform::TYPE_FLUTTER_ANDROID,
+            Platform::TYPE_FLUTTER_LINUX,
+            Platform::TYPE_FLUTTER_MACOS,
+            Platform::TYPE_FLUTTER_WINDOWS,
+            Platform::TYPE_APPLE_IOS,
+            Platform::TYPE_APPLE_MACOS,
+            Platform::TYPE_APPLE_WATCHOS,
+            Platform::TYPE_APPLE_TVOS,
+            Platform::TYPE_ANDROID,
+            Platform::TYPE_UNITY,
+            Platform::TYPE_REACT_NATIVE_IOS,
+            Platform::TYPE_REACT_NATIVE_ANDROID,
+        ], true),
+        'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.'
+    )
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
