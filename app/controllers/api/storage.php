@@ -988,6 +988,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 	Console::log("@@@debug-mustaq");
 	Console::log(json_encode([
 	    "isToken" => $isToken,
+	    "bucket" => $bucket,
 	    "resourceToken" => $resourceToken,
 	    "bucketInternalId" => $resourceToken->getAttribute("bucketInternalId"),
 	    "sequence" => $bucket->getSequence(),
@@ -996,9 +997,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 	    "bucketGetRead" => $bucket->getRead(),
 	    "valid" => $valid,
 	], JSON_PRETTY_PRINT));
-        if (!$fileSecurity && !$valid && !$isToken) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        // if (!$fileSecurity && !$valid && !$isToken) {
+        //     throw new Exception(Exception::USER_UNAUTHORIZED);
+        // }
 
         if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
@@ -1008,9 +1009,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 	
 
-        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        // if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
+        //     throw new Exception(Exception::USER_UNAUTHORIZED);
+        // }
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
