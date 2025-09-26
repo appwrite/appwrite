@@ -34,7 +34,7 @@ class Upsert extends DocumentUpsert
             ->desc('Upsert a document')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].upsert')
-            ->label('scope', ['documents.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.upsert')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
@@ -43,9 +43,9 @@ class Upsert extends DocumentUpsert
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
+                    namespace: 'documentsdb',
                     group: $this->getSdkGroup(),
-                    name: self::getName(),
+                    name: 'upsertDocument',
                     description: '/docs/references/documentsdb/upsert-document.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [

@@ -36,7 +36,7 @@ class Delete extends DocumentDelete
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents/:documentId')
             ->desc('Delete document')
             ->groups(['api', 'database'])
-            ->label('scope', ['documents.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
             ->label('audits.event', 'document.delete')
@@ -45,9 +45,9 @@ class Delete extends DocumentDelete
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'deleteDocument',
                 description: '/docs/references/documentsdb/delete-document.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

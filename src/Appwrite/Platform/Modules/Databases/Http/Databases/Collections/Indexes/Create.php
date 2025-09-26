@@ -144,33 +144,33 @@ class Create extends Action
         ];
 
         $contextType = $this->getParentContext();
-        if($dbForDatabaseRecords->getAdapter()->getSupportForAttributes()){
+        if ($dbForDatabaseRecords->getAdapter()->getSupportForAttributes()) {
             foreach ($attributes as $i => $attribute) {
                 // find attribute metadata in collection document
                 $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
-    
+
                 if ($attributeIndex === false) {
                     throw new Exception($this->getParentUnknownException(), "Unknown $contextType: " . $attribute . ". Verify the $contextType name or create the $contextType.");
                 }
-    
+
                 $attributeStatus = $oldAttributes[$attributeIndex]['status'];
                 $attributeType = $oldAttributes[$attributeIndex]['type'];
                 $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
-    
+
                 if ($attributeType === Database::VAR_RELATIONSHIP) {
                     throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
                 }
-    
+
                 // ensure attribute is available
                 if ($attributeStatus !== 'available') {
                     $contextType = ucfirst($contextType);
                     throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
                 }
-    
+
                 if (empty($lengths[$i])) {
                     $lengths[$i] = null;
                 }
-    
+
                 if ($attributeArray === true) {
                     $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
                     $orders[$i] = null;

@@ -31,10 +31,10 @@ class Get extends CollectionUsageGet
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/usage')
             ->desc('Get collection usage stats')
             ->groups(['api', 'database', 'usage'])
-            ->label('scope', ['collections.read'])
+            ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: null,
                 name: self::getName(),
                 description: '/docs/references/documentsdb/get-collection-usage.md',

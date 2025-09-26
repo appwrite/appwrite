@@ -33,13 +33,13 @@ class Update extends CollectionUpdate
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId')
             ->desc('Update collection')
             ->groups(['api', 'database', 'schema'])
-            ->label('scope', ['collections.write'])
+            ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].update')
             ->label('audits.event', 'collection.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: 'collections',
                 name: self::getName(),
                 description: '/docs/references/documentsdb/update-collection.md',

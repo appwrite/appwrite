@@ -118,7 +118,7 @@ class Create extends Action
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 permissions: $permissions,
                 documentSecurity: $documentSecurity
-            ); 
+            );
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {

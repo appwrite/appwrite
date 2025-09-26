@@ -212,7 +212,7 @@ class DatabasesCustomClientTest extends Scope
     //     $this->assertEquals('Test Database', $database['body']['name']);
 
     //     $dbId = $database['body']['$id'];
-        
+
     //     // var_dump the database id
     //     var_dump('Database ID: ' . $dbId);
 
@@ -264,11 +264,11 @@ class DatabasesCustomClientTest extends Scope
 
     //     $collectionId = $collection['body']['$id'];
     //     $this->assertEquals(201, $collection['headers']['status-code']);
-        
+
     //     // var_dump the collection id
     //     var_dump('Collection ID: ' . $collectionId);
 
-    //     // Create collection1 
+    //     // Create collection1
     //     $collection1 = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $dbId . '/collections', [
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],

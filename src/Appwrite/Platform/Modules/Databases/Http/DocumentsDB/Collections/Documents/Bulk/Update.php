@@ -33,7 +33,7 @@ class Update extends DocumentsUpdate
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Update documents')
             ->groups(['api', 'database'])
-            ->label('scope', ['documents.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -41,9 +41,9 @@ class Update extends DocumentsUpdate
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'updateDocuments',
                 description: '/docs/references/documentsdb/update-documents.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -56,10 +56,11 @@ class Update extends DocumentsUpdate
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include only fields and value pairs to be updated.', true)
+            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')

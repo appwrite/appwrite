@@ -32,7 +32,7 @@ class Delete extends DocumentsDelete
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Delete documents')
             ->groups(['api', 'database'])
-            ->label('scope', ['documents.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -40,9 +40,9 @@ class Delete extends DocumentsDelete
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'deleteDocuments',
                 description: '/docs/references/documentsdb/delete-documents.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -58,6 +58,7 @@ class Delete extends DocumentsDelete
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')

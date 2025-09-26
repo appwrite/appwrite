@@ -30,10 +30,10 @@ class Get extends CollectionGet
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId')
             ->desc('Get collection')
             ->groups(['api', 'database'])
-            ->label('scope', ['collections.read'])
+            ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: 'collections',
                 name: self::getName(),
                 description: '/docs/references/documentsdb/get-collection.md',

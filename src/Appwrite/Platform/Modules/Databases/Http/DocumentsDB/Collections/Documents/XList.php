@@ -32,12 +32,12 @@ class XList extends DocumentXList
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents')
             ->desc('List documents')
             ->groups(['api', 'database'])
-            ->label('scope', ['documents.read'])
+            ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'listDocuments',
                 description: '/docs/references/documentsdb/list-documents.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

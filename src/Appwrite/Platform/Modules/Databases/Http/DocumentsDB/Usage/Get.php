@@ -26,7 +26,7 @@ class Get extends DatabaseUsageGet
             ->setHttpPath('/v1/documentsdb/:databaseId/usage')
             ->desc('Get DocumentsDB usage stats')
             ->groups(['api', 'database', 'usage'])
-            ->label('scope', ['collections.read'])
+            ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(

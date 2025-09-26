@@ -35,12 +35,12 @@ class Create extends CollectionCreate
             ->desc('Create collection')
             ->groups(['api', 'database'])
             ->label('event', 'databases.[databaseId].collections.[collectionId].create')
-            ->label('scope', ['collections.write'])
+            ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'collections.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: 'collections',
                 name: self::getName(),
                 description: '/docs/references/documentsdb/create-collection.md',

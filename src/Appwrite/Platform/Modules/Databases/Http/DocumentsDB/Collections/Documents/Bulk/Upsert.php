@@ -32,7 +32,7 @@ class Upsert extends DocumentsUpsert
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Upsert documents')
             ->groups(['api', 'database'])
-            ->label('scope', ['documents.write'])
+            ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
@@ -41,9 +41,9 @@ class Upsert extends DocumentsUpsert
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
+                    namespace: 'documentsdb',
                     group: $this->getSdkGroup(),
-                    name: self::getName(),
+                    name: 'upsertDocuments',
                     description: '/docs/references/documentsdb/upsert-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
@@ -60,6 +60,7 @@ class Upsert extends DocumentsUpsert
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')

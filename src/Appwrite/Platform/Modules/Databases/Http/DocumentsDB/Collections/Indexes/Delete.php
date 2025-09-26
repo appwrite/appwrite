@@ -35,13 +35,13 @@ class Delete extends IndexDelete
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/indexes/:key')
             ->desc('Delete index')
             ->groups(['api', 'database'])
-            ->label('scope', ['collections.write'])
+            ->label('scope', 'collections.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
             ->label('audits.event', 'index.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: $this->getSdkGroup(),
                 name: 'deleteIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/documentsdb/delete-index.md',

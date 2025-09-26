@@ -31,10 +31,10 @@ class XList extends IndexXList
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/indexes')
             ->desc('List indexes')
             ->groups(['api', 'database'])
-            ->label('scope', ['collections.read'])
+            ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: $this->getSdkGroup(),
                 name: 'listIndexes', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/documentsdb/list-indexes.md',

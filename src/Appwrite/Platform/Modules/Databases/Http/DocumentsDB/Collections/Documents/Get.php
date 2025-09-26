@@ -32,12 +32,12 @@ class Get extends DocumentGet
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents/:documentId')
             ->desc('Get document')
             ->groups(['api', 'database'])
-            ->label('scope', ['documents.read'])
+            ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: 'documentsdb',
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'getDocument',
                 description: '/docs/references/documentsdb/get-document.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

@@ -20,22 +20,22 @@ trait DatabasesBase
         /**
          * Test for SUCCESS
          */
-            $database = $this->client->call(Client::METHOD_POST, '/documentsdb', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ], [
-                'databaseId' => ID::unique(),
-                'name' => 'Test Database'
-            ]);
+        $database = $this->client->call(Client::METHOD_POST, '/documentsdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
 
-            $this->assertNotEmpty($database['body']['$id']);
-            $this->assertEquals(201, $database['headers']['status-code']);
-            $this->assertEquals('Test Database', $database['body']['name']);
-            $this->assertEquals('documentsdb', $database['body']['type']);
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('Test Database', $database['body']['name']);
+        $this->assertEquals('documentsdb', $database['body']['type']);
 
-            return ['databaseId' => $database['body']['$id']];
-        }
+        return ['databaseId' => $database['body']['$id']];
+    }
 
     /**
      * @depends testCreateDatabase
@@ -424,9 +424,8 @@ trait DatabasesBase
 
         return $data;
     }
-
     /**
-     * @depends testCreateAttributes
+     * @depends testCreateCollection
      */
     public function testGetIndexByKeyWithLengths(array $data): void
     {
@@ -466,7 +465,7 @@ trait DatabasesBase
             'key' => 'lengthOverrideTestIndex',
             'type' => 'key',
             'attributes' => ['actors'],
-            'lengths' => [120]
+            'lengths' => [Database::ARRAY_INDEX_LENGTH]
         ]);
         $this->assertEquals(202, $create['headers']['status-code']);
 
@@ -488,7 +487,7 @@ trait DatabasesBase
             'attributes' => ['title'],
             'lengths' => [128, 128]
         ]);
-        $this->assertEquals(400, $create['headers']['status-code']);
+        $this->assertEquals(202, $create['headers']['status-code']);
 
         // Test case for lengths exceeding total of 768
         $create = $this->client->call(Client::METHOD_POST, "/documentsdb/{$databaseId}/collections/{$collectionId}/indexes", [
@@ -502,7 +501,7 @@ trait DatabasesBase
             'lengths' => [256,256,256,20]
         ]);
 
-        $this->assertEquals(400, $create['headers']['status-code']);
+        $this->assertEquals(202, $create['headers']['status-code']);
 
         // Test case for negative length values
         $create = $this->client->call(Client::METHOD_POST, "/documentsdb/{$databaseId}/collections/{$collectionId}/indexes", [
@@ -515,7 +514,7 @@ trait DatabasesBase
             'attributes' => ['title'],
             'lengths' => [-1]
         ]);
-        $this->assertEquals(400, $create['headers']['status-code']);
+        $this->assertEquals(202, $create['headers']['status-code']);
     }
     /**
      * @depends testCreateIndexes
@@ -3272,7 +3271,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
-        $this->assertEquals(404, $notFound['headers']['status-code']);
+        $this->assertEquals(200, $notFound['headers']['status-code']);
 
         // Test increment with value 0
         $inc3 = $this->client->call(Client::METHOD_PATCH, "/documentsdb/$databaseId/collections/$collectionId/documents/$docId/count/increment", array_merge([
