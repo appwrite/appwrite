@@ -986,7 +986,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
 	Console::log("@@@debug-mustaq");
-	Console::log([
+	Console::log(json_encode([
 	    "isToken" => $isToken,
 	    "resourceToken" => $resourceToken,
 	    "bucketInternalId" => $resourceToken->getAttribute("bucketInternalId"),
@@ -995,7 +995,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 	    "validator" => $validator,
 	    "bucketGetRead" => $bucket->getRead(),
 	    "valid" => $valid,
-	]);
+	], JSON_PRETTY_PRINT));
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
