@@ -1007,7 +1007,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             /* @type Document $file */
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
-	
+
 
         // if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
         //     throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -1190,9 +1190,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid && !$isToken) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        // if (!$fileSecurity && !$valid && !$isToken) {
+        //     throw new Exception(Exception::USER_UNAUTHORIZED);
+        // }
 
         if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
@@ -1201,9 +1201,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
-        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        // if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
+        //     throw new Exception(Exception::USER_UNAUTHORIZED);
+        // }
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
