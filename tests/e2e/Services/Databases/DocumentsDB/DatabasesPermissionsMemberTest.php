@@ -138,13 +138,6 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $public['headers']['status-code']);
         $this->collections = ['public' => $public['body']['$id']];
 
-        $response = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $this->collections['public'] . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $response['headers']['status-code']);
-
         $private = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Private Movies',
@@ -159,13 +152,6 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $private['headers']['status-code']);
         $this->collections['private'] = $private['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $response['headers']['status-code']);
-
         $doconly = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Document Only Movies',
@@ -174,15 +160,6 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
         $this->collections['doconly'] = $doconly['body']['$id'];
-
-        $response = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $this->collections['doconly'] . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $response['headers']['status-code']);
-
-        sleep(2);
 
         return [
             'users' => $this->users,

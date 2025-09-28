@@ -57,12 +57,6 @@ class DatabasesPermissionsTeamTest extends Scope
 
         $this->collections['collection1'] = $collection1['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/documentsdb/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-
         $collection2 = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $this->databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::custom('collection2'),
             'name' => 'Collection 2',
@@ -75,14 +69,6 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
 
         $this->collections['collection2'] = $collection2['body']['$id'];
-
-        $this->client->call(Client::METHOD_POST, '/documentsdb/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-
-        sleep(2);
 
         return $this->collections;
     }

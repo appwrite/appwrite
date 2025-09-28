@@ -51,19 +51,6 @@ class DatabasesPermissionsGuestTest extends Scope
         $publicCollection = ['id' => $publicMovies['body']['$id']];
         $privateCollection = ['id' => $privateMovies['body']['$id']];
 
-        $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $publicCollection['id'] . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $privateCollection['id'] . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-
-        sleep(2);
-
         return [
             'databaseId' => $databaseId,
             'publicCollectionId' => $publicCollection['id'],
@@ -250,14 +237,6 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         $moviesId = $movies['body']['$id'];
-
-        $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', $this->getServerHeader(), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-
-        sleep(1);
 
         $document = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $moviesId . '/documents', [
             'content-type' => 'application/json',
