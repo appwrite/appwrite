@@ -899,7 +899,7 @@ class Builds extends Action
 
             Console::log('Build details stored');
 
-            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime);
+            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
             $logs = $deployment->getAttribute('buildLogs', '');
 
             /** Screenshot site */
@@ -1390,10 +1390,12 @@ class Builds extends Action
      * @param Realtime $queueForRealtime
      * @param Database $dbForProject
      * @param Document $deployment
+     * @param array $runtime
+     * @param string|null $adapter
      * @return void
      * @throws Exception
      */
-    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime, ?string $adapter): void
     {
         if (!($queueForRealtime instanceof Realtime)) {
             throw new Exception('queueForRealtime must be an instance of Realtime');
@@ -1406,6 +1408,9 @@ class Builds extends Action
         }
         if (!is_array($runtime)) {
             throw new Exception('runtime must be an array');
+        }
+        if (!is_string($adapter) && !is_null($adapter)) {
+            throw new Exception('adapter must be a string or null');
         }
     }
 

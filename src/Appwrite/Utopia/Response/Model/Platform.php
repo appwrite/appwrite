@@ -41,10 +41,10 @@ class Platform extends Model
             ])
             ->addRule('type', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, ios, android, and unity.',
+                'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.',
                 'default' => '',
                 'example' => 'web',
-                'enum' => ['web', 'flutter-web', 'flutter-ios', 'flutter-android', 'ios', 'android', 'unity'],
+                'enum' => ['web', 'flutter-web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'apple-ios', 'apple-macos', 'apple-watchos', 'apple-tvos', 'android', 'unity', 'react-native-ios', 'react-native-android'],
             ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
