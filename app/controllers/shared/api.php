@@ -325,6 +325,44 @@ App::init()
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         }
 
+        // User verification middleware
+        $globalVerificationEnabled = System::getEnv('_APP_VERIFICATION_REQUIRED', 'disabled') === 'enabled';
+        $isConsoleProject = $project->getId() === 'console';
+        
+        if (empty($apiKey) && $globalVerificationEnabled && $isConsoleProject && !$user->isEmpty()) {
+            $currentPath = $request->getURI();
+            
+            // Endpoints that must remain accessible
+            $allowedEndpoints = [
+                '/v1/account',                    // User account operations
+                '/v1/console/variables',          // Console configuration
+                '/v1/health/version',             // Health checks
+                '/v1/account/verification',       // Email verification
+                '/v1/account/verification/phone', // Phone verification
+                '/v1/account/recovery',           // Account recovery
+                '/v1/account/sessions',           // Session management
+                '/v1/account/tokens',             // Token management
+                '/v1/account/mfa'                 // Multi-factor authentication
+            ];
+            
+            $isAllowedEndpoint = false;
+            foreach ($allowedEndpoints as $allowedEndpoint) {
+                if (str_starts_with($currentPath, $allowedEndpoint)) {
+                    $isAllowedEndpoint = true;
+                    break;
+                }
+            }
+            
+            if (!$isAllowedEndpoint) {
+                $emailVerified = $user->getAttribute('emailVerification', false);
+                $phoneVerified = $user->getAttribute('phoneVerification', false);
+                
+                if (!$emailVerified && !$phoneVerified) {
+                    throw new Exception(Exception::USER_VERIFICATION_REQUIRED);
+                }
+            }
+        }
+
         $scopes = \array_unique($scopes);
 
         Authorization::setRole($role);
