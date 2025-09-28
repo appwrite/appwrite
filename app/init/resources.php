@@ -545,7 +545,7 @@ function getDevice(string $root, string $connection = ''): Device
         $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
         $accessSecret = '';
-        $bucket = '';
+        $bucket = 'appwrite-storage';
         $region = '';
         $url = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
         Console::log("@@@debug-mustaq url {$url}");
@@ -572,7 +572,13 @@ function getDevice(string $root, string $connection = ''): Device
                         "@@@debug-mustaq connection device AWS " .
                         "root => {$root}\taccesskey => {$accessKey}\tsecret => {$accessSecret}\tregion => {$region}\tacl => {$acl}"
                     );
-                    return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+                    return new S3('/appwrite-storage',              // Your local root directory for caching or temp
+                        'minioadmin',                 // Access key
+                        'minioadmin',                 // Secret key
+                        'http://minio:9000',             // Host (MinIO endpoint)
+                        'us-east-1',                  // Region (MinIO uses this for compatibility)
+                        S3::ACL_PRIVATE);
+                    // return new AWS($root, $accessKey, $accessSecret, $bucket, $region, $acl);
                 }
                 // no break
             case STORAGE::DEVICE_DO_SPACES:
