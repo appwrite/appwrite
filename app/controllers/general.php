@@ -51,6 +51,7 @@ use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\System\System;
 use Utopia\Validator\Text;
+use Utopia\Database\Validator\UID;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -191,7 +192,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $resourceId = $rule->getAttribute('deploymentResourceId', '');
             $type = ($resourceType === 'site') ? 'sites' : 'functions';
             $exception = new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, view: $errorView);
-            $exception->addCTA('View deployments', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $projectId . '/' . $type . '/' . $resourceType . '-' . $resourceId);
+            $exception->addCTA('View deployments', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $project->getId() . '/' . $type . '/' . $resourceType . '-' . $resourceId);
             throw $exception;
         }
 
@@ -1640,3 +1641,61 @@ if (!empty(Method::getErrors())) {
 
 $platform = new Appwrite();
 $platform->init(Service::TYPE_HTTP);
+
+App::post('/v1/webhooks/stripe/auth/:projectId')
+    ->desc('Handle Stripe webhook for auth subscriptions')
+    ->groups(['webhooks'])
+    ->label('scope', 'public')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->inject('getProjectDB')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->action(function (string $projectId, $request, $response, $dbForPlatform, callable $getProjectDB) {
+        $payload = $request->getRawPayload();
+        $signature = $request->getHeader('stripe-signature') ?: $request->getHeader('Stripe-Signature') ?: ($_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '');
+
+        if (empty($signature)) {
+            throw new AppwriteException(AppwriteException::GENERAL_BAD_REQUEST, 'Missing Stripe signature');
+        }
+
+        $event = json_decode($payload, true);
+
+        $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+        if ($project->isEmpty()) {
+            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+        }
+        $dbForProject = $getProjectDB($project);
+
+        $webhookSecret = $project->getAttribute('authStripeWebhookSecret');
+        if (empty($webhookSecret)) {
+            throw new AppwriteException(AppwriteException::GENERAL_BAD_REQUEST, 'Webhook not configured');
+        }
+
+        $tmpService = new \Appwrite\Auth\Subscription\StripeService(
+            $project->getAttribute('authStripeSecretKey'),
+            $dbForProject,
+            $project
+        );
+        if (!$tmpService->verifyWebhookSignature($payload, $signature, $webhookSecret)) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook signature');
+        }
+
+        $platformDb = $dbForPlatform;
+        $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+            $project->getAttribute('authStripeSecretKey'),
+            $dbForProject,
+            $project,
+            $platformDb
+        );
+
+        
+
+        try {
+            $stripeService->handleWebhook($event ?? []);
+            $response->json(['success' => true]);
+        } catch (\Appwrite\Auth\Subscription\Exception\SubscriptionException $e) {
+            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, $e->getMessage());
+        }
+    });
+

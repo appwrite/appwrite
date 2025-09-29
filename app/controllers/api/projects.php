@@ -3,6 +3,10 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\MockNumber;
+use Appwrite\Auth\Validator\StripeKey;
+use Appwrite\Auth\Validator\PlanData;
+use Appwrite\Auth\Subscription\StripeService;
+use Appwrite\Auth\Subscription\Exception\SubscriptionException;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
@@ -321,7 +325,8 @@ App::get('/v1/projects/:projectId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->inject('dbForProject')
+    ->action(function (string $projectId, Response $response, Database $dbForPlatform, Database $dbForProject) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1236,7 +1241,8 @@ App::get('/v1/projects/:projectId/webhooks')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->inject('dbForProject')
+    ->action(function (string $projectId, Response $response, Database $dbForPlatform, Database $dbForProject) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -2635,6 +2641,178 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
         $auths['invalidateSessions'] = $enabled;
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
         ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::put('/v1/projects/:projectId/auth/subscriptions')
+    ->desc('Configure auth subscriptions')
+    ->groups(['api'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'configureSubscriptions',
+        description: '/docs/references/projects/configure-subscriptions.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('stripeSecretKey', '', new StripeKey(), 'Stripe secret key.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->inject('dbForProject')
+    ->action(function (string $projectId, string $stripeSecretKey, Response $response, Database $dbForPlatform, Database $dbForProject) {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        try {
+            $stripeService = new StripeService($stripeSecretKey, $dbForProject, $project);
+            $config = $stripeService->initializeAccount();
+
+            $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
+                ->setAttribute('authSubscriptionsEnabled', true)
+                ->setAttribute('authStripeSecretKey', $stripeSecretKey)
+                ->setAttribute('authStripePublishableKey', $config['publishableKey'])
+                ->setAttribute('authStripeWebhookSecret', $config['webhookSecret'])
+                ->setAttribute('authStripeWebhookEndpointId', $config['webhookEndpointId'])
+                ->setAttribute('authStripeCurrency', $config['currency']));
+
+            // Ensure a default free plan exists
+            $existingDefault = $dbForPlatform->findOne('auth_plans', [
+                \Utopia\Database\Query::equal('projectId', [$projectId]),
+                \Utopia\Database\Query::equal('isDefault', [true])
+            ]);
+            if (!$existingDefault) {
+                $dbForPlatform->createDocument('auth_plans', new \Utopia\Database\Document([
+                    '$id' => null,
+                    'projectInternalId' => $project->getSequence(),
+                    'projectId' => $projectId,
+                    'planId' => 'free',
+                    'name' => 'Free',
+                    'description' => 'Default free plan',
+                    'stripeProductId' => null,
+                    'stripePriceId' => null,
+                    'price' => 0,
+                    'currency' => $config['currency'],
+                    'interval' => null,
+                    'features' => [],
+                    'isDefault' => true,
+                    'isFree' => true,
+                    'maxUsers' => null,
+                    'active' => true,
+                    'search' => 'free Default free plan'
+                ]));
+            }
+
+            $response->dynamic($project, Response::MODEL_PROJECT);
+        } catch (SubscriptionException $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        }
+    });
+
+App::get('/v1/projects/:projectId/auth/subscriptions')
+    ->desc('Get auth subscription configuration')
+    ->groups(['api'])
+    ->label('scope', 'projects.read')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'getSubscriptionsConfig',
+        description: '/docs/references/projects/get-subscriptions-config.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $response->dynamic(new Document([
+            'enabled' => $project->getAttribute('authSubscriptionsEnabled', false),
+            'publishableKey' => $project->getAttribute('authStripePublishableKey'),
+            'currency' => $project->getAttribute('authStripeCurrency'),
+        ]), Response::MODEL_ANY);
+    });
+
+App::delete('/v1/projects/:projectId/auth/subscriptions')
+    ->desc('Remove auth subscription configuration')
+    ->groups(['api'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'removeSubscriptionsConfig',
+        description: '/docs/references/projects/remove-subscriptions-config.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->inject('dbForProject')
+    ->action(function (string $projectId, Response $response, Database $dbForPlatform, Database $dbForProject) {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if ($project->getAttribute('authSubscriptionsEnabled')) {
+            try {
+                $stripe = new \Appwrite\Auth\Subscription\StripeService(
+                    $project->getAttribute('authStripeSecretKey'),
+                    $dbForProject,
+                    $project,
+                    $dbForPlatform
+                );
+                $endpointId = $project->getAttribute('authStripeWebhookEndpointId');
+                if (!empty($endpointId)) {
+                    $stripe->deleteWebhookEndpoint($endpointId);
+                }
+                $plans = $dbForPlatform->find('auth_plans', [
+                    \Utopia\Database\Query::equal('projectId', [$projectId])
+                ]);
+                foreach ($plans as $plan) {
+                    $priceId = $plan->getAttribute('stripePriceId');
+                    $productId = $plan->getAttribute('stripeProductId');
+                    try { if ($priceId) { $stripe->deactivatePrice($priceId); } } catch (\Throwable $_) {}
+                    try { if ($productId) { $stripe->deactivateProduct($productId); } } catch (\Throwable $_) {}
+                    $dbForPlatform->deleteDocument('auth_plans', $plan->getId());
+                }
+            } catch (\Throwable $_) {}
+        }
+
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('authSubscriptionsEnabled', false)
+            ->setAttribute('authStripeSecretKey', null)
+            ->setAttribute('authStripePublishableKey', null)
+            ->setAttribute('authStripeWebhookSecret', null)
+            ->setAttribute('authStripeWebhookEndpointId', null)
+            ->setAttribute('authStripeCurrency', null));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

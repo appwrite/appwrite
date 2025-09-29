@@ -607,7 +607,9 @@ App::get('/v1/users')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->inject('dbForPlatform')
+    ->inject('project')
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -658,6 +660,49 @@ App::get('/v1/users')
             }
         }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
 
+        $planIds = [];
+        foreach ($users as $u) {
+            $pid = (string) $u->getAttribute('planId', '');
+            if ($pid !== '') {
+                $planIds[$pid] = true;
+            }
+        }
+        $planMap = [];
+        if (!empty($planIds)) {
+            $plans = $dbForPlatform->find('auth_plans', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('planId', array_keys($planIds)),
+                Query::equal('active', [true])
+            ]);
+            foreach ($plans as $p) {
+                $planMap[(string) $p->getAttribute('planId')] = $p;
+            }
+        }
+        $defaultPlan = $dbForPlatform->findOne('auth_plans', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::equal('isDefault', [true]),
+            Query::equal('active', [true])
+        ]);
+        foreach ($users as $u) {
+            $pid = (string) $u->getAttribute('planId', '');
+            $p = null;
+            if ($pid !== '' && isset($planMap[$pid])) {
+                $p = $planMap[$pid];
+            } elseif ($defaultPlan) {
+                $p = $defaultPlan;
+            }
+            if ($p) {
+                $u->setAttribute('plan', [
+                    'id' => $p->getAttribute('planId'),
+                    'name' => $p->getAttribute('name'),
+                    'price' => $p->getAttribute('price'),
+                    'currency' => $p->getAttribute('currency'),
+                    'interval' => $p->getAttribute('interval'),
+                    'isFree' => $p->getAttribute('isFree', false)
+                ]);
+            }
+        }
+
         $response->dynamic(new Document([
             'users' => $users,
             'total' => $total,
@@ -684,13 +729,140 @@ App::get('/v1/users/:userId')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, Response $response, Database $dbForProject) {
+    ->inject('dbForPlatform')
+    ->inject('project')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
+
+        $pid = (string) $user->getAttribute('planId', '');
+        $plan = null;
+        if ($pid !== '') {
+            $plan = $dbForPlatform->findOne('auth_plans', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('planId', [$pid]),
+                Query::equal('active', [true])
+            ]);
+        } else {
+            $plan = $dbForPlatform->findOne('auth_plans', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('isDefault', [true]),
+                Query::equal('active', [true])
+            ]);
+        }
+        if ($plan) {
+            $user->setAttribute('plan', [
+                'id' => $plan->getAttribute('planId'),
+                'name' => $plan->getAttribute('name'),
+                'price' => $plan->getAttribute('price'),
+                'currency' => $plan->getAttribute('currency'),
+                'interval' => $plan->getAttribute('interval'),
+                'isFree' => $plan->getAttribute('isFree', false)
+            ]);
+        }
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/:userId/plan')
+    ->desc('Assign plan to user (admin)')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.write')
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'assignPlan',
+        description: '/docs/references/users/assign-plan.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('planId', '', new Text(128), 'Plan ID to assign.')
+    ->param('complimentary', true, new Boolean(), 'If true, create a complimentary Stripe subscription for one billing interval.', true)
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->action(function (string $userId, string $planId, bool $complimentary, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform) {
+        $user = $dbForProject->getDocument('users', $userId);
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $plan = $dbForPlatform->findOne('auth_plans', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::equal('planId', [$planId]),
+            Query::equal('active', [true])
+        ]);
+        if (!$plan) {
+            throw new Exception(Exception::GENERAL_NOT_FOUND, 'Plan not found');
+        }
+
+        $user->setAttribute('planId', $planId);
+        $now = time();
+        $interval = (string) $plan->getAttribute('interval', 'month');
+        $seconds = match ($interval) {
+            'day' => 86400,
+            'week' => 86400 * 7,
+            'year' => 86400 * 365,
+            default => 86400 * 30,
+        };
+        $user->setAttribute('subscriptionStatus', 'active');
+        $user->setAttribute('subscriptionCurrentPeriodStart', DateTime::format(new \DateTime('@' . $now)));
+        $user->setAttribute('subscriptionCurrentPeriodEnd', DateTime::format(new \DateTime('@' . ($now + $seconds))));
+        $user->setAttribute('subscriptionCancelAtPeriodEnd', true);
+        $user->setAttribute('subscriptionTrialEnd', DateTime::format(new \DateTime('@' . ($now + $seconds))));
+
+        if ($plan->getAttribute('isFree', false) && $project->getAttribute('authSubscriptionsEnabled')) {
+            $stripe = new \Appwrite\Auth\Subscription\StripeService(
+                $project->getAttribute('authStripeSecretKey'),
+                $dbForProject,
+                $project
+            );
+            $subscriptionId = (string) $user->getAttribute('stripeSubscriptionId', '');
+            if ($subscriptionId === '') {
+                $customerId = (string) $user->getAttribute('stripeCustomerId', '');
+                if ($customerId !== '') {
+                    try {
+                        $found = $stripe->findActiveSubscriptionId($customerId);
+                        if (!empty($found)) {
+                            $subscriptionId = (string) $found;
+                        }
+                    } catch (\Throwable $_) {
+                    }
+                }
+            }
+            if ($subscriptionId !== '') {
+                try {
+                    $stripe->cancelSubscription($subscriptionId, false);
+                } catch (\Throwable $_) {
+                }
+                $user->setAttribute('stripeSubscriptionId', null);
+            }
+        } elseif ($complimentary && !$plan->getAttribute('isFree', false) && $project->getAttribute('authSubscriptionsEnabled')) {
+            $stripe = new \Appwrite\Auth\Subscription\StripeService(
+                $project->getAttribute('authStripeSecretKey'),
+                $dbForProject,
+                $project
+            );
+            $customerId = (string) $user->getAttribute('stripeCustomerId', '');
+            if ($customerId === '') {
+                $customerId = $stripe->ensureCustomer($user);
+                $user->setAttribute('stripeCustomerId', $customerId);
+            }
+            $stripe->createComplimentarySubscription($customerId, (string) $plan->getAttribute('stripePriceId'), $interval, $user->getId());
+        }
+
+        $user = $dbForProject->updateDocument('users', $userId, $user);
 
         $response->dynamic($user, Response::MODEL_USER);
     });

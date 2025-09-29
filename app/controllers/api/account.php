@@ -5180,3 +5180,336 @@ App::delete('/v1/account/identities/:identityId')
 
         return $response->noContent();
     });
+
+App::get('/v1/account/subscription')
+    ->desc('Get account subscription')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'subscription',
+        name: 'getSubscription',
+        description: '/docs/references/account/get-subscription.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->action(function (Response $response, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform) {
+        if (!$project->getAttribute('authSubscriptionsEnabled')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Subscriptions not enabled for this project');
+        }
+
+        $planId = (string) $user->getAttribute('planId', '');
+        $plan = null;
+
+        if ($planId !== '') {
+            $candidate = Authorization::skip(fn () => $dbForPlatform->findOne('auth_plans', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('planId', [$planId]),
+                Query::equal('active', [true])
+            ]));
+            $plan = ($candidate instanceof \Utopia\Database\Document && !$candidate->isEmpty()) ? $candidate : null;
+        }
+
+        if (!$plan) {
+            $candidate = Authorization::skip(fn () => $dbForPlatform->findOne('auth_plans', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('isDefault', [true]),
+                Query::equal('active', [true])
+            ]));
+            $plan = ($candidate instanceof \Utopia\Database\Document && !$candidate->isEmpty()) ? $candidate : null;
+        }
+
+        // Final safeguard: return default even if not explicitly marked active
+        if (!$plan) {
+            $candidate = Authorization::skip(fn () => $dbForPlatform->findOne('auth_plans', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('isDefault', [true])
+            ]));
+            $plan = ($candidate instanceof \Utopia\Database\Document && !$candidate->isEmpty()) ? $candidate : null;
+        }
+
+        if ($plan) {
+            $planId = (string) $plan->getAttribute('planId');
+        }
+
+
+        $response->dynamic(new Document([
+            'planId' => $planId !== '' ? $planId : null,
+            'planName' => $plan ? $plan->getAttribute('name') : null,
+            'status' => $user->getAttribute('subscriptionStatus', 'none'),
+            'currentPeriodStart' => $user->getAttribute('subscriptionCurrentPeriodStart'),
+            'currentPeriodEnd' => $user->getAttribute('subscriptionCurrentPeriodEnd'),
+            'cancelAtPeriodEnd' => $user->getAttribute('subscriptionCancelAtPeriodEnd', false),
+            'trialEnd' => $user->getAttribute('subscriptionTrialEnd')
+        ]), Response::MODEL_ANY);
+    });
+
+App::post('/v1/account/subscription/checkout')
+    ->desc('Create checkout session')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'subscription',
+        name: 'createSubscriptionCheckout',
+        description: '/docs/references/account/create-checkout.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->param('planId', '', new Text(128), 'Plan ID to subscribe to.')
+    ->param('successUrl', '', new URL(), 'URL to redirect on success.')
+    ->param('cancelUrl', '', new URL(), 'URL to redirect on cancel.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->action(function (
+        string $planId,
+        string $successUrl,
+        string $cancelUrl,
+        Response $response,
+        Document $user,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform
+    ) {
+        if (!$project->getAttribute('authSubscriptionsEnabled')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Subscriptions not enabled for this project');
+        }
+
+        $plan = Authorization::skip(fn () => $dbForPlatform->findOne('auth_plans', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::equal('planId', [$planId]),
+            Query::equal('active', [true])
+        ]));
+
+        if (!$plan) {
+            throw new Exception(Exception::GENERAL_NOT_FOUND, 'Plan not found');
+        }
+
+        if ($plan->getAttribute('isFree')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot checkout for free plan');
+        }
+
+        $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+            $project->getAttribute('authStripeSecretKey'),
+            $dbForProject,
+            $project
+        );
+
+        try {
+            $session = $stripeService->createCheckoutSession($user, $plan->getAttribute('stripePriceId'), $successUrl, $cancelUrl, (string) $plan->getAttribute('planId'));
+
+            $response->dynamic(new Document([
+                'checkoutUrl' => $session['url']
+            ]), Response::MODEL_ANY);
+        } catch (\Appwrite\Auth\Subscription\Exception\SubscriptionException $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        }
+    });
+
+App::post('/v1/account/subscription/portal')
+    ->desc('Create customer portal session')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'subscription',
+        name: 'createSubscriptionPortal',
+        description: '/docs/references/account/create-portal.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->param('returnUrl', '', new URL(), 'URL to return to.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->action(function (
+        string $returnUrl,
+        Response $response,
+        Document $user,
+        Document $project,
+        Database $dbForProject
+    ) {
+        if (!$project->getAttribute('authSubscriptionsEnabled')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Subscriptions not enabled for this project');
+        }
+
+        $customerId = $user->getAttribute('stripeCustomerId');
+
+        if (!$customerId) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'No active subscription found');
+        }
+
+        $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+            $project->getAttribute('authStripeSecretKey'),
+            $dbForProject,
+            $project
+        );
+
+        try {
+            $session = $stripeService->createPortalSession($customerId, $returnUrl);
+
+            $response->dynamic(new Document([
+                'portalUrl' => $session['url']
+            ]), Response::MODEL_ANY);
+        } catch (\Appwrite\Auth\Subscription\Exception\SubscriptionException $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        }
+    });
+
+App::put('/v1/account/subscription')
+    ->desc('Update subscription')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'subscription',
+        name: 'updateSubscription',
+        description: '/docs/references/account/update-subscription.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->param('planId', '', new Text(128), 'New plan ID.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->action(function (
+        string $planId,
+        Response $response,
+        Document $user,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform
+    ) {
+        if (!$project->getAttribute('authSubscriptionsEnabled')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Subscriptions not enabled for this project');
+        }
+
+        $subscriptionId = $user->getAttribute('stripeSubscriptionId');
+
+        if (!$subscriptionId) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'No active subscription found');
+        }
+
+        $plan = Authorization::skip(fn () => $dbForPlatform->findOne('auth_plans', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::equal('planId', [$planId]),
+            Query::equal('active', [true])
+        ]));
+
+        if (!$plan) {
+            throw new Exception(Exception::GENERAL_NOT_FOUND, 'Plan not found');
+        }
+
+        $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+            $project->getAttribute('authStripeSecretKey'),
+            $dbForProject,
+            $project
+        );
+
+        try {
+            $subscription = $stripeService->updateSubscription(
+                $subscriptionId,
+                $plan->getAttribute('stripePriceId')
+            );
+
+            $stripeService->syncSubscriptionStatus($user->getId(), $subscription);
+
+            $response->dynamic(new Document([
+                'success' => true
+            ]), Response::MODEL_ANY);
+        } catch (\Appwrite\Auth\Subscription\Exception\SubscriptionException $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        }
+    });
+
+App::delete('/v1/account/subscription')
+    ->desc('Cancel subscription')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'subscription',
+        name: 'cancelSubscription',
+        description: '/docs/references/account/cancel-subscription.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->param('atPeriodEnd', true, new Boolean(), 'Cancel at period end.', true)
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->action(function (
+        bool $atPeriodEnd,
+        Response $response,
+        Document $user,
+        Document $project,
+        Database $dbForProject
+    ) {
+        if (!$project->getAttribute('authSubscriptionsEnabled')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Subscriptions not enabled for this project');
+        }
+
+        $subscriptionId = $user->getAttribute('stripeSubscriptionId');
+
+        if (!$subscriptionId) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'No active subscription found');
+        }
+
+        $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+            $project->getAttribute('authStripeSecretKey'),
+            $dbForProject,
+            $project
+        );
+
+        try {
+            $subscription = $stripeService->cancelSubscription($subscriptionId, $atPeriodEnd);
+
+            if ($atPeriodEnd) {
+                $stripeService->syncSubscriptionStatus($user->getId(), $subscription);
+            }
+
+            $response->dynamic(new Document([
+                'success' => true,
+                'cancelAtPeriodEnd' => $atPeriodEnd
+            ]), Response::MODEL_ANY);
+        } catch (\Appwrite\Auth\Subscription\Exception\SubscriptionException $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        }
+    });
