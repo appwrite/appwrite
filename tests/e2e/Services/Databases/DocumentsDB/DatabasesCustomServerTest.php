@@ -2,14 +2,12 @@
 
 namespace Tests\E2E\Services\Databases\DocumentsDB;
 
-use Appwrite\Extend\Exception as AppwriteException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -711,7 +709,8 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $collection['headers']['status-code']);
         $this->assertIsArray($collection['body']['indexes']);
         $this->assertCount(2, $collection['body']['indexes']);
-        $this->assertEquals($index2['body']['key'], $collection['body']['indexes'][0]['key']);
+        $this->assertEquals($index1['body']['key'], $collection['body']['indexes'][0]['key']);
+        $this->assertEquals($index2['body']['key'], $collection['body']['indexes'][1]['key']);
         $this->assertIsArray($collection['body']['indexes'][0]['attributes']);
         $this->assertCount(2, $collection['body']['indexes'][0]['attributes']);
         $this->assertEquals('attribute1', $collection['body']['indexes'][0]['attributes'][0]);
@@ -1756,7 +1755,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $doc['headers']['status-code']);
-        $this->assertNotEmpty($doc['body']['datetime']);
+        $this->assertEmpty($doc['body']['datetime']);
         $this->assertNotEmpty($doc['body']['$createdAt']);
         $this->assertNotEmpty($doc['body']['$updatedAt']);
 
@@ -1766,7 +1765,7 @@ class DatabasesCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $doc['headers']['status-code']);
-        $this->assertNotEmpty($doc['body']['datetime']);
+        $this->assertEmpty($doc['body']['datetime']);
         $this->assertNotEmpty($doc['body']['$createdAt']);
         $this->assertNotEmpty($doc['body']['$updatedAt']);
 
@@ -2361,7 +2360,6 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(201, $upsertDoc1['headers']['status-code']);
-        var_dump($upsertDoc1['body']['$createdAt']);
         $this->assertEquals($createDate, $upsertDoc1['body']['$createdAt']);
         $this->assertNotEquals($createDate, $upsertDoc1['body']['$updatedAt']);
 

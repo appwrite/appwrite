@@ -201,13 +201,15 @@ class Create extends Action
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
+            $collection->getAttribute('indexes', []),
             $maxIndexLength,
             $internalIndexesKeys,
             $supportForIndexArray,
             $supportForSpatialAttributes,
             $supportForSpatialIndexNull,
             $supportForSpatialIndexOrder,
-            $dbForDatabaseRecords->getAdapter()->getSupportForAttributes()
+            $dbForDatabaseRecords->getAdapter()->getSupportForAttributes(),
+            $dbForDatabaseRecords->getAdapter()->getSupportForMultipleFulltextIndexes()
         );
 
         if (!$validator->isValid($index)) {

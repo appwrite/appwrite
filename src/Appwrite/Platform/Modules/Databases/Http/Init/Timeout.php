@@ -24,11 +24,13 @@ class Timeout extends Action
             ->groups(['api', 'database'])
             ->inject('request')
             ->inject('dbForProject')
-            ->callback(function (Request $request, Database $dbForProject) {
+            ->inject('dbForDocuments')
+            ->callback(function (Request $request, Database $dbForProject, Database $dbForDocuments) {
                 $timeout = \intval($request->getHeader('x-appwrite-timeout'));
 
                 if (!empty($timeout) && App::isDevelopment()) {
                     $dbForProject->setTimeout($timeout);
+                    $dbForDocuments->setTimeout($timeout);
                 }
             });
     }

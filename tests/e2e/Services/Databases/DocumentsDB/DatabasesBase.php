@@ -275,8 +275,7 @@ trait DatabasesBase
             'attributes' => ['releaseYear'],
         ]);
 
-        $this->assertEquals(409, $fulltextReleaseYear['headers']['status-code']);
-        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Index with the requested key already exists. Try again with a different key.');
+        $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
 
         $noAttributes = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -326,7 +325,7 @@ trait DatabasesBase
             'attributes' => ['actors'],
         ]);
 
-        $this->assertEquals(202, $fulltextArray['headers']['status-code']);
+        $this->assertEquals(400, $fulltextArray['headers']['status-code']);
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -402,7 +401,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(11, $movies['body']['indexes']);
+        $this->assertCount(10, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
