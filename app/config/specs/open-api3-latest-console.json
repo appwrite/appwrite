@@ -47921,7 +47921,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48016,7 +48017,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48113,7 +48115,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48210,7 +48213,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48290,7 +48294,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48377,7 +48382,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48474,7 +48480,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48561,7 +48568,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48648,7 +48656,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48735,7 +48744,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48850,7 +48860,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -48936,7 +48947,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -49034,7 +49046,8 @@
                             "deleting",
                             "stuck",
                             "failed"
-                        ]
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
