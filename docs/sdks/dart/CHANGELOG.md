@@ -1,5 +1,9 @@
 # Change Log
 
+## 18.1.0
+
+* Add `orderRandom` query support
+
 ## 18.0.0
 
 * Rename `CreditCard` enum value `unionChinaPay` to `unionPay`

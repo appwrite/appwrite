@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Request\Filters;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Query;
 
@@ -67,9 +68,9 @@ class V17 extends Filter
         foreach ($content['queries'] as $query) {
             try {
                 $query = $this->parseQuery($query);
-                $parsed[] = json_encode(array_filter($query->toArray()));
+                $parsed[] = \json_encode(\array_filter($query->toArray()));
             } catch (\Throwable $th) {
-                throw new \Exception("Invalid query: {$query}", previous: $th);
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
         }
 
@@ -83,6 +84,7 @@ class V17 extends Filter
     {
         // Init empty vars we fill later
         $method = '';
+        $attribute = null;
         $params = [];
 
         // Separate method from filter
@@ -92,7 +94,7 @@ class V17 extends Filter
             throw new \Exception('Invalid query');
         }
 
-        $method = mb_substr($filter, 0, $paramsStart);
+        $method = \mb_substr($filter, 0, $paramsStart);
 
         // Separate params from filter
         $paramsEnd = \strlen($filter) - 1; // -1 to ignore )
@@ -103,13 +105,12 @@ class V17 extends Filter
             throw new \Exception('Invalid query method');
         }
 
-        $currentParam = ""; // We build param here before pushing when it's ended
+        $currentParam = ''; // We build param here before pushing when it's ended
         $currentArrayParam = []; // We build array param here before pushing when it's ended
 
         $stack = []; // State for stack of parentheses
         $stackCount = 0; // Length of stack array. Kept as variable to improve performance
         $stringStackState = null; // State for string support
-
 
         // Loop thorough all characters
         for ($i = $parametersStart; $i < $paramsEnd; $i++) {
@@ -135,19 +136,24 @@ class V17 extends Filter
                 ($filter[$i - 1] !== static::CHAR_BACKSLASH || $filter[$i - 2] === static::CHAR_BACKSLASH) // Must not be escaped;
             ) {
                 if ($isStringStack) {
-                    // Dont mix-up string symbols. Only allow the same as on start
+                    // Don't mix up string symbols. Only allow the same as on start
                     if ($char === $stringStackState) {
                         // End of string
                         $stringStackState = null;
                     }
-
-                    // Either way, add symbol to builder
-                    static::appendSymbol($isStringStack, $char, $i, $filter, $currentParam);
                 } else {
                     // Start of string
                     $stringStackState = $char;
-                    static::appendSymbol($isStringStack, $char, $i, $filter, $currentParam);
                 }
+
+                // Either way, add symbol to builder
+                static::appendSymbol(
+                    $isStringStack,
+                    $char,
+                    $i,
+                    $filter,
+                    $currentParam,
+                );
 
                 continue;
             }
@@ -174,12 +180,12 @@ class V17 extends Filter
 
                     continue;
                 } elseif ($char === static::CHAR_COMMA) { // Params separation support
-                    // If in array stack, dont merge yet, just mark it in array param builder
+                    // If in array stack, don't merge yet, just mark it in array param builder
                     if ($isArrayStack) {
                         $currentArrayParam[] = $currentParam;
                         $currentParam = "";
                     } else {
-                        // Append from parap builder. Either value, or array
+                        // Append from param builder. Either value, or array
                         if (empty($currentArrayParam)) {
                             if (strlen($currentParam)) {
                                 $params[] = $currentParam;
@@ -193,23 +199,28 @@ class V17 extends Filter
             }
 
             // Value, not relevant to syntax
-            static::appendSymbol($isStringStack, $char, $i, $filter, $currentParam);
+            static::appendSymbol(
+                $isStringStack,
+                $char,
+                $i,
+                $filter,
+                $currentParam,
+            );
         }
 
-        if (strlen($currentParam)) {
+        if (\strlen($currentParam)) {
             $params[] = $currentParam;
-            $currentParam = "";
+            $currentParam = '';
         }
 
         $parsedParams = [];
 
         foreach ($params as $param) {
-            // If array, parse each child separatelly
+            // If array, parse each child separately
             if (\is_array($param)) {
                 foreach ($param as $element) {
                     $arr[] = self::parseValue($element);
                 }
-
                 $parsedParams[] = $arr ?? [];
             } else {
                 $parsedParams[] = self::parseValue($param);
@@ -295,8 +306,13 @@ class V17 extends Filter
      * @param string $currentParam
      * @return void
      */
-    private function appendSymbol(bool $isStringStack, string $char, int $index, string $filter, string &$currentParam): void
-    {
+    private function appendSymbol(
+        bool $isStringStack,
+        string $char,
+        int $index,
+        string $filter,
+        string &$currentParam
+    ): void {
         // Ignore spaces and commas outside of string
         $canBeIgnored = false;
 

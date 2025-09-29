@@ -11,8 +11,6 @@ class V16 extends Filter
     {
         switch ($model) {
             case 'functions.create':
-                $content['commands'] = $this->getCommands($content['runtime'] ?? '');
-                break;
             case 'functions.update':
                 $content['commands'] = $this->getCommands($content['runtime'] ?? '');
                 break;
