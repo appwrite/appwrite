@@ -374,7 +374,6 @@ class Create extends Action
                     );
                 }
             );
-
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (NotFoundException) {
