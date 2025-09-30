@@ -262,7 +262,6 @@ const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
 
 // Resource types
-
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';
 const RESOURCE_TYPE_SITES = 'sites';
@@ -272,10 +271,15 @@ const RESOURCE_TYPE_PROVIDERS = 'providers';
 const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
+const RESOURCE_TYPE_EXECUTIONS = 'executions';
 
 // Resource types for Tokens
-
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
 const TOKENS_RESOURCE_TYPE_SITES = 'sites';
 const TOKENS_RESOURCE_TYPE_FUNCTIONS = 'functions';
 const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
+
+// Resource types for Schedules
+const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
+const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
+const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';

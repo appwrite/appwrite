@@ -4397,68 +4397,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/1.2.0"
             },
-            "time": "2025-09-24T10:32:24+00:00"
-        },
-        {
-            "name": "utopia-php/mongo",
-            "version": "0.7.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "1363598f9f8e6c066f5821704be95e3e24ea66aa"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/1363598f9f8e6c066f5821704be95e3e24ea66aa",
-                "reference": "1363598f9f8e6c066f5821704be95e3e24ea66aa",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mongodb": "2.1.1",
-                "mongodb/mongodb": "2.1.0",
-                "php": ">=8.0",
-                "ramsey/uuid": "^4.9.0"
-            },
-            "require-dev": {
-                "fakerphp/faker": "^1.14",
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "2.1.*",
-                "phpunit/phpunit": "^9.4",
-                "swoole/ide-helper": "4.8.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Mongo\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Wess",
-                    "email": "wess@appwrite.io"
-                }
-            ],
-            "description": "A simple library to manage Mongo database",
-            "keywords": [
-                "database",
-                "mongo",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/0.7.0"
-            },
-            "time": "2025-09-26T09:15:55+00:00"
+            "time": "2025-09-10T06:17:20+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -8743,9 +8682,7 @@
         }
     ],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

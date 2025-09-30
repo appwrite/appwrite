@@ -125,6 +125,8 @@ class Delete extends Action
             throw new Exception($this->getConflictException());
         } catch (RestrictedException) {
             throw new Exception($this->getRestrictedException());
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         foreach ($documents as $document) {
