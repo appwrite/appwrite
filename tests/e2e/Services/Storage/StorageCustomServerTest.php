@@ -215,7 +215,12 @@ class StorageCustomServerTest extends Scope
                 $this->getHeaders()
             )
         );
-        $this->assertEquals(400, $response['headers']['status-code']);
+        // MongoDB allows longer IDs than MariaDB, so it returns 404 (not found) instead of 400 (validation error)
+        if ($this->isMongoDB()) {
+            $this->assertEquals(404, $response['headers']['status-code']);
+        } else {
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
 
         return $data;
     }
