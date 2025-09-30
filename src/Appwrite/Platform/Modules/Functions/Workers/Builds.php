@@ -695,7 +695,7 @@ class Builds extends Action
 
                                 // Enter output directory, if set
                                 if (!empty($outputDirectory)) {
-                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($resource->getAttribute('outputDirectory'));
+                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
                                 }
 
                                 // Print files, and end separation
