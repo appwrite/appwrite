@@ -3006,7 +3006,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertContains('tables.read', $response['body']['scopes']);
-         //Why are we checking 3 scopes if there are 4 i uodated it to 4?
+        //Why are we checking 3 scopes if there are 4 i uodated it to 4?
         $this->assertCount(4, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);

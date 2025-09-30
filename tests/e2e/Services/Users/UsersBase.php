@@ -8,7 +8,6 @@ use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\System\System;
 
 trait UsersBase
 {
