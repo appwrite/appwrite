@@ -692,9 +692,11 @@ class Builds extends Action
                                 // Start separation, enter build folder
                                 $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
 
+                                $outputDirectory = $deployment->getAttribute('outputDirectory') ?? $resource->getAttribute('outputDirectory');
+
                                 // Enter output directory, if set
-                                if (!empty($resource->getAttribute('outputDirectory', ''))) {
-                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($resource->getAttribute('outputDirectory', ''));
+                                if ($outputDirectory !== null) {
+                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($resource->getAttribute('outputDirectory'));
                                 }
 
                                 // Print files, and end separation
