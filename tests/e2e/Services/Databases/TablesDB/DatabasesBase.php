@@ -1302,7 +1302,13 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
-        $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
+
+        // MongoDB only allows one fulltext index per collection, so it returns a different error
+        if ($this->isMongoDB()) {
+            $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
+        } else {
+            $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
+        }
 
         $noAttributes = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
