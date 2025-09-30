@@ -41,7 +41,6 @@ COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
-COPY ./vendor /usr/src/code/vendor
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
