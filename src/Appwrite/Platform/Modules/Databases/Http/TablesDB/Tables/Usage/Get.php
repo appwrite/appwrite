@@ -52,6 +52,7 @@ class Get extends CollectionUsageGet
             ->param('tableId', '', new UID(), 'Table ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('dbForDatabaseRecords')
             ->callback($this->action(...));
     }
 }
