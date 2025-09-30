@@ -182,6 +182,132 @@ class StripeService
         return $response;
     }
 
+    public function createMeteredTieredPrice(
+        string $productId,
+        string $currency,
+        ?string $interval,
+        int $includedUnits,
+        string $tiersMode,
+        array $tiers,
+        ?string $planId,
+        ?string $featureId,
+        ?string $featureName
+    ): array {
+        $meterId = $this->ensureMeterForFeature($planId, $featureId, $featureName);
+        $stripeTiers = [];
+
+        $remainingIncluded = max(0, $includedUnits);
+        if ($remainingIncluded > 0) {
+            $stripeTiers[] = [
+                'up_to' => $remainingIncluded,
+                'unit_amount' => 0,
+            ];
+        }
+
+        foreach ($tiers as $tier) {
+            $to = $tier['to'] ?? null; // integer or 'inf'
+            $unitAmountMajor = (int) ($tier['unitAmount'] ?? 0);
+            $unitAmount = $this->toMinorUnits($unitAmountMajor, $currency);
+            $flatAmount = isset($tier['flatAmount']) ? (int) $tier['flatAmount'] : null;
+
+            $entry = [
+                'up_to' => $to === null ? 'inf' : $to,
+            ];
+            if ($unitAmount > 0) {
+                $entry['unit_amount'] = $unitAmount;
+            } else {
+                $entry['unit_amount'] = 0;
+            }
+            if ($flatAmount !== null) {
+                $entry['flat_amount'] = $this->toMinorUnits($flatAmount, $currency);
+            }
+            $stripeTiers[] = $entry;
+        }
+
+        $params = [
+            'product' => $productId,
+            'currency' => $currency,
+            'billing_scheme' => 'tiered',
+            'tiers_mode' => $tiersMode === 'volume' ? 'volume' : 'graduated',
+            'tiers' => $stripeTiers,
+            'recurring' => array_filter([
+                'interval' => $interval,
+                'usage_type' => 'metered',
+                'meter' => $meterId,
+            ]),
+            'nickname' => $featureName ? ('Feature: ' . $featureName) : null,
+            'metadata' => array_filter([
+                'project_id' => $this->project->getId(),
+                'plan_id' => $planId,
+                'feature_id' => $featureId,
+                'type' => 'auth_plan_feature_price'
+            ])
+        ];
+
+        $response = $this->makeRequest('POST', '/prices', $params);
+
+        if (isset($response['error'])) {
+            throw new SubscriptionException($response['error']['message'] ?? 'Failed to create metered price');
+        }
+
+        return $response;
+    }
+
+    private function toMinorUnits(int $major, string $currency): int
+    {
+        $currency = strtolower($currency);
+        $zeroDecimal = [
+            'bif','clp','djf','gnf','jpy','kmf','krw','mga','pyg','rwf','ugx','vnd','vuv','xaf','xof','xpf'
+        ];
+        if (in_array($currency, $zeroDecimal, true)) {
+            return $major;
+        }
+        return $major * 100;
+    }
+
+    public function ensureMeterForFeature(?string $planId, ?string $featureId, ?string $featureName): string
+    {
+        if ($this->platformDb === null || !$planId || !$featureId) {
+            return '';
+        }
+        $existing = $this->platformDb->findOne('auth_plan_features', [
+            Query::equal('projectId', [$this->project->getId()]),
+            Query::equal('planId', [$planId]),
+            Query::equal('featureId', [$featureId])
+        ]);
+        if ($existing && (string)$existing->getAttribute('stripeMeterId', '') !== '') {
+            return (string)$existing->getAttribute('stripeMeterId');
+        }
+        $eventName = 'appwrite.auth.feature.usage.' . $this->project->getId() . '.' . $planId . '.' . $featureId;
+
+        $list = $this->makeRequest('GET', '/billing/meters', [ 'limit' => 100 ]);
+        if (isset($list['data']) && is_array($list['data'])) {
+            foreach ($list['data'] as $m) {
+                if (($m['event_name'] ?? '') === $eventName) {
+                    $id = (string) ($m['id'] ?? '');
+                    if ($id !== '' && ($m['active'] ?? true) === false) {
+                        $this->makeRequest('POST', '/billing/meters/' . $id, ['active' => 'true']);
+                    }
+                    return $id;
+                }
+            }
+        }
+
+        $meter = $this->makeRequest('POST', '/billing/meters', [
+            'display_name' => ($featureName ? ($featureName . ' usage') : 'Auth feature usage'),
+            'event_name' => $eventName,
+            'default_aggregation' => [ 'formula' => 'sum' ],
+            'value_settings' => [ 'event_payload_key' => 'value' ],
+            'customer_mapping' => [ 'type' => 'by_id', 'event_payload_key' => 'stripe_customer_id' ]
+        ]);
+
+        if (isset($meter['error'])) {
+            throw new SubscriptionException($meter['error']['message'] ?? 'Failed to create meter');
+        }
+
+        return (string)($meter['id'] ?? '');
+    }
+
     /**
      * Deactivate a Stripe price
      * @throws SubscriptionException
@@ -189,6 +315,15 @@ class StripeService
     public function deactivatePrice(string $priceId): array
     {
         return $this->makeRequest('POST', '/prices/' . $priceId, ['active' => 'false']);
+    }
+
+    /**
+     * Get a Stripe price
+     * @throws SubscriptionException
+     */
+    public function getPrice(string $priceId): array
+    {
+        return $this->makeRequest('GET', '/prices/' . $priceId);
     }
 
     /**
@@ -204,16 +339,39 @@ class StripeService
      * Create checkout session
      * @throws SubscriptionException
      */
-    public function createCheckoutSession(Document $user, string $priceId, string $successUrl, string $cancelUrl, ?string $planId = null): array
+    public function createCheckoutSession(Document $user, string $priceId, string $successUrl, string $cancelUrl, ?string $planId = null, array $additionalItems = []): array
     {
-        $params = [
+        $mainItem = [ 'price' => $priceId ];
+        try {
+            $price = $this->getPrice($priceId);
+            $usageType = (string)($price['recurring']['usage_type'] ?? '');
+            if ($usageType !== 'metered') {
+                $mainItem['quantity'] = 1;
+            }
+        } catch (SubscriptionException $e) {
+            $mainItem['quantity'] = 1;
+        }
+
+        $lineItems = [
             'mode' => 'subscription',
-            'line_items' => [
-                [
-                    'price' => $priceId,
-                    'quantity' => 1
-                ]
-            ],
+            'line_items' => [ $mainItem ],
+        ];
+
+        foreach ($additionalItems as $item) {
+            if (!is_array($item)) continue;
+            $entry = [];
+            if (!empty($item['price'])) {
+                $entry['price'] = $item['price'];
+            }
+            if (!empty($item['quantity'])) {
+                $entry['quantity'] = (int) $item['quantity'];
+            }
+            if (!empty($entry)) {
+                $lineItems['line_items'][] = $entry;
+            }
+        }
+
+        $params = $lineItems + [
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
             'customer_email' => $user->getAttribute('email'),
@@ -244,6 +402,35 @@ class StripeService
         }
 
         return $response;
+    }
+
+    public function buildAdditionalLineItemsForPlan(string $planId): array
+    {
+        if ($this->platformDb === null) {
+            return [];
+        }
+
+        $items = [];
+        $assigned = Authorization::skip(fn () => $this->platformDb->find('auth_plan_features', [
+            Query::equal('projectId', [$this->project->getId()]),
+            Query::equal('planId', [$planId]),
+            Query::equal('active', [true])
+        ]));
+
+        foreach ($assigned as $af) {
+            $type = (string) $af->getAttribute('type');
+            $priceId = (string) $af->getAttribute('stripePriceId');
+            if ($priceId === '') {
+                continue;
+            }
+            if ($type === 'metered') {
+                $items[] = [ 'price' => $priceId ];
+                continue;
+            }
+            $items[] = [ 'price' => $priceId, 'quantity' => 1 ];
+        }
+
+        return $items;
     }
 
     /**
@@ -288,6 +475,140 @@ class StripeService
             throw new SubscriptionException($response['error']['message'] ?? 'Failed to create customer');
         }
         return (string) ($response['id'] ?? '');
+    }
+
+    /**
+     * Ingest usage for a metered feature
+     * @throws SubscriptionException
+     */
+    public function ingestUsage(int $value, string $userId, string $planId, string $featureId, ?int $timestamp = null, ?string $identifier = null): array
+    {
+        // Resolve user and ensure Stripe customer id
+        $user = Authorization::skip(fn () => $this->database->getDocument('users', $userId));
+        if ($user->isEmpty()) {
+            throw new SubscriptionException('User not found');
+        }
+
+        $customerId = (string) $user->getAttribute('stripeCustomerId', '');
+        if ($customerId === '') {
+            // Create customer if missing
+            $customerId = $this->ensureCustomer($user);
+            if ($customerId === '') {
+                throw new SubscriptionException('Failed to ensure Stripe customer for user');
+            }
+            $user = $user->setAttribute('stripeCustomerId', $customerId);
+            Authorization::skip(fn () => $this->database->updateDocument('users', $userId, $user));
+        }
+
+        // Enforce usage caps if defined on the plan feature assignment
+        if ($this->platformDb) {
+            $assignment = Authorization::skip(fn () => $this->platformDb->findOne('auth_plan_features', [
+                Query::equal('projectId', [$this->project->getId()]),
+                Query::equal('planId', [$planId]),
+                Query::equal('featureId', [$featureId]),
+                Query::equal('active', [true])
+            ]));
+            if ($assignment && !$assignment->isEmpty()) {
+                $cap = $assignment->getAttribute('usageCap');
+                if ($cap !== null) {
+                    $periodStart = $user->getAttribute('subscriptionCurrentPeriodStart');
+                    $periodEnd = $user->getAttribute('subscriptionCurrentPeriodEnd');
+                    $startTs = $periodStart ? strtotime((string)$periodStart) : 0;
+                    $endTs = $periodEnd ? strtotime((string)$periodEnd) : time();
+                    $current = 0;
+                    try {
+                        $current = $this->getFeatureUsageTotal($customerId, $planId, $featureId, $startTs, $endTs);
+                    } catch (\Throwable $_) {}
+                    if ($current + $value > (int)$cap) {
+                        throw new SubscriptionException('Usage cap exceeded for feature: ' . $featureId);
+                    }
+                }
+            }
+        }
+
+        // Build event name based on the provisioned meter convention
+        $eventName = 'appwrite.auth.feature.usage.' . $this->project->getId() . '.' . $planId . '.' . $featureId;
+
+        $params = [
+            'event_name' => $eventName,
+            'payload' => [
+                'value' => (string) $value,
+                'stripe_customer_id' => $customerId,
+            ],
+        ];
+        if (!empty($identifier)) {
+            $params['identifier'] = $identifier;
+        }
+        if (!empty($timestamp)) {
+            $params['timestamp'] = (string) $timestamp;
+        }
+
+        $response = $this->makeRequest('POST', '/billing/meter_events', $params);
+
+        if (isset($response['error'])) {
+            throw new SubscriptionException($response['error']['message'] ?? 'Failed to ingest usage');
+        }
+
+        return $response;
+    }
+
+    /**
+     * Get total usage for a feature for a customer within a time window
+     * Returns integer total (sum) if available, otherwise 0.
+     * @throws SubscriptionException
+     */
+    public function getFeatureUsageTotal(string $customerId, string $planId, string $featureId, int $startTime, int $endTime): int
+    {
+        if ($customerId === '' || $startTime <= 0 || $endTime <= 0) {
+            return 0;
+        }
+
+        // Find meter id from platform DB
+        if ($this->platformDb === null) {
+            return 0;
+        }
+        $assigned = Authorization::skip(fn () => $this->platformDb->findOne('auth_plan_features', [
+            Query::equal('projectId', [$this->project->getId()]),
+            Query::equal('planId', [$planId]),
+            Query::equal('featureId', [$featureId]),
+            Query::equal('active', [true])
+        ]));
+        if (!$assigned || $assigned->isEmpty()) {
+            return 0;
+        }
+        $meterId = (string) $assigned->getAttribute('stripeMeterId', '');
+        if ($meterId === '') {
+            return 0;
+        }
+
+        $params = [
+            'meter' => $meterId,
+            'customer' => $customerId,
+            'start_time' => (string) $startTime,
+            'end_time' => (string) $endTime,
+        ];
+
+        // Stripe may expose this endpoint as meter_event_summaries
+        $summary = $this->makeRequest('GET', '/billing/meter_event_summaries', $params);
+        if (isset($summary['error'])) {
+            return 0;
+        }
+        // Attempt to parse common shapes
+        if (isset($summary['data']) && is_array($summary['data'])) {
+            $total = 0;
+            foreach ($summary['data'] as $row) {
+                $val = (int) ($row['value'] ?? 0);
+                $total += $val;
+            }
+            return $total;
+        }
+        if (isset($summary['total'])) {
+            return (int) $summary['total'];
+        }
+        if (isset($summary['value'])) {
+            return (int) $summary['value'];
+        }
+        return 0;
     }
 
     /**
@@ -510,7 +831,7 @@ class StripeService
             Query::equal('stripeProductId', [$stripeProductId]),
             Query::equal('projectId', [$this->project->getId()])
         ]);
-        if (!$plan) return;
+        if ($plan->isEmpty()) return;
         $plan->setAttribute('name', $product['name'] ?? $plan->getAttribute('name'));
         if (isset($product['active']) && $product['active'] === false) {
             // If product deactivated, mark plan inactive
@@ -531,7 +852,7 @@ class StripeService
             Query::equal('stripeProductId', [$stripeProductId]),
             Query::equal('projectId', [$this->project->getId()])
         ]);
-        if ($plan) {
+        if (!$plan->isEmpty()) {
             $this->platformDb->deleteDocument('auth_plans', $plan->getId());
         }
     }
@@ -548,7 +869,7 @@ class StripeService
             Query::equal('stripePriceId', [$stripePriceId]),
             Query::equal('projectId', [$this->project->getId()])
         ]);
-        if (!$plan) return;
+        if ($plan->isEmpty()) return;
         if (isset($price['active']) && $price['active'] === false) {
             $plan->setAttribute('active', false);
         }
@@ -576,7 +897,7 @@ class StripeService
             Query::equal('stripePriceId', [$stripePriceId]),
             Query::equal('projectId', [$this->project->getId()])
         ]);
-        if ($plan) {
+        if (!$plan->isEmpty()) {
             $this->platformDb->deleteDocument('auth_plans', $plan->getId());
         }
     }
@@ -773,6 +1094,7 @@ class StripeService
         $ch = curl_init();
 
         $url = $this->apiUrl . $path;
+
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [

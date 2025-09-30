@@ -6,6 +6,7 @@ use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
+use Appwrite\Auth\Key;
 use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -61,6 +62,7 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -5242,6 +5244,46 @@ App::get('/v1/account/subscription')
             $planId = (string) $plan->getAttribute('planId');
         }
 
+        $features = [];
+        if ($planId !== '') {
+            $assigned = Authorization::skip(fn () => $dbForPlatform->find('auth_plan_features', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('planId', [$planId]),
+                Query::equal('active', [true])
+            ]));
+            $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+                $project->getAttribute('authStripeSecretKey'),
+                $dbForProject,
+                $project,
+                $dbForPlatform
+            );
+            $customerId = (string) $user->getAttribute('stripeCustomerId', '');
+            $periodStart = $user->getAttribute('subscriptionCurrentPeriodStart');
+            $periodEnd = $user->getAttribute('subscriptionCurrentPeriodEnd');
+            $startTs = $periodStart ? strtotime($periodStart) : 0;
+            $endTs = $periodEnd ? strtotime($periodEnd) : time();
+            foreach ($assigned as $af) {
+                $featureId = (string) $af->getAttribute('featureId');
+                $usage = 0;
+                if ((string)$af->getAttribute('type') === 'metered' && $customerId !== '' && $startTs > 0) {
+                    try {
+                        $usage = $stripeService->getFeatureUsageTotal($customerId, $planId, $featureId, $startTs, $endTs);
+                    } catch (\Throwable $_) {}
+                }
+                $features[] = [
+                    'featureId' => $featureId,
+                    'type' => (string) $af->getAttribute('type'),
+                    'enabled' => (bool) $af->getAttribute('enabled', true),
+                    'currency' => $af->getAttribute('currency'),
+                    'interval' => $af->getAttribute('interval'),
+                    'includedUnits' => (int) $af->getAttribute('includedUnits', 0),
+                    'tiersMode' => $af->getAttribute('tiersMode'),
+                    'tiers' => (array) $af->getAttribute('tiers', []),
+                    'usage' => $usage,
+                    'usageCap' => $af->getAttribute('usageCap'),
+                ];
+            }
+        }
 
         $response->dynamic(new Document([
             'planId' => $planId !== '' ? $planId : null,
@@ -5250,7 +5292,8 @@ App::get('/v1/account/subscription')
             'currentPeriodStart' => $user->getAttribute('subscriptionCurrentPeriodStart'),
             'currentPeriodEnd' => $user->getAttribute('subscriptionCurrentPeriodEnd'),
             'cancelAtPeriodEnd' => $user->getAttribute('subscriptionCancelAtPeriodEnd', false),
-            'trialEnd' => $user->getAttribute('subscriptionTrialEnd')
+            'trialEnd' => $user->getAttribute('subscriptionTrialEnd'),
+            'features' => $features
         ]), Response::MODEL_ANY);
     });
 
@@ -5310,11 +5353,21 @@ App::post('/v1/account/subscription/checkout')
         $stripeService = new \Appwrite\Auth\Subscription\StripeService(
             $project->getAttribute('authStripeSecretKey'),
             $dbForProject,
-            $project
+            $project,
+            $dbForPlatform
         );
 
         try {
-            $session = $stripeService->createCheckoutSession($user, $plan->getAttribute('stripePriceId'), $successUrl, $cancelUrl, (string) $plan->getAttribute('planId'));
+            $additionalItems = $stripeService->buildAdditionalLineItemsForPlan($planId);
+
+            $session = $stripeService->createCheckoutSession(
+                $user,
+                $plan->getAttribute('stripePriceId'),
+                $successUrl,
+                $cancelUrl,
+                (string) $plan->getAttribute('planId'),
+                $additionalItems
+            );
 
             $response->dynamic(new Document([
                 'checkoutUrl' => $session['url']
@@ -5508,6 +5561,101 @@ App::delete('/v1/account/subscription')
             $response->dynamic(new Document([
                 'success' => true,
                 'cancelAtPeriodEnd' => $atPeriodEnd
+            ]), Response::MODEL_ANY);
+        } catch (\Appwrite\Auth\Subscription\Exception\SubscriptionException $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        }
+    });
+
+App::post('/v1/usage/ingest')
+    ->desc('Ingest metered usage for a feature')
+    ->groups(['api'])
+    ->label('scope', 'account')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'usage',
+        name: 'ingestUsage',
+        description: '/docs/references/account/ingest-usage.md',
+        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->param('planId', '', new Text(128), 'Plan ID to attribute usage to.')
+    ->param('featureId', '', new Text(128), 'Feature ID to attribute usage to.')
+    ->param('value', 1, new Integer(), 'Usage value to ingest.')
+    ->param('userId', '', new UID(), 'User ID to attribute usage to. Ignored for client SDK calls.', true)
+    ->param('timestamp', null, new Integer(true), 'Unix timestamp for the event.', true)
+    ->param('identifier', null, new Text(256), 'Idempotency identifier for this event.', true)
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('apiKey')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->action(function (
+        string $planId,
+        string $featureId,
+        int $value,
+        string $userId,
+        ?int $timestamp,
+        ?string $identifier,
+        Response $response,
+        Document $project,
+        Document $user,
+        ?Key $apiKey,
+        Database $dbForProject,
+        Database $dbForPlatform
+    ) {
+        if (!$project->getAttribute('authSubscriptionsEnabled')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Subscriptions not enabled for this project');
+        }
+
+        // Determine effective userId
+        $effectiveUserId = '';
+        if (!empty($apiKey)) {
+            // Admin/API key: honor provided userId
+            if (empty($userId)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'userId is required when using API key');
+            }
+            $effectiveUserId = $userId;
+        } else {
+            // Client SDK (session/JWT): ignore provided userId, use logged-in user
+            if ($user->isEmpty()) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+            $effectiveUserId = $user->getId();
+        }
+
+        // Validate plan & feature assignment exists and is metered
+        $assignment = Authorization::skip(fn () => $dbForPlatform->findOne('auth_plan_features', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::equal('planId', [$planId]),
+            Query::equal('featureId', [$featureId]),
+            Query::equal('active', [true])
+        ]));
+        if (!$assignment || $assignment->isEmpty()) {
+            throw new Exception(Exception::GENERAL_NOT_FOUND, 'Feature not assigned to plan');
+        }
+        if ((string)$assignment->getAttribute('type') !== 'metered') {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Feature is not metered');
+        }
+
+        $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+            $project->getAttribute('authStripeSecretKey'),
+            $dbForProject,
+            $project,
+            $dbForPlatform
+        );
+
+        try {
+            $result = $stripeService->ingestUsage($value, $effectiveUserId, $planId, $featureId, $timestamp, $identifier);
+            $response->dynamic(new Document([
+                'success' => true,
+                'id' => $result['id'] ?? null
             ]), Response::MODEL_ANY);
         } catch (\Appwrite\Auth\Subscription\Exception\SubscriptionException $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());

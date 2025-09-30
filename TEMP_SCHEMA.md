@@ -170,7 +170,7 @@
 
 `GET /v1/projects/{projectId}/auth/plans`
 
-**Description:** List all subscription plans for the project.
+**Description:** List all subscription plans for the project. Each plan embeds `features` resolved from `auth_plan_features` (including `usageCap` for metered features).
 
 **Authentication:** Admin API Key
 
@@ -198,23 +198,43 @@
 
 ```json
 {
-  "total": 3,
+  "total": 2,
   "plans": [
     {
       "$id": "64a5f8e7c3d2a",
       "planId": "free",
       "name": "Free Plan",
       "price": 0,
+      "currency": "usd",
+      "interval": "month",
       "isFree": true,
-      "isDefault": true
-      // ... other plan fields
+      "isDefault": true,
+      "features": [
+        { "featureId": "custom-domains", "type": "boolean", "enabled": true }
+      ]
     },
     {
       "$id": "64a5f8e7c3d2b",
       "planId": "basic",
       "name": "Basic Plan",
-      "price": 999
-      // ... other plan fields
+      "price": 999,
+      "currency": "usd",
+      "interval": "month",
+      "features": [
+        {
+          "featureId": "premium-api-calls",
+          "type": "metered",
+          "currency": "usd",
+          "interval": "month",
+          "includedUnits": 20,
+          "tiersMode": "graduated",
+          "tiers": [
+            { "up_to": 20, "unit_amount": 0 },
+            { "up_to": "inf", "unit_amount": 100 }
+          ],
+          "stripePriceId": "price_123"
+        }
+      ]
     }
   ]
 }
@@ -231,7 +251,7 @@
 
 `GET /v1/projects/{projectId}/auth/plans/{planId}`
 
-**Description:** Get details of a specific subscription plan.
+**Description:** Get details of a specific subscription plan. Response embeds `features` identical in shape to the List endpoint (including `usageCap` for metered features).
 
 **Authentication:** Admin API Key
 
@@ -241,7 +261,7 @@
 | projectId | string | Project unique ID | Yes |
 | planId | string | Plan ID | Yes |
 
-**Response (200 OK):** Plan object (same as create response)
+**Response (200 OK):** Plan object with embedded `features`
 
 **Errors:**
 
@@ -257,6 +277,12 @@
 
 **Description:** Update plan metadata. Note: Cannot update price, currency, or interval after creation.
 
+When `features` is provided, it is treated as the full source of truth for the plan's assignments and the backend reconciles as follows:
+
+- Upsert: Each provided feature assignment is created or updated in `auth_plan_features`
+- Soft-delete: Any existing assignment not present in the payload is marked `active=false`
+- Stripe cleanup: For removed metered assignments, the associated Stripe price is deactivated
+
 **Authentication:** Admin API Key
 
 **Path Parameters:**
@@ -270,11 +296,11 @@
 |-------|------|-------------|----------|
 | name | string | Plan display name | No |
 | description | string | Plan description | No |
-| features | array | List of plan features | No |
+| features | array<object> | Full list of current feature assignments | No |
 | maxUsers | integer | Max users allowed | No |
 | isDefault | boolean | Set as default plan | No |
 
-**Response (200 OK):** Updated plan object
+**Response (200 OK):** Updated plan object (features are read from GET/LIST)
 
 **Errors:**
 
@@ -308,13 +334,238 @@
 
 ---
 
+## Auth Features Management Endpoints
+
+### 8.a Create Auth Feature
+
+`POST /v1/projects/{projectId}/auth/features`
+
+Description: Create a reusable feature definition at the project level. Features can be assigned to plans.
+
+Authentication: Admin API Key
+
+Path Parameters:
+| Parameter | Type | Description | Required |
+|-----------|------|-------------|----------|
+| projectId | string | Project unique ID | Yes |
+
+Request Body:
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| featureId | string | Unique feature ID | Yes |
+| name | string | Feature display name | Yes |
+| type | string | Feature type (`boolean` or `metered`) | Yes |
+| description | string | Description | No |
+
+Response (201 Created): Feature object
+
+Errors:
+
+- 401 - Unauthorized
+- 404 - Project not found
+- 409 - Feature already exists
+
+---
+
+### 8.b List Auth Features
+
+`GET /v1/projects/{projectId}/auth/features`
+
+Description: List all active features for the project.
+
+Authentication: Admin API Key
+
+Path Parameters:
+| Parameter | Type | Description | Required |
+|-----------|------|-------------|----------|
+| projectId | string | Project unique ID | Yes |
+
+Response (200 OK): Document list of features
+
+Errors:
+
+- 401 - Unauthorized
+- 404 - Project not found
+
+---
+
+### 8.c Update Auth Feature
+
+`PUT /v1/projects/{projectId}/auth/features/{featureId}`
+
+Description: Update a feature definition.
+
+Authentication: Admin API Key
+
+Path Parameters:
+| Parameter | Type | Description | Required |
+|-----------|------|-------------|----------|
+| projectId | string | Project unique ID | Yes |
+| featureId | string | Feature unique ID | Yes |
+
+Request Body:
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| name | string | Feature name | No |
+| type | string | `boolean` or `metered` | No |
+| description | string | Description | No |
+| active | boolean | Active state | No |
+
+Response (200 OK): Updated feature object
+
+Errors:
+
+- 401 - Unauthorized
+- 404 - Project or Feature not found
+
+---
+
+### 8.d Delete Auth Feature
+
+`DELETE /v1/projects/{projectId}/auth/features/{featureId}`
+
+Description: Delete a feature.
+
+Authentication: Admin API Key
+
+Path Parameters:
+| Parameter | Type | Description | Required |
+|-----------|------|-------------|----------|
+| projectId | string | Project unique ID | Yes |
+| featureId | string | Feature unique ID | Yes |
+
+Response (204 No Content): Empty
+
+Errors:
+
+- 401 - Unauthorized
+- 404 - Project or Feature not found
+
+---
+
+## Plan Feature Assignment Endpoints
+
+### 8.e Assign Features to Plan
+
+`POST /v1/projects/{projectId}/auth/plans/{planId}/features`
+
+Description: Assign features to a plan. Creates Stripe metered tiered prices for metered features and links them.
+
+Authentication: Admin API Key
+
+Path Parameters:
+| Parameter | Type | Description | Required |
+|-----------|------|-------------|----------|
+| projectId | string | Project unique ID | Yes |
+| planId | string | Plan ID | Yes |
+
+Request Body:
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| features | array<object> | List of feature assignments | Yes |
+
+Feature assignment object (two shapes):
+
+- Boolean feature:
+  {
+  "featureId": "custom-domains",
+  "type": "boolean",
+  "enabled": true
+  }
+
+- Metered feature:
+  {
+  "featureId": "seats",
+  "type": "metered",
+  "currency": "usd",
+  "interval": "month",
+  "includedUnits": 100,
+  "tiersMode": "graduated",
+  "tiers": [
+  { "to": 500, "unitAmount": 100 },
+  { "to": 1000, "unitAmount": 200 },
+  { "to": "inf", "unitAmount": 300 }
+  ]
+  }
+
+Notes:
+
+- includedUnits are applied as a free tier in Stripe (unit_amount=0 up to includedUnits)
+- Stripe price uses billing_scheme=tiered, usage_type=metered, tiers_mode=graduated|volume, and references a Stripe Meter (required by Stripe versions >= 2025-03-31.basil)
+- Amounts are accepted in major units (e.g., USD dollars); backend converts to minor units (cents), handling zero-decimal currencies
+- `tiers` sent to Stripe are in `{ up_to, unit_amount }` with the last tier `up_to = "inf"`
+- Price nickname is set to "Feature: {feature.name}" and metadata includes `feature_id`, `plan_id`, `project_id`
+- Optional `usageCap` (integer or null) can be provided on metered features to cap ingestion per billing period. Ingestion beyond the cap is rejected and not sent to Stripe.
+
+Response (200 OK): Document list of created/updated assignments
+
+Errors:
+
+- 400 - Invalid feature assignment
+- 401 - Unauthorized
+- 404 - Project, Plan or Feature not found
+- 500 - Stripe error for metered features
+
+---
+
+### 8.f List Plan Features
+
+`GET /v1/projects/{projectId}/auth/plans/{planId}/features`
+
+Description: List active features assigned to a plan.
+
+Authentication: Admin API Key
+
+Response (200 OK): Document list of assignments
+
+---
+
+### 8.g Delete Plan Feature
+
+`DELETE /v1/projects/{projectId}/auth/plans/{planId}/features/{featureId}`
+
+Description: Soft-delete a single feature assignment from a plan. For metered assignments, deactivates the Stripe price.
+
+Authentication: Admin API Key
+
+Response (204 No Content)
+
+Errors:
+
+- 401 - Unauthorized
+- 404 - Project or Plan Feature not found
+
+---
+
+### 8.h Delete Multiple Plan Features
+
+`DELETE /v1/projects/{projectId}/auth/plans/{planId}/features`
+
+Description: Bulk remove feature assignments from a plan by IDs. Deactivates Stripe prices for removed metered features.
+
+Authentication: Admin API Key
+
+Request Body:
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| featureIds | array<string> | Feature IDs to remove | Yes |
+
+Response (200 OK): Document list of updated assignments
+
+Errors:
+
+- 401 - Unauthorized
+- 404 - Project not found
+
+---
+
 ## User Subscription Endpoints
 
 ### 9. Get Account Subscription
 
 `GET /v1/account/subscription`
 
-**Description:** Get current user's subscription details.
+**Description:** Get current user's subscription details, including assigned features and current-period usage for metered features.
 
 **Authentication:** Session or JWT
 
@@ -328,7 +579,25 @@
   "currentPeriodStart": "2024-01-01T00:00:00.000+00:00",
   "currentPeriodEnd": "2024-02-01T00:00:00.000+00:00",
   "cancelAtPeriodEnd": false,
-  "trialEnd": null
+  "trialEnd": null,
+  "features": [
+    {
+      "featureId": "requests",
+      "type": "metered",
+      "enabled": true,
+      "currency": "usd",
+      "interval": "month",
+      "includedUnits": 100000,
+      "tiersMode": "graduated",
+      "tiers": [
+        { "to": 100000, "unitAmount": 0 },
+        { "to": "inf", "unitAmount": 0.5 }
+      ],
+      "usage": 12345,
+      "usageCap": 200000
+    },
+    { "featureId": "team-members", "type": "boolean", "enabled": true }
+  ]
 }
 ```
 
@@ -371,6 +640,9 @@
 {
   "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_test_a1b2c3..."
 }
+
+Notes:
+- Assigned metered feature prices, if any, are added as additional subscription line items in the checkout session.
 ```
 
 **Errors:**
@@ -380,6 +652,51 @@
 - `401` - Unauthorized
 - `404` - Plan not found
 - `500` - Failed to create checkout session
+
+---
+
+### 10.a Ingest Usage
+
+`POST /v1/usage/ingest`
+
+**Description:** Ingest usage events for metered features. Sends usage to Stripe Billing Meters.
+
+**Authentication:**
+
+- Admin API Key (server-to-server), or
+- Session/JWT (client SDK)
+- Scope: `account`
+
+**Behavior:**
+
+- With API key: `userId` is required and honored.
+- With Session/JWT: `userId` is ignored; the logged-in user is used.
+
+**Request Body:**
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| planId | string | Plan ID to attribute usage to | Yes |
+| featureId | string | Feature ID to attribute usage to | Yes |
+| value | integer | Usage value to ingest | Yes |
+| userId | string | User ID (ignored on client SDK) | No |
+| timestamp | integer | Unix timestamp for the usage event | No |
+| identifier | string | Idempotency identifier for the event | No |
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "id": "mevt_123"
+}
+```
+
+**Errors:**
+
+- `400` - Subscriptions not enabled / Feature not metered / Missing userId for API key mode
+- `401` - Unauthorized
+- `404` - Feature assignment not found
+- `500` - Stripe ingestion error
 
 ---
 
@@ -597,7 +914,6 @@
 | price             | integer     | Price in cents                | No       | No             |
 | currency          | string(3)   | ISO 4217 currency code        | No       | No             |
 | interval          | string(10)  | Billing interval              | No       | No             |
-| features          | array       | JSON array of features        | No       | No             |
 | isDefault         | boolean     | Default plan flag             | Yes      | No             |
 | isFree            | boolean     | Free tier flag                | No       | No             |
 | maxUsers          | integer     | User limit (null = unlimited) | No       | No             |
@@ -606,13 +922,54 @@
 | $createdAt        | datetime    | Creation timestamp            | No       | No             |
 | $updatedAt        | datetime    | Last update timestamp         | No       | No             |
 
+### Auth Features Collection
+
+| Field             | Type        | Description                | Index    | Unique         |
+| ----------------- | ----------- | -------------------------- | -------- | -------------- |
+| $id               | string      | Document ID                | Primary  | Yes            |
+| projectInternalId | string      | Internal project reference | Yes      | No             |
+| projectId         | string      | Project ID                 | Yes      | No             |
+| featureId         | string      | Feature identifier         | Yes      | With projectId |
+| name              | string(128) | Feature name               | No       | No             |
+| type              | string(16)  | `boolean` or `metered`     | Yes      | No             |
+| description       | string(256) | Feature description        | No       | No             |
+| active            | boolean     | Active status              | Yes      | No             |
+| search            | string      | Full-text search           | Fulltext | No             |
+
+Indexes:
+
+- \_key_project: projectId
+- \_key_project_featureId: projectId + featureId (unique)
+- \_fulltext_search: search
+
+### Auth Plan Features Collection
+
+| Field             | Type        | Description                      | Index   | Unique                   |
+| ----------------- | ----------- | -------------------------------- | ------- | ------------------------ |
+| $id               | string      | Document ID                      | Primary | Yes                      |
+| projectInternalId | string      | Internal project reference       | Yes     | No                       |
+| projectId         | string      | Project ID                       | Yes     | No                       |
+| planId            | string      | Plan ID                          | Yes     | With projectId+featureId |
+| featureId         | string      | Feature ID                       | Yes     | With projectId+planId    |
+| type              | string(16)  | `boolean` or `metered`           | Yes     | No                       |
+| enabled           | boolean     | For boolean features             | No      | No                       |
+| currency          | string(3)   | For metered features             | No      | No                       |
+| interval          | string(10)  | For metered features             | No      | No                       |
+| includedUnits     | integer     | Free included units              | No      | No                       |
+| tiersMode         | string(16)  | `graduated` or `volume`          | No      | No                       |
+| tiers             | array       | Tier definitions                 | No      | No                       |
+| stripePriceId     | string(256) | Stripe price for metered feature | No      | No                       |
+| stripeMeterId     | string(256) | Stripe meter backing the price   | No      | No                       |
+| active            | boolean     | Active status                    | Yes     | No                       |
+| $createdAt        | datetime    | Creation timestamp               | No      | No                       |
+| $updatedAt        | datetime    | Last update timestamp            | No      | No                       |
+
 **Indexes:**
 
 - `_key_project`: projectId
-- `_key_project_planId`: projectId + planId (unique)
-- `_key_project_default`: projectId + isDefault
-- `_key_project_active`: projectId + active
-- `_fulltext_search`: search
+- `_key_project_plan`: projectId + planId
+- `_key_project_plan_feature` (unique): projectId + planId + featureId
+- `_key_active`: active
 
 ### Users Collection Extensions
 
@@ -669,9 +1026,10 @@ All errors follow Appwrite's standard error format:
 
 1. **Setup**: Admin configures Stripe key → Webhook created automatically
 2. **Plan Creation**: Admin creates plan → Stripe product/price created
-3. **User Subscription**: User initiates checkout → Redirected to Stripe
-4. **Webhook Processing**: Stripe sends events → User record updated
-5. **Management**: User uses portal or API → Subscription modified in Stripe
+3. **Assign Features**: Admin assigns features → For metered features, backend creates/links Stripe Meter and tiered metered price
+4. **User Subscription**: User initiates checkout → Redirected to Stripe; additional line items include metered feature prices
+5. **Webhook Processing**: Stripe sends events → User record updated
+6. **Management**: User uses portal or API → Subscription modified in Stripe
 
 ### Migration Considerations
 

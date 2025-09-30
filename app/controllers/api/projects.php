@@ -54,6 +54,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Assoc;
 
 App::init()
     ->groups(['projects'])
@@ -62,6 +63,201 @@ App::init()
         if ($project->getId() !== 'console') {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
         }
+    });
+
+App::post('/v1/projects/:projectId/auth/features')
+    ->desc('Create auth feature')
+    ->groups(['api'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'authFeatures',
+        name: 'createAuthFeature',
+        description: '/docs/references/projects/create-auth-feature.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('featureId', '', new Text(128), 'Feature unique ID.')
+    ->param('name', '', new Text(128), 'Feature name.')
+    ->param('type', '', new WhiteList(['boolean', 'metered']), 'Feature type: boolean or metered')
+    ->param('description', '', new Text(256), 'Feature description.', true)
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (
+        string $projectId,
+        string $featureId,
+        string $name,
+        string $type,
+        string $description,
+        Response $response,
+        Database $dbForPlatform
+    ) {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $existing = $dbForPlatform->findOne('auth_features', [
+            Query::equal('projectId', [$projectId]),
+            Query::equal('featureId', [$featureId])
+        ]);
+
+        if ($existing instanceof Document && !$existing->isEmpty()) {
+            throw new Exception(Exception::RESOURCE_ALREADY_EXISTS, 'Feature already exists');
+        }
+
+        $doc = $dbForPlatform->createDocument('auth_features', new Document([
+            '$id' => ID::unique(),
+            'projectInternalId' => $project->getSequence(),
+            'projectId' => $projectId,
+            'featureId' => $featureId,
+            'name' => $name,
+            'type' => $type,
+            'description' => $description,
+            'active' => true,
+            'search' => implode(' ', [$featureId, $name, $description])
+        ]));
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($doc, Response::MODEL_ANY);
+    });
+
+App::get('/v1/projects/:projectId/auth/features')
+    ->desc('List auth features')
+    ->groups(['api'])
+    ->label('scope', 'projects.read')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'authFeatures',
+        name: 'listAuthFeatures',
+        description: '/docs/references/projects/list-auth-features.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_DOCUMENT_LIST,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('queries', [], new ArrayList(new Text(256)), 'Array of query strings.', true)
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, array $queries, Response $response, Database $dbForPlatform) {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+        $queries[] = Query::equal('projectId', [$projectId]);
+        $queries[] = Query::equal('active', [true]);
+        $docs = $dbForPlatform->find('auth_features', $queries);
+        $response->dynamic(new Document([
+            'total' => count($docs),
+            'documents' => $docs
+        ]), Response::MODEL_DOCUMENT_LIST);
+    });
+
+App::put('/v1/projects/:projectId/auth/features/:featureId')
+    ->desc('Update auth feature')
+    ->groups(['api'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'authFeatures',
+        name: 'updateAuthFeature',
+        description: '/docs/references/projects/update-auth-feature.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_ANY,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('featureId', '', new Text(128), 'Feature unique ID.')
+    ->param('name', null, new Text(128), 'Feature name.', true)
+    ->param('type', null, new WhiteList(['boolean', 'metered'], true), 'Feature type.', true)
+    ->param('description', null, new Text(256), 'Feature description.', true)
+    ->param('active', null, new Boolean(), 'Active state.', true)
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (
+        string $projectId,
+        string $featureId,
+        ?string $name,
+        ?string $type,
+        ?string $description,
+        ?bool $active,
+        Response $response,
+        Database $dbForPlatform
+    ) {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+        $doc = $dbForPlatform->findOne('auth_features', [
+            Query::equal('projectId', [$projectId]),
+            Query::equal('featureId', [$featureId])
+        ]);
+        if (!$doc) {
+            throw new Exception(Exception::GENERAL_NOT_FOUND, 'Feature not found');
+        }
+        if ($name !== null) $doc->setAttribute('name', $name);
+        if ($type !== null) $doc->setAttribute('type', $type);
+        if ($description !== null) $doc->setAttribute('description', $description);
+        if ($active !== null) $doc->setAttribute('active', $active);
+        $doc->setAttribute('search', implode(' ', [
+            $doc->getAttribute('featureId'),
+            $doc->getAttribute('name'),
+            $doc->getAttribute('description')
+        ]));
+        $doc = $dbForPlatform->updateDocument('auth_features', $doc->getId(), $doc);
+        $response->dynamic($doc, Response::MODEL_ANY);
+    });
+
+App::delete('/v1/projects/:projectId/auth/features/:featureId')
+    ->desc('Delete auth feature')
+    ->groups(['api'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'authFeatures',
+        name: 'deleteAuthFeature',
+        description: '/docs/references/projects/delete-auth-feature.md',
+        auth: [AuthType::ADMIN, AuthType::SESSION],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_NOCONTENT,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('featureId', '', new Text(128), 'Feature unique ID.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $featureId, Response $response, Database $dbForPlatform) {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+        $doc = $dbForPlatform->findOne('auth_features', [
+            Query::equal('projectId', [$projectId]),
+            Query::equal('featureId', [$featureId])
+        ]);
+        if (!$doc) {
+            throw new Exception(Exception::GENERAL_NOT_FOUND, 'Feature not found');
+        }
+        $dbForPlatform->deleteDocument('auth_features', $doc->getId());
+        $response->noContent();
     });
 
 App::post('/v1/projects')
@@ -2691,9 +2887,9 @@ App::put('/v1/projects/:projectId/auth/subscriptions')
                 \Utopia\Database\Query::equal('projectId', [$projectId]),
                 \Utopia\Database\Query::equal('isDefault', [true])
             ]);
-            if (!$existingDefault) {
+            if (!($existingDefault instanceof \Utopia\Database\Document) || $existingDefault->isEmpty()) {
                 $dbForPlatform->createDocument('auth_plans', new \Utopia\Database\Document([
-                    '$id' => null,
+                    '$id' => \Utopia\Database\Helpers\ID::unique(),
                     'projectInternalId' => $project->getSequence(),
                     'projectId' => $projectId,
                     'planId' => 'free',
