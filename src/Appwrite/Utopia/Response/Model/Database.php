@@ -41,10 +41,11 @@ class Database extends Model
                 'example' => false,
             ])
             ->addRule('type', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Database type.',
                 'default' => 'legacy',
                 'example' => 'legacy',
+                'enum' => ['legacy', 'tablesdb'],
             ])
         ;
     }
