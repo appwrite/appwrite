@@ -686,7 +686,7 @@ class Builds extends Action
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
-                            $outputDirectory = $deployment->getAttribute('outputDirectory') ?? $resource->getAttribute('outputDirectory');
+                            $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
                                 $listFilesCommand = '';
 
