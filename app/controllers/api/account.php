@@ -2,11 +2,11 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
-use Appwrite\Auth\Key;
 use Appwrite\Auth\Phrase;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
@@ -62,8 +62,8 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -5265,10 +5265,24 @@ App::get('/v1/account/subscription')
             foreach ($assigned as $af) {
                 $featureId = (string) $af->getAttribute('featureId');
                 $usage = 0;
-                if ((string)$af->getAttribute('type') === 'metered' && $customerId !== '' && $startTs > 0) {
+                if ((string)$af->getAttribute('type') === 'metered') {
+                    $featureStartTs = $startTs;
+                    $featureEndTs = $endTs;
+                    if ($featureStartTs <= 0 || $featureEndTs <= 0) {
+                        $interval = (string) $af->getAttribute('interval', 'month');
+                        $seconds = match ($interval) {
+                            'day' => 86400,
+                            'week' => 86400 * 7,
+                            'year' => 86400 * 365,
+                            default => 86400 * 30,
+                        };
+                        $featureEndTs = time();
+                        $featureStartTs = $featureEndTs - $seconds;
+                    }
                     try {
-                        $usage = $stripeService->getFeatureUsageTotal($customerId, $planId, $featureId, $startTs, $endTs);
-                    } catch (\Throwable $_) {}
+                        $usage = $stripeService->getFeatureUsageTotalLocal($user->getId(), $planId, $featureId, $featureStartTs, $featureEndTs);
+                    } catch (\Throwable $_) {
+                    }
                 }
                 $features[] = [
                     'featureId' => $featureId,

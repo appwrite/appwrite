@@ -2,11 +2,10 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Subscription\Exception\SubscriptionException;
+use Appwrite\Auth\Subscription\StripeService;
 use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Auth\Validator\StripeKey;
-use Appwrite\Auth\Validator\PlanData;
-use Appwrite\Auth\Subscription\StripeService;
-use Appwrite\Auth\Subscription\Exception\SubscriptionException;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
@@ -54,7 +53,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Assoc;
 
 App::init()
     ->groups(['projects'])
@@ -210,10 +208,18 @@ App::put('/v1/projects/:projectId/auth/features/:featureId')
         if (!$doc) {
             throw new Exception(Exception::GENERAL_NOT_FOUND, 'Feature not found');
         }
-        if ($name !== null) $doc->setAttribute('name', $name);
-        if ($type !== null) $doc->setAttribute('type', $type);
-        if ($description !== null) $doc->setAttribute('description', $description);
-        if ($active !== null) $doc->setAttribute('active', $active);
+        if ($name !== null) {
+            $doc->setAttribute('name', $name);
+        }
+        if ($type !== null) {
+            $doc->setAttribute('type', $type);
+        }
+        if ($description !== null) {
+            $doc->setAttribute('description', $description);
+        }
+        if ($active !== null) {
+            $doc->setAttribute('active', $active);
+        }
         $doc->setAttribute('search', implode(' ', [
             $doc->getAttribute('featureId'),
             $doc->getAttribute('name'),
@@ -2995,11 +3001,22 @@ App::delete('/v1/projects/:projectId/auth/subscriptions')
                 foreach ($plans as $plan) {
                     $priceId = $plan->getAttribute('stripePriceId');
                     $productId = $plan->getAttribute('stripeProductId');
-                    try { if ($priceId) { $stripe->deactivatePrice($priceId); } } catch (\Throwable $_) {}
-                    try { if ($productId) { $stripe->deactivateProduct($productId); } } catch (\Throwable $_) {}
+                    try {
+                        if ($priceId) {
+                            $stripe->deactivatePrice($priceId);
+                        }
+                    } catch (\Throwable $_) {
+                    }
+                    try {
+                        if ($productId) {
+                            $stripe->deactivateProduct($productId);
+                        }
+                    } catch (\Throwable $_) {
+                    }
                     $dbForPlatform->deleteDocument('auth_plans', $plan->getId());
                 }
-            } catch (\Throwable $_) {}
+            } catch (\Throwable $_) {
+            }
         }
 
         $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project

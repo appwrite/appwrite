@@ -41,6 +41,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
@@ -51,7 +52,6 @@ use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\System\System;
 use Utopia\Validator\Text;
-use Utopia\Database\Validator\UID;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -1689,7 +1689,7 @@ App::post('/v1/webhooks/stripe/auth/:projectId')
             $platformDb
         );
 
-        
+
 
         try {
             $stripeService->handleWebhook($event ?? []);
@@ -1698,4 +1698,3 @@ App::post('/v1/webhooks/stripe/auth/:projectId')
             throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, $e->getMessage());
         }
     });
-

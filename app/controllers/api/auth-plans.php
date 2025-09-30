@@ -1,8 +1,7 @@
 <?php
 
-use Appwrite\Auth\Validator\PlanData;
-use Appwrite\Auth\Subscription\StripeService;
 use Appwrite\Auth\Subscription\Exception\SubscriptionException;
+use Appwrite\Auth\Subscription\StripeService;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -15,11 +14,11 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Assoc;
 
 App::post('/v1/projects/:projectId/auth/plans')
     ->desc('Create auth plan')
@@ -701,11 +700,21 @@ App::put('/v1/projects/:projectId/auth/plans/:planId')
             }
         }
 
-        if ($name !== null) $plan->setAttribute('name', $name);
-        if ($description !== null) $plan->setAttribute('description', $description);
-        if ($features !== null) $plan->setAttribute('features', $features);
-        if ($maxUsers !== null) $plan->setAttribute('maxUsers', $maxUsers);
-        if ($isDefault !== null) $plan->setAttribute('isDefault', $isDefault);
+        if ($name !== null) {
+            $plan->setAttribute('name', $name);
+        }
+        if ($description !== null) {
+            $plan->setAttribute('description', $description);
+        }
+        if ($features !== null) {
+            $plan->setAttribute('features', $features);
+        }
+        if ($maxUsers !== null) {
+            $plan->setAttribute('maxUsers', $maxUsers);
+        }
+        if ($isDefault !== null) {
+            $plan->setAttribute('isDefault', $isDefault);
+        }
 
         $plan->setAttribute('search', implode(' ', [
             $plan->getAttribute('planId'),
@@ -727,10 +736,14 @@ App::put('/v1/projects/:projectId/auth/plans/:planId')
 
             $providedIds = [];
             foreach ($features as $cfg) {
-                if (!is_array($cfg)) continue;
+                if (!is_array($cfg)) {
+                    continue;
+                }
                 $fid = (string)($cfg['featureId'] ?? '');
                 $type = (string)($cfg['type'] ?? '');
-                if ($fid === '' || ($type !== 'boolean' && $type !== 'metered')) continue;
+                if ($fid === '' || ($type !== 'boolean' && $type !== 'metered')) {
+                    continue;
+                }
                 $providedIds[] = $fid;
                 $assignment = $existingById[$fid] ?? null;
                 $doc = $assignment ?: new Document(['$id' => ID::unique()]);
@@ -760,152 +773,152 @@ App::put('/v1/projects/:projectId/auth/plans/:planId')
                         $doc->setAttribute('usageCap', $cfg['usageCap'] === null ? null : (int)$cfg['usageCap']);
                     }
                 }
-				if ($assignment) {
-					if ($type === 'metered' && $project->getAttribute('authSubscriptionsEnabled')) {
-						try {
-							$ss = new StripeService(
-								$project->getAttribute('authStripeSecretKey'),
-								$dbForProject,
-								$project,
-								$dbForPlatform
-							);
-							$productId = (string)$plan->getAttribute('stripeProductId');
-							if (!$productId) {
-								$p = $ss->createProduct($plan->getAttribute('name'), $plan->getAttribute('description', ''), (string)$plan->getAttribute('planId'));
-								$productId = (string)$p['id'];
-								$plan->setAttribute('stripeProductId', $productId);
-								$dbForPlatform->updateDocument('auth_plans', $plan->getId(), $plan);
-							}
-							$feature = $dbForPlatform->findOne('auth_features', [
-								Query::equal('projectId', [$projectId]),
-								Query::equal('featureId', [$fid])
-							]);
-							$featureName = $feature ? (string)$feature->getAttribute('name', $fid) : $fid;
-							$prev = [
-								'currency' => (string)$assignment->getAttribute('currency'),
-								'interval' => (string)$assignment->getAttribute('interval'),
-								'includedUnits' => (int)$assignment->getAttribute('includedUnits', 0),
-								'tiersMode' => (string)$assignment->getAttribute('tiersMode'),
-								'tiers' => (array)$assignment->getAttribute('tiers', [])
-							];
-							$next = [
-								'currency' => (string)$doc->getAttribute('currency'),
-								'interval' => (string)$doc->getAttribute('interval'),
-								'includedUnits' => (int)$doc->getAttribute('includedUnits', 0),
-								'tiersMode' => (string)$doc->getAttribute('tiersMode'),
-								'tiers' => (array)$doc->getAttribute('tiers', [])
-							];
-							$tiersChanged = json_encode(array_values($prev['tiers'])) !== json_encode(array_values($next['tiers'])) || ($prev['tiersMode'] !== $next['tiersMode']);
-							$metaChanged = $prev['currency'] !== $next['currency'] || $prev['interval'] !== $next['interval'] || $prev['includedUnits'] !== $next['includedUnits'];
-							$oldPriceId = (string)$assignment->getAttribute('stripePriceId', '');
-							// If nothing changed, still verify on Stripe whether the existing price matches the expected shape.
-							$forceRecreate = false;
-							if ($oldPriceId !== '') {
-								try {
-									$curr = $ss->getPrice($oldPriceId);
-									$currMode = (string)($curr['tiers_mode'] ?? '');
-									$currUsage = (string)($curr['recurring']['usage_type'] ?? '');
-									$currCurrency = (string)($curr['currency'] ?? '');
-									$currInterval = (string)($curr['recurring']['interval'] ?? '');
-									if ($currMode !== $next['tiersMode'] || $currUsage !== 'metered' || $currCurrency !== $next['currency'] || ($next['interval'] && $currInterval !== $next['interval'])) {
-										$forceRecreate = true;
-									}
-									// Compare tier boundaries with expected (including includedUnits free tier)
-									$currTiers = isset($curr['tiers']) && is_array($curr['tiers']) ? $curr['tiers'] : [];
-									$currUpTo = [];
-									foreach ($currTiers as $t) {
-										$currUpTo[] = isset($t['up_to']) ? (string)$t['up_to'] : '';
-									}
-									$expectedUpTo = [];
-									$inc = (int)$next['includedUnits'];
-									if ($inc > 0) {
-										$expectedUpTo[] = (string)$inc;
-									}
-									foreach ((array)$next['tiers'] as $tierX) {
-										$to = $tierX['to'] ?? 'inf';
-										$expectedUpTo[] = $to === 'inf' ? 'inf' : (string)$to;
-									}
-									if (json_encode($currUpTo) !== json_encode($expectedUpTo)) {
-										$forceRecreate = true;
-									}
-									// Ensure free tier is truly free if includedUnits > 0
-									if ($inc > 0 && isset($currTiers[0]['unit_amount']) && (int)$currTiers[0]['unit_amount'] !== 0) {
-										$forceRecreate = true;
-									}
-									error_log(json_encode(['plan_put' => 'remote_check', 'featureId' => $fid, 'currUpTo' => $currUpTo, 'expectedUpTo' => $expectedUpTo, 'forceRecreate' => $forceRecreate]));
-								} catch (SubscriptionException $e) {
-									$forceRecreate = true;
-								}
-							}
-							if ($oldPriceId === '' || $tiersChanged || $metaChanged || $forceRecreate) {
-								$meterId = $ss->ensureMeterForFeature((string)$plan->getAttribute('planId'), $fid, $featureName);
-								if ($meterId) {
-									$doc->setAttribute('stripeMeterId', $meterId);
-								}
-								$newPrice = $ss->createMeteredTieredPrice(
-									$productId,
-									$next['currency'],
-									$next['interval'] ?: null,
-									$next['includedUnits'],
-									$next['tiersMode'],
-									$next['tiers'],
-									(string)$plan->getAttribute('planId'),
-									$fid,
-									$featureName
-								);
-								$doc->setAttribute('stripePriceId', $newPrice['id'] ?? null);
-								if ($oldPriceId !== '') {
-									$ss->deactivatePrice($oldPriceId);
-								}
-							}
-							} catch (SubscriptionException $e) {
-							throw $e;
-						}
-					}
-					$dbForPlatform->updateDocument('auth_plan_features', $assignment->getId(), $doc);
-				} else {
-					if ($type === 'metered' && $project->getAttribute('authSubscriptionsEnabled')) {
-						try {
-							$ss = new StripeService(
-								$project->getAttribute('authStripeSecretKey'),
-								$dbForProject,
-								$project,
-								$dbForPlatform
-							);
-							$productId = (string)$plan->getAttribute('stripeProductId');
-							if (!$productId) {
-								$p = $ss->createProduct($plan->getAttribute('name'), $plan->getAttribute('description', ''), (string)$plan->getAttribute('planId'));
-								$productId = (string)$p['id'];
-								$plan->setAttribute('stripeProductId', $productId);
-								$dbForPlatform->updateDocument('auth_plans', $plan->getId(), $plan);
-							}
-							$feature = $dbForPlatform->findOne('auth_features', [
-								Query::equal('projectId', [$projectId]),
-								Query::equal('featureId', [$fid])
-							]);
-							$featureName = $feature ? (string)$feature->getAttribute('name', $fid) : $fid;
-							$meterId = $ss->ensureMeterForFeature((string)$plan->getAttribute('planId'), $fid, $featureName);
-							if ($meterId) {
-								$doc->setAttribute('stripeMeterId', $meterId);
-							}
-							$newPrice = $ss->createMeteredTieredPrice(
-								$productId,
-								(string)$doc->getAttribute('currency'),
-								(string)$doc->getAttribute('interval') ?: null,
-								(int)$doc->getAttribute('includedUnits', 0),
-								(string)$doc->getAttribute('tiersMode'),
-								(array)$doc->getAttribute('tiers', []),
-								(string)$plan->getAttribute('planId'),
-								$fid,
-								$featureName
-							);
-							$doc->setAttribute('stripePriceId', $newPrice['id'] ?? null);
-						} catch (SubscriptionException $e) {
-							throw $e;
-						}
-					}
-					$dbForPlatform->createDocument('auth_plan_features', $doc);
-				}
+                if ($assignment) {
+                    if ($type === 'metered' && $project->getAttribute('authSubscriptionsEnabled')) {
+                        try {
+                            $ss = new StripeService(
+                                $project->getAttribute('authStripeSecretKey'),
+                                $dbForProject,
+                                $project,
+                                $dbForPlatform
+                            );
+                            $productId = (string)$plan->getAttribute('stripeProductId');
+                            if (!$productId) {
+                                $p = $ss->createProduct($plan->getAttribute('name'), $plan->getAttribute('description', ''), (string)$plan->getAttribute('planId'));
+                                $productId = (string)$p['id'];
+                                $plan->setAttribute('stripeProductId', $productId);
+                                $dbForPlatform->updateDocument('auth_plans', $plan->getId(), $plan);
+                            }
+                            $feature = $dbForPlatform->findOne('auth_features', [
+                                Query::equal('projectId', [$projectId]),
+                                Query::equal('featureId', [$fid])
+                            ]);
+                            $featureName = $feature ? (string)$feature->getAttribute('name', $fid) : $fid;
+                            $prev = [
+                                'currency' => (string)$assignment->getAttribute('currency'),
+                                'interval' => (string)$assignment->getAttribute('interval'),
+                                'includedUnits' => (int)$assignment->getAttribute('includedUnits', 0),
+                                'tiersMode' => (string)$assignment->getAttribute('tiersMode'),
+                                'tiers' => (array)$assignment->getAttribute('tiers', [])
+                            ];
+                            $next = [
+                                'currency' => (string)$doc->getAttribute('currency'),
+                                'interval' => (string)$doc->getAttribute('interval'),
+                                'includedUnits' => (int)$doc->getAttribute('includedUnits', 0),
+                                'tiersMode' => (string)$doc->getAttribute('tiersMode'),
+                                'tiers' => (array)$doc->getAttribute('tiers', [])
+                            ];
+                            $tiersChanged = json_encode(array_values($prev['tiers'])) !== json_encode(array_values($next['tiers'])) || ($prev['tiersMode'] !== $next['tiersMode']);
+                            $metaChanged = $prev['currency'] !== $next['currency'] || $prev['interval'] !== $next['interval'] || $prev['includedUnits'] !== $next['includedUnits'];
+                            $oldPriceId = (string)$assignment->getAttribute('stripePriceId', '');
+                            // If nothing changed, still verify on Stripe whether the existing price matches the expected shape.
+                            $forceRecreate = false;
+                            if ($oldPriceId !== '') {
+                                try {
+                                    $curr = $ss->getPrice($oldPriceId);
+                                    $currMode = (string)($curr['tiers_mode'] ?? '');
+                                    $currUsage = (string)($curr['recurring']['usage_type'] ?? '');
+                                    $currCurrency = (string)($curr['currency'] ?? '');
+                                    $currInterval = (string)($curr['recurring']['interval'] ?? '');
+                                    if ($currMode !== $next['tiersMode'] || $currUsage !== 'metered' || $currCurrency !== $next['currency'] || ($next['interval'] && $currInterval !== $next['interval'])) {
+                                        $forceRecreate = true;
+                                    }
+                                    // Compare tier boundaries with expected (including includedUnits free tier)
+                                    $currTiers = isset($curr['tiers']) && is_array($curr['tiers']) ? $curr['tiers'] : [];
+                                    $currUpTo = [];
+                                    foreach ($currTiers as $t) {
+                                        $currUpTo[] = isset($t['up_to']) ? (string)$t['up_to'] : '';
+                                    }
+                                    $expectedUpTo = [];
+                                    $inc = (int)$next['includedUnits'];
+                                    if ($inc > 0) {
+                                        $expectedUpTo[] = (string)$inc;
+                                    }
+                                    foreach ((array)$next['tiers'] as $tierX) {
+                                        $to = $tierX['to'] ?? 'inf';
+                                        $expectedUpTo[] = $to === 'inf' ? 'inf' : (string)$to;
+                                    }
+                                    if (json_encode($currUpTo) !== json_encode($expectedUpTo)) {
+                                        $forceRecreate = true;
+                                    }
+                                    // Ensure free tier is truly free if includedUnits > 0
+                                    if ($inc > 0 && isset($currTiers[0]['unit_amount']) && (int)$currTiers[0]['unit_amount'] !== 0) {
+                                        $forceRecreate = true;
+                                    }
+                                    // debug log removed
+                                } catch (SubscriptionException $e) {
+                                    $forceRecreate = true;
+                                }
+                            }
+                            if ($oldPriceId === '' || $tiersChanged || $metaChanged || $forceRecreate) {
+                                $meterId = $ss->ensureMeterForFeature((string)$plan->getAttribute('planId'), $fid, $featureName);
+                                if ($meterId) {
+                                    $doc->setAttribute('stripeMeterId', $meterId);
+                                }
+                                $newPrice = $ss->createMeteredTieredPrice(
+                                    $productId,
+                                    $next['currency'],
+                                    $next['interval'] ?: null,
+                                    $next['includedUnits'],
+                                    $next['tiersMode'],
+                                    $next['tiers'],
+                                    (string)$plan->getAttribute('planId'),
+                                    $fid,
+                                    $featureName
+                                );
+                                $doc->setAttribute('stripePriceId', $newPrice['id'] ?? null);
+                                if ($oldPriceId !== '') {
+                                    $ss->deactivatePrice($oldPriceId);
+                                }
+                            }
+                        } catch (SubscriptionException $e) {
+                            throw $e;
+                        }
+                    }
+                    $dbForPlatform->updateDocument('auth_plan_features', $assignment->getId(), $doc);
+                } else {
+                    if ($type === 'metered' && $project->getAttribute('authSubscriptionsEnabled')) {
+                        try {
+                            $ss = new StripeService(
+                                $project->getAttribute('authStripeSecretKey'),
+                                $dbForProject,
+                                $project,
+                                $dbForPlatform
+                            );
+                            $productId = (string)$plan->getAttribute('stripeProductId');
+                            if (!$productId) {
+                                $p = $ss->createProduct($plan->getAttribute('name'), $plan->getAttribute('description', ''), (string)$plan->getAttribute('planId'));
+                                $productId = (string)$p['id'];
+                                $plan->setAttribute('stripeProductId', $productId);
+                                $dbForPlatform->updateDocument('auth_plans', $plan->getId(), $plan);
+                            }
+                            $feature = $dbForPlatform->findOne('auth_features', [
+                                Query::equal('projectId', [$projectId]),
+                                Query::equal('featureId', [$fid])
+                            ]);
+                            $featureName = $feature ? (string)$feature->getAttribute('name', $fid) : $fid;
+                            $meterId = $ss->ensureMeterForFeature((string)$plan->getAttribute('planId'), $fid, $featureName);
+                            if ($meterId) {
+                                $doc->setAttribute('stripeMeterId', $meterId);
+                            }
+                            $newPrice = $ss->createMeteredTieredPrice(
+                                $productId,
+                                (string)$doc->getAttribute('currency'),
+                                (string)$doc->getAttribute('interval') ?: null,
+                                (int)$doc->getAttribute('includedUnits', 0),
+                                (string)$doc->getAttribute('tiersMode'),
+                                (array)$doc->getAttribute('tiers', []),
+                                (string)$plan->getAttribute('planId'),
+                                $fid,
+                                $featureName
+                            );
+                            $doc->setAttribute('stripePriceId', $newPrice['id'] ?? null);
+                        } catch (SubscriptionException $e) {
+                            throw $e;
+                        }
+                    }
+                    $dbForPlatform->createDocument('auth_plan_features', $doc);
+                }
             }
 
             foreach ($existingById as $fid => $assignment) {
@@ -918,8 +931,11 @@ App::put('/v1/projects/:projectId/auth/plans/:planId')
                                 $project
                             );
                             $pid = (string)$assignment->getAttribute('stripePriceId', '');
-                            if ($pid !== '') $ss->deactivatePrice($pid);
-                        } catch (SubscriptionException $_) {}
+                            if ($pid !== '') {
+                                $ss->deactivatePrice($pid);
+                            }
+                        } catch (SubscriptionException $_) {
+                        }
                     }
                     $assignment->setAttribute('active', false);
                     $dbForPlatform->updateDocument('auth_plan_features', $assignment->getId(), $assignment);

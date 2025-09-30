@@ -756,59 +756,60 @@ App::get('/v1/users/:userId')
             ]);
             $plan = ($candidate instanceof \Utopia\Database\Document && !$candidate->isEmpty()) ? $candidate : null;
         }
-        // if ($plan instanceof \Utopia\Database\Document && !$plan->isEmpty()) {
-        //     $features = [];
-        //     $resolvedPlanId = (string) $plan->getAttribute('planId');
-        //     $assigned = [];
-        //     if ($resolvedPlanId !== '') {
-        //         $assigned = Authorization::skip(fn () => $dbForPlatform->find('auth_plan_features', [
-        //             Query::equal('projectId', [$project->getId()]),
-        //             Query::equal('planId', [$resolvedPlanId]),
-        //             Query::equal('active', [true])
-        //         ]));
-        //     }
-        //     $stripeService = new \Appwrite\Auth\Subscription\StripeService(
-        //         $project->getAttribute('authStripeSecretKey'),
-        //         $dbForProject,
-        //         $project,
-        //         $dbForPlatform
-        //     );
-        //     $customerId = (string) $user->getAttribute('stripeCustomerId', '');
-        //     $periodStart = $user->getAttribute('subscriptionCurrentPeriodStart');
-        //     $periodEnd = $user->getAttribute('subscriptionCurrentPeriodEnd');
-        //     $startTs = $periodStart ? strtotime($periodStart) : 0;
-        //     $endTs = $periodEnd ? strtotime($periodEnd) : time();
-        //     foreach ($assigned as $af) {
-        //         $featureId = (string) $af->getAttribute('featureId');
-        //         $usage = 0;
-        //         if ((string)$af->getAttribute('type') === 'metered' && $customerId !== '' && $startTs > 0) {
-        //             try {
-        //                 $usage = $stripeService->getFeatureUsageTotal($customerId, $resolvedPlanId, $featureId, $startTs, $endTs);
-        //             } catch (\Throwable $_) {}
-        //         }
-        //         $features[] = [
-        //             'featureId' => (string) $af->getAttribute('featureId'),
-        //             'type' => (string) $af->getAttribute('type'),
-        //             'enabled' => (bool) $af->getAttribute('enabled', true),
-        //             'currency' => $af->getAttribute('currency'),
-        //             'interval' => $af->getAttribute('interval'),
-        //             'includedUnits' => (int) $af->getAttribute('includedUnits', 0),
-        //             'tiersMode' => $af->getAttribute('tiersMode'),
-        //             'tiers' => (array) $af->getAttribute('tiers', []),
-        //             'usage' => $usage,
-        //             'usageCap' => $af->getAttribute('usageCap'),
-        //         ];
-        //     }
-        //     $user->setAttribute('plan', [
-        //         'id' => $plan->getAttribute('planId'),
-        //         'name' => $plan->getAttribute('name'),
-        //         'price' => $plan->getAttribute('price'),
-        //         'currency' => $plan->getAttribute('currency'),
-        //         'interval' => $plan->getAttribute('interval'),
-        //         'isFree' => $plan->getAttribute('isFree', false),
-        //         'features' => $features
-        //     ]);
-        // }
+        if ($plan instanceof \Utopia\Database\Document && !$plan->isEmpty()) {
+            $features = [];
+            $resolvedPlanId = (string) $plan->getAttribute('planId');
+            $assigned = [];
+            if ($resolvedPlanId !== '') {
+                $assigned = Authorization::skip(fn () => $dbForPlatform->find('auth_plan_features', [
+                    Query::equal('projectId', [$project->getId()]),
+                    Query::equal('planId', [$resolvedPlanId]),
+                    Query::equal('active', [true])
+                ]));
+            }
+            $stripeService = new \Appwrite\Auth\Subscription\StripeService(
+                $project->getAttribute('authStripeSecretKey'),
+                $dbForProject,
+                $project,
+                $dbForPlatform
+            );
+            $customerId = (string) $user->getAttribute('stripeCustomerId', '');
+            $periodStart = $user->getAttribute('subscriptionCurrentPeriodStart');
+            $periodEnd = $user->getAttribute('subscriptionCurrentPeriodEnd');
+            $startTs = $periodStart ? strtotime($periodStart) : 0;
+            $endTs = $periodEnd ? strtotime($periodEnd) : time();
+            foreach ($assigned as $af) {
+                $featureId = (string) $af->getAttribute('featureId');
+                $usage = 0;
+                if ((string)$af->getAttribute('type') === 'metered') {
+                    try {
+                        $usage = $stripeService->getFeatureUsageTotalLocal($user->getId(), $resolvedPlanId, $featureId, $startTs, $endTs);
+                    } catch (\Throwable $_) {
+                    }
+                }
+                $features[] = [
+                    'featureId' => (string) $af->getAttribute('featureId'),
+                    'type' => (string) $af->getAttribute('type'),
+                    'enabled' => (bool) $af->getAttribute('enabled', true),
+                    'currency' => $af->getAttribute('currency'),
+                    'interval' => $af->getAttribute('interval'),
+                    'includedUnits' => (int) $af->getAttribute('includedUnits', 0),
+                    'tiersMode' => $af->getAttribute('tiersMode'),
+                    'tiers' => (array) $af->getAttribute('tiers', []),
+                    'usage' => $usage,
+                    'usageCap' => $af->getAttribute('usageCap'),
+                ];
+            }
+            $user->setAttribute('plan', [
+                'id' => $plan->getAttribute('planId'),
+                'name' => $plan->getAttribute('name'),
+                'price' => $plan->getAttribute('price'),
+                'currency' => $plan->getAttribute('currency'),
+                'interval' => $plan->getAttribute('interval'),
+                'isFree' => $plan->getAttribute('isFree', false),
+                'features' => $features
+            ]);
+        }
 
         $response->dynamic($user, Response::MODEL_USER);
     });

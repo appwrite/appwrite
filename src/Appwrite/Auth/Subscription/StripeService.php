@@ -4,6 +4,7 @@ namespace Appwrite\Auth\Subscription;
 
 use Appwrite\Auth\Subscription\Exception\SubscriptionException;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -358,7 +359,9 @@ class StripeService
         ];
 
         foreach ($additionalItems as $item) {
-            if (!is_array($item)) continue;
+            if (!is_array($item)) {
+                continue;
+            }
             $entry = [];
             if (!empty($item['price'])) {
                 $entry['price'] = $item['price'];
@@ -500,7 +503,13 @@ class StripeService
             Authorization::skip(fn () => $this->database->updateDocument('users', $userId, $user));
         }
 
-        // Enforce usage caps if defined on the plan feature assignment
+        // Determine window timestamps
+        $periodStart = $user->getAttribute('subscriptionCurrentPeriodStart');
+        $periodEnd = $user->getAttribute('subscriptionCurrentPeriodEnd');
+        $startTs = $periodStart ? strtotime((string)$periodStart) : 0;
+        $endTs = $periodEnd ? strtotime((string)$periodEnd) : time();
+
+        // Enforce usage caps if defined on the plan feature assignment (prefer local DB total to avoid Stripe latency)
         if ($this->platformDb) {
             $assignment = Authorization::skip(fn () => $this->platformDb->findOne('auth_plan_features', [
                 Query::equal('projectId', [$this->project->getId()]),
@@ -511,14 +520,19 @@ class StripeService
             if ($assignment && !$assignment->isEmpty()) {
                 $cap = $assignment->getAttribute('usageCap');
                 if ($cap !== null) {
-                    $periodStart = $user->getAttribute('subscriptionCurrentPeriodStart');
-                    $periodEnd = $user->getAttribute('subscriptionCurrentPeriodEnd');
-                    $startTs = $periodStart ? strtotime((string)$periodStart) : 0;
-                    $endTs = $periodEnd ? strtotime((string)$periodEnd) : time();
+                    // First, try local DB sum
                     $current = 0;
                     try {
-                        $current = $this->getFeatureUsageTotal($customerId, $planId, $featureId, $startTs, $endTs);
-                    } catch (\Throwable $_) {}
+                        $current = $this->getFeatureUsageTotalLocal($user->getId(), $planId, $featureId, $startTs, $endTs);
+                    } catch (\Throwable $_) {
+                    }
+                    // Fallback to Stripe if local gives 0 and we have a customer
+                    if ($current === 0) {
+                        try {
+                            $current = $this->getFeatureUsageTotal($customerId, $planId, $featureId, $startTs, $endTs);
+                        } catch (\Throwable $_) {
+                        }
+                    }
                     if ($current + $value > (int)$cap) {
                         throw new SubscriptionException('Usage cap exceeded for feature: ' . $featureId);
                     }
@@ -543,6 +557,27 @@ class StripeService
             $params['timestamp'] = (string) $timestamp;
         }
 
+        // Write usage locally for fast reads and idempotency checks
+        $eventDocument = new Document([
+            '$id' => ID::unique(),
+            'projectInternalId' => $this->project->getSequence(),
+            'projectId' => $this->project->getId(),
+            'userId' => $user->getId(),
+            'planId' => $planId,
+            'featureId' => $featureId,
+            'value' => $value,
+            'identifier' => $identifier,
+            'timestamp' => isset($timestamp)
+                ? DatabaseDateTime::formatTz(gmdate('c', (int)$timestamp))
+                : DatabaseDateTime::formatTz(gmdate('c')),
+        ]);
+        try {
+            Authorization::skip(fn () => $this->platformDb?->createDocument('auth_usage_events', $eventDocument));
+        } catch (\Throwable $e) {
+            // best-effort; do not block ingestion if local write fails
+        }
+
+        // Send to Stripe (async on Stripe side)
         $response = $this->makeRequest('POST', '/billing/meter_events', $params);
 
         if (isset($response['error'])) {
@@ -550,6 +585,39 @@ class StripeService
         }
 
         return $response;
+    }
+
+    /**
+     * Get total usage for a feature from local DB within a time window
+     */
+    public function getFeatureUsageTotalLocal(string $userId, string $planId, string $featureId, int $startTime, int $endTime): int
+    {
+        if ($this->platformDb === null) {
+            return 0;
+        }
+        // Sum within current billing window; if invalid window, approximate using feature interval (default month)
+        if ($startTime <= 0 || $endTime <= 0) {
+            // Approximate: last 30 days
+            $endTime = time();
+            $startTime = $endTime - (86400 * 30);
+        }
+        $fromStr = DatabaseDateTime::formatTz(gmdate('c', (int)$startTime));
+        $toStr = DatabaseDateTime::formatTz(gmdate('c', (int)$endTime));
+        $filters = [
+            Query::equal('projectId', [$this->project->getId()]),
+            Query::equal('userId', [$userId]),
+            Query::equal('planId', [$planId]),
+            Query::equal('featureId', [$featureId]),
+            Query::greaterThanEqual('timestamp', $fromStr),
+            Query::lessThanEqual('timestamp', $toStr),
+            Query::limit(100000),
+        ];
+        $events = Authorization::skip(fn () => $this->platformDb->find('auth_usage_events', $filters));
+        $total = 0;
+        foreach ($events as $e) {
+            $total += (int) $e->getAttribute('value', 0);
+        }
+        return $total;
     }
 
     /**
@@ -620,14 +688,18 @@ class StripeService
         $seconds = 0;
         switch ($interval) {
             case 'day':
-                $seconds = 86400; break;
+                $seconds = 86400;
+                break;
             case 'week':
-                $seconds = 86400 * 7; break;
+                $seconds = 86400 * 7;
+                break;
             case 'year':
-                $seconds = 86400 * 365; break;
+                $seconds = 86400 * 365;
+                break;
             case 'month':
             default:
-                $seconds = 86400 * 30; break;
+                $seconds = 86400 * 30;
+                break;
         }
         $trialEnd = $now + $seconds;
 
@@ -803,7 +875,7 @@ class StripeService
                 $this->handlePaymentSucceeded($event['data']['object']);
                 break;
 
-            // Keep Appwrite in sync with Stripe-side changes
+                // Keep Appwrite in sync with Stripe-side changes
             case 'product.updated':
                 $this->handleProductUpdated($event['data']['object']);
                 break;
@@ -824,14 +896,20 @@ class StripeService
      */
     private function handleProductUpdated(array $product): void
     {
-        if ($this->platformDb === null) return;
+        if ($this->platformDb === null) {
+            return;
+        }
         $stripeProductId = $product['id'] ?? '';
-        if (empty($stripeProductId)) return;
+        if (empty($stripeProductId)) {
+            return;
+        }
         $plan = $this->platformDb->findOne('auth_plans', [
             Query::equal('stripeProductId', [$stripeProductId]),
             Query::equal('projectId', [$this->project->getId()])
         ]);
-        if ($plan->isEmpty()) return;
+        if ($plan->isEmpty()) {
+            return;
+        }
         $plan->setAttribute('name', $product['name'] ?? $plan->getAttribute('name'));
         if (isset($product['active']) && $product['active'] === false) {
             // If product deactivated, mark plan inactive
@@ -845,9 +923,13 @@ class StripeService
      */
     private function handleProductDeleted(array $product): void
     {
-        if ($this->platformDb === null) return;
+        if ($this->platformDb === null) {
+            return;
+        }
         $stripeProductId = $product['id'] ?? '';
-        if (empty($stripeProductId)) return;
+        if (empty($stripeProductId)) {
+            return;
+        }
         $plan = $this->platformDb->findOne('auth_plans', [
             Query::equal('stripeProductId', [$stripeProductId]),
             Query::equal('projectId', [$this->project->getId()])
@@ -862,14 +944,20 @@ class StripeService
      */
     private function handlePriceUpdated(array $price): void
     {
-        if ($this->platformDb === null) return;
+        if ($this->platformDb === null) {
+            return;
+        }
         $stripePriceId = $price['id'] ?? '';
-        if (empty($stripePriceId)) return;
+        if (empty($stripePriceId)) {
+            return;
+        }
         $plan = $this->platformDb->findOne('auth_plans', [
             Query::equal('stripePriceId', [$stripePriceId]),
             Query::equal('projectId', [$this->project->getId()])
         ]);
-        if ($plan->isEmpty()) return;
+        if ($plan->isEmpty()) {
+            return;
+        }
         if (isset($price['active']) && $price['active'] === false) {
             $plan->setAttribute('active', false);
         }
@@ -890,9 +978,13 @@ class StripeService
      */
     private function handlePriceDeleted(array $price): void
     {
-        if ($this->platformDb === null) return;
+        if ($this->platformDb === null) {
+            return;
+        }
         $stripePriceId = $price['id'] ?? '';
-        if (empty($stripePriceId)) return;
+        if (empty($stripePriceId)) {
+            return;
+        }
         $plan = $this->platformDb->findOne('auth_plans', [
             Query::equal('stripePriceId', [$stripePriceId]),
             Query::equal('projectId', [$this->project->getId()])
@@ -1064,7 +1156,7 @@ class StripeService
                 }
             }
         }
-        
+
 
         $fallbackToFree = ($status === 'canceled' || $status === 'incomplete_expired' || ($cancelAtPeriodEnd && $periodEndTs && time() >= (int) $periodEndTs));
         $defaultPlan = null;
