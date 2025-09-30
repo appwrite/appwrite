@@ -60,8 +60,6 @@ use Utopia\Validator\Hostname;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
-use function Swoole\Coroutine\Http\request;
-
 // Runtime Execution
 App::setResource('log', fn () => new Log());
 App::setResource('logger', function ($register) {
@@ -351,6 +349,44 @@ App::setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Database $dbForDocuments, Cache $cache, Document $project, Request $request) {
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForPlatform;
+    }
+
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
+
+    $adapter = new DatabasePool($pools->get($dsn->getHost()));
+    $database = new Database($adapter, $cache);
+
+    $database
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId())
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+    if (\in_array($dsn->getHost(), $sharedTables)) {
+        $database
+            ->setSharedTables(true)
+            ->setTenant((int)$project->getSequence())
+            ->setNamespace($dsn->getParam('namespace'));
+    } else {
+        $database
+            ->setSharedTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getSequence());
+    }
+
+    return $database;
+}, ['pools', 'dbForPlatform', 'dbForDocuments', 'cache', 'project', 'request']);
+
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     $adapter = new DatabasePool($pools->get('console'));
     $database = new Database($adapter, $cache);
@@ -400,44 +436,6 @@ App::setResource('dbForDocuments', function (Group $pools, Database $dbForPlatfo
 
     return $database;
 }, ['pools', 'dbForPlatform', 'cache', 'project']);
-
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Database $dbForDocuments, Cache $cache, Document $project, Request $request) {
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForPlatform;
-    }
-
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-
-    $adapter = new DatabasePool($pools->get($dsn->getHost()));
-    $database = new Database($adapter, $cache);
-
-    $database
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId())
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-    if (\in_array($dsn->getHost(), $sharedTables)) {
-        $database
-            ->setSharedTables(true)
-            ->setTenant((int)$project->getSequence())
-            ->setNamespace($dsn->getParam('namespace'));
-    } else {
-        $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
-    }
-
-    return $database;
-}, ['pools', 'dbForPlatform', 'dbForDocuments', 'cache', 'project', 'request']);
 
 App::setResource('dbForDatabaseRecords', function (Database $dbForProject, Database $dbForDocuments, Request $request) {
 
