@@ -961,16 +961,16 @@
         },
         {
             "name": "mongodb/mongodb",
-            "version": "2.1.0",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mongodb/mongo-php-library.git",
-                "reference": "3bbe7ba9578724c7e1f47fcd17c881c0995baaad"
+                "reference": "f399d24905dd42f97dfe0af9706129743ef247ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/3bbe7ba9578724c7e1f47fcd17c881c0995baaad",
-                "reference": "3bbe7ba9578724c7e1f47fcd17c881c0995baaad",
+                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/f399d24905dd42f97dfe0af9706129743ef247ac",
+                "reference": "f399d24905dd42f97dfe0af9706129743ef247ac",
                 "shasum": ""
             },
             "require": {
@@ -1032,9 +1032,9 @@
             ],
             "support": {
                 "issues": "https://github.com/mongodb/mongo-php-library/issues",
-                "source": "https://github.com/mongodb/mongo-php-library/tree/2.1.0"
+                "source": "https://github.com/mongodb/mongo-php-library/tree/2.1.1"
             },
-            "time": "2025-05-23T10:48:05+00:00"
+            "time": "2025-08-13T20:50:05+00:00"
         },
         {
             "name": "mustangostang/spyc",
@@ -3796,21 +3796,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f52c1e9fda1f55e784adeb28f0be8ff4feb9686c"
+                "reference": "4103174f0d99f1d1761312e320e92bda22647ba2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f52c1e9fda1f55e784adeb28f0be8ff4feb9686c",
-                "reference": "f52c1e9fda1f55e784adeb28f0be8ff4feb9686c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4103174f0d99f1d1761312e320e92bda22647ba2",
+                "reference": "4103174f0d99f1d1761312e320e92bda22647ba2",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
+                "ext-mongodb": "*",
                 "ext-pdo": "*",
                 "php": ">=8.1",
                 "utopia-php/cache": "0.13.*",
                 "utopia-php/framework": "0.33.*",
-                "utopia-php/mongo": "0.7.*",
+                "utopia-php/mongo": "0.8.*",
                 "utopia-php/pools": "0.8.*"
             },
             "require-dev": {
@@ -3845,7 +3846,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/attributes-fix-schemaless"
             },
-            "time": "2025-09-29T11:14:13+00:00"
+            "time": "2025-09-30T13:10:04+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4397,7 +4398,68 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/1.2.0"
             },
-            "time": "2025-09-10T06:17:20+00:00"
+            "time": "2025-09-24T10:32:24+00:00"
+        },
+        {
+            "name": "utopia-php/mongo",
+            "version": "0.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/mongo.git",
+                "reference": "b9c9c2e3f693edfdfcff777a68b3cd0d3e5bb97d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/b9c9c2e3f693edfdfcff777a68b3cd0d3e5bb97d",
+                "reference": "b9c9c2e3f693edfdfcff777a68b3cd0d3e5bb97d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mongodb": "2.1.*",
+                "mongodb/mongodb": "2.1.*",
+                "php": ">=8.0",
+                "ramsey/uuid": "4.9.*"
+            },
+            "require-dev": {
+                "fakerphp/faker": "1.*",
+                "laravel/pint": "*",
+                "phpstan/phpstan": "*",
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "5.1.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Mongo\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Wess",
+                    "email": "wess@appwrite.io"
+                }
+            ],
+            "description": "A simple library to manage Mongo database",
+            "keywords": [
+                "database",
+                "mongo",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/mongo/issues",
+                "source": "https://github.com/utopia-php/mongo/tree/0.8.0"
+            },
+            "time": "2025-09-30T09:36:04+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -8682,7 +8744,9 @@
         }
     ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
