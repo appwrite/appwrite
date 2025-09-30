@@ -209,7 +209,8 @@ class Create extends Action
             $supportForSpatialIndexNull,
             $supportForSpatialIndexOrder,
             $dbForDatabaseRecords->getAdapter()->getSupportForAttributes(),
-            $dbForDatabaseRecords->getAdapter()->getSupportForMultipleFulltextIndexes()
+            $dbForDatabaseRecords->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForDatabaseRecords->getAdapter()->getSupportForIdenticalIndexes(),
         );
 
         if (!$validator->isValid($index)) {

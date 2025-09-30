@@ -363,11 +363,17 @@ class Create extends Action
         }, $documents);
 
         try {
+            $created = [];
             $dbForDatabaseRecords->withPreserveDates(
-                fn () => $dbForDatabaseRecords->createDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    $documents,
-                )
+                function () use (&$created, $dbForDatabaseRecords, $database, $collection, $documents) {
+                    $dbForDatabaseRecords->createDocuments(
+                        'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                        $documents,
+                        onNext: function ($doc) use (&$created) {
+                            $created[] = $doc;
+                        }
+                    );
+                }
             );
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
@@ -387,7 +393,7 @@ class Create extends Action
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $collectionsCache = [];
-        foreach ($documents as $document) {
+        foreach ($created as $document) {
             $this->processDocument(
                 database: $database,
                 collection: $collection,
@@ -405,15 +411,15 @@ class Create extends Action
 
         if ($isBulk) {
             $response->dynamic(new Document([
-                'total' => count($documents),
-                $this->getSdkGroup() => $documents
+                'total' => count($created),
+                $this->getSdkGroup() => $created
             ]), $this->getBulkResponseModel());
 
             $this->triggerBulk(
                 'databases.[databaseId].collections.[collectionId].documents.[documentId].create',
                 $database,
                 $collection,
-                $documents,
+                $created,
                 $queueForEvents,
                 $queueForRealtime,
                 $queueForFunctions,
@@ -423,12 +429,12 @@ class Create extends Action
         }
 
         $queueForEvents
-            ->setParam('documentId', $documents[0]->getId())
-            ->setParam('rowId', $documents[0]->getId())
+            ->setParam('documentId', $created[0]->getId())
+            ->setParam('rowId', $created[0]->getId())
             ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
 
         $response->dynamic(
-            $documents[0],
+            $created[0],
             $this->getResponseModel()
         );
     }

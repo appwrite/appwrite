@@ -717,13 +717,44 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('attribute2', $collection['body']['indexes'][0]['attributes'][1]);
     }
 
-    /**
-     * @depends testDeleteIndexOnDeleteAttribute
-     */
-    public function testDeleteCollection($data)
+
+    public function testDeleteCollection()
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $database = $this->client->call(Client::METHOD_POST, '/documentsdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'invalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+        $this->assertTrue($database['body']['enabled']);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $movies = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'collectionId' => ID::unique(),
+            'name' => 'Movies',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $movies['headers']['status-code']);
+        $this->assertEquals($movies['body']['name'], 'Movies');
+
+        $collectionId = $movies['body']['$id'];
 
         // Add Documents to the collection
         $document1 = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
