@@ -7673,12 +7673,12 @@ trait DatabasesBase
             'rowId' => ID::unique(),
             'data' => [
                 'name' => 'Upserted Location',
-                'location' => [34.0522, -118.2437]
+                'location' => [34.0522, -80]
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([34.0522, -118.2437], $response['body']['location']);
+        $this->assertEquals([34.0522, -80], $response['body']['location']);
 
         // Create row without permissions (should fail)
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
@@ -7812,12 +7812,12 @@ trait DatabasesBase
             'rowId' => ID::unique(),
             'data' => [
                 'distance' => 200,
-                'route' => [[34.0522, -118.2437], [34.0736, -118.2400]]
+                'route' => [[34.0522, -80], [34.0736, -80]]
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([[34.0522, -118.2437], [34.0736, -118.2400]], $response['body']['route']);
+        $this->assertEquals([[34.0522, -80], [34.0736, -80]], $response['body']['route']);
 
         // Delete row
         $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, array_merge([
@@ -7951,12 +7951,12 @@ trait DatabasesBase
             'rowId' => ID::unique(),
             'data' => [
                 'active' => false,
-                'area' => [[[34.0522, -118.2437], [34.0736, -118.2437], [34.0736, -118.2400], [34.0522, -118.2400], [34.0522, -118.2437]]]
+                'area' => [[[34.0522, -80], [34.0736, -80], [34.0736, -80], [34.0522, -80], [34.0522, -80]]]
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals([[[34.0522, -118.2437], [34.0736, -118.2437], [34.0736, -118.2400], [34.0522, -118.2400], [34.0522, -118.2437]]], $response['body']['area']);
+        $this->assertEquals([[[34.0522, -80], [34.0736, -80], [34.0736, -80], [34.0522, -80], [34.0522, -80]]], $response['body']['area']);
 
         // Create row missing required polygon (should fail)
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
