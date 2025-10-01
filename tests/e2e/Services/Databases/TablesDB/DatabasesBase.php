@@ -1360,7 +1360,13 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+
+        // MongoDB only allows one fulltext index per collection, so it returns a different error
+        if ($this->isMongoDB()) {
+            $this->assertEquals('There is already a fulltext index in the collection', $fulltextArray['body']['message']);
+        } else {
+            $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+        }
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
