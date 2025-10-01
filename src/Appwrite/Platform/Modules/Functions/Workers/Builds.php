@@ -686,6 +686,7 @@ class Builds extends Action
                         if ($version === 'v2') {
                             $command = 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh';
                         } else {
+                            $outputDirectory = $deployment->getAttribute('buildOutput') ?? $resource->getAttribute('outputDirectory');
                             if ($resource->getCollection() === 'sites') {
                                 $listFilesCommand = '';
 
@@ -693,8 +694,8 @@ class Builds extends Action
                                 $listFilesCommand .= 'echo "{APPWRITE_DETECTION_SEPARATOR_START}" && cd /usr/local/build';
 
                                 // Enter output directory, if set
-                                if (!empty($resource->getAttribute('outputDirectory', ''))) {
-                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($resource->getAttribute('outputDirectory', ''));
+                                if (!empty($outputDirectory)) {
+                                    $listFilesCommand .= ' && cd ' . \escapeshellarg($outputDirectory);
                                 }
 
                                 // Print files, and end separation
@@ -725,7 +726,7 @@ class Builds extends Action
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
                             command: $command,
-                            outputDirectory: $resource->getAttribute('outputDirectory', '')
+                            outputDirectory: $outputDirectory ?? ''
                         );
 
                         Console::log('createRuntime finished');
@@ -899,7 +900,7 @@ class Builds extends Action
 
             Console::log('Build details stored');
 
-            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment);
+            $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
             $logs = $deployment->getAttribute('buildLogs', '');
 
             /** Screenshot site */
@@ -1390,13 +1391,28 @@ class Builds extends Action
      * @param Realtime $queueForRealtime
      * @param Database $dbForProject
      * @param Document $deployment
+     * @param array $runtime
+     * @param string|null $adapter
      * @return void
+     * @throws Exception
      */
-    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment): void
+    protected function afterBuildSuccess(Realtime $queueForRealtime, Database $dbForProject, Document &$deployment, array $runtime, ?string $adapter): void
     {
-        assert($queueForRealtime instanceof Realtime);
-        assert($dbForProject instanceof Database);
-        assert($deployment instanceof Document);
+        if (!($queueForRealtime instanceof Realtime)) {
+            throw new Exception('queueForRealtime must be an instance of Realtime');
+        }
+        if (!($dbForProject instanceof Database)) {
+            throw new Exception('dbForProject must be an instance of Database');
+        }
+        if (!($deployment instanceof Document)) {
+            throw new Exception('deployment must be an instance of Document');
+        }
+        if (!is_array($runtime)) {
+            throw new Exception('runtime must be an array');
+        }
+        if (!is_string($adapter) && !is_null($adapter)) {
+            throw new Exception('adapter must be a string or null');
+        }
     }
 
     protected function getRuntime(Document $resource, string $version): array
