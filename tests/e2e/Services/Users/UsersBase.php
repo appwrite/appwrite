@@ -707,12 +707,7 @@ trait UsersBase
         $this->assertCount(1, $response['body']['users']);
 
         //mongodb fulltext search support only in complete words.
-        $adapter = \Utopia\System\System::getEnv('_APP_DB_ADAPTER', 'not-set');
-        $isMongo = $this->isMongoDB();
-        error_log("DEBUG testListUsers: _APP_DB_ADAPTER={$adapter}, isMongoDB={$isMongo}");
-
         if (!$this->isMongoDB()) {
-            error_log("DEBUG testListUsers: Running man search test for MariaDB");
             $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -720,8 +715,6 @@ trait UsersBase
                 'search' => "man",
             ]);
 
-            error_log("DEBUG testListUsers: man search returned status=" . $response['headers']['status-code'] .
-                      ", total=" . ($response['body']['total'] ?? 'N/A'));
 
             $this->assertEquals($response['headers']['status-code'], 200);
             $this->assertIsArray($response['body']);
@@ -729,8 +722,6 @@ trait UsersBase
             $this->assertIsInt($response['body']['total']);
             $this->assertEquals(1, $response['body']['total']);
             $this->assertCount(1, $response['body']['users']);
-        } else {
-            error_log("DEBUG testListUsers: Skipping man search test for MongoDB");
         }
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
