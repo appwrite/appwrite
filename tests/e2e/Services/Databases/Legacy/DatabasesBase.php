@@ -1306,7 +1306,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
-        
+
         // MongoDB only allows one fulltext index per collection, so it returns a different error
         if ($this->isMongoDB()) {
             $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
