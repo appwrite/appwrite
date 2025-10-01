@@ -298,6 +298,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
+                    // TODO: fix the temporary 2>/dev/null || true - added due to permission issues when removing files
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
@@ -309,7 +310,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
                         git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
-                        rm -rf ' . $target . '/* && \
+                        rm -rf ' . $target . '/* 2>/dev/null || true && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
                         git add . && \
                         git commit -m "' . $message . '" && \
