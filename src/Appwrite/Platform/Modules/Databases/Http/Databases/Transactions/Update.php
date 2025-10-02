@@ -133,6 +133,7 @@ class Update extends Action
                 // Fetch operations ordered by sequence by default to replay operations in exact order they were created
                 $operations = $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::limit(PHP_INT_MAX),
                 ]);
 
                 // Track transaction state for cross-operation visibility
