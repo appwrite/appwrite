@@ -4176,7 +4176,15 @@ trait DatabasesBase
 
         $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
 
-        sleep(2);
+        $index = null;
+        $this->assertEventually(function () use ($databaseId, $data, &$index) {
+            $index = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes/unique_title', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $this->assertEquals('available', $index['body']['status']);
+        }, 30000, 500);
 
         // test for failure
         $duplicate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
