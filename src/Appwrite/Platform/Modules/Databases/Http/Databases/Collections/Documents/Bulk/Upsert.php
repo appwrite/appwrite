@@ -144,7 +144,7 @@ class Upsert extends Action
                     'transactions',
                     $transactionId,
                     'operations',
-                    \count($staged)
+                   1
                 );
             });
 
