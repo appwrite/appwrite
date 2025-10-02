@@ -544,9 +544,14 @@ class Update extends Action
         array &$state
     ): void {
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
+            // Convert data arrays to Document objects if needed
+            $documents = \array_map(function ($doc) {
+                return $doc instanceof Document ? $doc : new Document($doc);
+            }, $data);
+
             $dbForProject->createDocuments(
                 $collectionId,
-                \array_map(fn($doc) => new Document($doc), $data),
+                $documents,
                 onNext: function (Document $document) use (&$state, $collectionId) {
                     $state[$collectionId][$document->getId()] = $document;
                 }
@@ -601,10 +606,15 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        // Convert data arrays to Document objects if needed
+        $documents = \array_map(function ($doc) {
+            return $doc instanceof Document ? $doc : new Document($doc);
+        }, $data);
+
         // Run bulk upsert without timestamp wrapper, checking manually in callback
         $dbForProject->upsertDocuments(
             $collectionId,
-            \array_map(fn($doc) => new Document($doc), $data),
+            $documents,
             onNext: function (Document $upserted, ?Document $old) use (&$state, $collectionId, $createdAt) {
                 if ($old !== null) {
                     // This is an update - check if document was created/modified in this transaction
