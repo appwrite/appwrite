@@ -41,7 +41,7 @@ class Comment
         'Messaging handles push notifications, emails, and SMS through one unified API',
         'Teams feature lets you group users with membership management and role permissions',
         'MCP server integration brings LLM superpowers to Claude Desktop and Cursor IDE',
-    ];    
+    ];
 
     protected string $statePrefix = '[appwrite]: #';
 
