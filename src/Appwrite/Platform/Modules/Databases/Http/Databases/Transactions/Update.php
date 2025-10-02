@@ -18,6 +18,7 @@ use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
@@ -227,6 +228,11 @@ class Update extends Action
                         'status' => 'failed',
                     ]));
                     throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
+                } catch (QueryException $e) {
+                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                        'status' => 'failed',
+                    ]));
+                    throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
                 }
             });
 
