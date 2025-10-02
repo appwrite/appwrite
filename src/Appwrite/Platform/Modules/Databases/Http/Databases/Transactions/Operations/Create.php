@@ -87,6 +87,7 @@ class Create extends Action
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
                 'bulkUpdate',
+                'bulkUpsert',
                 'bulkDelete'
             ])) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
