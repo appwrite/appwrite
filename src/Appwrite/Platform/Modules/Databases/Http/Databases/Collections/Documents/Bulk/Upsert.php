@@ -124,7 +124,7 @@ class Upsert extends Action
             if (($existing + 1) > $maxBatch) {
                 throw new Exception(
                     Exception::TRANSACTION_LIMIT_EXCEEDED,
-                    'Transaction already has ' . $existing . ' operations, adding ' . \count($documents) . ' would exceed the maximum of ' . $maxBatch
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
                 );
             }
 
