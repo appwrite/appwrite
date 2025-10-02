@@ -20,12 +20,10 @@ use Appwrite\Platform\Appwrite;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -35,7 +33,6 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
@@ -43,17 +40,21 @@ use Utopia\Registry\Registry;
 use Utopia\System\System;
 
 Authorization::disable();
-Runtime::enableCoroutine();
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 Server::setResource('register', fn () => $register);
 
 Server::setResource('dbForPlatform', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
-    $adapter = new DatabasePool($pools->get('console'));
-    $dbForPlatform = new Database($adapter, $cache);
-    $dbForPlatform->setNamespace('_console');
+    $database = $pools
+        ->get('console')
+        ->pop()
+        ->getResource();
 
-    return $dbForPlatform;
+    $adapter = new Database($database, $cache);
+    $adapter->setNamespace('_console');
+
+    return $adapter;
 }, ['cache', 'register']);
 
 Server::setResource('project', function (Message $message, Database $dbForPlatform) {
@@ -81,8 +82,19 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         $dsn = new DSN('mysql://' . $project->getAttribute('database'));
     }
 
-    $adapter = new DatabasePool($pools->get($dsn->getHost()));
+    $adapter = $pools
+        ->get($dsn->getHost())
+        ->pop()
+        ->getResource();
+
     $database = new Database($adapter, $cache);
+
+    try {
+        $dsn = new DSN($project->getAttribute('database'));
+    } catch (\InvalidArgumentException) {
+        // TODO: Temporary until all projects are using shared tables
+        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+    }
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -138,8 +150,12 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             return $database;
         }
 
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, $cache);
+        $dbAdapter = $pools
+            ->get($dsn->getHost())
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
 
         $databases[$dsn->getHost()] = $database;
 
@@ -171,8 +187,15 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             return $database;
         }
 
-        $adapter = new DatabasePool($pools->get('logs'));
-        $database = new Database($adapter, $cache);
+        $dbAdapter = $pools
+            ->get('logs')
+            ->pop()
+            ->getResource();
+
+        $database = new Database(
+            $dbAdapter,
+            $cache
+        );
 
         $database
             ->setSharedTables(true)
@@ -210,7 +233,11 @@ Server::setResource('cache', function (Registry $register) {
     $adapters = [];
 
     foreach ($list as $value) {
-        $adapters[] = new CachePool($pools->get($value));
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
     }
 
     return new Cache(new Sharding($adapters));
@@ -240,11 +267,11 @@ Server::setResource('timelimit', function (\Redis $redis) {
 Server::setResource('log', fn () => new Log());
 
 Server::setResource('publisher', function (Group $pools) {
-    return new BrokerPool(publisher: $pools->get('publisher'));
+    return $pools->get('publisher')->pop()->getResource();
 }, ['pools']);
 
 Server::setResource('consumer', function (Group $pools) {
-    return new BrokerPool(consumer: $pools->get('consumer'));
+    return $pools->get('consumer')->pop()->getResource();
 }, ['pools']);
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
@@ -422,13 +449,21 @@ try {
 $worker = $platform->getWorker();
 
 $worker
+    ->shutdown()
+    ->inject('pools')
+    ->action(function (Group $pools) {
+        $pools->reclaim();
+    });
+
+$worker
     ->error()
     ->inject('error')
     ->inject('logger')
     ->inject('log')
     ->inject('pools')
     ->inject('project')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($worker, $queueName) {
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
+        $pools->reclaim();
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {

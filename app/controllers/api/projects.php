@@ -24,7 +24,6 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -224,7 +223,7 @@ App::post('/v1/projects')
         $sharedTables = $sharedTablesV1 || $sharedTablesV2;
 
         if (!$sharedTablesV2) {
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
+            $adapter = $pools->get($dsn->getHost())->pop()->getResource();
             $dbForProject = new Database($adapter, $cache);
 
             if ($sharedTables) {

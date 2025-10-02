@@ -29,7 +29,9 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void
     {
-        $queueForFunctions = new Func($this->publisher);
+        $queue = $pools->get('publisher')->pop();
+        $connection = $queue->getResource();
+        $queueForFunctions = new Func($connection);
         $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         foreach ($this->schedules as $schedule) {
@@ -57,7 +59,7 @@ class ScheduleExecutions extends ScheduleBase
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data) {
+            \go(function () use ($queueForFunctions, $schedule, $delay, $data) {
                 Co::sleep($delay);
 
                 $queueForFunctions->setType('schedule')
@@ -72,8 +74,6 @@ class ScheduleExecutions extends ScheduleBase
                     ->setProject($schedule['project'])
                     ->setUserId($data['userId'] ?? '')
                     ->trigger();
-
-                $this->recordEnqueueDelay($scheduledAt);
             });
 
             $dbForPlatform->deleteDocument(
@@ -83,5 +83,7 @@ class ScheduleExecutions extends ScheduleBase
 
             unset($this->schedules[$schedule['$internalId']]);
         }
+
+        $queue->reclaim();
     }
 }
