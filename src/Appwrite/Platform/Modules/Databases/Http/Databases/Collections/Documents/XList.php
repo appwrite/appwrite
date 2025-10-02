@@ -129,7 +129,7 @@ class XList extends Action
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
                 $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
-                $total = count($documents); // For transaction-aware queries, we count the actual results
+                $total = $transactionState->countDocuments($collectionTableId, $transactionId, $queries);
             } elseif (! empty($selectQueries)) {
                 // has selects, allow relationship on documents
                 $documents = $dbForProject->find($collectionTableId, $queries);
