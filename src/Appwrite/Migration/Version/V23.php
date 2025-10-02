@@ -97,6 +97,18 @@ class V23 extends Migration
             $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
 
             switch ($id) {
+                case 'projects':
+                    $attributes = [
+                        'pingCount',
+                        'pingedAt'
+                    ];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
+                    } catch (\Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
                 case 'databases':
                     $attributes = [
                         'type',
