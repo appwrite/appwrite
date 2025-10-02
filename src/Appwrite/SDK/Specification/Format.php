@@ -624,6 +624,84 @@ abstract class Format
                         return 'AttributeStatus';
                 }
                 break;
+            case 'columnString':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnInteger':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnFloat':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnBoolean':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnEmail':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnEnum':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnIp':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnUrl':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnDatetime':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnRelationship':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnPoint':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnLine':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
+            case 'columnPolygon':
+                switch ($param) {
+                    case 'status':
+                        return 'ColumnStatus';
+                }
+                break;
             case 'healthStatus':
                 switch ($param) {
                     case 'status':

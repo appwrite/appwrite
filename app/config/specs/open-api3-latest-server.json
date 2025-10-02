@@ -35093,7 +35093,11 @@
                     "type": {
                         "type": "string",
                         "description": "Database type.",
-                        "x-example": "legacy"
+                        "x-example": "legacy",
+                        "enum": [
+                            "legacy",
+                            "tablesdb"
+                        ]
                     }
                 },
                 "required": [
@@ -36780,7 +36784,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -36868,7 +36880,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -36958,7 +36978,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37048,7 +37076,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37121,7 +37157,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37201,7 +37245,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37291,7 +37343,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37371,7 +37431,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37451,7 +37519,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37531,7 +37607,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37639,7 +37723,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37718,7 +37810,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
@@ -37809,7 +37909,15 @@
                     "status": {
                         "type": "string",
                         "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                        "x-example": "available"
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
                     },
                     "error": {
                         "type": "string",
