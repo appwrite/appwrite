@@ -215,10 +215,10 @@ App::init()
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-            // Disable authorization checks for API keys
-            Authorization::setDefaultStatus(false);
-
             if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
+                // Disable authorization checks for API keys
+                Authorization::setDefaultStatus(false);
+
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
@@ -689,7 +689,7 @@ App::shutdown()
              * A future optimisation is to only trigger webhooks if the webhook is "enabled"
              * But it might have performance implications on the API due to the number of webhooks etc.
              * Some profiling is needed to see if this is a problem.
-            */
+             */
             if (!empty($project->getAttribute('webhooks'))) {
                 $queueForWebhooks
                     ->from($queueForEvents)
