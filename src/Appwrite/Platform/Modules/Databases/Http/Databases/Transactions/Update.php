@@ -545,7 +545,7 @@ class Update extends Action
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
             $dbForProject->createDocuments(
                 $collectionId,
-                $data,
+                \array_map(fn($doc) => new Document($doc), $data),
                 onNext: function (Document $document) use (&$state, $collectionId) {
                     $state[$collectionId][$document->getId()] = $document;
                 }
@@ -603,7 +603,7 @@ class Update extends Action
         // Run bulk upsert without timestamp wrapper, checking manually in callback
         $dbForProject->upsertDocuments(
             $collectionId,
-            $data,
+            \array_map(fn($doc) => new Document($doc), $data),
             onNext: function (Document $upserted, ?Document $old) use (&$state, $collectionId, $createdAt) {
                 if ($old !== null) {
                     // This is an update - check if document was created/modified in this transaction
