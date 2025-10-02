@@ -266,12 +266,18 @@ class Update extends Action
                     Query::equal('$sequence', [$collectionInternalId])
                 ]);
 
+                $groupId = $this->getGroupId();
+                $resourceId = $this->getResourceId();
+                $contextKey = $this->getContext();
+                $resource = $this->getResource();
+                $resourcePlural = $resource . 's';
+
                 $queueForEvents
                     ->setParam('databaseId', $database->getId())
                     ->setContext('database', $database)
                     ->setParam('collectionId', $collection->getId())
                     ->setParam('tableId', $collection->getId())
-                    ->setContext('collection', $collection);
+                    ->setContext($contextKey, $collection);
 
                 $eventAction = '';
                 $documents = [];
@@ -308,7 +314,7 @@ class Update extends Action
                         $queueForEvents
                             ->setParam('documentId', $docId)
                             ->setParam('rowId', $docId)
-                            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].' . $eventAction);
+                            ->setEvent("databases.[databaseId].{$contextKey}s.[{$groupId}].{$resourcePlural}.[{$resourceId}]." . $eventAction);
 
                         $queueForRealtime->from($queueForEvents)->trigger();
                         $queueForFunctions->from($queueForEvents)->trigger();
