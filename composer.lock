@@ -3792,16 +3792,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "1.5.1",
+            "version": "dev-attributes-fix-schemaless",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "56efe4daaf23abb753553acffccdcc04cd6178c9"
+                "reference": "4103174f0d99f1d1761312e320e92bda22647ba2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/56efe4daaf23abb753553acffccdcc04cd6178c9",
-                "reference": "56efe4daaf23abb753553acffccdcc04cd6178c9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4103174f0d99f1d1761312e320e92bda22647ba2",
+                "reference": "4103174f0d99f1d1761312e320e92bda22647ba2",
                 "shasum": ""
             },
             "require": {
@@ -3844,9 +3844,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/1.5.1"
+                "source": "https://github.com/utopia-php/database/tree/attributes-fix-schemaless"
             },
-            "time": "2025-10-01T04:44:14+00:00"
+            "time": "2025-09-30T13:10:04+00:00"
         },
         {
             "name": "utopia-php/detector",
