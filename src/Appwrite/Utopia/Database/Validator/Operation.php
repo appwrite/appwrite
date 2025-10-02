@@ -127,12 +127,23 @@ class Operation extends Validator
         }
 
         // If action requires documentId, it must be present
-        if (
-            isset($this->requiresDocumentId[$value['action']]) &&
-            !\array_key_exists($this->documentIdName, $value)
-        ) {
+-        if (
+-            isset($this->requiresDocumentId[$value['action']]) &&
+-            !\array_key_exists($this->documentIdName, $value)
+-        ) {
+-            $this->description = "Key '$this->documentIdName' is required for action '{$value['action']}'";
+-            return false;
+        $actionRequiresDocumentId = ($this->requiresDocumentId[$value['action']] ?? false) === true;
+        if ($actionRequiresDocumentId && !\array_key_exists($this->documentIdName, $value)) {
             $this->description = "Key '$this->documentIdName' is required for action '{$value['action']}'";
             return false;
+        }
+
+        if (\array_key_exists($this->documentIdName, $value)) {
+            if (!\is_string($value[$this->documentIdName]) || \trim($value[$this->documentIdName]) === '') {
+                $this->description = "Key '$this->documentIdName' must be a non-empty string";
+                return false;
+            }
         }
 
         // Data validation - only required for certain actions
@@ -146,7 +157,7 @@ class Operation extends Validator
                 $this->description = "Key 'data' must be an array";
                 return false;
             }
-        } elseif (\array_key_exists('data', $value)) {
+        } else if (\array_key_exists('data', $value)) {
             // Data is optional but if provided, must be an array
             if (!\is_array($value['data'])) {
                 $this->description = "Key 'data' must be an array";
