@@ -49,15 +49,15 @@ class TransactionState
 
             switch ($action) {
                 case 'create':
-                    if ($documentId) {
-                        $state[$collectionId][$documentId] = [
+                    $docId = $documentId ?? ($data['$id'] ?? null);
+                    if ($docId) {
+                        $state[$collectionId][$docId] = [
                             'action' => 'create',
                             'document' => new Document($data),
                             'exists' => true
                         ];
                     }
                     break;
-
                 case 'update':
                     if (isset($state[$collectionId][$documentId])) {
                         // Update existing document in transaction state
