@@ -14,7 +14,6 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
-use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -37,7 +36,7 @@ class Databases extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
-            ->inject('dbForDocuments')
+            ->inject('getDatabaseRecordsDB')
             ->inject('queueForRealtime')
             ->inject('log')
             ->callback($this->action(...));
@@ -53,7 +52,7 @@ class Databases extends Action
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDocuments, Realtime $queueForRealtime, Log $log): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Database $dbForProject, callable $getDatabaseRecordsDB, Realtime $queueForRealtime, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -65,19 +64,10 @@ class Databases extends Action
         $document = new Document($payload['row'] ?? $payload['document'] ?? []);
         $collection = new Document($payload['table'] ?? $payload['collection'] ?? []);
         $database = new Document($payload['database'] ?? []);
-        $databaseType = $database->getAttribute('database', '');
-
-        $dsn = new DSN($databaseType);
-        $datatypeType = $dsn->getScheme();
-
-        switch ($datatypeType) {
-            case 'mongodb':
-                $dbForDatabaseRecords = $dbForDocuments;
-                break;
-
-            default:
-                $dbForDatabaseRecords = $dbForProject;
-        }
+        /**
+         * @var Database $dbForDatabaseRecords
+         */
+        $dbForDatabaseRecords = call_user_func($getDatabaseRecordsDB, $database);
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);

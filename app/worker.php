@@ -223,6 +223,18 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
+Server::setResource('getDatabaseRecordsDB', function (Database $dbForProject, Database $dbForDocuments) {
+    return function (Document $database) use ($dbForProject, $dbForDocuments): Database {
+        $databaseType = $database->getAttribute('database', '');
+        $dsn = new DSN($databaseType);
+        $datatypeType = $dsn->getScheme();
+        return match ($datatypeType) {
+            'mongodb' => $dbForDocuments,
+            default   => $dbForProject,
+        };
+    };
+}, ['dbForProject', 'dbForDocuments']);
+
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
 });
