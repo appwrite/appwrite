@@ -144,7 +144,7 @@ class Upsert extends Action
                     'transactions',
                     $transactionId,
                     'operations',
-                   1
+                    1
                 );
             });
 

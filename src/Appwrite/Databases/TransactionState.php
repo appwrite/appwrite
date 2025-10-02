@@ -134,7 +134,9 @@ class TransactionState
 
                 case 'upsert':
                     $docId = $documentId ?? ($data['$id'] ?? null);
-                    if (!$docId) { break; }
+                    if (!$docId) {
+                        break;
+                    }
                     $state[$collectionId][$docId] = [
                         'action' => 'upsert',
                         'document' => new Document($data),
