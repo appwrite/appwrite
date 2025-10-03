@@ -67,12 +67,12 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, StatsUsage $queueForStatsUsage): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -93,6 +93,8 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
@@ -110,7 +112,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = Authorization::skip(fn () => $dbForDatabase->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -125,14 +127,14 @@ class XList extends Action
 
             if (! empty($selectQueries)) {
                 // has selects, allow relationship on documents
-                $documents = $dbForDatabaseRecords->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
+                $documents = $dbForDatabase->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
-                $documents = $dbForDatabaseRecords->skipRelationships(fn () => $dbForDatabaseRecords->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
+                $documents = $dbForDatabase->skipRelationships(fn () => $dbForDatabase->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
             }
 
-            $total = $dbForDatabaseRecords->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries, APP_LIMIT_COUNT);
+            $total = $dbForDatabase->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';

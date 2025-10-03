@@ -60,7 +60,7 @@ class Upsert extends DocumentsUpsert
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')

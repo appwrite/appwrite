@@ -62,7 +62,7 @@ class Increment extends IncrementDocumentAttribute
             ->param('max', null, new Numeric(), 'Maximum value for the column. If the current value is greater than this value, an error will be thrown.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));

@@ -41,7 +41,7 @@ class Update extends CollectionUpdate
             ->label('sdk', new Method(
                 namespace: 'documentsdb',
                 group: 'collections',
-                name: self::getName(),
+                name: 'updateCollection',
                 description: '/docs/references/documentsdb/update-collection.md',
                 auth: [AuthType::KEY],
                 responses: [
@@ -60,7 +60,7 @@ class Update extends CollectionUpdate
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }

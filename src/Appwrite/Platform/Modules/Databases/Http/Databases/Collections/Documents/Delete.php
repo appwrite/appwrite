@@ -74,13 +74,13 @@ class Delete extends Action
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -97,16 +97,18 @@ class Delete extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+
         // Read permission should not be required for delete
-        $document = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+        $document = Authorization::skip(fn () => $dbForDatabase->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException());
         }
 
         try {
-            $dbForDatabaseRecords->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabaseRecords, $database, $collection, $documentId) {
-                $dbForDatabaseRecords->deleteDocument(
+            $dbForDatabase->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabase, $database, $collection, $documentId) {
+                $dbForDatabase->deleteDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documentId
                 );

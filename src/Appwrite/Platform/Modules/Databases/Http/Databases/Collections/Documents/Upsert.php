@@ -84,13 +84,13 @@ class Upsert extends Action
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Database $dbForDatabaseRecords, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, callable $getDatabaseDB, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -115,6 +115,8 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+
         $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
@@ -125,7 +127,7 @@ class Upsert extends Action
 
         // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
-            $oldDocument = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $oldDocument = Authorization::skip(fn () => $dbForDatabase->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
             if ($oldDocument->isEmpty()) {
                 if (!empty($user->getId())) {
                     $defaultPermissions = [];
@@ -166,7 +168,7 @@ class Upsert extends Action
         $newDocument = new Document($data);
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $dbForDatabaseRecords, $database, &$operations) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $dbForDatabase, $database, &$operations) {
             $operations++;
 
             $relationships = \array_filter(
@@ -207,7 +209,7 @@ class Upsert extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $oldDocument = Authorization::skip(fn () => $dbForDatabaseRecords->getDocument(
+                        $oldDocument = Authorization::skip(fn () => $dbForDatabase->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
@@ -243,8 +245,8 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForDatabaseRecords->withPreserveDates(function () use (&$upserted, $dbForDatabaseRecords, $database, $collection, $newDocument) {
-                return $dbForDatabaseRecords->upsertDocuments(
+            $dbForDatabase->withPreserveDates(function () use (&$upserted, $dbForDatabase, $database, $collection, $newDocument) {
+                return $dbForDatabase->upsertDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     [$newDocument],
                     onNext: function (Document $document) use (&$upserted) {
@@ -265,7 +267,7 @@ class Upsert extends Action
         $collectionsCache = [];
 
         if (empty($upserted[0])) {
-            $upserted[0] = $dbForDatabaseRecords->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+            $upserted[0] = $dbForDatabase->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
         }
 
         $document = $upserted[0];

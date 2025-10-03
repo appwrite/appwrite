@@ -20,6 +20,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -28,6 +29,25 @@ class Create extends Action
     public static function getName(): string
     {
         return 'createDatabase';
+    }
+
+    protected function getDatabaseDSN(): string
+    {
+        $database = System::getEnv('_APP_DATABASE_NAME', 'appwrite');
+        $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+
+        $schema = match ($this->getDatabaseType()) {
+            'documentsdb' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
+            default       => System::getEnv('_APP_DB_HOST', 'mariadb'),
+        };
+
+        $dsn = $schema . '://' . $database;
+
+        if (!empty($namespace)) {
+            $dsn .= '?namespace=' . $namespace;
+        }
+
+        return $dsn;
     }
 
     public function __construct()

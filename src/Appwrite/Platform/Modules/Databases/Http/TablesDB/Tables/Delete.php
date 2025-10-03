@@ -53,7 +53,7 @@ class Delete extends CollectionDelete
             ->param('tableId', '', new UID(), 'Table ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->callback($this->action(...));

@@ -37,7 +37,7 @@ class XList extends CollectionXList
             ->label('sdk', new Method(
                 namespace: 'documentsdb',
                 group: 'collections',
-                name: self::getName(),
+                name: 'listCollections',
                 description: '/docs/references/documentsdb/list-collections.md',
                 auth: [AuthType::KEY],
                 responses: [

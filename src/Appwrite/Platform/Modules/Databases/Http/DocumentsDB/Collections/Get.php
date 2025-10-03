@@ -35,7 +35,7 @@ class Get extends CollectionGet
             ->label('sdk', new Method(
                 namespace: 'documentsdb',
                 group: 'collections',
-                name: self::getName(),
+                name: 'getCollection',
                 description: '/docs/references/documentsdb/get-collection.md',
                 auth: [AuthType::KEY],
                 responses: [

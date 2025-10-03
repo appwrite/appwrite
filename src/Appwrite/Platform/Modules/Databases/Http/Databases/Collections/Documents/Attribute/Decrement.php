@@ -77,13 +77,13 @@ class Decrement extends Action
             ->param('min', null, new Numeric(), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, UtopiaResponse $response, Database $dbForProject, Database $dbForDatabaseRecords, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -95,8 +95,10 @@ class Decrement extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+
         try {
-            $document = $dbForDatabaseRecords->decreaseDocumentAttribute(
+            $document = $dbForDatabase->decreaseDocumentAttribute(
                 collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 id: $documentId,
                 attribute: $attribute,

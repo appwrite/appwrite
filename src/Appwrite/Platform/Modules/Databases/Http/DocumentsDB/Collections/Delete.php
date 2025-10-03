@@ -38,7 +38,7 @@ class Delete extends CollectionDelete
             ->label('sdk', new Method(
                 namespace: 'documentsdb',
                 group: 'collections',
-                name: self::getName(),
+                name: 'deleteCollection',
                 description: '/docs/references/documentsdb/delete-collection.md',
                 auth: [AuthType::KEY],
                 responses: [
@@ -53,7 +53,7 @@ class Delete extends CollectionDelete
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->callback($this->action(...));

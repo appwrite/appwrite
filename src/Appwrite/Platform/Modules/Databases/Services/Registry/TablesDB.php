@@ -72,7 +72,7 @@ use Utopia\Platform\Service;
  * - Columns
  * - Column-Indexes
  */
-class Tables extends Base
+class TablesDB extends Base
 {
     protected function register(Service $service): void
     {

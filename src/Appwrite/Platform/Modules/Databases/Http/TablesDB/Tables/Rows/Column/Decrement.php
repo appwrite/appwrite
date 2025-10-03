@@ -62,7 +62,7 @@ class Decrement extends DecrementDocumentAttribute
             ->param('min', null, new Numeric(), 'Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForDatabaseRecords')
+            ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->callback($this->action(...));
