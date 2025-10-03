@@ -591,8 +591,9 @@ class Update extends Action
         }
 
         // Use timestamp wrapper for independent operations
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data) {
-            $dbForProject->decreaseDocumentAttribute(
+        // Use timestamp wrapper for independent operations
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
+            $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $data[$this->getAttributeKey()],
