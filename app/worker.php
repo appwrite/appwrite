@@ -106,37 +106,6 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     return $database;
 }, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
 
-Server::setResource('dbForDocuments', function (Cache $cache, Registry $register, Document $project, Database $dbForPlatform) {
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForPlatform;
-    }
-    $pools = $register->get('pools');
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-    $adapter = new DatabasePool($pools->get('documentsDb'));
-    $database = new Database($adapter, $cache);
-
-    if (\in_array($dsn->getHost(), $sharedTables)) {
-        $database
-            ->setSharedTables(true)
-            ->setTenant((int)$project->getSequence())
-            ->setNamespace($dsn->getParam('namespace'));
-    } else {
-        $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
-    }
-    $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
-    return $database;
-}, ['cache', 'register', 'project', 'dbForPlatform']);
-
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
@@ -223,17 +192,50 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
-Server::setResource('getDatabaseRecordsDB', function (Database $dbForProject, Database $dbForDocuments) {
-    return function (Document $database) use ($dbForProject, $dbForDocuments): Database {
+Server::setResource('getDatabaseDB', function (Cache $cache, Registry $register, Document $project) {
+    return function (Document $database) use ($cache, $register, $project): Database {
         $databaseType = $database->getAttribute('database', '');
-        $dsn = new DSN($databaseType);
-        $datatypeType = $dsn->getScheme();
-        return match ($datatypeType) {
-            'mongodb' => $dbForDocuments,
-            default   => $dbForProject,
-        };
+        $databaseDSN = new DSN($databaseType);
+        $datatypeType = $databaseDSN->getScheme();
+
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
+
+        $pools = $register->get('pools');
+        $pool = null;
+
+        switch ($datatypeType) {
+            case System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'):
+                $pool = $pools->get('documentsDb');
+                break;
+            default:
+                $pool = $pools->get($dsn->getHost());
+        }
+
+        $adapter = new DatabasePool($pool);
+        $database = new Database($adapter, $cache);
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables)) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant((int)$project->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence());
+        }
+
+        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+        return $database;
     };
-}, ['dbForProject', 'dbForDocuments']);
+}, ['cache', 'register', 'project']);
 
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day

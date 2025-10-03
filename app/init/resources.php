@@ -349,7 +349,7 @@ App::setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Database $dbForDocuments, Cache $cache, Document $project, Request $request) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -385,7 +385,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     }
 
     return $database;
-}, ['pools', 'dbForPlatform', 'dbForDocuments', 'cache', 'project', 'request']);
+}, ['pools', 'dbForPlatform', 'cache', 'project']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     $adapter = new DatabasePool($pools->get('console'));
@@ -401,51 +401,59 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('dbForDocuments', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForPlatform;
-    }
+App::setResource('getDatabaseDB', function (Group $pools, Cache $cache, Document $project, Request $request) {
 
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    return function (Document $database) use ($pools, $cache, $project, $request): Database {
+        $databaseType = $database->getAttribute('database', '');
+        $databaseDSN = new DSN($databaseType);
+        $datatypeType = $databaseDSN->getScheme();
 
-    $adapter = new DatabasePool($pools->get('documentsDb'));
-    $database = new Database($adapter, $cache);
-    $database
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId())
-        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-        ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
 
-    if (\in_array($dsn->getHost(), $sharedTables)) {
+        $pool = null;
+
+        switch ($datatypeType) {
+            case System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'):
+                $pool = $pools->get('documentsDb');
+                break;
+            default:
+                $pool = $pools->get($dsn->getHost());
+        }
+
+        $adapter = new DatabasePool($pool);
+        $database = new Database($adapter, $cache);
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
         $database
-            ->setSharedTables(true)
-            ->setTenant((int)$project->getSequence())
-            ->setNamespace($dsn->getParam('namespace'));
-    } else {
-        $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
-    }
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId())
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
-    return $database;
-}, ['pools', 'dbForPlatform', 'cache', 'project']);
+        if (\in_array($dsn->getHost(), $sharedTables)) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant((int)$project->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence());
+        }
+        $timeout = \intval($request->getHeader('x-appwrite-timeout'));
+        if (!empty($timeout) && App::isDevelopment()) {
+            $database->setTimeout($timeout);
+        }
+        return $database;
+    };
 
-App::setResource('dbForDatabaseRecords', function (Database $dbForProject, Database $dbForDocuments, Request $request) {
-
-    $uri = $request->getURI();
-    if (str_starts_with($uri, '/v1/documentsdb')) {
-        return $dbForDocuments;
-    }
-    return $dbForProject;
-
-}, ['dbForProject','dbForDocuments','request']);
+}, ['pools','cache','project','request']);
 
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {

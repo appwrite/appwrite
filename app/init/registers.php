@@ -112,8 +112,8 @@ $register->set('pools', function () {
     ]);
     $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => 'mongodb',
-        'host' => System::getEnv('_APP_DOCUMENTS_DB_HOST', 'mongodb'),
-        'port' => System::getEnv('_APP_DOCUMENTS_DB_PORT', '27017'),
+        'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB_PORT', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
@@ -276,9 +276,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        if ($dsn->getScheme() !== 'mongodb') {
-                            $adapter->setDatabase($dsn->getPath());
-                        }
+                        $adapter->setDatabase($dsn->getPath());
                         return $adapter;
                     case 'pubsub':
                         return match ($dsn->getScheme()) {
