@@ -33,7 +33,11 @@ class Migrate extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback($this->action(...));
+            ->callback(function ($version, $dbForPlatform, $getProjectDB, Registry $register) {
+                \Co\run(function () use ($version, $dbForPlatform, $getProjectDB, $register) {
+                    $this->action($version, $dbForPlatform, $getProjectDB, $register);
+                });
+            });
     }
 
     private function clearProjectsCache(Document $project)

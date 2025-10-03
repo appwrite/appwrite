@@ -35,13 +35,6 @@ class Migrations extends Action
     protected Document $project;
 
     /**
-     * Cached for performance.
-     *
-     * @var array<string, int>
-     */
-    protected array $sourceReport = [];
-
-    /**
      * @var callable
      */
     protected $logError;
@@ -108,7 +101,7 @@ class Migrations extends Action
         $source = $migration->getAttribute('source');
         $credentials = $migration->getAttribute('credentials');
 
-        $migrationSource = match ($source) {
+        return match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
             ),
@@ -137,10 +130,6 @@ class Migrations extends Action
             ),
             default => throw new \Exception('Invalid source type'),
         };
-
-        $this->sourceReport = $migrationSource->report();
-
-        return $migrationSource;
     }
 
     /**
@@ -255,6 +244,8 @@ class Migrations extends Action
 
             $source = $this->processSource($migration);
             $destination = $this->processDestination($migration, $tempAPIKey);
+
+            $source->report();
 
             $transfer = new Transfer(
                 $source,

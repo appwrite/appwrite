@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\SDK\Specification;
+namespace Appwrite\Specification;
 
 class Specification
 {

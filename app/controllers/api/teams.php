@@ -322,7 +322,9 @@ App::put('/v1/teams/:teamId')
             ->setAttribute('name', $name)
             ->setAttribute('search', implode(' ', [$teamId, $name]));
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team);
+        $team = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $team) {
+            return $dbForProject->updateDocument('teams', $team->getId(), $team);
+        });
 
         $queueForEvents->setParam('teamId', $team->getId());
 
@@ -1089,10 +1091,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             // Quick check: fetch up to 2 owners to determine if only one exists
             $ownersCount = $dbForProject->count(
                 collection: 'memberships',
-                queries: [
-                    Query::contains('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getInternalId()])
-                ],
+                queries: [Query::contains('roles', ['owner'])],
                 max: 2
             );
 

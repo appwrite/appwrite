@@ -46,13 +46,7 @@ class ScheduleFunctions extends ScheduleBase
         $delayedExecutions = []; // Group executions with same delay to share one coroutine
 
         foreach ($this->schedules as $key => $schedule) {
-            try {
-                $cron = new CronExpression($schedule['schedule']);
-            } catch (\InvalidArgumentException) {
-                // ignore invalid cron expressions
-                continue;
-            }
-
+            $cron = new CronExpression($schedule['schedule']);
             $nextDate = $cron->getNextRunDate();
             $next = DateTime::format($nextDate);
 
@@ -72,15 +66,17 @@ class ScheduleFunctions extends ScheduleBase
                 $delayedExecutions[$delay] = [];
             }
 
-            $delayedExecutions[$delay][] = ['key' => $key, 'nextDate' => $nextDate];
+            $delayedExecutions[$delay][] = $key;
         }
 
-        foreach ($delayedExecutions as $delay => $schedules) {
-            \go(function () use ($delay, $schedules, $dbForPlatform) {
+        foreach ($delayedExecutions as $delay => $scheduleKeys) {
+            \go(function () use ($delay, $scheduleKeys, $pools, $dbForPlatform) {
                 \sleep($delay); // in seconds
 
-                foreach ($schedules as $delayConfig) {
-                    $scheduleKey = $delayConfig['key'];
+                $queue = $pools->get('publisher')->pop();
+                $connection = $queue->getResource();
+
+                foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
                     if (!\array_key_exists($scheduleKey, $this->schedules)) {
                         return;
@@ -90,7 +86,7 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = new Func($this->publisher);
+                    $queueForFunctions = new Func($connection);
 
                     $queueForFunctions
                         ->setType('schedule')
@@ -99,9 +95,9 @@ class ScheduleFunctions extends ScheduleBase
                         ->setPath('/')
                         ->setProject($schedule['project'])
                         ->trigger();
-
-                    $this->recordEnqueueDelay($delayConfig['nextDate']);
                 }
+
+                $queue->reclaim();
             });
         }
 

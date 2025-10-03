@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Auth\Auth;
-use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
@@ -30,49 +29,35 @@ class Request extends UtopiaRequest
     {
         $parameters = parent::getParams();
 
-        if (!$this->hasFilters() || !self::hasRoute()) {
-            return $parameters;
-        }
+        if ($this->hasFilters() && self::hasRoute()) {
+            $methods = self::getRoute()->getLabel('sdk', null);
 
-        $methods = self::getRoute()->getLabel('sdk', null);
+            if (!\is_array($methods)) {
+                $methods = [$methods];
+            }
 
-        if (empty($methods)) {
-            return $parameters;
-        }
+            $params = [];
 
-        if (!\is_array($methods)) {
-            $id = $methods->getNamespace() . '.' . $methods->getMethodName();
+            foreach ($methods as $method) {
+                /** @var \Appwrite\SDK\Method $method */
+                if (empty($method)) {
+                    $endpointIdentifier = 'unknown.unknown';
+                } else {
+                    $endpointIdentifier = $method->getNamespace() . '.' . $method->getMethodName();
+                }
+
+                $params += $method->getParameters();
+            }
+
+            if (!empty($params)) {
+                $parameters = array_filter($parameters, function ($key) use ($params) {
+                    return array_key_exists($key, $params);
+                }, \ARRAY_FILTER_USE_KEY);
+            }
+
             foreach ($this->getFilters() as $filter) {
-                $parameters = $filter->parse($parameters, $id);
+                $parameters = $filter->parse($parameters, $endpointIdentifier);
             }
-            return $parameters;
-        }
-
-        $matched = null;
-        foreach ($methods as $method) {
-            /** @var Method|null $method */
-            if ($method === null) {
-                continue;
-            }
-
-            // Find the method that matches the parameters passed
-            $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
-            $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
-
-            // No params defined, or all params are valid
-            if (empty($methodParamNames) || empty($invalidParams)) {
-                $matched = $method;
-                break;
-            }
-        }
-
-        $id = $matched !== null
-            ? $matched->getNamespace() . '.' . $matched->getMethodName()
-            : 'unknown.unknown';
-
-        // Apply filters
-        foreach ($this->getFilters() as $filter) {
-            $parameters = $filter->parse($parameters, $id);
         }
 
         return $parameters;
@@ -219,18 +204,5 @@ class Request extends UtopiaRequest
         }
 
         return UtopiaRequest::getUserAgent($default);
-    }
-
-    /**
-     * Creates a unique stable cache identifier for this GET request.
-     * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
-     *
-     * @return string
-     */
-    public function cacheIdentifier(): string
-    {
-        $params = $this->getParams();
-        ksort($params);
-        return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }
 }
