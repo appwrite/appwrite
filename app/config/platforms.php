@@ -11,7 +11,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '20.2.0',
+                'version' => '21.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
@@ -60,7 +60,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '19.2.0',
+                'version' => '20s.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -79,7 +79,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '12.2.0',
+                'version' => '13.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -116,7 +116,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
-                'version' => '10.2.0',
+                'version' => '11.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
                 'enabled' => true,
@@ -262,7 +262,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '19.2.0',
+                'version' => '20.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'package' => 'https://www.npmjs.com/package/node-appwrite',
                 'enabled' => true,
@@ -319,7 +319,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '18.2.0',
+                'version' => '19.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'package' => 'https://rubygems.org/gems/appwrite',
                 'enabled' => true,
@@ -376,7 +376,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '18.2.0',
+                'version' => '19.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,
@@ -395,7 +395,7 @@ return [
             [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
-                'version' => '11.2.0',
+                'version' => '12.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-kotlin',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-kotlin',
                 'enabled' => true,
@@ -418,7 +418,7 @@ return [
             [
                 'key' => 'swift',
                 'name' => 'Swift',
-                'version' => '12.2.0',
+                'version' => '13.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-swift',
                 'package' => 'https://github.com/appwrite/sdk-for-swift',
                 'enabled' => true,

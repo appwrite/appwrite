@@ -318,7 +318,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-
                     if ($createPr) {
                         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
                         $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
@@ -353,7 +352,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         } else {
                             $errorMessage = implode("\n", $prOutput);
                             if (strpos($errorMessage, 'already exists') !== false) {
-                                Console::warning("Pull request already exists for {$language['name']} SDK");
+                                Console::warning("Pull request already exists for {$language['name']} SDK, updating title and body...");
+
+                                $updateCommand = 'cd ' . $target . ' && \
+                                    gh pr edit "' . $gitBranch . '" \
+                                    --repo "' . $repoName . '" \
+                                    --title "' . $prTitle . '" \
+                                    --body "' . $prBody . '" \
+                                    2>&1';
+
+                                $updateOutput = [];
+                                $updateReturnCode = 0;
+                                \exec($updateCommand, $updateOutput, $updateReturnCode);
+
+                                if ($updateReturnCode === 0) {
+                                    Console::success("Successfully updated pull request for {$language['name']} SDK");
+                                } else {
+                                    $updateErrorMessage = implode("\n", $updateOutput);
+                                    Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
+                                }
                             } else {
                                 Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
                             }
