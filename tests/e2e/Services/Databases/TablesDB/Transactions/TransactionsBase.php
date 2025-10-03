@@ -4225,4 +4225,453 @@ trait TransactionsBase
         sort($remainingIds);
         $this->assertEquals(['row_6', 'row_7', 'row_8'], $remainingIds);
     }
+
+    /**
+     * Test validation for invalid operation inputs
+     */
+    public function testCreateOperationsValidation(): void
+    {
+        // Create database and table for testing
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'ValidationTestDatabase'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'ValidationTest',
+            'rowSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Add required column
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        // Wait for column to be ready
+        sleep(2);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test 1: Invalid action type
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'invalidAction',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => ID::unique(),
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 2: Missing required action field
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => ID::unique(),
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 3: Missing required databaseId field
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'tableId' => $tableId,
+                    'rowId' => ID::unique(),
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 4: Missing required tableId field
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    'rowId' => ID::unique(),
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 5: Missing rowId for create operation
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 6: Missing data for create operation
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => ID::unique()
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 7: BulkCreate with non-array data
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'bulkCreate',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'data' => 'not an array'
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 8: BulkUpdate with missing queries
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'bulkUpdate',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'data' => [
+                        'data' => ['name' => 'Updated']
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 9: BulkUpdate with invalid query format
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'bulkUpdate',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'data' => [
+                        'queries' => 'not an array',
+                        'data' => ['name' => 'Updated']
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 10: BulkDelete with missing queries
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'bulkDelete',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'data' => []
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 11: Increment with missing attribute
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'increment',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => ID::unique(),
+                    'data' => ['value' => 1]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 12: Decrement with invalid value type
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'decrement',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => ID::unique(),
+                    'data' => [
+                        'attribute' => 'counter',
+                        'value' => 'not a number'
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 13: Empty operations array
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => []
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 14: Operations not an array
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => 'not an array'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    /**
+     * Test validation for committing/rolling back transactions
+     */
+    public function testCommitRollbackValidation(): void
+    {
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test 1: Missing both commit and rollback
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 2: Both commit and rollback set to true
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true,
+            'rollback' => true
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 3: Invalid transaction ID
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/invalid_id", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        // Commit the transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Test 4: Attempt to commit already committed transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    /**
+     * Test validation for non-existent resources
+     */
+    public function testNonExistentResources(): void
+    {
+        // Create database and transaction
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'ResourceTestDatabase'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test 1: Non-existent database
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'databaseId' => 'nonExistentDatabase',
+                    'tableId' => 'someTable',
+                    'rowId' => ID::unique(),
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        // Test 2: Non-existent table
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    'tableId' => 'nonExistentTable',
+                    'rowId' => ID::unique(),
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+    }
 }

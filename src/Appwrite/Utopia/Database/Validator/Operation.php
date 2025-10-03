@@ -159,6 +159,51 @@ class Operation extends Validator
             }
         }
 
+        // Bulk operation specific validations
+        $action = $value['action'];
+
+        // BulkUpdate and BulkDelete require queries
+        if (\in_array($action, ['bulkUpdate', 'bulkDelete'])) {
+            if (!\array_key_exists('data', $value) || !\is_array($value['data'])) {
+                $this->description = "Key 'data' must be an array for {$action}";
+                return false;
+            }
+            if (!\array_key_exists('queries', $value['data'])) {
+                $this->description = "Key 'queries' is required in data for {$action}";
+                return false;
+            }
+            if (!\is_array($value['data']['queries'])) {
+                $this->description = "Key 'queries' must be an array for {$action}";
+                return false;
+            }
+        }
+
+        // BulkUpdate requires both queries and data
+        if ($action === 'bulkUpdate') {
+            if (!\array_key_exists('data', $value['data'])) {
+                $this->description = "Key 'data' is required in data for {$action}";
+                return false;
+            }
+            if (!\is_array($value['data']['data'])) {
+                $this->description = "Key 'data.data' must be an array for {$action}";
+                return false;
+            }
+        }
+
+        // Increment and Decrement require specific keys
+        if (\in_array($action, ['increment', 'decrement'])) {
+            if (!\array_key_exists('data', $value) || !\is_array($value['data'])) {
+                $this->description = "Key 'data' must be an array for {$action}";
+                return false;
+            }
+            // Get the attribute key name based on type
+            $attributeKey = $this->type === 'tablesdb' ? 'column' : 'attribute';
+            if (!\array_key_exists($attributeKey, $value['data'])) {
+                $this->description = "Key '{$attributeKey}' is required in data for {$action}";
+                return false;
+            }
+        }
+
         return true;
     }
 
