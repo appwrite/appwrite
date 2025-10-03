@@ -27669,7 +27669,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -27757,7 +27757,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/products\/databases\/tables#create-table).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/products\/databases\/tables#create-table).",
                         "required": true,
                         "schema": {
                             "type": "string",

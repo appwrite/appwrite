@@ -7612,7 +7612,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/products\/databases\/tables#create-table).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/products\/databases\/tables#create-table).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
