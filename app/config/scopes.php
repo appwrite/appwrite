@@ -166,4 +166,13 @@ return [ // List of publicly visible scopes
     'tokens.write' => [
         'description' => 'Access to create, update, and delete your project\'s tokens',
     ],
+    'payments.read' => [
+        'description' => 'Access to read your project\'s payments data (plans, subscriptions, usage)'
+    ],
+    'payments.write' => [
+        'description' => 'Access to create, update, and delete your project\'s payments resources'
+    ],
+    'payments.subscribe' => [
+        'description' => 'Access to create and manage subscriptions as an actor (user/team)'
+    ],
 ];
