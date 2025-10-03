@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
@@ -66,6 +67,7 @@ class Update extends Action
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('transactionState')
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
@@ -81,6 +83,7 @@ class Update extends Action
      * @param bool $rollback
      * @param UtopiaResponse $response
      * @param Database $dbForProject
+     * @param TransactionState $transactionState
      * @param Delete $queueForDeletes
      * @param Event $queueForEvents
      * @param StatsUsage $queueForStatsUsage
@@ -96,7 +99,7 @@ class Update extends Action
      * @throws Structure
      * @throws \Utopia\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
+    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -182,13 +185,13 @@ class Update extends Action
                                 $this->handleBulkCreateOperation($dbForProject, $collectionId, $data, $createdAt, $state);
                                 break;
                             case 'bulkUpdate':
-                                $this->handleBulkUpdateOperation($dbForProject, $collectionId, $data, $createdAt, $state);
+                                $this->handleBulkUpdateOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
                                 break;
                             case 'bulkUpsert':
-                                $this->handleBulkUpsertOperation($dbForProject, $collectionId, $data, $createdAt, $state);
+                                $this->handleBulkUpsertOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
                                 break;
                             case 'bulkDelete':
-                                $this->handleBulkDeleteOperation($dbForProject, $collectionId, $data, $createdAt, $state);
+                                $this->handleBulkDeleteOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
                                 break;
                         }
                     }
@@ -348,6 +351,14 @@ class Update extends Action
 
     /**
      * Handle create operation
+     *
+     * @param Database $dbForProject
+     * @param string $collectionId
+     * @param string|null $documentId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
      * @throws \Utopia\Database\Exception
      */
     private function handleCreateOperation(
@@ -371,6 +382,14 @@ class Update extends Action
 
     /**
      * Handle update operation
+     *
+     * @param Database $dbForProject
+     * @param string $collectionId
+     * @param string $documentId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
      * @throws ConflictException
      * @throws \Utopia\Database\Exception
      */
@@ -410,6 +429,14 @@ class Update extends Action
 
     /**
      * Handle upsert operation
+     *
+     * @param Database $dbForProject
+     * @param string $collectionId
+     * @param string|null $documentId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
      * @throws \Utopia\Database\Exception
      */
     private function handleUpsertOperation(
@@ -442,6 +469,15 @@ class Update extends Action
 
     /**
      * Handle delete operation
+     *
+     * @param Database $dbForProject
+     * @param string $collectionId
+     * @param string $documentId
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
+     * @throws \Utopia\Database\Exception
+     * @throws NotFoundException
      */
     private function handleDeleteOperation(
         Database $dbForProject,
@@ -473,6 +509,16 @@ class Update extends Action
 
     /**
      * Handle increment operation
+     *
+     * @param Database $dbForProject
+     * @param string $collectionId
+     * @param string $documentId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
+     * @throws ConflictException
+     * @throws \Utopia\Database\Exception
      */
     private function handleIncrementOperation(
         Database $dbForProject,
@@ -510,6 +556,16 @@ class Update extends Action
 
     /**
      * Handle decrement operation
+     *
+     * @param Database $dbForProject
+     * @param string $collectionId
+     * @param string $documentId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
+     * @throws ConflictException
+     * @throws \Utopia\Database\Exception
      */
     private function handleDecrementOperation(
         Database $dbForProject,
@@ -547,6 +603,14 @@ class Update extends Action
 
     /**
      * Handle bulk create operation
+     *
+     * @param Database $dbForProject
+     * @param string $collectionId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
+     * @throws \Utopia\Database\Exception
      */
     private function handleBulkCreateOperation(
         Database $dbForProject,
@@ -573,22 +637,33 @@ class Update extends Action
 
     /**
      * Handle bulk update operation with manual timestamp checking
+     *
+     * @param Database $dbForProject
+     * @param TransactionState $transactionState
+     * @param string $collectionId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
      * @throws \Utopia\Database\Exception
      * @throws \Utopia\Database\Exception\Query
      * @throws ConflictException
      */
     private function handleBulkUpdateOperation(
         Database $dbForProject,
+        TransactionState $transactionState,
         string $collectionId,
         array $data,
         \DateTime $createdAt,
         array &$state
     ): void {
         $queries = Query::parseQueries($data['queries'] ?? []);
+        $updateData = new Document($data['data']);
 
+        // First, update documents in the committed database
         $dbForProject->updateDocuments(
             $collectionId,
-            new Document($data['data']),
+            $updateData,
             $queries,
             onNext: function (Document $updated, Document $old) use (&$state, $collectionId, $createdAt) {
                 // Check if this document was created/modified in this transaction
@@ -605,14 +680,27 @@ class Update extends Action
                 $state[$collectionId][$updated->getId()] = $updated;
             }
         );
+
+        // Also update documents in the transaction state that match the query
+        $transactionState->applyBulkUpdateToState($collectionId, $updateData, $queries, $state);
     }
 
     /**
      * Handle bulk upsert operation with manual timestamp checking
+     *
+     * @param Database $dbForProject
+     * @param TransactionState $transactionState
+     * @param string $collectionId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
      * @throws ConflictException
+     * @throws \Utopia\Database\Exception
      */
     private function handleBulkUpsertOperation(
         Database $dbForProject,
+        TransactionState $transactionState,
         string $collectionId,
         array $data,
         \DateTime $createdAt,
@@ -623,7 +711,11 @@ class Update extends Action
             return $doc instanceof Document ? $doc : new Document($doc);
         }, $data);
 
-        // Run bulk upsert without timestamp wrapper, checking manually in callback
+        // First, apply upserts to documents in the transaction state
+        // This ensures documents created in this transaction are updated properly
+        $transactionState->applyBulkUpsertToState($collectionId, $documents, $state);
+
+        // Then run bulk upsert on committed database, checking manually in callback
         $dbForProject->upsertDocuments(
             $collectionId,
             $documents,
@@ -649,11 +741,21 @@ class Update extends Action
 
     /**
      * Handle bulk delete operation with manual timestamp checking
+     *
+     * @param Database $dbForProject
+     * @param TransactionState $transactionState
+     * @param string $collectionId
+     * @param array $data
+     * @param \DateTime $createdAt
+     * @param array &$state
+     * @return void
      * @throws \Utopia\Database\Exception\Query
      * @throws ConflictException
+     * @throws \Utopia\Database\Exception
      */
     private function handleBulkDeleteOperation(
         Database $dbForProject,
+        TransactionState $transactionState,
         string $collectionId,
         array $data,
         \DateTime $createdAt,
@@ -681,5 +783,8 @@ class Update extends Action
                 }
             }
         );
+
+        // Also delete documents in the transaction state that match the query
+        $transactionState->applyBulkDeleteToState($collectionId, $queries, $state);
     }
 }
