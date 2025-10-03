@@ -4,6 +4,8 @@ namespace Appwrite\Databases;
 
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
+use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 
 /**
@@ -32,6 +34,9 @@ class TransactionState
      * @param string|null $transactionId Optional transaction ID
      * @param array $queries Optional query filters
      * @return Document
+     * @throws Exception
+     * @throws Exception\Query
+     * @throws Timeout
      */
     public function getDocument(
         string $collectionId,
@@ -90,6 +95,9 @@ class TransactionState
      * @param string|null $transactionId Optional transaction ID
      * @param array $queries Optional query filters
      * @return array Array of Document objects
+     * @throws Exception
+     * @throws Exception\Query
+     * @throws Timeout
      */
     public function listDocuments(
         string $collectionId,
@@ -147,6 +155,9 @@ class TransactionState
      * @param string|null $transactionId Optional transaction ID
      * @param array $queries Optional query filters
      * @return int Document count
+     * @throws Exception
+     * @throws Exception\Query
+     * @throws Timeout
      */
     public function countDocuments(
         string $collectionId,
@@ -328,6 +339,9 @@ class TransactionState
      *
      * @param string $transactionId Transaction ID
      * @return array State array with structure: [collectionId => [docId => ['action' => ..., 'document' => ..., 'exists' => ...]]]
+     * @throws Exception
+     * @throws Exception\Query
+     * @throws Timeout
      */
     private function getTransactionState(string $transactionId): array
     {
@@ -339,6 +353,8 @@ class TransactionState
         // Fetch operations ordered by sequence to replay in exact order
         $operations = $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
+            Query::orderAsc(),
+            Query::limit(PHP_INT_MAX)
         ]);
 
         $state = [];
