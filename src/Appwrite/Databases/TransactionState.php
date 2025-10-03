@@ -574,25 +574,25 @@ class TransactionState
                     }
                     break;
 
-                case Query::TYPE_GREATER_THAN:
+                case Query::TYPE_GREATER:
                     if (!($docValue > $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_GREATER_THAN_EQUAL:
+                case Query::TYPE_GREATER_EQUAL:
                     if (!($docValue >= $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_LESSER_THAN:
+                case Query::TYPE_LESSER:
                     if (!($docValue < $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_LESSER_THAN_EQUAL:
+                case Query::TYPE_LESSER_EQUAL:
                     if (!($docValue <= $values[0])) {
                         return false;
                     }

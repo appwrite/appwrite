@@ -129,7 +129,7 @@ class Update extends Action
             $totalOperations = 0;
             $databaseOperations = [];
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks) {
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks) {
                 $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'committing',
                 ]));

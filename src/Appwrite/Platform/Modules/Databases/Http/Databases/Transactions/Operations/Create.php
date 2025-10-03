@@ -64,6 +64,10 @@ class Create extends Action
 
     public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, array $plan): void
     {
+        if (empty($operations)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
+        }
+
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
