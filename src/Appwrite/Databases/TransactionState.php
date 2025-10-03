@@ -188,6 +188,8 @@ class TransactionState
 
         $adjustedCount = $baseCount;
 
+        $filters = $this->extractFilters($queries);
+
         // Apply transaction state changes to the count
         foreach ($state[$collectionId] as $docId => $docState) {
             if (!$docState['exists']) {
@@ -197,13 +199,13 @@ class TransactionState
                 }
             } elseif ($docState['action'] === 'create') {
                 // Document was created in transaction
-                if ($this->documentMatchesFilters($docState['document'], $queries)) {
+                if ($this->documentMatchesFilters($docState['document'], $filters)) {
                     $adjustedCount++; // New document that matches
                 }
             } elseif ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
                 // Document was updated/upserted
                 $wasInResults = isset($committedDocIds[$docId]);
-                $nowMatches = $this->documentMatchesFilters($docState['document'], $queries);
+                $nowMatches = $this->documentMatchesFilters($docState['document'], $filters);
 
                 if (!$wasInResults && $nowMatches && $docState['action'] === 'upsert') {
                     $adjustedCount++; // Upsert created new document that matches
@@ -259,8 +261,10 @@ class TransactionState
             return;
         }
 
+        $filters = $this->extractFilters($queries);
+
         foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $queries)) {
+            if ($this->documentMatchesFilters($doc, $filters)) {
                 // Apply the update to the state document
                 foreach ($updateData->getArrayCopy() as $key => $value) {
                     if ($key !== '$id') {
@@ -290,8 +294,10 @@ class TransactionState
             return;
         }
 
+        $filters = $this->extractFilters($queries);
+
         foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $queries)) {
+            if ($this->documentMatchesFilters($doc, $filters)) {
                 unset($state[$collectionId][$docId]);
             }
         }
@@ -501,19 +507,17 @@ class TransactionState
     }
 
     /**
-     * Check if a document matches filter queries
+     * Extract only filter queries from a query array
      *
-     * @param Document $doc Document to check
-     * @param array $queries Query filters
-     * @return bool True if document matches all filters
+     * @param array $queries Query array
+     * @return array Filtered queries
      */
-    private function documentMatchesFilters(Document $doc, array $queries): bool
+    private function extractFilters(array $queries): array
     {
-        // Extract filter queries
         $filters = [];
         foreach ($queries as $query) {
             $method = $query->getMethod();
-            // Only process filter queries, not limit/offset/cursor/select
+            // Only process filter queries, not limit/offset/cursor/select/order
             if (!\in_array($method, [
                 Query::TYPE_LIMIT,
                 Query::TYPE_OFFSET,
@@ -526,7 +530,18 @@ class TransactionState
                 $filters[] = $query;
             }
         }
+        return $filters;
+    }
 
+    /**
+     * Check if a document matches filter queries
+     *
+     * @param Document $doc Document to check
+     * @param array $filters Pre-filtered Query filters (use extractFilters first)
+     * @return bool True if document matches all filters
+     */
+    private function documentMatchesFilters(Document $doc, array $filters): bool
+    {
         // If no filters, document matches
         if (empty($filters)) {
             return true;

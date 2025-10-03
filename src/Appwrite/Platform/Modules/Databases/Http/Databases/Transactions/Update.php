@@ -129,22 +129,22 @@ class Update extends Action
             $totalOperations = 0;
             $databaseOperations = [];
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks) {
-                $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                    'status' => 'committing',
-                ]));
+            try {
+                $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks) {
+                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                        'status' => 'committing',
+                    ]));
 
-                // Fetch operations ordered by sequence by default to replay operations in exact order they were created
-                $operations = $dbForProject->find('transactionLogs', [
-                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                    Query::orderAsc(),
-                    Query::limit(PHP_INT_MAX),
-                ]);
+                    // Fetch operations ordered by sequence by default to replay operations in exact order they were created
+                    $operations = $dbForProject->find('transactionLogs', [
+                        Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                        Query::orderAsc(),
+                        Query::limit(PHP_INT_MAX),
+                    ]);
 
-                // Track transaction state for cross-operation visibility
-                $state = [];
+                    // Track transaction state for cross-operation visibility
+                    $state = [];
 
-                try {
                     foreach ($operations as $operation) {
                         $databaseInternalId = $operation['databaseInternalId'];
                         $collectionInternalId = $operation['collectionInternalId'];
@@ -207,38 +207,44 @@ class Update extends Action
                     $queueForDeletes
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($transaction);
-                } catch (NotFoundException $e) {
-                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'failed',
-                    ]));
-                    throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e);
-                } catch (DuplicateException|ConflictException $e) {
-                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'failed',
-                    ]));
-                    throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
-                } catch (StructureException $e) {
-                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'failed',
-                    ]));
-                    throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
-                } catch (LimitException $e) {
-                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'failed',
-                    ]));
-                    throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, $e->getMessage());
-                } catch (TransactionException $e) {
-                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'failed',
-                    ]));
-                    throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
-                } catch (QueryException $e) {
-                    $dbForProject->updateDocument('transactions', $transactionId, new Document([
-                        'status' => 'failed',
-                    ]));
-                    throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-                }
-            });
+                });
+            } catch (NotFoundException $e) {
+                // Transaction has been rolled back, now mark it as failed
+                $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ]));
+                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e);
+            } catch (DuplicateException|ConflictException $e) {
+                // Transaction has been rolled back, now mark it as failed
+                $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ]));
+                throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
+            } catch (StructureException $e) {
+                // Transaction has been rolled back, now mark it as failed
+                $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ]));
+                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+            } catch (LimitException $e) {
+                // Transaction has been rolled back, now mark it as failed
+                $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ]));
+                throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, $e->getMessage());
+            } catch (TransactionException $e) {
+                // Transaction has been rolled back, now mark it as failed
+                $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ]));
+                throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
+            } catch (QueryException $e) {
+                // Transaction has been rolled back, now mark it as failed
+                $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                    'status' => 'failed',
+                ]));
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
 
             $queueForStatsUsage
                 ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $totalOperations);
