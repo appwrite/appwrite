@@ -1864,7 +1864,7 @@ class AccountCustomClientTest extends Scope
             'url' => 'http://localhost/verification',
         ]);
 
-        $this->assertEquals(500, $response['body']['code']);
+        $this->assertEquals(400, $response['body']['code']);
         $this->assertEquals('user_email_not_found', $response['body']['type']);
 
         return [];
