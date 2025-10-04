@@ -3639,12 +3639,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d97d181d7c2ed267b0b57ba421d3364faff64f8e"
+                "reference": "7e39c677a20a9f4ac4d84007882a460fbee206f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d97d181d7c2ed267b0b57ba421d3364faff64f8e",
-                "reference": "d97d181d7c2ed267b0b57ba421d3364faff64f8e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/7e39c677a20a9f4ac4d84007882a460fbee206f6",
+                "reference": "7e39c677a20a9f4ac4d84007882a460fbee206f6",
                 "shasum": ""
             },
             "require": {
@@ -3687,7 +3687,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-relationship-updates"
             },
-            "time": "2025-10-03T12:05:20+00:00"
+            "time": "2025-10-04T10:17:19+00:00"
         },
         {
             "name": "utopia-php/detector",
