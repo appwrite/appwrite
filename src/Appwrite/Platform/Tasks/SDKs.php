@@ -281,7 +281,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
                 // regardless of whether they were just generated or not.
-                \exec('rm -rf ' . $result);
+                \exec('chmod -R u+w ' . $result . ' 2>/dev/null; rm -rf ' . $result);
 
                 try {
                     $sdk->generate($result);
@@ -298,7 +298,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
-                    // TODO: fix the temporary 2>/dev/null || true - added due to permission issues when removing files
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
@@ -310,7 +309,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
                         git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
-                        rm -rf ' . $target . '/* 2>/dev/null || true && \
+                        find . -mindepth 1 ! -path "./.git*" -delete && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
                         git add . && \
                         git commit -m "' . $message . '" && \
@@ -377,7 +376,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         }
                     }
 
-                    \exec('rm -rf ' . $target);
+                    \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
