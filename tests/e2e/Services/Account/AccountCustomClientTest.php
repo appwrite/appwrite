@@ -1539,6 +1539,77 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
+    public function testCreateOidcOAuth2Token(): array
+    {
+        $provider = 'oidc';
+        $appId = '1';
+
+        // Valid well-known configuration
+        $secret = '{
+            "wellKnownEndpoint": "https://accounts.google.com/.well-known/openid-configuration",
+            "authorizationEndpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+            "tokenEndpoint": "https://oauth2.googleapis.com/token",
+            "userinfoEndpoint": "https://openidconnect.googleapis.com/v1/userinfo"
+        }';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'provider' => $provider,
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], true, false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // Invalid well-known configuration
+        $secret = '{}';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'provider' => $provider,
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(500, $response['headers']['status-code']);
+
+        return [];
+    }
+
     public function testBlockedAccount(): array
     {
         $email = uniqid() . 'user@localhost.test';
