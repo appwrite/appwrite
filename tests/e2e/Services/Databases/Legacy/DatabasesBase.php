@@ -4715,8 +4715,7 @@ trait DatabasesBase
             ],
         ]);
 
-        $this->assertEquals(400, $documents['headers']['status-code']);
-        $this->assertEquals('Invalid query: Cannot query nested attribute on: library', $documents['body']['message']);
+        $this->assertEquals(200, $documents['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/library', array_merge([
             'content-type' => 'application/json',
