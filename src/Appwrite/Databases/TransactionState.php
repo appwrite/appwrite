@@ -7,6 +7,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 
 /**
  * Service for managing transaction state and providing transaction-aware document operations
@@ -351,17 +352,17 @@ class TransactionState
      */
     private function getTransactionState(string $transactionId): array
     {
-        $transaction = $this->dbForProject->getDocument('transactions', $transactionId);
+        $transaction = Authorization::skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId));
         if ($transaction->isEmpty() || $transaction->getAttribute('status') !== 'pending') {
             return [];
         }
 
         // Fetch operations ordered by sequence to replay in exact order
-        $operations = $this->dbForProject->find('transactionLogs', [
+        $operations = Authorization::skip(fn () => $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
             Query::orderAsc(),
             Query::limit(PHP_INT_MAX)
-        ]);
+        ]));
 
         $state = [];
 
@@ -381,6 +382,10 @@ class TransactionState
                 case 'create':
                     $docId = $documentId ?? ($data['$id'] ?? null);
                     if ($docId) {
+                        // Ensure document has the correct $id
+                        if (!isset($data['$id'])) {
+                            $data['$id'] = $docId;
+                        }
                         $state[$collectionId][$docId] = [
                             'action' => 'create',
                             'document' => new Document($data),

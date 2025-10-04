@@ -52,6 +52,7 @@ class Create extends OperationsCreate
             ->param('operations', [], new ArrayList(new Operation(type: 'tablesdb')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }

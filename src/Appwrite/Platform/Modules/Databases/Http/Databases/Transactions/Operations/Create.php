@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
 use Appwrite\SDK\AuthType;
@@ -60,11 +61,12 @@ class Create extends Action
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, array $plan): void
+    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan): void
     {
         if (empty($operations)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
@@ -88,7 +90,7 @@ class Create extends Action
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-        $databases = $collections = $staged = [];
+        $databases = $collections = $staged = $dependants = [];
         foreach ($operations as $operation) {
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
@@ -122,27 +124,26 @@ class Create extends Action
                 }
             }
 
-            // For update, upsert, delete, check document existence first
+            // For update, upsert, delete, increment, decrement, check document existence first
             $document = null;
-            if (\in_array($operation['action'], ['update', 'delete', 'upsert'])) {
+            if (\in_array($operation['action'], ['update', 'delete', 'upsert', 'increment', 'decrement'])) {
                 $documentId = $operation[$this->getResourceId()] ?? null;
                 if (empty($documentId)) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Document ID is required for ' . $operation['action'] . ' operations');
                 }
 
-                $document = Authorization::skip(fn () => $dbForProject->getDocument(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    $documentId
-                ));
+                $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                $isDependant = isset($dependants[$collectionKey][$documentId]);
 
-                if ($document->isEmpty() && \in_array($operation['action'], ['update', 'delete'])) {
+                $document = $transactionState->getDocument($collectionKey, $documentId, $transactionId);
+                if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND);
                 }
             }
 
             $permissionType = match ($operation['action']) {
                 'create', 'bulkCreate' => Database::PERMISSION_CREATE,
-                'update', 'bulkUpdate' => Database::PERMISSION_UPDATE,
+                'update', 'bulkUpdate', 'increment', 'decrement' => Database::PERMISSION_UPDATE,
                 'delete', 'bulkDelete' => Database::PERMISSION_DELETE,
                 'upsert', 'bulkUpsert' => ($document && !$document->isEmpty()) ? Database::PERMISSION_UPDATE : Database::PERMISSION_CREATE,
                 default => throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action'])
@@ -173,23 +174,21 @@ class Create extends Action
 
                 // Users can only set permissions for roles they have
                 if (isset($operation['data']['$permissions'])) {
-                    $permissions = $operation['data']['$permissions'] ?? null;
-                    if (!\is_null($permissions)) {
-                        $roles = Authorization::getRoles();
-                        foreach (Database::PERMISSIONS as $type) {
-                            foreach ($permissions as $permission) {
-                                $permission = Permission::parse($permission);
-                                if ($permission->getPermission() != $type) {
-                                    continue;
-                                }
-                                $role = (new Role(
-                                    $permission->getRole(),
-                                    $permission->getIdentifier(),
-                                    $permission->getDimension()
-                                ))->toString();
-                                if (!Authorization::isRole($role)) {
-                                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
-                                }
+                    $permissions = $operation['data']['$permissions'];
+                    $roles = Authorization::getRoles();
+                    foreach (Database::PERMISSIONS as $type) {
+                        foreach ($permissions as $permission) {
+                            $permission = Permission::parse($permission);
+                            if ($permission->getPermission() != $type) {
+                                continue;
+                            }
+                            $role = (new Role(
+                                $permission->getRole(),
+                                $permission->getIdentifier(),
+                                $permission->getDimension()
+                            ))->toString();
+                            if (!Authorization::isRole($role)) {
+                                throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                             }
                         }
                     }
@@ -205,17 +204,26 @@ class Create extends Action
                 'action' => $operation['action'],
                 'data' => $operation['data'] ?? [],
             ]);
+
+            // Track create operations for dependent update/increment/decrement/delete operations in same batch
+            if ($operation['action'] === 'create') {
+                $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                $documentId = $operation[$this->getResourceId()] ?? null;
+                if ($documentId) {
+                    $dependants[$collectionKey][$documentId] = true;
+                }
+            }
         }
 
-        $transaction = $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
-            Authorization::skip(fn () => $dbForProject->createDocuments('transactionLogs', $staged));
-            return Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+        $transaction = Authorization::skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
+            $dbForProject->createDocuments('transactionLogs', $staged);
+            return $dbForProject->increaseDocumentAttribute(
                 'transactions',
                 $transactionId,
                 'operations',
                 \count($operations)
-            ));
-        });
+            );
+        }));
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)

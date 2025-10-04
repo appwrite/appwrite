@@ -667,4 +667,117 @@ trait PermissionsBase
         // This should fail with 404 Not Found
         $this->assertEquals(404, $staged['headers']['status-code']);
     }
+
+    /**
+     * Test that a document created in one batch can be updated in a subsequent batch within the same transaction
+     * This validates the transactionState->getDocument() fix for cross-batch dependencies
+     */
+    public function testCanUpdateDocumentCreatedInPreviousBatch(): void
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->permissionsDatabase . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => 'permTest10',
+            'name' => 'Permission Test 10',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'rowSecurity' => false,
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->permissionsDatabase . '/tables/' . $collection['body']['$id'] . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        sleep(2);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        // Batch 1: Create a document
+        $batch1 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transaction['body']['$id'] . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->permissionsDatabase,
+                'tableId' => $collection['body']['$id'],
+                'rowId' => 'crossBatchDoc',
+                'data' => [
+                    'title' => 'Initial Title',
+                ],
+            ]]
+        ]);
+
+        $this->assertEquals(201, $batch1['headers']['status-code']);
+        $this->assertEquals(1, $batch1['body']['operations']);
+
+        // Batch 2: Update the document created in batch 1
+        $batch2 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transaction['body']['$id'] . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [[
+                'action' => 'update',
+                'databaseId' => $this->permissionsDatabase,
+                'tableId' => $collection['body']['$id'],
+                'rowId' => 'crossBatchDoc',
+                'data' => [
+                    'title' => 'Updated Title',
+                ],
+            ]]
+        ]);
+
+        // This should succeed with 201 because transactionState finds the staged document from batch 1
+        $this->assertEquals(201, $batch2['headers']['status-code']);
+        $this->assertEquals(2, $batch2['body']['operations']);
+
+        // Batch 3: Delete the same document
+        $batch3 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transaction['body']['$id'] . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [[
+                'action' => 'delete',
+                'databaseId' => $this->permissionsDatabase,
+                'tableId' => $collection['body']['$id'],
+                'rowId' => 'crossBatchDoc',
+                'data' => [],
+            ]]
+        ]);
+
+        // This should also succeed with 201
+        $this->assertEquals(201, $batch3['headers']['status-code']);
+        $this->assertEquals(3, $batch3['body']['operations']);
+
+        // Rollback to clean up
+        $rollback = $this->client->call(Client::METHOD_PATCH, '/tablesdb/transactions/' . $transaction['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rollback' => true,
+        ]);
+
+        $this->assertEquals(200, $rollback['headers']['status-code']);
+    }
 }

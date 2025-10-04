@@ -28,7 +28,7 @@ class RealtimeCustomClientTest extends Scope
         $userId = $user['$id'] ?? '';
         $session = $user['session'] ?? '';
 
-        $headers =  [
+        $headers = [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session
         ];
@@ -3068,7 +3068,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
             'documentId' => ID::unique(),
-            'data' => [ 'name' => 'L2' ],
+            'data' => ['name' => 'L2'],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -3082,7 +3082,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
             'documentId' => ID::unique(),
-            'data' => [ 'name' => 'L1' ],
+            'data' => ['name' => 'L1'],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -3116,5 +3116,4 @@ class RealtimeCustomClientTest extends Scope
 
         $client->close();
     }
-
 }
