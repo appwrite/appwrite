@@ -1416,7 +1416,7 @@ trait TransactionsBase
 
         $transactionId = $transaction['body']['$id'];
 
-        // Try to update non-existent row
+        // Try to update non-existent row - should fail at staging time with early validation
         $response = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1433,20 +1433,9 @@ trait TransactionsBase
             ]
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']); // Operation added
+        $this->assertEquals(404, $response['headers']['status-code']); // Document not found at staging time
 
-        // Commit should fail
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'commit' => true
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']); // Document not found
-
-        // Test delete non-existent row
+        // Test delete non-existent row - should also fail at staging time with early validation
         $transaction2 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1470,18 +1459,7 @@ trait TransactionsBase
             ]
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        // Commit should fail
-        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId2}", array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'commit' => true
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']); // Document not found
+        $this->assertEquals(404, $response['headers']['status-code']); // Document not found at staging time
     }
 
     /**
