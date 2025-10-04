@@ -462,7 +462,7 @@ class StatsResources extends Action
         });
 
         try {
-            $dbForLogs->createOrUpdateDocuments(
+            $dbForLogs->upsertDocuments(
                 'stats',
                 $this->documents,
             );
