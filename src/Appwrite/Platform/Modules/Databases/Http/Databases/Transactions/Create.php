@@ -9,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -57,12 +58,12 @@ class Create extends Action
 
     public function action(int $ttl, UtopiaResponse $response, Database $dbForProject): void
     {
-        $transaction = $dbForProject->createDocument('transactions', new Document([
+        $transaction = Authorization::skip(fn () => $dbForProject->createDocument('transactions', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
             'operations' => 0,
             'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),
-        ]));
+        ])));
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)

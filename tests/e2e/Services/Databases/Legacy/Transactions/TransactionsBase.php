@@ -32,8 +32,7 @@ trait TransactionsBase
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertArrayHasKey('$id', $response['body']);
@@ -49,8 +48,7 @@ trait TransactionsBase
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ], $this->getHeaders()), [
             'ttl' => 900
         ]);
 
@@ -69,8 +67,7 @@ trait TransactionsBase
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ], $this->getHeaders()), [
             'ttl' => 30 // Below minimum
         ]);
 
@@ -79,8 +76,7 @@ trait TransactionsBase
         $response = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ], $this->getHeaders()), [
             'ttl' => 4000 // Above maximum
         ]);
 
@@ -109,8 +105,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -299,8 +294,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -410,8 +404,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -542,8 +535,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ], $this->getHeaders()), [
             'ttl' => 60
         ]);
 
@@ -633,8 +625,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -769,14 +760,12 @@ trait TransactionsBase
         $txn1 = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $txn2 = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId1 = $txn1['body']['$id'];
         $transactionId2 = $txn2['body']['$id'];
@@ -908,8 +897,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -1027,8 +1015,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -1190,8 +1177,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -1302,8 +1288,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -1350,8 +1335,7 @@ trait TransactionsBase
         $transaction2 = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId2 = $transaction2['body']['$id'];
 
@@ -1428,8 +1412,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -1467,8 +1450,7 @@ trait TransactionsBase
         $transaction2 = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId2 = $transaction2['body']['$id'];
 
@@ -1564,8 +1546,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -1703,8 +1684,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -1815,8 +1795,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -1944,8 +1923,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -2047,8 +2025,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -2207,8 +2184,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -2331,8 +2307,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -2479,8 +2454,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -2616,8 +2590,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
         $this->assertEquals(201, $transaction['headers']['status-code']);
@@ -2860,8 +2833,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -3037,8 +3009,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -3219,8 +3190,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -3384,8 +3354,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -3547,8 +3516,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -3704,8 +3672,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -3861,8 +3828,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -4012,8 +3978,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -4163,8 +4128,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $transactionId = $transaction['body']['$id'];
 
@@ -4283,8 +4247,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -4450,8 +4413,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -4532,8 +4494,7 @@ trait TransactionsBase
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
