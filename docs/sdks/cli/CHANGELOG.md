@@ -1,5 +1,12 @@
 # Change Log
 
+## 10.0.1
+
+* Fix CLI Dart model generation issues
+* Fix row permissions and security sync
+* Fix error when pushing columns with relationships
+* Fix resource name from attributes to columns for TablesDB indexes
+
 ## 10.0.0
 
 * **Breaking:** Removed Avatars CLI command and all related subcommands; corresponding examples deleted

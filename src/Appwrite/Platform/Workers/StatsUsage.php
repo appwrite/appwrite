@@ -452,7 +452,7 @@ class StatsUsage extends Action
                     return strcmp($a['time'], $b['time']);
                 });
 
-                $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
+                $dbForProject->upsertDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
                 Console::success('Batch successfully written to DB');
             } catch (Throwable $e) {
                 Console::error('Error processing stats: ' . $e->getMessage());
@@ -532,7 +532,7 @@ class StatsUsage extends Action
                 return strcmp($a['time'], $b['time']);
             });
 
-            $dbForLogs->createOrUpdateDocumentsWithIncrease(
+            $dbForLogs->upsertDocumentsWithIncrease(
                 'stats',
                 'value',
                 $this->statDocuments
