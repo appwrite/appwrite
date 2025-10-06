@@ -868,6 +868,7 @@ class Builds extends Action
 
             $deployment->setAttribute('buildLogs', $logs);
 
+            $adapter = null;
             if ($resource->getCollection() === 'sites' && !empty($detectionLogs)) {
                 $files = \explode("\n", $detectionLogs); // Parse output
                 $files = \array_filter($files); // Remove empty
