@@ -713,6 +713,10 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
     } catch (Throwable $th) {
         $code = $th->getCode();
+        if (!is_int($code)) {
+            $code = 500;
+        }
+
         $message = $th->getMessage();
 
         // sanitize 5xx errors
