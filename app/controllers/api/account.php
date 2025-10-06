@@ -2296,11 +2296,11 @@ App::post('/v1/account/tokens/email')
 
         $subject = $locale->getText("emails.otpSession.subject");
         $preview = $locale->getText("emails.otpSession.preview");
-        $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
+        $heading = $locale->getText("emails.otpSession.heading");
 
-        $customEmails = $project->getAttribute('customEmails', false);
-        $bodyTemplate = '';
-        $heading = '';
+        $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
+        $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
@@ -2369,23 +2369,6 @@ App::post('/v1/account/tokens/email')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
-        } elseif ($customEmails && !empty($customTemplate)) {
-            $subject = $customTemplate['subject'];
-            $preview = $customTemplate['preview'];
-            $heading = $customTemplate['heading'];
-
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
-            $message
-                ->setParam('{{hello}}', $customTemplate['hello'])
-                ->setParam('{{description}}', $customTemplate['body'], escapeHtml: false)
-                ->setParam('{{thanks}}', $customTemplate['thanks'])
-                ->setParam('{{signature}}', $customTemplate['signature'])
-                ->setParam('{{clientInfo}}', '')
-                ->setParam('{{securityPhrase}}', '')
-                ->setParam('{{securityPhraseDividerDisplay}}', 'none');
-
-            $body = $message->render();
-            $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
         }
 
         $emailVariables = [
@@ -2402,7 +2385,7 @@ App::post('/v1/account/tokens/email')
             'team' => '',
         ];
 
-        if ($customEmails && !empty($customTemplate)) {
+        if ($smtpBaseTemplate === 'email-base-styled') {
             $emailVariables = array_merge($emailVariables, [
                 'heading' => $heading,
                 'accentColor' => APP_EMAIL_ACCENT_COLOR,
@@ -3624,7 +3607,11 @@ App::post('/v1/account/verification')
         $body = $locale->getText("emails.verification.body");
         $preview = $locale->getText("emails.verification.preview");
         $subject = $locale->getText("emails.verification.subject");
+        $heading = $locale->getText("emails.verification.heading");
+
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
+        $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+        $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -3643,10 +3630,6 @@ App::post('/v1/account/verification')
         $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
-
-        $customEmails = $project->getAttribute('customEmails', false);
-        $bodyTemplate = '';
-        $heading = '';
 
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
@@ -3685,22 +3668,6 @@ App::post('/v1/account/verification')
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
-        } elseif ($customEmails && !empty($customTemplate)) {
-            $subject = $customTemplate['subject'];
-            $preview = $customTemplate['preview'];
-            $heading = $customTemplate['heading'];
-
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-verification.tpl');
-            $message
-                ->setParam('{{hello}}', $customTemplate['hello'])
-                ->setParam('{{body}}', $customTemplate['body'], escapeHtml: false)
-                ->setParam('{{buttonText}}', $customTemplate['buttonText'])
-                ->setParam('{{footer}}', $customTemplate['footer'])
-                ->setParam('{{thanks}}', $customTemplate['thanks'])
-                ->setParam('{{signature}}', $customTemplate['signature']);
-
-            $body = $message->render();
-            $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
         }
 
         $emailVariables = [
@@ -3713,7 +3680,7 @@ App::post('/v1/account/verification')
             'team' => '',
         ];
 
-        if ($customEmails && !empty($customTemplate)) {
+        if ($smtpBaseTemplate === 'email-base-styled') {
             $emailVariables = array_merge($emailVariables, [
                 'heading' => $heading,
                 'accentColor' => APP_EMAIL_ACCENT_COLOR,
@@ -4736,7 +4703,11 @@ App::post('/v1/account/mfa/challenge')
 
                 $subject = $locale->getText("emails.mfaChallenge.subject");
                 $preview = $locale->getText("emails.mfaChallenge.preview");
+                $heading = $locale->getText("emails.mfaChallenge.heading");
+
                 $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+                $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+                $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
                 $detector = new Detector($request->getUserAgent('UNKNOWN'));
                 $agentOs = $detector->getOS();
@@ -4759,10 +4730,6 @@ App::post('/v1/account/mfa/challenge')
                 $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
-
-                $customEmails = $project->getAttribute('customEmails', false);
-                $bodyTemplate = '';
-                $heading = '';
 
                 if ($smtpEnabled) {
                     if (!empty($smtp['senderEmail'])) {
@@ -4801,21 +4768,6 @@ App::post('/v1/account/mfa/challenge')
                         ->setSmtpReplyTo($replyTo)
                         ->setSmtpSenderEmail($senderEmail)
                         ->setSmtpSenderName($senderName);
-                } elseif ($customEmails && !empty($customTemplate)) {
-                    $subject = $customTemplate['subject'];
-                    $preview = $customTemplate['preview'];
-                    $heading = $customTemplate['heading'];
-
-                    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-challenge.tpl');
-                    $message
-                        ->setParam('{{hello}}', $customTemplate['hello'])
-                        ->setParam('{{description}}', $customTemplate['body'], escapeHtml: false)
-                        ->setParam('{{thanks}}', $customTemplate['thanks'])
-                        ->setParam('{{signature}}', $customTemplate['signature'])
-                        ->setParam('{{clientInfo}}', '');
-
-                    $body = $message->render();
-                    $bodyTemplate = __DIR__ . '/../../config/locale/templates/email-auth-styled.tpl';
                 }
 
                 $emailVariables = [
@@ -4829,7 +4781,7 @@ App::post('/v1/account/mfa/challenge')
                     'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
                 ];
 
-                if ($customEmails && !empty($customTemplate)) {
+                if ($smtpBaseTemplate === 'email-base-styled') {
                     $emailVariables = array_merge($emailVariables, [
                         'heading' => $heading,
                         'accentColor' => APP_EMAIL_ACCENT_COLOR,

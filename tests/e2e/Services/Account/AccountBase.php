@@ -192,11 +192,6 @@ trait AccountBase
             $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
         }
 
-        // TODO: Remove this once OTP login is supported for Console.
-        if ($isConsoleProject) {
-            return;
-        }
-
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
