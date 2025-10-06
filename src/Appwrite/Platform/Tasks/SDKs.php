@@ -281,7 +281,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
                 // regardless of whether they were just generated or not.
-                \exec('rm -rf ' . $result);
+                \exec('chmod -R u+w ' . $result . ' 2>/dev/null; rm -rf ' . $result);
 
                 try {
                     $sdk->generate($result);
@@ -309,7 +309,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
                         git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
-                        rm -rf ' . $target . '/* && \
+                        find . -mindepth 1 ! -path "./.git*" -delete && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
                         git add . && \
                         git commit -m "' . $message . '" && \
@@ -317,7 +317,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-
                     if ($createPr) {
                         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
                         $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
@@ -352,14 +351,32 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         } else {
                             $errorMessage = implode("\n", $prOutput);
                             if (strpos($errorMessage, 'already exists') !== false) {
-                                Console::warning("Pull request already exists for {$language['name']} SDK");
+                                Console::warning("Pull request already exists for {$language['name']} SDK, updating title and body...");
+
+                                $updateCommand = 'cd ' . $target . ' && \
+                                    gh pr edit "' . $gitBranch . '" \
+                                    --repo "' . $repoName . '" \
+                                    --title "' . $prTitle . '" \
+                                    --body "' . $prBody . '" \
+                                    2>&1';
+
+                                $updateOutput = [];
+                                $updateReturnCode = 0;
+                                \exec($updateCommand, $updateOutput, $updateReturnCode);
+
+                                if ($updateReturnCode === 0) {
+                                    Console::success("Successfully updated pull request for {$language['name']} SDK");
+                                } else {
+                                    $updateErrorMessage = implode("\n", $updateOutput);
+                                    Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
+                                }
                             } else {
                                 Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
                             }
                         }
                     }
 
-                    \exec('rm -rf ' . $target);
+                    \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
