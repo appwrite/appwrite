@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7553e976312b0423cc31544abb91caec",
+    "content-hash": "58f9aa04628082e0e142d7321b259bdf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1927,16 +1927,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.46",
+            "version": "3.0.47",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6"
+                "reference": "9d6ca36a6c2dd434765b1071b2644a1c683b385d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
-                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/9d6ca36a6c2dd434765b1071b2644a1c683b385d",
+                "reference": "9d6ca36a6c2dd434765b1071b2644a1c683b385d",
                 "shasum": ""
             },
             "require": {
@@ -2017,7 +2017,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.46"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.47"
             },
             "funding": [
                 {
@@ -2033,7 +2033,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-26T16:29:55+00:00"
+            "time": "2025-10-06T01:07:24+00:00"
         },
         {
             "name": "psr/container",
@@ -3792,16 +3792,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.8.1",
+            "version": "dev-fix-opensrs-suggest-limit",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "d5f903e93c105407da6374e411c4805b7decd8a8"
+                "reference": "1b3cadfa02aacd4ad6c98b4619f44a7f9d338a7a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/d5f903e93c105407da6374e411c4805b7decd8a8",
-                "reference": "d5f903e93c105407da6374e411c4805b7decd8a8",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1b3cadfa02aacd4ad6c98b4619f44a7f9d338a7a",
+                "reference": "1b3cadfa02aacd4ad6c98b4619f44a7f9d338a7a",
                 "shasum": ""
             },
             "require": {
@@ -3847,9 +3847,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/0.8.1"
+                "source": "https://github.com/utopia-php/domains/tree/fix-opensrs-suggest-limit"
             },
-            "time": "2025-10-03T11:58:53+00:00"
+            "time": "2025-10-06T02:43:04+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -8517,7 +8517,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/domains": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

@@ -54,7 +54,7 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "1.*",
         "utopia-php/detector": "0.1.*",
-        "utopia-php/domains": "0.8.*",
+        "utopia-php/domains": "dev-fix-opensrs-suggest-limit",
         "utopia-php/dns": "0.3.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
