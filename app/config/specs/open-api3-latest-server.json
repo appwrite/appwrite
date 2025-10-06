@@ -3161,7 +3161,7 @@
                 }
             }
         },
-        "\/account\/verification": {
+        "\/account\/verification\/email": {
             "post": {
                 "summary": "Create email verification",
                 "operationId": "accountCreateEmailVerification",
