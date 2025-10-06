@@ -131,6 +131,14 @@
             .social-icon > img {
                 margin: auto;
             }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin: 0;
+                padding: 0;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
+            }
         </style>
     </head>
 

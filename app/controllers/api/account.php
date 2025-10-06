@@ -69,6 +69,12 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
+function containsDirectoryTraversal(string $path)
+{
+    // Matches '../', './', '/..', or absolute paths starting with '/'
+    return preg_match('/(\.\.\/|\.\/|\/\.\.|\/)/', $path);
+}
+
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
@@ -2300,6 +2306,11 @@ App::post('/v1/account/tokens/email')
 
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+        if (containsDirectoryTraversal($smtpBaseTemplate)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+        }
+
         $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -2317,10 +2328,8 @@ App::post('/v1/account/tokens/email')
 
         if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.otpSession.securityPhrase"));
-            $message->setParam('{{securityPhraseDividerDisplay}}', 'block');
         } else {
             $message->setParam('{{securityPhrase}}', '');
-            $message->setParam('{{securityPhraseDividerDisplay}}', 'none');
         }
 
         $body = $message->render();
@@ -2372,6 +2381,7 @@ App::post('/v1/account/tokens/email')
         }
 
         $emailVariables = [
+            'heading' => $heading,
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{project}} and {{otp}} are required in the templates
             'user' => $user->getAttribute('name'),
@@ -2385,9 +2395,8 @@ App::post('/v1/account/tokens/email')
             'team' => '',
         ];
 
-        if ($smtpBaseTemplate === 'email-base-styled') {
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
             $emailVariables = array_merge($emailVariables, [
-                'heading' => $heading,
                 'accentColor' => APP_EMAIL_ACCENT_COLOR,
                 'logoUrl' => APP_EMAIL_LOGO_URL,
                 'twitterUrl' => APP_SOCIAL_TWITTER,
@@ -3611,6 +3620,11 @@ App::post('/v1/account/verification')
 
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+        if (containsDirectoryTraversal($smtpBaseTemplate)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+        }
+
         $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
@@ -3671,6 +3685,7 @@ App::post('/v1/account/verification')
         }
 
         $emailVariables = [
+            'heading' => $heading,
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $user->getAttribute('name'),
@@ -3680,9 +3695,8 @@ App::post('/v1/account/verification')
             'team' => '',
         ];
 
-        if ($smtpBaseTemplate === 'email-base-styled') {
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
             $emailVariables = array_merge($emailVariables, [
-                'heading' => $heading,
                 'accentColor' => APP_EMAIL_ACCENT_COLOR,
                 'logoUrl' => APP_EMAIL_LOGO_URL,
                 'twitterUrl' => APP_SOCIAL_TWITTER,
@@ -4707,6 +4721,11 @@ App::post('/v1/account/mfa/challenge')
 
                 $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
                 $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+                if (containsDirectoryTraversal($smtpBaseTemplate)) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+                }
+
                 $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
                 $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -4771,6 +4790,7 @@ App::post('/v1/account/mfa/challenge')
                 }
 
                 $emailVariables = [
+                    'heading' => $heading,
                     'direction' => $locale->getText('settings.direction'),
                     // {{user}}, {{project}} and {{otp}} are required in the templates
                     'user' => $user->getAttribute('name'),
@@ -4781,9 +4801,8 @@ App::post('/v1/account/mfa/challenge')
                     'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
                 ];
 
-                if ($smtpBaseTemplate === 'email-base-styled') {
+                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
                     $emailVariables = array_merge($emailVariables, [
-                        'heading' => $heading,
                         'accentColor' => APP_EMAIL_ACCENT_COLOR,
                         'logoUrl' => APP_EMAIL_LOGO_URL,
                         'twitterUrl' => APP_SOCIAL_TWITTER,
