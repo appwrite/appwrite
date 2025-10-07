@@ -7637,7 +7637,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdbdb#tablesdbCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/products\/databases\/tables#create-table).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -7666,7 +7666,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -7728,7 +7728,7 @@
                                     "model": "#\/components\/schemas\/row"
                                 }
                             ],
-                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                             "demo": "tablesdb\/create-row.md"
                         }
                     ],
@@ -7756,7 +7756,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate). Make sure to define columns before creating rows.",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable). Make sure to define columns before creating rows.",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -7870,7 +7870,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "schema": {
                             "type": "string",
@@ -7909,7 +7909,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -7970,7 +7970,7 @@
                                     "model": "#\/components\/schemas\/row"
                                 }
                             ],
-                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                             "demo": "tablesdb\/upsert-row.md"
                         }
                     ],
@@ -8209,7 +8209,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "schema": {
                             "type": "string",
