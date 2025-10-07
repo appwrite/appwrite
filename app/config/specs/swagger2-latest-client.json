@@ -3599,7 +3599,7 @@
                 ]
             }
         },
-        "\/account\/verification\/email": {
+        "\/account\/verifications\/email": {
             "post": {
                 "summary": "Create email verification",
                 "operationId": "accountCreateEmailVerification",
@@ -3854,7 +3854,7 @@
                 ]
             }
         },
-        "\/account\/verification\/phone": {
+        "\/account\/verifications\/phone": {
             "post": {
                 "summary": "Create phone verification",
                 "operationId": "accountCreatePhoneVerification",

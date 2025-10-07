@@ -3506,7 +3506,7 @@ App::put('/v1/account/recovery')
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification/email')
+App::post('/v1/account/verifications/email')
     ->alias('/v1/account/verification')
     ->desc('Create email verification')
     ->groups(['api', 'account'])
@@ -3693,7 +3693,7 @@ App::post('/v1/account/verification/email')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification/email')
+App::put('/v1/account/verifications/email')
     ->alias('/v1/account/verification')
     ->desc('Update email verification (confirmation)')
     ->groups(['api', 'account'])
@@ -3781,7 +3781,8 @@ App::put('/v1/account/verification/email')
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification/phone')
+App::post('/v1/account/verifications/phone')
+    ->alias('/v1/account/verification/phone')
     ->desc('Create phone verification')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
@@ -3930,7 +3931,8 @@ App::post('/v1/account/verification/phone')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification/phone')
+App::put('/v1/account/verifications/phone')
+    ->alias('/v1/account/verification/phone')
     ->desc('Update phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
