@@ -2610,10 +2610,9 @@ trait DatabasesBase
         ]), [
             'key' => 'unique_title',
             'type' => 'unique',
-            'attributes' => ['title'],
+            'attributes' => ['movieTitle'],
         ]);
-        // already a same attribute index is present
-        $this->assertEquals(400, $uniqueIndex['headers']['status-code']);
+        $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
 
         // creating index on movieTitle as index is already created on index
         $uniqueIndex = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
@@ -2625,6 +2624,7 @@ trait DatabasesBase
             'type' => 'unique',
             'attributes' => ['movieTitle'],
         ]);
+        $this->assertEquals(400, $uniqueIndex['headers']['status-code']);
 
         $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',

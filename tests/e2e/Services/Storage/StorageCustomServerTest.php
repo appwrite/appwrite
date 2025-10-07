@@ -215,7 +215,7 @@ class StorageCustomServerTest extends Scope
                 $this->getHeaders()
             )
         );
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         return $data;
     }
