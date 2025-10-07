@@ -3618,10 +3618,10 @@
                 ]
             }
         },
-        "\/account\/verification": {
+        "\/account\/verifications\/email": {
             "post": {
                 "summary": "Create email verification",
-                "operationId": "accountCreateVerification",
+                "operationId": "accountCreateEmailVerification",
                 "consumes": [
                     "application\/json"
                 ],
@@ -3642,12 +3642,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "createVerification",
+                    "method": "createEmailVerification",
                     "group": "verification",
                     "weight": 41,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-verification.md",
+                    "demo": "account\/create-email-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -3658,6 +3658,56 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createEmailVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "url"
+                            ],
+                            "required": [
+                                "url"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
+                            "demo": "account\/create-email-verification.md"
+                        },
+                        {
+                            "name": "createVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "url"
+                            ],
+                            "required": [
+                                "url"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
+                            "demo": "account\/create-verification.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.createEmailVerification"
+                            }
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -3691,7 +3741,7 @@
             },
             "put": {
                 "summary": "Update email verification (confirmation)",
-                "operationId": "accountUpdateVerification",
+                "operationId": "accountUpdateEmailVerification",
                 "consumes": [
                     "application\/json"
                 ],
@@ -3712,12 +3762,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "updateVerification",
+                    "method": "updateEmailVerification",
                     "group": "verification",
                     "weight": 42,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-verification.md",
+                    "demo": "account\/update-email-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -3728,6 +3778,60 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "updateEmailVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "secret"
+                            ],
+                            "required": [
+                                "userId",
+                                "secret"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
+                            "demo": "account\/update-email-verification.md"
+                        },
+                        {
+                            "name": "updateVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "secret"
+                            ],
+                            "required": [
+                                "userId",
+                                "secret"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
+                            "demo": "account\/update-verification.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.updateEmailVerification"
+                            }
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -3767,7 +3871,7 @@
                 ]
             }
         },
-        "\/account\/verification\/phone": {
+        "\/account\/verifications\/phone": {
             "post": {
                 "summary": "Create phone verification",
                 "operationId": "accountCreatePhoneVerification",

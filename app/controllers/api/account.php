@@ -3511,27 +3511,48 @@ App::put('/v1/account/recovery')
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification')
+App::post('/v1/account/verifications/email')
+    ->alias('/v1/account/verification')
     ->desc('Create email verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].verification.[tokenId].create')
     ->label('audits.event', 'verification.create')
     ->label('audits.resource', 'user/{response.userId}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'verification',
-        name: 'createVerification',
-        description: '/docs/references/account/create-email-verification.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_TOKEN,
-            )
-        ],
-        contentType: ContentType::JSON,
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'verification',
+            name: 'createEmailVerification',
+            description: '/docs/references/account/create-email-verification.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_TOKEN,
+                )
+            ],
+            contentType: ContentType::JSON,
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'verification',
+            name: 'createVerification',
+            description: '/docs/references/account/create-email-verification.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_TOKEN,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.createEmailVerification'
+            ),
+        )
+    ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['platforms', 'devKey']) // TODO add built-in confirm page
@@ -3677,27 +3698,48 @@ App::post('/v1/account/verification')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification')
+App::put('/v1/account/verifications/email')
+    ->alias('/v1/account/verification')
     ->desc('Update email verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.userId}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'verification',
-        name: 'updateVerification',
-        description: '/docs/references/account/update-email-verification.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_TOKEN,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'account',
+            group: 'verification',
+            name: 'updateEmailVerification',
+            description: '/docs/references/account/update-email-verification.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_TOKEN,
+                )
+            ],
+            contentType: ContentType::JSON
+        ),
+        new Method(
+            namespace: 'account',
+            group: 'verification',
+            name: 'updateVerification',
+            description: '/docs/references/account/update-email-verification.md',
+            auth: [AuthType::SESSION, AuthType::JWT],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_TOKEN,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'account.updateEmailVerification'
+            ),
+        )
+    ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
@@ -3744,7 +3786,8 @@ App::put('/v1/account/verification')
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification/phone')
+App::post('/v1/account/verifications/phone')
+    ->alias('/v1/account/verification/phone')
     ->desc('Create phone verification')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
@@ -3893,7 +3936,8 @@ App::post('/v1/account/verification/phone')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification/phone')
+App::put('/v1/account/verifications/phone')
+    ->alias('/v1/account/verification/phone')
     ->desc('Update phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
