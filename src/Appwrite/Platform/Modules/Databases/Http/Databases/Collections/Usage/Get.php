@@ -58,9 +58,9 @@ class Get extends Action
                     replaceWith: 'tablesDB.getTableUsage',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('databaseId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
-            ->param('collectionId', '', new UID(), 'Collection ID.')
+            ->param('collectionId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
