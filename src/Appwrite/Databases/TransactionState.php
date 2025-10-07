@@ -423,6 +423,33 @@ class TransactionState
                     ];
                     break;
 
+                case 'increment':
+                case 'decrement':
+                    $attribute = $data['attribute'] ?? null;
+                    $value = $data['value'] ?? 1;
+
+                    if ($attribute) {
+                        if (isset($state[$collectionId][$documentId])) {
+                            $existingDocument = $state[$collectionId][$documentId]['document'];
+                            $currentValue = $existingDocument->getAttribute($attribute, 0);
+                            $newValue = $action === 'increment' ? $currentValue + $value : $currentValue - $value;
+                            $existingDocument->setAttribute($attribute, $newValue);
+
+                            $currentAction = $state[$collectionId][$documentId]['action'];
+                            if ($currentAction !== 'create' && $currentAction !== 'upsert') {
+                                $state[$collectionId][$documentId]['action'] = 'update';
+                            }
+                        } else {
+                            $newValue = $action === 'increment' ? $value : -$value;
+                            $state[$collectionId][$documentId] = [
+                                'action' => 'update',
+                                'document' => new Document([$attribute => $newValue]),
+                                'exists' => true
+                            ];
+                        }
+                    }
+                    break;
+
                 case 'bulkCreate':
                     if (\is_array($data)) {
                         foreach ($data as $doc) {
@@ -434,6 +461,84 @@ class TransactionState
                                 'document' => new Document($doc),
                                 'exists' => true
                             ];
+                        }
+                    }
+                    break;
+
+                case 'bulkUpdate':
+                    if (isset($data['queries']) && isset($data['data'])) {
+                        $queries = Query::parseQueries($data['queries'] ?? []);
+                        $updateData = $data['data'];
+
+                        foreach ($state[$collectionId] ?? [] as $docId => $entry) {
+                            if (!$entry['exists']) {
+                                continue;
+                            }
+
+                            $document = $entry['document'];
+                            $filters = $this->extractFilters($queries);
+
+                            if ($this->documentMatchesFilters($document, $filters)) {
+                                foreach ($updateData as $key => $value) {
+                                    if ($key !== '$id') {
+                                        $document->setAttribute($key, $value);
+                                    }
+                                }
+
+                                $currentAction = $state[$collectionId][$docId]['action'];
+                                if ($currentAction !== 'create' && $currentAction !== 'upsert') {
+                                    $state[$collectionId][$docId]['action'] = 'update';
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case 'bulkUpsert':
+                    if (\is_array($data)) {
+                        foreach ($data as $doc) {
+                            if ($doc instanceof Document) {
+                                $doc = $doc->getArrayCopy();
+                            }
+
+                            $docId = $doc['$id'] ?? null;
+                            if (!$docId) {
+                                continue;
+                            }
+
+                            if (isset($state[$collectionId][$docId])) {
+                                $existingDocument = $state[$collectionId][$docId]['document'];
+                                foreach ($doc as $key => $value) {
+                                    $existingDocument->setAttribute($key, $value);
+                                }
+                            } else {
+                                $state[$collectionId][$docId] = [
+                                    'action' => 'upsert',
+                                    'document' => new Document($doc),
+                                    'exists' => true
+                                ];
+                            }
+                        }
+                    }
+                    break;
+
+                case 'bulkDelete':
+                    if (isset($data['queries'])) {
+                        $queries = Query::parseQueries($data['queries'] ?? []);
+                        $filters = $this->extractFilters($queries);
+
+                        foreach ($state[$collectionId] ?? [] as $docId => $entry) {
+                            if (!$entry['exists']) {
+                                continue;
+                            }
+
+                            $document = $entry['document'];
+                            if ($this->documentMatchesFilters($document, $filters)) {
+                                $state[$collectionId][$docId] = [
+                                    'action' => 'delete',
+                                    'exists' => false
+                                ];
+                            }
                         }
                     }
                     break;

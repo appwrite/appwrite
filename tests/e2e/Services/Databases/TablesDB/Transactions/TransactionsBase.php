@@ -4613,4 +4613,127 @@ trait TransactionsBase
 
         $this->assertEquals(404, $response['headers']['status-code']);
     }
+
+    /**
+     * Test that bulkUpdate can match documents created in the same transaction
+     * This tests the fix for the bug where applyBulkUpdateToState was treating
+     * state entries as Documents instead of arrays with 'document' keys
+     */
+    public function testBulkUpdateMatchesCreatedDocsInSameTransaction(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'BulkUpdateStateDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestTable',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'flag',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(3);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Create 3 documents with status='pending' in transaction
+        $docIds = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'rowId' => 'test_' . $i,
+                'data' => [
+                    'status' => 'pending'
+                ],
+                'transactionId' => $transactionId
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $docIds[] = $response['body']['$id'];
+        }
+
+        // Bulk update all documents with status='pending' to add flag='processed'
+        // This should match all 3 documents created above in the same transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'flag' => 'processed'
+            ],
+            'queries' => [Query::equal('status', ['pending'])->toString()],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify all 3 documents have the flag set
+        foreach ($docIds as $docId) {
+            $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/{$docId}", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('pending', $response['body']['status']);
+            $this->assertEquals('processed', $response['body']['flag'], 'Bulk update should have matched document created in same transaction');
+        }
+    }
 }
