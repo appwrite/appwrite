@@ -52,16 +52,18 @@ class Execution extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('trigger', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.',
                 'default' => '',
                 'example' => 'http',
+                'enum' => ['http', 'schedule', 'event'],
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.',
                 'default' => '',
                 'example' => 'processing',
+                'enum' => ['waiting', 'processing', 'completed', 'failed'],
             ])
             ->addRule('requestMethod', [
                 'type' => self::TYPE_STRING,
@@ -77,7 +79,7 @@ class Execution extends Model
             ])
             ->addRule('requestHeaders', [
                 'type' => Response::MODEL_HEADERS,
-                'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
+                'description' => 'HTTP request headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
                 'default' => [],
                 'example' => [['Content-Type' => 'application/json']],
                 'array' => true,

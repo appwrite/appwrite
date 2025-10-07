@@ -3599,10 +3599,10 @@
                 ]
             }
         },
-        "\/account\/verification": {
+        "\/account\/verifications\/email": {
             "post": {
                 "summary": "Create email verification",
-                "operationId": "accountCreateVerification",
+                "operationId": "accountCreateEmailVerification",
                 "consumes": [
                     "application\/json"
                 ],
@@ -3623,12 +3623,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "createVerification",
+                    "method": "createEmailVerification",
                     "group": "verification",
                     "weight": 41,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-verification.md",
+                    "demo": "account\/create-email-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -3639,6 +3639,56 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createEmailVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "url"
+                            ],
+                            "required": [
+                                "url"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
+                            "demo": "account\/create-email-verification.md"
+                        },
+                        {
+                            "name": "createVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "url"
+                            ],
+                            "required": [
+                                "url"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
+                            "demo": "account\/create-verification.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.createEmailVerification"
+                            }
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -3673,7 +3723,7 @@
             },
             "put": {
                 "summary": "Update email verification (confirmation)",
-                "operationId": "accountUpdateVerification",
+                "operationId": "accountUpdateEmailVerification",
                 "consumes": [
                     "application\/json"
                 ],
@@ -3694,12 +3744,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "updateVerification",
+                    "method": "updateEmailVerification",
                     "group": "verification",
                     "weight": 42,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-verification.md",
+                    "demo": "account\/update-email-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -3710,6 +3760,60 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "updateEmailVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "secret"
+                            ],
+                            "required": [
+                                "userId",
+                                "secret"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
+                            "demo": "account\/update-email-verification.md"
+                        },
+                        {
+                            "name": "updateVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "secret"
+                            ],
+                            "required": [
+                                "userId",
+                                "secret"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
+                            "demo": "account\/update-verification.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.updateEmailVerification"
+                            }
+                        }
+                    ],
                     "auth": {
                         "Project": []
                     }
@@ -3750,7 +3854,7 @@
                 ]
             }
         },
-        "\/account\/verification\/phone": {
+        "\/account\/verifications\/phone": {
             "post": {
                 "summary": "Create phone verification",
                 "operationId": "accountCreatePhoneVerification",
@@ -4972,7 +5076,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 339,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-documents.md",
@@ -5057,7 +5161,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 331,
+                    "weight": 327,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-document.md",
@@ -5204,7 +5308,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 332,
+                    "weight": 328,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-document.md",
@@ -5297,7 +5401,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 335,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-document.md",
@@ -5440,7 +5544,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 333,
+                    "weight": 329,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-document.md",
@@ -5540,7 +5644,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 337,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-document.md",
@@ -5623,7 +5727,7 @@
                 "x-appwrite": {
                     "method": "decrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 342,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/decrement-document-attribute.md",
@@ -5735,7 +5839,7 @@
                 "x-appwrite": {
                     "method": "incrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 341,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/increment-document-attribute.md",
@@ -5845,7 +5949,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 460,
+                    "weight": 456,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -5918,7 +6022,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 458,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -6035,7 +6139,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 459,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -6106,7 +6210,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 254,
+                    "weight": 250,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -6179,7 +6283,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 253,
+                    "weight": 249,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -6660,7 +6764,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 300,
+                    "weight": 296,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -6744,7 +6848,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 304,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -7573,7 +7677,7 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 431,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-rows.md",
@@ -7612,7 +7716,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdbdb#tablesdbCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/products\/databases\/tables#create-table).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -7644,7 +7748,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -7657,7 +7761,7 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 423,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-row.md",
@@ -7701,7 +7805,7 @@
                                     "model": "#\/definitions\/row"
                                 }
                             ],
-                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                             "demo": "tablesdb\/create-row.md"
                         }
                     ],
@@ -7727,7 +7831,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate). Make sure to define columns before creating rows.",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable). Make sure to define columns before creating rows.",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -7762,7 +7866,7 @@
                                 },
                                 "rows": {
                                     "type": "array",
-                                    "description": "Array of documents data as JSON objects.",
+                                    "description": "Array of rows data as JSON objects.",
                                     "default": [],
                                     "x-example": null,
                                     "items": {
@@ -7799,7 +7903,7 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 424,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-row.md",
@@ -7838,7 +7942,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -7878,7 +7982,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -7891,7 +7995,7 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 427,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-row.md",
@@ -7934,7 +8038,7 @@
                                     "model": "#\/definitions\/row"
                                 }
                             ],
-                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                             "demo": "tablesdb\/upsert-row.md"
                         }
                     ],
@@ -8025,7 +8129,7 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 425,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-row.md",
@@ -8124,7 +8228,7 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 429,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-row.md",
@@ -8163,7 +8267,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -8206,7 +8310,7 @@
                 "x-appwrite": {
                     "method": "decrementRowColumn",
                     "group": "rows",
-                    "weight": 434,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/decrement-row-column.md",
@@ -8317,7 +8421,7 @@
                 "x-appwrite": {
                     "method": "incrementRowColumn",
                     "group": "rows",
-                    "weight": 433,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/increment-row-column.md",
@@ -11392,12 +11496,23 @@
                 "trigger": {
                     "type": "string",
                     "description": "The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.",
-                    "x-example": "http"
+                    "x-example": "http",
+                    "enum": [
+                        "http",
+                        "schedule",
+                        "event"
+                    ]
                 },
                 "status": {
                     "type": "string",
                     "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.",
-                    "x-example": "processing"
+                    "x-example": "processing",
+                    "enum": [
+                        "waiting",
+                        "processing",
+                        "completed",
+                        "failed"
+                    ]
                 },
                 "requestMethod": {
                     "type": "string",
@@ -11411,7 +11526,7 @@
                 },
                 "requestHeaders": {
                     "type": "array",
-                    "description": "HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
+                    "description": "HTTP request headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/headers"

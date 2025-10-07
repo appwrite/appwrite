@@ -9,8 +9,11 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Any;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Spatial;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -448,13 +451,18 @@ class OpenAPI3 extends Format
                         ];
                         break;
                     case 'Utopia\Database\Validator\Spatial':
+                        /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'oneOf' => [
                                 ['type' => 'array']
                             ]
                         ];
-                        $node['schema']['x-example'] = '[[1,2], [3, 4]]';
+                        $node['schema']['x-example'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => '[1, 2]',
+                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
+                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                        };
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
@@ -552,8 +560,8 @@ class OpenAPI3 extends Format
 
                         if ($allowed) {
                             $node['schema']['enum'] = $validator->getList();
-                            $node['schema']['x-enum-name'] = $this->getEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                            $node['schema']['x-enum-keys'] = $this->getEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                            $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
+                            $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
                         }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
@@ -675,6 +683,10 @@ class OpenAPI3 extends Format
                         $type = 'string';
                         break;
 
+                    case 'enum':
+                        $type = 'string';
+                        break;
+
                     case 'json':
                         $type = 'object';
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
@@ -763,11 +775,27 @@ class OpenAPI3 extends Format
                 if ($items) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
+                if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
+                    if ($rule['array']) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['enum'] = $rule['enum'];
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
+                        }
+                    } else {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = $rule['enum'];
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
+                        }
+                    }
+                }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
 
+            /** @var Any $model */
             if ($model->isAny() && !empty($model->getSampleData())) {
                 $examples = array_merge($examples, $model->getSampleData());
             }

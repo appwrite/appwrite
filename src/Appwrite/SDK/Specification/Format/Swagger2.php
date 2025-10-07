@@ -9,8 +9,11 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Any;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Spatial;
 use Utopia\Route;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
@@ -463,13 +466,18 @@ class Swagger2 extends Format
                         ];
                         break;
                     case 'Utopia\Database\Validator\Spatial':
+                        /** @var Spatial $validator */
                         $node['type'] = 'array';
                         $node['schema']['items'] = [
                             'oneOf' => [
                                 ['type' => 'array']
                             ]
                         ];
-                        $node['x-example'] = '[[1,2], [3, 4]]';
+                        $node['x-example'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => '[1, 2]',
+                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
+                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                        };
                         break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
@@ -558,8 +566,8 @@ class Swagger2 extends Format
 
                         if ($allowed && $validator->getType() === 'string') {
                             $node['enum'] = $validator->getList();
-                            $node['x-enum-name'] = $this->getEnumName($namespace, $methodName, $name);
-                            $node['x-enum-keys'] = $this->getEnumKeys($namespace, $methodName, $name);
+                            $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
+                            $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                         }
 
                         if ($validator->getType() === 'integer') {
@@ -683,6 +691,10 @@ class Swagger2 extends Format
                         $type = 'string';
                         break;
 
+                    case 'enum':
+                        $type = 'string';
+                        break;
+
                     case 'json':
                         $type = 'object';
                         break;
@@ -785,11 +797,27 @@ class Swagger2 extends Format
                 if ($items) {
                     $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
+                if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
+                    if ($rule['array']) {
+                        $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = $rule['enum'];
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['definitions'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
+                        }
+                    } else {
+                        $output['definitions'][$model->getType()]['properties'][$name]['enum'] = $rule['enum'];
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['definitions'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
+                        }
+                    }
+                }
                 if (!in_array($name, $required)) {
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
                 }
             }
 
+            /** @var Any $model */
             if ($model->isAny() && !empty($model->getSampleData())) {
                 $examples = array_merge($examples, $model->getSampleData());
             }

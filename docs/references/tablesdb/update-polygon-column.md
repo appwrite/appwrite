@@ -1,1 +1,1 @@
-Update a polygon column. Changing the `default` value will not update already existing documents.
+Update a polygon column. Changing the `default` value will not update already existing rows.

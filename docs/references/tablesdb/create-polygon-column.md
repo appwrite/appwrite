@@ -1,1 +1,1 @@
-Create a geometric polygon attribute.
+Create a geometric polygon column.

@@ -1,5 +1,15 @@
 # Change Log
 
+## 19.1.0
+
+* Add `orderRandom` query support
+
+## 19.0.0
+
+* Rename `CreditCard` enum value `unionChinaPay` to `unionPay`
+* Add time between query support
+* Add spatial query support
+
 ## 18.0.0
 
 * Support for Appwrite 1.8
