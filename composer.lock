@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0dcdf4388266428e99b36d3ac2897b28",
+    "content-hash": "95edd8345cc946df8765f28230e0de69",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1999,16 +1999,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.46",
+            "version": "3.0.47",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6"
+                "reference": "9d6ca36a6c2dd434765b1071b2644a1c683b385d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
-                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/9d6ca36a6c2dd434765b1071b2644a1c683b385d",
+                "reference": "9d6ca36a6c2dd434765b1071b2644a1c683b385d",
                 "shasum": ""
             },
             "require": {
@@ -2089,7 +2089,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.46"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.47"
             },
             "funding": [
                 {
@@ -2105,7 +2105,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-26T16:29:55+00:00"
+            "time": "2025-10-06T01:07:24+00:00"
         },
         {
             "name": "psr/container",
@@ -3791,12 +3791,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "8b19ba383fc15d875fed5eef48fe75992fb2a4c1"
+                "reference": "91d6ebb90bd081c38235d2e1fd4ea71cc7811e03"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/8b19ba383fc15d875fed5eef48fe75992fb2a4c1",
-                "reference": "8b19ba383fc15d875fed5eef48fe75992fb2a4c1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/91d6ebb90bd081c38235d2e1fd4ea71cc7811e03",
+                "reference": "91d6ebb90bd081c38235d2e1fd4ea71cc7811e03",
                 "shasum": ""
             },
             "require": {
@@ -3841,7 +3841,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-mongodb"
             },
-            "time": "2025-10-03T21:04:53+00:00"
+            "time": "2025-10-07T05:14:20+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -3946,16 +3946,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.8.0",
+            "version": "0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "650463d2a1525273eb03223c48da9fb1a768bbf7"
+                "reference": "d5f903e93c105407da6374e411c4805b7decd8a8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/650463d2a1525273eb03223c48da9fb1a768bbf7",
-                "reference": "650463d2a1525273eb03223c48da9fb1a768bbf7",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/d5f903e93c105407da6374e411c4805b7decd8a8",
+                "reference": "d5f903e93c105407da6374e411c4805b7decd8a8",
                 "shasum": ""
             },
             "require": {
@@ -4001,9 +4001,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/0.8.0"
+                "source": "https://github.com/utopia-php/domains/tree/0.8.1"
             },
-            "time": "2025-05-16T10:03:59+00:00"
+            "time": "2025-10-03T11:58:53+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -8734,8 +8734,8 @@
         {
             "package": "utopia-php/database",
             "version": "dev-feat-mongodb",
-            "alias": "2.2.0",
-            "alias_normalized": "2.2.0.0"
+            "alias": "2.3.1",
+            "alias_normalized": "2.3.1.0"
         }
     ],
     "minimum-stability": "dev",
