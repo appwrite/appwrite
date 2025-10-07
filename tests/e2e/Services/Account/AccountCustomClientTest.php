@@ -924,7 +924,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Account Verification', $lastEmail['subject']);
+        $this->assertEquals('Account Verification for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Verify your email to activate your ' . $this->getProject()['name'] . ' account.', $lastEmail['text']);
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
@@ -1228,7 +1228,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Password Reset', $lastEmail['subject']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
 
 
