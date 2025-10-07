@@ -158,22 +158,18 @@ class TransactionState
         ?string $transactionId = null,
         array $queries = []
     ): int {
-        // If no transaction, use normal database count
         if ($transactionId === null) {
             return $this->dbForProject->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
         $state = $this->getTransactionState($transactionId);
 
-        // Get base count from database
         $baseCount = $this->dbForProject->count($collectionId, $queries, APP_LIMIT_COUNT);
 
-        // If no transaction state for this collection, return base count
         if (!isset($state[$collectionId])) {
             return $baseCount;
         }
 
-        // Build a set of committed document IDs that match the query
         $committedDocs = $this->dbForProject->find($collectionId, $queries);
         $committedDocIds = [];
         foreach ($committedDocs as $doc) {
@@ -184,27 +180,23 @@ class TransactionState
 
         $filters = $this->extractFilters($queries);
 
-        // Apply transaction state changes to the count
         foreach ($state[$collectionId] as $docId => $docState) {
             if (!$docState['exists']) {
-                // Document was deleted in transaction
                 if (isset($committedDocIds[$docId])) {
-                    $adjustedCount--; // Was in results, now deleted
+                    $adjustedCount--;
                 }
             } elseif ($docState['action'] === 'create') {
-                // Document was created in transaction
                 if ($this->documentMatchesFilters($docState['document'], $filters)) {
-                    $adjustedCount++; // New document that matches
+                    $adjustedCount++;
                 }
             } elseif ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
-                // Document was updated/upserted
                 $wasInResults = isset($committedDocIds[$docId]);
                 $nowMatches = $this->documentMatchesFilters($docState['document'], $filters);
 
                 if (!$wasInResults && $nowMatches && $docState['action'] === 'upsert') {
-                    $adjustedCount++; // Upsert created new document that matches
+                    $adjustedCount++;
                 } elseif ($wasInResults && !$nowMatches) {
-                    $adjustedCount--; // Update/upsert made document no longer match
+                    $adjustedCount--;
                 } elseif (!$wasInResults && $nowMatches) {
                     // Update shouldn't add a new doc, but upsert might have
                     if ($docState['action'] === 'upsert') {
@@ -259,7 +251,6 @@ class TransactionState
 
         foreach ($state[$collectionId] as $docId => $doc) {
             if ($this->documentMatchesFilters($doc, $filters)) {
-                // Apply the update to the state document
                 foreach ($updateData->getArrayCopy() as $key => $value) {
                     if ($key !== '$id') {
                         $doc->setAttribute($key, $value);
@@ -325,18 +316,14 @@ class TransactionState
                 continue;
             }
 
-            // If document exists in state, update it and use the merged version
             if (isset($state[$collectionId][$docId])) {
-                // Apply updates to existing state document
                 foreach ($doc->getArrayCopy() as $key => $value) {
                     if ($key !== '$id') {
                         $state[$collectionId][$docId]->setAttribute($key, $value);
                     }
                 }
-                // Use the full merged document from state
                 $mergedDocuments[] = $state[$collectionId][$docId];
             } else {
-                // Document not in state - use original partial data for DB upsert
                 $mergedDocuments[] = $doc;
             }
         }
@@ -360,7 +347,6 @@ class TransactionState
             return [];
         }
 
-        // Fetch operations ordered by sequence to replay in exact order
         $operations = Authorization::skip(fn () => $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
             Query::orderAsc(),
@@ -385,7 +371,6 @@ class TransactionState
                 case 'create':
                     $docId = $documentId ?? ($data['$id'] ?? null);
                     if ($docId) {
-                        // Ensure document has the correct $id
                         if (!isset($data['$id'])) {
                             $data['$id'] = $docId;
                         }
@@ -399,7 +384,6 @@ class TransactionState
 
                 case 'update':
                     if (isset($state[$collectionId][$documentId])) {
-                        // Update existing document in transaction state
                         $existingDocument = $state[$collectionId][$documentId]['document'];
                         foreach ($data as $key => $value) {
                             if ($key !== '$id') {
@@ -412,7 +396,6 @@ class TransactionState
                             $state[$collectionId][$documentId]['action'] = 'update';
                         }
                     } else {
-                        // Document doesn't exist in transaction state, will be merged with committed version
                         $state[$collectionId][$documentId] = [
                             'action' => 'update',
                             'document' => new Document($data),
@@ -473,7 +456,6 @@ class TransactionState
             return $doc;
         }
 
-        // Extract selections from queries
         $selections = [];
         foreach ($queries as $query) {
             if ($query->getMethod() === Query::TYPE_SELECT) {
@@ -487,7 +469,6 @@ class TransactionState
             }
         }
 
-        // If no selections or wildcard present, return document as-is
         if (empty($selections) || \in_array('*', $selections)) {
             return $doc;
         }
@@ -525,7 +506,6 @@ class TransactionState
         $filters = [];
         foreach ($queries as $query) {
             $method = $query->getMethod();
-            // Only process filter queries, not limit/offset/cursor/select/order
             if (!\in_array($method, [
                 Query::TYPE_LIMIT,
                 Query::TYPE_OFFSET,
@@ -550,12 +530,10 @@ class TransactionState
      */
     private function documentMatchesFilters(Document $doc, array $filters): bool
     {
-        // If no filters, document matches
         if (empty($filters)) {
             return true;
         }
 
-        // Check each filter
         foreach ($filters as $filter) {
             $attribute = $filter->getAttribute();
             $values = $filter->getValues();

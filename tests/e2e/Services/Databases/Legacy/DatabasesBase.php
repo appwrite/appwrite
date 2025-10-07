@@ -4711,12 +4711,16 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                Query::select(['library.*'])->toString(),
                 Query::equal('library.libraryName', ['Library 1'])->toString(),
             ],
         ]);
 
-        $this->assertEquals(400, $documents['headers']['status-code']);
-        $this->assertEquals('Invalid query: Cannot query nested attribute on: library', $documents['body']['message']);
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(1, $documents['body']['total']);
+        $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
+        $this->assertEquals($person1['body']['$id'], $documents['body']['documents'][0]['$id']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/library', array_merge([
             'content-type' => 'application/json',

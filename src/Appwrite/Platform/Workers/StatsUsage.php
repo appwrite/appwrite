@@ -533,7 +533,7 @@ class StatsUsage extends Action
                 return strcmp($a['time'], $b['time']);
             });
 
-            $dbForLogs->createOrUpdateDocumentsWithIncrease(
+            $dbForLogs->upsertDocumentsWithIncrease(
                 'stats',
                 'value',
                 $this->statDocuments
