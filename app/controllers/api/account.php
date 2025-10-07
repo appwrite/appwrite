@@ -58,6 +58,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
+use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -68,12 +69,6 @@ use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
-
-function containsDirectoryTraversal(string $path)
-{
-    // Matches '../', './', '/..', or absolute paths starting with '/'
-    return preg_match('/(\.\.\/|\.\/|\/\.\.|\/)/', $path);
-}
 
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
 {
@@ -2307,7 +2302,8 @@ App::post('/v1/account/tokens/email')
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
-        if (containsDirectoryTraversal($smtpBaseTemplate)) {
+        $validator = new FileName();
+        if (!$validator->isValid($smtpBaseTemplate)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
         }
 
@@ -3621,7 +3617,8 @@ App::post('/v1/account/verification')
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
-        if (containsDirectoryTraversal($smtpBaseTemplate)) {
+        $validator = new FileName();
+        if (!$validator->isValid($smtpBaseTemplate)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
         }
 
@@ -4722,7 +4719,8 @@ App::post('/v1/account/mfa/challenge')
                 $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
                 $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
-                if (containsDirectoryTraversal($smtpBaseTemplate)) {
+                $validator = new FileName();
+                if (!$validator->isValid($smtpBaseTemplate)) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
                 }
 
