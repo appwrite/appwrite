@@ -1,8 +1,8 @@
 app/db/SQL
 node_modules
-storage
+file
 .git
 .idea
 .cd .babelrc
 .DS_Store
-debug
+no bug
