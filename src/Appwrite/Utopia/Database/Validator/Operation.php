@@ -202,6 +202,11 @@ class Operation extends Validator
                 $this->description = "Key '{$attributeKey}' is required in data for {$action}";
                 return false;
             }
+            // Validate 'value' is numeric if provided (defaults to 1 if omitted)
+            if (\array_key_exists('value', $value['data']) && !\is_numeric($value['data']['value'])) {
+                $this->description = "Key 'value' must be a numeric value for {$action}";
+                return false;
+            }
         }
 
         return true;
