@@ -597,11 +597,27 @@ class Deletes extends Action
         if ($projectTables) {
             $dbForProject->deleteCollection(Database::METADATA);
         } elseif ($sharedTablesV1) {
+            $collectionsConfig = Config::getParam('collections', []);
+            $metadataUIDs = array_keys($collectionsConfig['projects'] ?? []);
+            $metadataUIDs[] = 'audit';
+
+            $metadataDocuments = $dbForProject->find(Database::METADATA, [
+                Query::equal('$id', $metadataUIDs),
+                Query::limit(PHP_INT_MAX)
+            ]);
+
+            $sequencesToDelete = [];
+
+            foreach ($metadataDocuments as $metadataDoc) {
+                if (!is_null($metadataDoc->getTenant()) && $metadataDoc->getTenant() === (int)$document->getSequence()) {
+                    Console::log("Found metadata sequence: {$metadataDoc->getSequence()} (tenant: {$metadataDoc->getTenant()})");
+                    $sequencesToDelete[] = $metadataDoc->getSequence();
+                }
+            }
+            $queries = [Query::equal('$sequence', $sequencesToDelete),Query::orderAsc()];
             $this->deleteByGroup(
                 Database::METADATA,
-                [
-                    Query::orderAsc()
-                ],
+                $queries,
                 $dbForProject
             );
         } elseif ($sharedTablesV2) {
