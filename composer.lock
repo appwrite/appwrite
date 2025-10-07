@@ -1927,16 +1927,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.46",
+            "version": "3.0.47",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6"
+                "reference": "9d6ca36a6c2dd434765b1071b2644a1c683b385d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
-                "reference": "56483a7de62a6c2a6635e42e93b8a9e25d4f0ec6",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/9d6ca36a6c2dd434765b1071b2644a1c683b385d",
+                "reference": "9d6ca36a6c2dd434765b1071b2644a1c683b385d",
                 "shasum": ""
             },
             "require": {
@@ -2017,7 +2017,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.46"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.47"
             },
             "funding": [
                 {
@@ -2033,7 +2033,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-26T16:29:55+00:00"
+            "time": "2025-10-06T01:07:24+00:00"
         },
         {
             "name": "psr/container",
@@ -3635,16 +3635,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "2.2.0",
+            "version": "2.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "19a3ab2ae99578861dd1a7b4fdbfb62b37d09447"
+                "reference": "a91e04080d7f13c35c4885dea0ffebc33cd33e1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/19a3ab2ae99578861dd1a7b4fdbfb62b37d09447",
-                "reference": "19a3ab2ae99578861dd1a7b4fdbfb62b37d09447",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a91e04080d7f13c35c4885dea0ffebc33cd33e1f",
+                "reference": "a91e04080d7f13c35c4885dea0ffebc33cd33e1f",
                 "shasum": ""
             },
             "require": {
@@ -3685,9 +3685,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/2.2.0"
+                "source": "https://github.com/utopia-php/database/tree/2.3.1"
             },
-            "time": "2025-09-26T02:23:30+00:00"
+            "time": "2025-10-06T04:29:14+00:00"
         },
         {
             "name": "utopia-php/detector",

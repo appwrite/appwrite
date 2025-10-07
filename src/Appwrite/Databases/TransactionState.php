@@ -45,32 +45,27 @@ class TransactionState
         ?string $transactionId = null,
         array $queries = []
     ): Document {
-        // If no transaction, use normal database retrieval
         if ($transactionId === null) {
             return $this->dbForProject->getDocument($collectionId, $documentId, $queries);
         }
 
         $state = $this->getTransactionState($transactionId);
 
-        // Check if document exists in transaction state
         if (isset($state[$collectionId][$documentId])) {
             $docState = $state[$collectionId][$documentId];
 
             if (!$docState['exists']) {
-                // Document was deleted in transaction
                 return new Document();
             }
 
             if ($docState['action'] === 'create') {
-                // Document was created in transaction, return the created version
                 return $this->applyProjection($docState['document'], $queries);
             }
 
             if ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
-                // This is an update to an existing document, merge with committed version
+                // Merge with committed version
                 $committedDoc = $this->dbForProject->getDocument($collectionId, $documentId, $queries);
                 if (!$committedDoc->isEmpty()) {
-                    // Apply the updates from transaction
                     foreach ($docState['document']->getAttributes() as $key => $value) {
                         if ($key !== '$id') {
                             $committedDoc->setAttribute($key, $value);
@@ -79,13 +74,11 @@ class TransactionState
                     // Reapply projection in case transaction added new fields
                     return $this->applyProjection($committedDoc, $queries);
                 } elseif ($docState['action'] === 'upsert') {
-                    // Upsert created a new document since committed doc doesn't exist
                     return $this->applyProjection($docState['document'], $queries);
                 }
             }
         }
 
-        // Document not affected by transaction, return committed version
         return $this->dbForProject->getDocument($collectionId, $documentId, $queries);
     }
 
@@ -307,18 +300,21 @@ class TransactionState
     /**
      * Apply bulk upsert to documents in transaction state
      *
-     * This allows bulk operations within a transaction to see each other's changes.
+     * This merges partial upsert data with full documents from transaction state,
+     * preventing validation errors when upserting documents created in the same transaction.
      *
      * @param string $collectionId Collection ID
-     * @param array $documents Array of Document objects to upsert
+     * @param array $documents Array of Document objects to upsert (can be partial)
      * @param array &$state Transaction state (passed by reference)
-     * @return void
+     * @return array Merged documents ready for database upsert
      */
     public function applyBulkUpsertToState(
         string $collectionId,
         array $documents,
         array &$state
-    ): void {
+    ): array {
+        $mergedDocuments = [];
+
         foreach ($documents as $doc) {
             if (!($doc instanceof Document)) {
                 continue;
@@ -329,7 +325,7 @@ class TransactionState
                 continue;
             }
 
-            // If document exists in state, update it; otherwise it will be handled by DB upsert
+            // If document exists in state, update it and use the merged version
             if (isset($state[$collectionId][$docId])) {
                 // Apply updates to existing state document
                 foreach ($doc->getArrayCopy() as $key => $value) {
@@ -337,8 +333,15 @@ class TransactionState
                         $state[$collectionId][$docId]->setAttribute($key, $value);
                     }
                 }
+                // Use the full merged document from state
+                $mergedDocuments[] = $state[$collectionId][$docId];
+            } else {
+                // Document not in state - use original partial data for DB upsert
+                $mergedDocuments[] = $doc;
             }
         }
+
+        return $mergedDocuments;
     }
 
     /**

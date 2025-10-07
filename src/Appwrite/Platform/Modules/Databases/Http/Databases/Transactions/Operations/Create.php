@@ -113,7 +113,6 @@ class Create extends Action
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
 
-            // Check if collection has relationships for bulk operations
             if (\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
                 $hasRelationships = \array_filter(
                     $collection->getAttribute('attributes', []),
