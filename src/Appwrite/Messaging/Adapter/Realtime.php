@@ -315,14 +315,28 @@ class Realtime extends MessagingAdapter
                     $tableId = $payload->getAttribute('$tableId', '');
                     $collectionId = $payload->getAttribute('$collectionId', '');
                     $resourceId = $tableId ?: $collectionId;
+                    $databaseType = $database->getAttribute('type');
+                    $channels = [];
+                    // backward compat(tablesdb will have databases channels + tablesdb prefixed channels)
+                    if ($databaseType === 'legacy' || $databaseType === 'tablesdb') {
+                        $prefix = 'databases';
+                        $channels = array_merge(
+                            $channels,
+                            self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), $prefix)
+                        );
 
-                    $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $resourceId . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $resourceId . '.rows.' . $payload->getId();
-
-                    $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $resourceId . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $resourceId . '.documents.' . $payload->getId();
+                        $channels = array_merge(
+                            $channels,
+                            self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), $prefix)
+                        );
+                    }
+                    // prefixed channels -> tablesdb, documentsdb,etc
+                    if ($databaseType !== 'legacy') {
+                        $channels = array_merge(
+                            $channels,
+                            self::getDatabaseChannels($databaseType, $database->getId(), $resourceId, $payload->getId())
+                        );
+                    }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -378,5 +392,54 @@ class Realtime extends MessagingAdapter
             'permissionsChanged' => $permissionsChanged,
             'projectId' => $projectId
         ];
+    }
+
+    // $prefixOverride to forcefully use a prefix(for backward-compat cases)
+    public static function getDatabaseChannels(
+        string $type = 'databases',
+        string $databaseId = '',
+        string $resourceId = '',
+        string $payloadId = '',
+        string $prefixOverride = '',
+    ): array {
+        $basePrefix = $prefixOverride ?: $type;
+
+        if (!$databaseId || !$resourceId || !$payloadId) {
+            return [];
+        }
+
+        $channels = [];
+
+        switch ($type) {
+            case 'legacy':
+                if (empty($prefixOverride)) {
+                    $basePrefix = 'databases';
+                }
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+            case 'tablesdb':
+                $channels[] = 'rows';
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows";
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows.{$payloadId}";
+                break;
+
+            case 'documentsdb':
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+            default:
+                $basePrefix = 'databases';
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+        }
+
+        return $channels;
     }
 }
