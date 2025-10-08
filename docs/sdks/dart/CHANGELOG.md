@@ -1,5 +1,10 @@
 # Change Log
 
+## 19.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 18.1.0
 
 * Add `orderRandom` query support
