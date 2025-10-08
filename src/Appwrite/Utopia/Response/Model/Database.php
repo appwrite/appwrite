@@ -47,6 +47,12 @@ class Database extends Model
                 'example' => 'legacy',
                 'enum' => ['legacy', 'tablesdb'],
             ])
+            ->addRule('database', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Database DSN.',
+                'default' => '',
+                'example' => 'mariadb://appwrite',
+            ])
         ;
     }
 

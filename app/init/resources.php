@@ -435,8 +435,6 @@ App::setResource('getDatabaseDB', function (Group $pools, Cache $cache, Document
     return function (Document $database) use ($pools, $cache, $project, $request): Database {
         $databaseType = $database->getAttribute('database', '');
         $databaseDSN = new DSN($databaseType);
-        $datatypeType = $databaseDSN->getScheme();
-
         try {
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
@@ -444,15 +442,7 @@ App::setResource('getDatabaseDB', function (Group $pools, Cache $cache, Document
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
-        $pool = null;
-
-        switch ($datatypeType) {
-            case System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'):
-                $pool = $pools->get('documentsDb');
-                break;
-            default:
-                $pool = $pools->get($dsn->getHost());
-        }
+        $pool = $pools->get($databaseDSN->getHost());
 
         $adapter = new DatabasePool($pool);
         $database = new Database($adapter, $cache);

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c7dfa0ae1684b819ac85adf3d277b86b",
+    "content-hash": "b2d376e36ec13c9dc9295c61a2d3a78f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3450,16 +3450,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "1.0.1",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "cd591568791556d246d901d6aaf9935ab02c3f9a"
+                "reference": "c5e2232033b507a07f72180dc56d37e1872ee7be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/cd591568791556d246d901d6aaf9935ab02c3f9a",
-                "reference": "cd591568791556d246d901d6aaf9935ab02c3f9a",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/c5e2232033b507a07f72180dc56d37e1872ee7be",
+                "reference": "c5e2232033b507a07f72180dc56d37e1872ee7be",
                 "shasum": ""
             },
             "require": {
@@ -3467,7 +3467,7 @@
                 "ext-pdo": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "2.*"
+                "utopia-php/database": "1.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -3495,9 +3495,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/1.0.1"
+                "source": "https://github.com/utopia-php/abuse/tree/1.0.0"
             },
-            "time": "2025-09-04T12:46:54+00:00"
+            "time": "2025-08-13T09:12:54+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -3547,21 +3547,21 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "1.0.1",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "5ef26d6a2ab2db7bb86288a1a6ef970307b46f22"
+                "reference": "c0ed75f4d068f1f6c2e7149a909490d4214e72bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/5ef26d6a2ab2db7bb86288a1a6ef970307b46f22",
-                "reference": "5ef26d6a2ab2db7bb86288a1a6ef970307b46f22",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/c0ed75f4d068f1f6c2e7149a909490d4214e72bb",
+                "reference": "c0ed75f4d068f1f6c2e7149a909490d4214e72bb",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "2.*"
+                "utopia-php/database": "1.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -3588,9 +3588,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/1.0.1"
+                "source": "https://github.com/utopia-php/audit/tree/1.0.0"
             },
-            "time": "2025-09-04T12:46:43+00:00"
+            "time": "2025-08-13T09:09:00+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -4346,16 +4346,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.1.0",
+            "version": "dev-feat-documents-db",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "6fb6f8f032cd34c3c65728a55d494adeac2ff038"
+                "reference": "262c1c2c72d7429e504cde53b2b1774da8e9998c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/6fb6f8f032cd34c3c65728a55d494adeac2ff038",
-                "reference": "6fb6f8f032cd34c3c65728a55d494adeac2ff038",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/262c1c2c72d7429e504cde53b2b1774da8e9998c",
+                "reference": "262c1c2c72d7429e504cde53b2b1774da8e9998c",
                 "shasum": ""
             },
             "require": {
@@ -4363,7 +4363,7 @@
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
-                "utopia-php/database": "2.*",
+                "utopia-php/database": "1.*",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/storage": "0.18.*"
@@ -4396,9 +4396,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.1.0"
+                "source": "https://github.com/utopia-php/migration/tree/feat-documents-db"
             },
-            "time": "2025-09-10T05:45:30+00:00"
+            "time": "2025-10-07T14:52:08+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4786,16 +4786,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.13",
+            "version": "0.18.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "3d8ce53ae042173bf230445e996056c5f65ded22"
+                "reference": "4f14ec952c6f4006dd0613e55bbf7631814fbc00"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/3d8ce53ae042173bf230445e996056c5f65ded22",
-                "reference": "3d8ce53ae042173bf230445e996056c5f65ded22",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/4f14ec952c6f4006dd0613e55bbf7631814fbc00",
+                "reference": "4f14ec952c6f4006dd0613e55bbf7631814fbc00",
                 "shasum": ""
             },
             "require": {
@@ -4838,9 +4838,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.13"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.14"
             },
-            "time": "2025-05-26T13:10:35+00:00"
+            "time": "2025-10-07T10:21:47+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -8739,13 +8739,20 @@
         {
             "package": "utopia-php/database",
             "version": "dev-feat-documentsdb",
-            "alias": "2.1.1",
-            "alias_normalized": "2.1.1.0"
+            "alias": "1.1.1",
+            "alias_normalized": "1.1.1.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-documents-db",
+            "alias": "1.1.1",
+            "alias_normalized": "1.1.1.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/database": 20
+        "utopia-php/database": 20,
+        "utopia-php/migration": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

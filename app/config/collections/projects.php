@@ -65,7 +65,7 @@ return [
                 '$id' => ID::custom('database'),
                 'type' => Database::VAR_STRING,
                 'size' => 128,
-                'required' => false,
+                'required' => true,
                 'signed' => true,
                 'array' => false,
                 'filters' => [],

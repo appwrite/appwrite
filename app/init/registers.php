@@ -139,10 +139,10 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
-        'documentsDb' => [
+        'documentsdb' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_DOCUMENTS', $fallbackForDocumentsDB),
-            'multiple' => false,
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_DOCUMENTSDB', $fallbackForDocumentsDB),
+            'multiple' => true,
             'schemes' => ['mongodb'],
         ],
         'logs' => [

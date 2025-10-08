@@ -196,7 +196,6 @@ Server::setResource('getDatabaseDB', function (Cache $cache, Registry $register,
     return function (Document $database) use ($cache, $register, $project): Database {
         $databaseType = $database->getAttribute('database', '');
         $databaseDSN = new DSN($databaseType);
-        $datatypeType = $databaseDSN->getScheme();
 
         try {
             $dsn = new DSN($project->getAttribute('database'));
@@ -206,15 +205,7 @@ Server::setResource('getDatabaseDB', function (Cache $cache, Registry $register,
         }
 
         $pools = $register->get('pools');
-        $pool = null;
-
-        switch ($datatypeType) {
-            case System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'):
-                $pool = $pools->get('documentsDb');
-                break;
-            default:
-                $pool = $pools->get($dsn->getHost());
-        }
+        $pool = $pools->get($databaseDSN->getHost());
 
         $adapter = new DatabasePool($pool);
         $database = new Database($adapter, $cache);

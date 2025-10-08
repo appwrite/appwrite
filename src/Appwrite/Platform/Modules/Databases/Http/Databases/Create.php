@@ -19,6 +19,7 @@ use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
@@ -31,22 +32,60 @@ class Create extends Action
         return 'createDatabase';
     }
 
-    protected function getDatabaseDSN(): string
+    protected function getDatabaseDSN(string $region = 'default'): string
     {
-        $database = System::getEnv('_APP_DATABASE_NAME', 'appwrite');
-        $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-
-        $schema = match ($this->getDatabaseType()) {
-            'documentsdb' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
-            default       => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        };
-
-        $dsn = $schema . '://' . $database;
-
-        if (!empty($namespace)) {
-            $dsn .= '?namespace=' . $namespace;
+        $databases = [];
+        $databaseKeys = [];
+        /**
+         * @var string|null $databaseOverride
+        */
+        $databaseOverride = '';
+        $dbScheme = '';
+        switch ($this->getDatabaseType()) {
+            case 'documentsdb':
+                $databases = Config::getParam('pools-documentsdb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+                break;
+            default:
+                $databases = Config::getParam('pools-database', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST', 'mysql');
         }
 
+        if ($region !== 'default') {
+            $keys = explode(',', $databaseKeys);
+            $databases = array_filter($keys, function ($value) use ($region) {
+                return str_contains($value, $region);
+            });
+        }
+
+        $index = \array_search($databaseOverride, $databases);
+        if ($index !== false) {
+            $dsn = $databases[$index];
+        } else {
+            $dsn = $databases[array_rand($databases)];
+        }
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (\in_array($dsn, $sharedTables)) {
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . $dsn . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
+        }
+        try {
+            // for validation
+            new DSN($dsn);
+        } catch (\InvalidArgumentException) {
+            $dsn = $dbScheme.'://' . $dsn;
+        }
         return $dsn;
     }
 
