@@ -62,6 +62,7 @@ class Exception extends \Exception
     public const GENERAL_INVALID_PHONE             = 'general_invalid_phone';
     public const GENERAL_REGION_ACCESS_DENIED      = 'general_region_access_denied';
     public const GENERAL_BAD_REQUEST               = 'general_bad_request';
+    public const GENERAL_NOT_FOUND                 = 'general_not_found';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
