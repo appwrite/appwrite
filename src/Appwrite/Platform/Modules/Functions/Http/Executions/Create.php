@@ -11,7 +11,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Platform\Modules\Compute\Action;
-use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -312,7 +311,7 @@ class Create extends Action
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => ScheduleExecutions::getSupportedResource(),
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_EXECUTION,
                     'resourceId' => $execution->getId(),
                     'resourceInternalId' => $execution->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),

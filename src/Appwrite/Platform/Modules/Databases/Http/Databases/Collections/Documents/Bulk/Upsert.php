@@ -113,7 +113,7 @@ class Upsert extends Action
 
         try {
             $modified = $dbForProject->withPreserveDates(function () use ($dbForProject, $database, $collection, $documents, $plan, &$upserted) {
-                return $dbForProject->createOrUpdateDocuments(
+                return $dbForProject->upsertDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documents,
                     onNext: function (Document $document) use ($plan, &$upserted) {
@@ -130,7 +130,7 @@ class Upsert extends Action
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
-            throw new Exception($this->getInvalidStructureException(), $e->getMessage());
+            throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
         foreach ($upserted as $document) {

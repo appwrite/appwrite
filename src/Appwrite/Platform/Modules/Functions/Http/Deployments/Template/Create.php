@@ -50,7 +50,7 @@ class Create extends Action
                 description: <<<EOT
                 Create a deployment based on a template.
                 
-                Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/server/functions#listTemplates) to find the template details.
+                Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/products/functions/templates) to find the template details.
                 EOT,
                 auth: [AuthType::KEY],
                 responses: [

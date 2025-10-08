@@ -234,7 +234,7 @@ class Create extends Action
         $schedule = Authorization::skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'function',
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),

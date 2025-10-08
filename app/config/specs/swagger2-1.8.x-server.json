@@ -3302,10 +3302,10 @@
                 ]
             }
         },
-        "\/account\/verification": {
+        "\/account\/verifications\/email": {
             "post": {
                 "summary": "Create email verification",
-                "operationId": "accountCreateVerification",
+                "operationId": "accountCreateEmailVerification",
                 "consumes": [
                     "application\/json"
                 ],
@@ -3326,12 +3326,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "createVerification",
+                    "method": "createEmailVerification",
                     "group": "verification",
                     "weight": 41,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/create-verification.md",
+                    "demo": "account\/create-email-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -3342,6 +3342,58 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "createEmailVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "url"
+                            ],
+                            "required": [
+                                "url"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
+                            "demo": "account\/create-email-verification.md"
+                        },
+                        {
+                            "name": "createVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "url"
+                            ],
+                            "required": [
+                                "url"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
+                            "demo": "account\/create-verification.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.createEmailVerification"
+                            }
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3377,7 +3429,7 @@
             },
             "put": {
                 "summary": "Update email verification (confirmation)",
-                "operationId": "accountUpdateVerification",
+                "operationId": "accountUpdateEmailVerification",
                 "consumes": [
                     "application\/json"
                 ],
@@ -3398,12 +3450,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "updateVerification",
+                    "method": "updateEmailVerification",
                     "group": "verification",
                     "weight": 42,
                     "cookies": false,
                     "type": "",
-                    "demo": "account\/update-verification.md",
+                    "demo": "account\/update-email-verification.md",
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
@@ -3414,6 +3466,62 @@
                         "server"
                     ],
                     "packaging": false,
+                    "methods": [
+                        {
+                            "name": "updateEmailVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "secret"
+                            ],
+                            "required": [
+                                "userId",
+                                "secret"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
+                            "demo": "account\/update-email-verification.md"
+                        },
+                        {
+                            "name": "updateVerification",
+                            "namespace": "account",
+                            "desc": "",
+                            "auth": {
+                                "Project": [],
+                                "Session": []
+                            },
+                            "parameters": [
+                                "userId",
+                                "secret"
+                            ],
+                            "required": [
+                                "userId",
+                                "secret"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/definitions\/token"
+                                }
+                            ],
+                            "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
+                            "demo": "account\/update-verification.md",
+                            "deprecated": {
+                                "since": "1.8.0",
+                                "replaceWith": "account.updateEmailVerification"
+                            }
+                        }
+                    ],
                     "auth": {
                         "Project": [],
                         "Session": []
@@ -3455,7 +3563,7 @@
                 ]
             }
         },
-        "\/account\/verification\/phone": {
+        "\/account\/verifications\/phone": {
             "post": {
                 "summary": "Create phone verification",
                 "operationId": "accountCreatePhoneVerification",
@@ -11662,7 +11770,7 @@
                 "tags": [
                     "functions"
                 ],
-                "description": "Create a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/functions#listTemplates) to find the template details.",
+                "description": "Create a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/products\/functions\/templates) to find the template details.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -11679,7 +11787,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/functions#listTemplates) to find the template details.",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/products\/functions\/templates) to find the template details.",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -21063,7 +21171,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "Create a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/sites#listTemplates) to find the template details.",
+                "description": "Create a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/products\/sites\/templates) to find the template details.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -21080,7 +21188,7 @@
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/server\/sites#listTemplates) to find the template details.",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a deployment based on a template.\n\nUse this endpoint with combination of [listTemplates](https:\/\/appwrite.io\/docs\/products\/sites\/templates) to find the template details.",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -23817,7 +23925,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create a new Table. Before using this route, you should create a new database resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "description": "Create a new Table. Before using this route, you should create a new database resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Table",
@@ -24309,7 +24417,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -24419,7 +24527,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -25931,7 +26039,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -26036,7 +26144,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -26147,7 +26255,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -26252,7 +26360,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -26363,7 +26471,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -26468,7 +26576,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -26716,7 +26824,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -26839,7 +26947,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -27467,7 +27575,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -27550,7 +27658,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -27682,7 +27790,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -27755,7 +27863,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -27836,7 +27944,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the TableDB service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdbdb#tablesdbCreate).",
+                        "description": "Table ID. You can create a new table using the TablesDB service [server integration](https:\/\/appwrite.io\/docs\/products\/databases\/tables#create-table).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -27868,7 +27976,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -27926,7 +28034,7 @@
                                     "model": "#\/definitions\/row"
                                 }
                             ],
-                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                             "demo": "tablesdb\/create-row.md"
                         },
                         {
@@ -27953,7 +28061,7 @@
                                     "model": "#\/definitions\/rowList"
                                 }
                             ],
-                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                             "demo": "tablesdb\/create-rows.md"
                         }
                     ],
@@ -27981,7 +28089,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate). Make sure to define columns before creating rows.",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable). Make sure to define columns before creating rows.",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -28040,7 +28148,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.\n",
+                "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.\n",
                 "responses": {
                     "201": {
                         "description": "Rows List",
@@ -28095,7 +28203,7 @@
                                     "model": "#\/definitions\/rowList"
                                 }
                             ],
-                            "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.\n",
+                            "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.\n",
                             "demo": "tablesdb\/upsert-rows.md"
                         }
                     ],
@@ -28310,7 +28418,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -28402,7 +28510,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -28442,7 +28550,7 @@
                 "tags": [
                     "tablesDB"
                 ],
-                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                 "responses": {
                     "201": {
                         "description": "Row",
@@ -28499,7 +28607,7 @@
                                     "model": "#\/definitions\/row"
                                 }
                             ],
-                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreateTable) API or directly from your database console.",
+                            "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
                             "demo": "tablesdb\/upsert-row.md"
                         }
                     ],
@@ -28734,7 +28842,7 @@
                     },
                     {
                         "name": "tableId",
-                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/tablesdb#tablesDBCreate).",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
                         "required": true,
                         "type": "string",
                         "x-example": "<TABLE_ID>",
@@ -35120,7 +35228,11 @@
                 "type": {
                     "type": "string",
                     "description": "Database type.",
-                    "x-example": "legacy"
+                    "x-example": "legacy",
+                    "enum": [
+                        "legacy",
+                        "tablesdb"
+                    ]
                 }
             },
             "required": [
@@ -35359,7 +35471,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -35447,7 +35567,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -35537,7 +35665,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -35627,7 +35763,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -35700,7 +35844,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -35780,7 +35932,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -35870,7 +36030,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -35950,7 +36118,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36030,7 +36206,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36110,7 +36294,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36218,7 +36410,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36297,7 +36497,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36388,7 +36596,15 @@
                 "status": {
                     "type": "string",
                     "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "AttributeStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36705,7 +36921,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36793,7 +37017,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36883,7 +37115,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -36973,7 +37213,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37046,7 +37294,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37126,7 +37382,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37216,7 +37480,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37296,7 +37568,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37376,7 +37656,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37456,7 +37744,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37564,7 +37860,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37643,7 +37947,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37734,7 +38046,15 @@
                 "status": {
                     "type": "string",
                     "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ],
+                    "x-enum-name": "ColumnStatus"
                 },
                 "error": {
                     "type": "string",
@@ -37864,7 +38184,14 @@
                 "status": {
                     "type": "string",
                     "description": "Index status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
-                    "x-example": "available"
+                    "x-example": "available",
+                    "enum": [
+                        "available",
+                        "processing",
+                        "deleting",
+                        "stuck",
+                        "failed"
+                    ]
                 },
                 "error": {
                     "type": "string",
@@ -40307,7 +40634,14 @@
                 "status": {
                     "type": "string",
                     "description": "The deployment status. Possible values are \"waiting\", \"processing\", \"building\", \"ready\", and \"failed\".",
-                    "x-example": "ready"
+                    "x-example": "ready",
+                    "enum": [
+                        "waiting",
+                        "processing",
+                        "building",
+                        "ready",
+                        "failed"
+                    ]
                 },
                 "buildLogs": {
                     "type": "string",
@@ -40335,11 +40669,6 @@
                     "description": "The url of the vcs provider repository",
                     "x-example": "https:\/\/github.com\/vermakhushboo\/g4-node-function"
                 },
-                "providerBranch": {
-                    "type": "string",
-                    "description": "The branch of the vcs repository",
-                    "x-example": "0.7.x"
-                },
                 "providerCommitHash": {
                     "type": "string",
                     "description": "The commit hash of the vcs commit",
@@ -40364,6 +40693,11 @@
                     "type": "string",
                     "description": "The url of the vcs commit",
                     "x-example": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb"
+                },
+                "providerBranch": {
+                    "type": "string",
+                    "description": "The branch of the vcs repository",
+                    "x-example": "0.7.x"
                 },
                 "providerBranchUrl": {
                     "type": "string",
@@ -40392,12 +40726,12 @@
                 "providerRepositoryName",
                 "providerRepositoryOwner",
                 "providerRepositoryUrl",
-                "providerBranch",
                 "providerCommitHash",
                 "providerCommitAuthorUrl",
                 "providerCommitAuthor",
                 "providerCommitMessage",
                 "providerCommitUrl",
+                "providerBranch",
                 "providerBranchUrl"
             ],
             "example": {
@@ -40421,12 +40755,12 @@
                 "providerRepositoryName": "database",
                 "providerRepositoryOwner": "utopia",
                 "providerRepositoryUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function",
-                "providerBranch": "0.7.x",
                 "providerCommitHash": "7c3f25d",
                 "providerCommitAuthorUrl": "https:\/\/github.com\/vermakhushboo",
                 "providerCommitAuthor": "Khushboo Verma",
                 "providerCommitMessage": "Update index.js",
                 "providerCommitUrl": "https:\/\/github.com\/vermakhushboo\/g4-node-function\/commit\/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb",
+                "providerBranch": "0.7.x",
                 "providerBranchUrl": "https:\/\/github.com\/vermakhushboo\/appwrite\/tree\/0.7.x"
             }
         },
@@ -40472,12 +40806,23 @@
                 "trigger": {
                     "type": "string",
                     "description": "The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.",
-                    "x-example": "http"
+                    "x-example": "http",
+                    "enum": [
+                        "http",
+                        "schedule",
+                        "event"
+                    ]
                 },
                 "status": {
                     "type": "string",
                     "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.",
-                    "x-example": "processing"
+                    "x-example": "processing",
+                    "enum": [
+                        "waiting",
+                        "processing",
+                        "completed",
+                        "failed"
+                    ]
                 },
                 "requestMethod": {
                     "type": "string",
@@ -40491,7 +40836,7 @@
                 },
                 "requestHeaders": {
                     "type": "array",
-                    "description": "HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
+                    "description": "HTTP request headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.",
                     "items": {
                         "type": "object",
                         "$ref": "#\/definitions\/headers"
@@ -40847,8 +41192,13 @@
                 },
                 "status": {
                     "type": "string",
-                    "description": "Antivirus status. Possible values can are: `disabled`, `offline`, `online`",
-                    "x-example": "online"
+                    "description": "Antivirus status. Possible values are: `disabled`, `offline`, `online`",
+                    "x-example": "online",
+                    "enum": [
+                        "disabled",
+                        "offline",
+                        "online"
+                    ]
                 }
             },
             "required": [
@@ -40895,8 +41245,13 @@
                 },
                 "status": {
                     "type": "string",
-                    "description": "Service status. Possible values can are: `pass`, `fail`",
-                    "x-example": "pass"
+                    "description": "Service status. Possible values are: `pass`, `fail`",
+                    "x-example": "pass",
+                    "enum": [
+                        "pass",
+                        "fail"
+                    ],
+                    "x-enum-name": "HealthCheckStatus"
                 }
             },
             "required": [
@@ -41363,7 +41718,14 @@
                 "status": {
                     "type": "string",
                     "description": "Status of delivery.",
-                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed.",
+                    "enum": [
+                        "draft",
+                        "processing",
+                        "scheduled",
+                        "sent",
+                        "failed"
+                    ]
                 }
             },
             "required": [

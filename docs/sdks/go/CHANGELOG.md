@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.12.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+* Add `orderRandom` query support
+
 ## 0.9.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
