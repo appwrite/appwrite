@@ -58,6 +58,8 @@ class SDKs extends Action
         $git ??= Console::confirm('Should we use git push? (yes/no)');
         $git = $git === 'yes';
 
+        $prUrls = [];
+
         if ($git) {
             $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
             $production = $production === 'Appwrite';
@@ -346,7 +348,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         if ($prReturnCode === 0) {
                             Console::success("Successfully created pull request for {$language['name']} SDK");
                             if (!empty($prOutput)) {
-                                Console::info("PR URL: " . end($prOutput));
+                                $prUrls[$language['name']] = end($prOutput);
                             }
                         } else {
                             $errorMessage = implode("\n", $prOutput);
@@ -366,6 +368,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                                 if ($updateReturnCode === 0) {
                                     Console::success("Successfully updated pull request for {$language['name']} SDK");
+
+                                    $prUrlCommand = 'cd ' . $target . ' && \
+                                        gh pr view "' . $gitBranch . '" \
+                                        --repo "' . $repoName . '" \
+                                        --json url \
+                                        --jq .url \
+                                        2>&1';
+
+                                    $prUrlOutput = [];
+                                    $prUrlReturnCode = 0;
+                                    \exec($prUrlCommand, $prUrlOutput, $prUrlReturnCode);
+
+                                    if ($prUrlReturnCode === 0 && !empty($prUrlOutput)) {
+                                        $prUrls[$language['name']] = $prUrlOutput[0];
+                                    }
                                 } else {
                                     $updateErrorMessage = implode("\n", $updateOutput);
                                     Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
@@ -395,6 +412,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
                 }
             }
+        }
+
+        if (!empty($prUrls)) {
+            Console::log('');
+            Console::log('Pull Request Summary');
+            foreach ($prUrls as $sdkName => $url) {
+                Console::log("{$sdkName}: {$url}");
+            }
+            Console::log('');
         }
     }
 }
