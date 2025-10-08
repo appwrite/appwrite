@@ -45,8 +45,8 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('projectId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
-            ->param('keyId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
+            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+            ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));

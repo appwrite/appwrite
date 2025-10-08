@@ -8,6 +8,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -53,14 +54,14 @@ class Update extends FloatUpdate
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('tableId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
-            ->param('key', '', fn(Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('min', null, new FloatValidator(), 'Minimum value', true)
             ->param('max', null, new FloatValidator(), 'Maximum value', true)
             ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.')
-            ->param('newKey', null, fn(Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'New Column Key.', true, ['dbForProject'])
+            ->param('newKey', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

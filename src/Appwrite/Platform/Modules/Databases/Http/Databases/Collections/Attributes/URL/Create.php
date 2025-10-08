@@ -59,9 +59,9 @@ class Create extends Action
                     replaceWith: 'tablesDB.createUrlColumn',
                 ),
             ))
-            ->param('databaseId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn(Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)

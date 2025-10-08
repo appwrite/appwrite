@@ -57,7 +57,7 @@ class Create extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
             ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)

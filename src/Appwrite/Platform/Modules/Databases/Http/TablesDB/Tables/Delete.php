@@ -8,6 +8,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 
@@ -49,8 +50,8 @@ class Delete extends CollectionDelete
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('databaseId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('tableId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')

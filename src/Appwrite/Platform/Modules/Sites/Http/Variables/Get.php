@@ -49,8 +49,8 @@ class Get extends Base
                     ],
                 )
             )
-            ->param('siteId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
-            ->param('variableId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

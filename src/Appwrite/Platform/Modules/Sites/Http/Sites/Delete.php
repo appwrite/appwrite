@@ -53,7 +53,7 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('siteId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDeletes')

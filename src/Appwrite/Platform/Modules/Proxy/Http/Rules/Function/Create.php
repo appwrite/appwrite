@@ -63,7 +63,7 @@ class Create extends Action
             ->label('abuse-key', 'userId:{userId}, url:{url}')
             ->label('abuse-time', 60)
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-            ->param('functionId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of function to be executed.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of function to be executed.', false, ['dbForProject'])
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
             ->inject('project')

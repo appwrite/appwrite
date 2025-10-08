@@ -59,7 +59,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', fn(Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             // TODO: Support tag in future
             ->param('type', '', new WhiteList(['branch', 'commit', 'tag']), 'Type of reference passed. Allowed values are: branch, commit')
             ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name, commit hash')
