@@ -338,7 +338,7 @@ return [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => '0.14.0',
+                'version' => 'v0.12.0',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'package' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => true,
