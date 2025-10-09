@@ -367,7 +367,9 @@ class Create extends Action
 
         // Handle transaction staging
         if ($transactionId !== null) {
-            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND);
             }

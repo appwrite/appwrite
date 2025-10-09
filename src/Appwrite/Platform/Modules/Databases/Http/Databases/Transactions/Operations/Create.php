@@ -72,8 +72,17 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
         }
 
-        $transaction = Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId));
-        if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        // API keys and admins can read any transaction, regular users need permissions
+        $transaction = ($isAPIKey || $isPrivilegedUser)
+            ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+            : $dbForProject->getDocument('transactions', $transactionId);
+        if ($transaction->isEmpty()) {
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+        }
+        if ($transaction->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
         }
 
@@ -92,9 +101,6 @@ class Create extends Action
                 'Transaction already has ' . $existing . ' operations, adding ' . \count($operations) . ' would exceed the maximum of ' . $maxBatch
             );
         }
-
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
         $databases = $collections = $staged = $dependants = [];
         foreach ($operations as $operation) {
@@ -146,54 +152,58 @@ class Create extends Action
                 }
             }
 
-            $permissionType = match ($operation['action']) {
-                'create', 'bulkCreate' => Database::PERMISSION_CREATE,
-                'update', 'bulkUpdate', 'increment', 'decrement' => Database::PERMISSION_UPDATE,
-                'delete', 'bulkDelete' => Database::PERMISSION_DELETE,
-                'upsert', 'bulkUpsert' => ($document && !$document->isEmpty()) ? Database::PERMISSION_UPDATE : Database::PERMISSION_CREATE,
-                default => throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action'])
-            };
+            // Bulk operations skip permission validation entirely (API key/admin only, already checked above)
+            if (!\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
+                $permissionType = match ($operation['action']) {
+                    'create' => Database::PERMISSION_CREATE,
+                    'update', 'increment', 'decrement' => Database::PERMISSION_UPDATE,
+                    'delete' => Database::PERMISSION_DELETE,
+                    'upsert' => ($document && !$document->isEmpty()) ? Database::PERMISSION_UPDATE : Database::PERMISSION_CREATE,
+                    default => throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action'])
+                };
 
-            if (!$isAPIKey && !$isPrivilegedUser) {
-                $documentSecurity = $collection->getAttribute('documentSecurity', false);
-                $validator = new Authorization($permissionType);
-                $collectionValid = $validator->isValid($collection->getPermissionsByType($permissionType));
-                $documentValid = false;
-                if ($document !== null && !$document->isEmpty() && $documentSecurity) {
-                    if ($permissionType === Database::PERMISSION_UPDATE) {
-                        $documentValid = $validator->isValid($document->getUpdate());
-                    } elseif ($permissionType === Database::PERMISSION_DELETE) {
-                        $documentValid = $validator->isValid($document->getDelete());
+                // For individual operations, enforce permissions unless using API key/admin
+                if (!$isAPIKey && !$isPrivilegedUser) {
+                    $documentSecurity = $collection->getAttribute('documentSecurity', false);
+                    $validator = new Authorization($permissionType);
+                    $collectionValid = $validator->isValid($collection->getPermissionsByType($permissionType));
+                    $documentValid = false;
+                    if ($document !== null && !$document->isEmpty() && $documentSecurity) {
+                        if ($permissionType === Database::PERMISSION_UPDATE) {
+                            $documentValid = $validator->isValid($document->getUpdate());
+                        } elseif ($permissionType === Database::PERMISSION_DELETE) {
+                            $documentValid = $validator->isValid($document->getDelete());
+                        }
                     }
-                }
 
-                if ($permissionType === Database::PERMISSION_CREATE || !$documentSecurity) {
-                    if (!$collectionValid) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                    if ($permissionType === Database::PERMISSION_CREATE || !$documentSecurity) {
+                        if (!$collectionValid) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED);
+                        }
+                    } else {
+                        if (!$collectionValid && !$documentValid) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED);
+                        }
                     }
-                } else {
-                    if (!$collectionValid && !$documentValid) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
-                    }
-                }
 
-                // Users can only set permissions for roles they have
-                if (isset($operation['data']['$permissions'])) {
-                    $permissions = $operation['data']['$permissions'];
-                    $roles = Authorization::getRoles();
-                    foreach (Database::PERMISSIONS as $type) {
-                        foreach ($permissions as $permission) {
-                            $permission = Permission::parse($permission);
-                            if ($permission->getPermission() != $type) {
-                                continue;
-                            }
-                            $role = (new Role(
-                                $permission->getRole(),
-                                $permission->getIdentifier(),
-                                $permission->getDimension()
-                            ))->toString();
-                            if (!Authorization::isRole($role)) {
-                                throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    // Users can only set permissions for roles they have
+                    if (isset($operation['data']['$permissions'])) {
+                        $permissions = $operation['data']['$permissions'];
+                        $roles = Authorization::getRoles();
+                        foreach (Database::PERMISSIONS as $type) {
+                            foreach ($permissions as $permission) {
+                                $permission = Permission::parse($permission);
+                                if ($permission->getPermission() != $type) {
+                                    continue;
+                                }
+                                $role = (new Role(
+                                    $permission->getRole(),
+                                    $permission->getIdentifier(),
+                                    $permission->getDimension()
+                                ))->toString();
+                                if (!Authorization::isRole($role)) {
+                                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                                }
                             }
                         }
                     }
