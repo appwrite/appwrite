@@ -3,6 +3,7 @@
 namespace Tests\E2E\General;
 
 use Appwrite\Platform\Modules\Compute\Specification;
+use Appwrite\Tests\Retry;
 use CURLFile;
 use DateTime;
 use Tests\E2E\Client;
@@ -593,6 +594,8 @@ class UsageTest extends Scope
         $collectionsTotal = $data['collectionsTotal'];
         $documentsTotal = $data['documentsTotal'];
 
+        sleep(self::WAIT * 5);
+
         $this->assertEventually(function () use ($requestsTotal, $databasesTotal, $documentsTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
@@ -844,7 +847,7 @@ class UsageTest extends Scope
         $tablesTotal = $data['tablesTotal'];
         $databasesTotal = $data['databasesTotal'];
 
-        sleep(self::WAIT);
+        sleep(self::WAIT * 5);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -909,6 +912,215 @@ class UsageTest extends Scope
     }
 
     /** @depends testDatabaseStatsTablesAPI */
+    public function testPrepareDocumentsDBStats(array $data): array
+    {
+        $documentsTotal = 0;
+        $collectionsTotal = 0;
+        $databasesTotal = $data['databasesTotal'];
+        $requestsTotal = $data['requestsTotal'];
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' documentsdb';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/documentsdb',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'databaseId' => 'unique()',
+                    'name' => $name,
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $databasesTotal += 1;
+
+            $documentsDbId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/documentsdb/' . $documentsDbId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $databasesTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $name = uniqid() . ' collection';
+
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/documentsdb/' . $documentsDbId . '/collections',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'collectionId' => 'unique()',
+                    'name' => $name,
+                    'documentSecurity' => false,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::create(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]
+            );
+
+            $this->assertEquals($name, $response['body']['name']);
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $collectionsTotal += 1;
+
+            $collectionId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $collectionsTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        for ($i = 0; $i < self::CREATE; $i++) {
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/documents',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+                [
+                    'documentId' => 'unique()',
+                    'data' => [
+                        'name' => uniqid() . ' document',
+                        'value' => $i
+                    ]
+                ]
+            );
+
+            $this->assertNotEmpty($response['body']['$id']);
+
+            $requestsTotal += 1;
+            $documentsTotal += 1;
+
+            $documentId = $response['body']['$id'];
+
+            if ($i < (self::CREATE / 2)) {
+                $response = $this->client->call(
+                    Client::METHOD_DELETE,
+                    '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/documents/' . $documentId,
+                    array_merge([
+                        'x-appwrite-project' => $this->getProject()['$id']
+                    ], $this->getHeaders()),
+                );
+
+                $this->assertEmpty($response['body']);
+
+                $documentsTotal -= 1;
+                $requestsTotal += 1;
+            }
+        }
+
+        return array_merge($data, [
+            'documentsDbId' => $documentsDbId,
+            'documentsDbCollectionId' => $collectionId,
+            'requestsTotal' => $requestsTotal,
+            'databasesTotal' => $databasesTotal,
+            'documentsDbCollectionsTotal' => $collectionsTotal,
+            'documentsDbDocumentsTotal' => $documentsTotal,
+        ]);
+    }
+
+    /** @depends testPrepareDocumentsDBStats */
+    #[Retry(count: 1)]
+    public function testDocumentsDBStats(array $data): array
+    {
+        $documentsDbId = $data['documentsDbId'];
+        $collectionId = $data['documentsDbCollectionId'];
+        $requestsTotal = $data['requestsTotal'];
+        $databasesTotal = $data['databasesTotal'];
+        $collectionsTotal = $data['documentsDbCollectionsTotal'];
+        $documentsTotal = $data['documentsDbDocumentsTotal'];
+
+        sleep(self::WAIT * 5);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/project/usage',
+            $this->getConsoleHeaders(),
+            [
+                'period' => '1d',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
+        );
+
+        $this->assertGreaterThanOrEqual(31, count($response['body']));
+        $this->assertCount(1, $response['body']['requests']);
+        $this->assertCount(1, $response['body']['network']);
+        $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
+        $this->validateDates($response['body']['requests']);
+        $this->assertEquals($databasesTotal, $response['body']['databasesTotal']);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals($databasesTotal, $response['body']['databases'][array_key_last($response['body']['databases'])]['value']);
+        $this->validateDates($response['body']['databases']);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/documentsdb/' . $documentsDbId . '/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals($collectionsTotal, $response['body']['collections'][array_key_last($response['body']['collections'])]['value']);
+        $this->validateDates($response['body']['collections']);
+
+        $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+        $this->validateDates($response['body']['documents']);
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/usage?range=30d',
+            $this->getConsoleHeaders()
+        );
+
+        $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+        $this->validateDates($response['body']['documents']);
+
+        return $data;
+    }
+
+    /** @depends testDocumentsDBStats */
     public function testPrepareFunctionsStats(array $data): array
     {
         $executionTime = 0;
