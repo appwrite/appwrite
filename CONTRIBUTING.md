@@ -567,7 +567,7 @@ zend_extension=xdebug
   "request": "launch",
   "port": 9005,
   "pathMappings": {
-    "/usr/src/code": "${workspaceRoot}"
+    "/usr/src/code": "${workspaceFolder}"
   }
 }
 ```
