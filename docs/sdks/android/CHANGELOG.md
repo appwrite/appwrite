@@ -1,6 +1,6 @@
 # Change Log
 
-## 11.2.0
+## 11.2.1
 
 * Add transaction support for Databases and TablesDB
 

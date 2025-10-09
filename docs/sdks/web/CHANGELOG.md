@@ -1,6 +1,6 @@
 # Change Log
 
-## 21.2.0
+## 21.2.1
 
 * Add transaction support for Databases and TablesDB
 

@@ -1,6 +1,6 @@
 # Change Log
 
-## 13.2.0
+## 13.2.1
 
 * Add transaction support for Databases and TablesDB
 

@@ -1,6 +1,6 @@
 # Change log
 
-## 0.17.0
+## 0.17.1
 
 * Add transaction support for Databases and TablesDB
 
