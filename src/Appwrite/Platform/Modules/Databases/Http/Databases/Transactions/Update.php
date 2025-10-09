@@ -263,7 +263,6 @@ class Update extends Action
                 $documentId = $operation['documentId'];
                 $data = $operation['data'];
 
-
                 if ($data instanceof Document) {
                     $data = $data->getArrayCopy();
                 }
@@ -351,9 +350,7 @@ class Update extends Action
                         ->setParam('rowId', $doc->getId())
                         ->setPayload($payload);
 
-                    $project = $queueForEvents->getProject();
-                    $result = $queueForRealtime->from($queueForEvents)->trigger();
-
+                    $queueForRealtime->from($queueForEvents)->trigger();
                     $queueForFunctions->from($queueForEvents)->trigger();
                     $queueForWebhooks->from($queueForEvents)->trigger();
                 }
