@@ -36,7 +36,7 @@ class XList extends CollectionXList
             ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: $this->getSDKNamespace(),
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/list-tables.md',

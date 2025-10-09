@@ -47,8 +47,8 @@ class Create extends Action
             ->label('audits.event', 'attribute.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-string-attribute.md',
                 auth: [AuthType::KEY],
@@ -95,7 +95,7 @@ class Create extends Action
         array $plan
     ): void {
         if (!App::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string ' . $this->getSdkGroup() . ' are not available on your plan. Please upgrade to create encrypted string ' . $this->getSdkGroup() . '.');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted string ' . $this->getSDKGroup() . '.');
         }
 
         if ($encrypt && $size < APP_DATABASE_ENCRYPT_SIZE_MIN) {

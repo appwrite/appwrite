@@ -42,8 +42,8 @@ class Decrement extends DecrementDocumentAttribute
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/decrement-row-column.md',
                 auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
@@ -61,10 +61,12 @@ class Decrement extends DecrementDocumentAttribute
             ->param('column', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column key.', false, ['dbForProject'])
             ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true)
             ->param('min', null, new Numeric(), 'Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 }

@@ -42,8 +42,8 @@ class Upsert extends DocumentsUpsert
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/tablesdb/upsert-rows.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
@@ -59,6 +59,7 @@ class Upsert extends DocumentsUpsert
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('rows', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of row data as JSON objects. May contain partial rows.', false, ['plan'])
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')

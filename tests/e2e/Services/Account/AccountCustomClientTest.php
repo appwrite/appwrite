@@ -924,7 +924,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Account Verification', $lastEmail['subject']);
+        $this->assertEquals('Account Verification for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Verify your email to activate your ' . $this->getProject()['name'] . ' account.', $lastEmail['text']);
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
@@ -1228,7 +1228,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Password Reset', $lastEmail['subject']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
 
 
@@ -1919,6 +1919,26 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         return $session;
+    }
+
+    /**
+     * @depends testCreateAnonymousAccount
+     */
+    public function testCreateAnonymousAccountVerification($session): array
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(400, $response['body']['code']);
+        $this->assertEquals('user_email_not_found', $response['body']['type']);
+
+        return [];
     }
 
     /**

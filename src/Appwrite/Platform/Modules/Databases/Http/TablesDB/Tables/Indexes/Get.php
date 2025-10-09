@@ -35,8 +35,8 @@ class Get extends IndexGet
             ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: 'getIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/tablesdb/get-index.md',
                 auth: [AuthType::KEY],

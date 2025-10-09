@@ -4992,7 +4992,7 @@
                 "x-appwrite": {
                     "method": "getResource",
                     "group": null,
-                    "weight": 496,
+                    "weight": 508,
                     "cookies": false,
                     "type": "",
                     "demo": "console\/get-resource.md",
@@ -5303,6 +5303,424 @@
                                     "databaseId",
                                     "name"
                                 ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/transactions": {
+            "get": {
+                "summary": "List transactions",
+                "operationId": "databasesListTransactions",
+                "tags": [
+                    "databases"
+                ],
+                "description": "List transactions across all databases.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transactionList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listTransactions",
+                    "group": "transactions",
+                    "weight": 376,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/list-transactions.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-transactions.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries).",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create transaction",
+                "operationId": "databasesCreateTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create a new transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createTransaction",
+                    "group": "transactions",
+                    "weight": 372,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ttl": {
+                                        "type": "integer",
+                                        "description": "Seconds before the transaction expires.",
+                                        "x-example": 60
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/transactions\/{transactionId}": {
+            "get": {
+                "summary": "Get transaction",
+                "operationId": "databasesGetTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Get a transaction by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getTransaction",
+                    "group": "transactions",
+                    "weight": 373,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/get-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update transaction",
+                "operationId": "databasesUpdateTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Update a transaction, to either commit or roll back its operations.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateTransaction",
+                    "group": "transactions",
+                    "weight": 374,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/update-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commit": {
+                                        "type": "boolean",
+                                        "description": "Commit transaction?",
+                                        "x-example": false
+                                    },
+                                    "rollback": {
+                                        "type": "boolean",
+                                        "description": "Rollback transaction?",
+                                        "x-example": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete transaction",
+                "operationId": "databasesDeleteTransaction",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Delete a transaction by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteTransaction",
+                    "group": "transactions",
+                    "weight": 375,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/delete-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/databases\/transactions\/{transactionId}\/operations": {
+            "post": {
+                "summary": "Create operations scoped to a transaction",
+                "operationId": "databasesCreateOperations",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create multiple operations in a single transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createOperations",
+                    "group": "transactions",
+                    "weight": 377,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-operations.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-operations.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "operations": {
+                                        "type": "array",
+                                        "description": "Array of staged operations.",
+                                        "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"collectionId\": \"<COLLECTION_ID>\",\n\t        \"documentId\": \"<DOCUMENT_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -9564,6 +9982,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -9622,7 +10050,8 @@
                                 "collectionId",
                                 "documentId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -9653,7 +10082,8 @@
                             "parameters": [
                                 "databaseId",
                                 "collectionId",
-                                "documents"
+                                "documents",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -9738,6 +10168,11 @@
                                         "items": {
                                             "type": "object"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -9797,7 +10232,8 @@
                             "parameters": [
                                 "databaseId",
                                 "collectionId",
-                                "documents"
+                                "documents",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -9863,6 +10299,11 @@
                                         "items": {
                                             "type": "object"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 },
                                 "required": [
@@ -9964,6 +10405,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -10057,6 +10503,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -10162,6 +10613,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -10220,7 +10681,8 @@
                                 "collectionId",
                                 "documentId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -10303,6 +10765,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 },
                                 "required": [
@@ -10416,6 +10883,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -10500,7 +10972,23 @@
                         },
                         "in": "path"
                     }
-                ]
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/logs": {
@@ -10711,6 +11199,11 @@
                                         "type": "number",
                                         "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -10830,6 +11323,11 @@
                                         "type": "number",
                                         "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -11064,7 +11562,7 @@
                 "tags": [
                     "databases"
                 ],
-                "description": "Get index by ID.",
+                "description": "Get an index by its unique ID.",
                 "responses": {
                     "200": {
                         "description": "Index",
@@ -11644,7 +12142,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 440,
+                    "weight": 452,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list.md",
@@ -11717,7 +12215,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 437,
+                    "weight": 449,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create.md",
@@ -11950,7 +12448,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 442,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-runtimes.md",
@@ -11999,7 +12497,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 443,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-specifications.md",
@@ -12049,7 +12547,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 466,
+                    "weight": 478,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-templates.md",
@@ -12149,7 +12647,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 465,
+                    "weight": 477,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-template.md",
@@ -12209,7 +12707,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 459,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-usage.md",
@@ -12281,7 +12779,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 438,
+                    "weight": 450,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get.md",
@@ -12340,7 +12838,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 439,
+                    "weight": 451,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update.md",
@@ -12570,7 +13068,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 441,
+                    "weight": 453,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete.md",
@@ -12631,7 +13129,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 446,
+                    "weight": 458,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-function-deployment.md",
@@ -12711,7 +13209,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 447,
+                    "weight": 459,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-deployments.md",
@@ -12794,7 +13292,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 444,
+                    "weight": 456,
                     "cookies": false,
                     "type": "upload",
                     "demo": "functions\/create-deployment.md",
@@ -12890,7 +13388,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 452,
+                    "weight": 464,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-duplicate-deployment.md",
@@ -12975,7 +13473,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 449,
+                    "weight": 461,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
@@ -13078,7 +13576,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 450,
+                    "weight": 462,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-vcs-deployment.md",
@@ -13175,7 +13673,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 445,
+                    "weight": 457,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-deployment.md",
@@ -13237,7 +13735,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 448,
+                    "weight": 460,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-deployment.md",
@@ -13301,7 +13799,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 451,
+                    "weight": 463,
                     "cookies": false,
                     "type": "location",
                     "demo": "functions\/get-deployment-download.md",
@@ -13391,7 +13889,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 453,
+                    "weight": 465,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-deployment-status.md",
@@ -13462,7 +13960,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 456,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -13537,7 +14035,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 454,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -13613,9 +14111,9 @@
                                         "x-enum-keys": []
                                     },
                                     "headers": {
-                                        "type": "string",
+                                        "type": "object",
                                         "description": "HTTP headers of execution. Defaults to empty.",
-                                        "x-example": null
+                                        "x-example": "{}"
                                     },
                                     "scheduledAt": {
                                         "type": "string",
@@ -13653,7 +14151,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 455,
+                    "weight": 467,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -13718,7 +14216,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 457,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-execution.md",
@@ -13789,7 +14287,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 458,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-usage.md",
@@ -13871,7 +14369,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 462,
+                    "weight": 474,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-variables.md",
@@ -13930,7 +14428,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 460,
+                    "weight": 472,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-variable.md",
@@ -14021,7 +14519,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 461,
+                    "weight": 473,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-variable.md",
@@ -14090,7 +14588,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 463,
+                    "weight": 475,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-variable.md",
@@ -14181,7 +14679,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 464,
+                    "weight": 476,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-variable.md",
@@ -16515,7 +17013,7 @@
                                     "image": {
                                         "type": "string",
                                         "description": "Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.",
-                                        "x-example": "[ID1:ID2]"
+                                        "x-example": "<ID1:ID2>"
                                     },
                                     "icon": {
                                         "type": "string",
@@ -16696,7 +17194,7 @@
                                     "image": {
                                         "type": "string",
                                         "description": "Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.",
-                                        "x-example": "[ID1:ID2]"
+                                        "x-example": "<ID1:ID2>"
                                     },
                                     "icon": {
                                         "type": "string",
@@ -21294,7 +21792,7 @@
                                     "resourceId": {
                                         "type": "string",
                                         "description": "Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.",
-                                        "x-example": "[ID1:ID2]"
+                                        "x-example": "<ID1:ID2>"
                                     },
                                     "internalFile": {
                                         "type": "boolean",
@@ -22537,7 +23035,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "projects",
-                    "weight": 436,
+                    "weight": 448,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/list.md",
@@ -24172,7 +24670,7 @@
                 "x-appwrite": {
                     "method": "listDevKeys",
                     "group": "devKeys",
-                    "weight": 434,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/list-dev-keys.md",
@@ -24210,7 +24708,10 @@
                         "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: accessedAt, expire",
                         "required": false,
                         "schema": {
-                            "type": "string",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": []
                         },
                         "in": "query"
@@ -24240,7 +24741,7 @@
                 "x-appwrite": {
                     "method": "createDevKey",
                     "group": "devKeys",
-                    "weight": 431,
+                    "weight": 443,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/create-dev-key.md",
@@ -24325,7 +24826,7 @@
                 "x-appwrite": {
                     "method": "getDevKey",
                     "group": "devKeys",
-                    "weight": 433,
+                    "weight": 445,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/get-dev-key.md",
@@ -24393,7 +24894,7 @@
                 "x-appwrite": {
                     "method": "updateDevKey",
                     "group": "devKeys",
-                    "weight": 432,
+                    "weight": 444,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/update-dev-key.md",
@@ -24479,7 +24980,7 @@
                 "x-appwrite": {
                     "method": "deleteDevKey",
                     "group": "devKeys",
-                    "weight": 435,
+                    "weight": 447,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/delete-dev-key.md",
@@ -28313,7 +28814,7 @@
                 "x-appwrite": {
                     "method": "listRules",
                     "group": null,
-                    "weight": 502,
+                    "weight": 514,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/list-rules.md",
@@ -28387,7 +28888,7 @@
                 "x-appwrite": {
                     "method": "createAPIRule",
                     "group": null,
-                    "weight": 497,
+                    "weight": 509,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-api-rule.md",
@@ -28454,7 +28955,7 @@
                 "x-appwrite": {
                     "method": "createFunctionRule",
                     "group": null,
-                    "weight": 499,
+                    "weight": 511,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-function-rule.md",
@@ -28532,7 +29033,7 @@
                 "x-appwrite": {
                     "method": "createRedirectRule",
                     "group": null,
-                    "weight": 500,
+                    "weight": 512,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-redirect-rule.md",
@@ -28645,7 +29146,7 @@
                 "x-appwrite": {
                     "method": "createSiteRule",
                     "group": null,
-                    "weight": 498,
+                    "weight": 510,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-site-rule.md",
@@ -28723,7 +29224,7 @@
                 "x-appwrite": {
                     "method": "getRule",
                     "group": null,
-                    "weight": 501,
+                    "weight": 513,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/get-rule.md",
@@ -28774,7 +29275,7 @@
                 "x-appwrite": {
                     "method": "deleteRule",
                     "group": null,
-                    "weight": 503,
+                    "weight": 515,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/delete-rule.md",
@@ -28834,7 +29335,7 @@
                 "x-appwrite": {
                     "method": "updateRuleVerification",
                     "group": null,
-                    "weight": 504,
+                    "weight": 516,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/update-rule-verification.md",
@@ -28894,7 +29395,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 469,
+                    "weight": 481,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list.md",
@@ -28923,7 +29424,10 @@
                         "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, framework, deploymentId, buildCommand, installCommand, outputDirectory, installationId",
                         "required": false,
                         "schema": {
-                            "type": "string",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": []
                         },
                         "in": "query"
@@ -28964,7 +29468,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 467,
+                    "weight": 479,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create.md",
@@ -29213,7 +29717,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 472,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-frameworks.md",
@@ -29262,7 +29766,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 495,
+                    "weight": 507,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -29312,7 +29816,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 491,
+                    "weight": 503,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-templates.md",
@@ -29412,7 +29916,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 492,
+                    "weight": 504,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-template.md",
@@ -29472,7 +29976,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 493,
+                    "weight": 505,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-usage.md",
@@ -29544,7 +30048,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 468,
+                    "weight": 480,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get.md",
@@ -29603,7 +30107,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 470,
+                    "weight": 482,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update.md",
@@ -29848,7 +30352,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 471,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete.md",
@@ -29909,7 +30413,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 478,
+                    "weight": 490,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-site-deployment.md",
@@ -29989,7 +30493,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 477,
+                    "weight": 489,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-deployments.md",
@@ -30072,7 +30576,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 473,
+                    "weight": 485,
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
@@ -30173,7 +30677,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 481,
+                    "weight": 493,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-duplicate-deployment.md",
@@ -30253,7 +30757,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 474,
+                    "weight": 486,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
@@ -30356,7 +30860,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 475,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-vcs-deployment.md",
@@ -30454,7 +30958,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 476,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-deployment.md",
@@ -30516,7 +31020,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 479,
+                    "weight": 491,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-deployment.md",
@@ -30580,7 +31084,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 480,
+                    "weight": 492,
                     "cookies": false,
                     "type": "location",
                     "demo": "sites\/get-deployment-download.md",
@@ -30670,7 +31174,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 482,
+                    "weight": 494,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-deployment-status.md",
@@ -30741,7 +31245,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 484,
+                    "weight": 496,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -30780,7 +31284,10 @@
                         "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: trigger, status, responseStatusCode, duration, requestMethod, requestPath, deploymentId",
                         "required": false,
                         "schema": {
-                            "type": "string",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": []
                         },
                         "in": "query"
@@ -30812,7 +31319,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 483,
+                    "weight": 495,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -30874,7 +31381,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 485,
+                    "weight": 497,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -30945,7 +31452,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 494,
+                    "weight": 506,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-usage.md",
@@ -31027,7 +31534,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 488,
+                    "weight": 500,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -31086,7 +31593,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 486,
+                    "weight": 498,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -31177,7 +31684,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 487,
+                    "weight": 499,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -31246,7 +31753,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 489,
+                    "weight": 501,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -31337,7 +31844,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 490,
+                    "weight": 502,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -32809,7 +33316,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "tablesdb",
-                    "weight": 376,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list.md",
@@ -32882,7 +33389,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "tablesdb",
-                    "weight": 372,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create.md",
@@ -32937,6 +33444,424 @@
                 }
             }
         },
+        "\/tablesdb\/transactions": {
+            "get": {
+                "summary": "List transactions",
+                "operationId": "tablesDBListTransactions",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "List transactions across all databases.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transactionList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listTransactions",
+                    "group": "transactions",
+                    "weight": 441,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/list-transactions.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-transactions.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries).",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create transaction",
+                "operationId": "tablesDBCreateTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create a new transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createTransaction",
+                    "group": "transactions",
+                    "weight": 437,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ttl": {
+                                        "type": "integer",
+                                        "description": "Seconds before the transaction expires.",
+                                        "x-example": 60
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/tablesdb\/transactions\/{transactionId}": {
+            "get": {
+                "summary": "Get transaction",
+                "operationId": "tablesDBGetTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Get a transaction by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getTransaction",
+                    "group": "transactions",
+                    "weight": 438,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/get-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.read",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "patch": {
+                "summary": "Update transaction",
+                "operationId": "tablesDBUpdateTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Update a transaction, to either commit or roll back its operations.",
+                "responses": {
+                    "200": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateTransaction",
+                    "group": "transactions",
+                    "weight": 439,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/update-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "commit": {
+                                        "type": "boolean",
+                                        "description": "Commit transaction?",
+                                        "x-example": false
+                                    },
+                                    "rollback": {
+                                        "type": "boolean",
+                                        "description": "Rollback transaction?",
+                                        "x-example": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete transaction",
+                "operationId": "tablesDBDeleteTransaction",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Delete a transaction by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteTransaction",
+                    "group": "transactions",
+                    "weight": 440,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/delete-transaction.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-transaction.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/tablesdb\/transactions\/{transactionId}\/operations": {
+            "post": {
+                "summary": "Create operations scoped to a transaction",
+                "operationId": "tablesDBCreateOperations",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create multiple operations in a single transaction.",
+                "responses": {
+                    "201": {
+                        "description": "Transaction",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/transaction"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createOperations",
+                    "group": "transactions",
+                    "weight": 442,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-operations.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-operations.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "rows.write",
+                    "platforms": [
+                        "server",
+                        "client",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "operations": {
+                                        "type": "array",
+                                        "description": "Array of staged operations.",
+                                        "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"tableId\": \"<TABLE_ID>\",\n\t        \"rowId\": \"<ROW_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/tablesdb\/usage": {
             "get": {
                 "summary": "Get TablesDB usage stats",
@@ -32961,7 +33886,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 378,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-usage.md",
@@ -33058,7 +33983,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tablesdb",
-                    "weight": 373,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get.md",
@@ -33117,7 +34042,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tablesdb",
-                    "weight": 374,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update.md",
@@ -33193,7 +34118,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tablesdb",
-                    "weight": 375,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete.md",
@@ -33254,7 +34179,7 @@
                 "x-appwrite": {
                     "method": "listTables",
                     "group": "tables",
-                    "weight": 383,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-tables.md",
@@ -33340,7 +34265,7 @@
                 "x-appwrite": {
                     "method": "createTable",
                     "group": "tables",
-                    "weight": 379,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-table.md",
@@ -33447,7 +34372,7 @@
                 "x-appwrite": {
                     "method": "getTable",
                     "group": "tables",
-                    "weight": 380,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-table.md",
@@ -33519,7 +34444,7 @@
                 "x-appwrite": {
                     "method": "updateTable",
                     "group": "tables",
-                    "weight": 381,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-table.md",
@@ -33621,7 +34546,7 @@
                 "x-appwrite": {
                     "method": "deleteTable",
                     "group": "tables",
-                    "weight": 382,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-table.md",
@@ -33695,7 +34620,7 @@
                 "x-appwrite": {
                     "method": "listColumns",
                     "group": "columns",
-                    "weight": 388,
+                    "weight": 394,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-columns.md",
@@ -33782,7 +34707,7 @@
                 "x-appwrite": {
                     "method": "createBooleanColumn",
                     "group": "columns",
-                    "weight": 389,
+                    "weight": 395,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-boolean-column.md",
@@ -33891,7 +34816,7 @@
                 "x-appwrite": {
                     "method": "updateBooleanColumn",
                     "group": "columns",
-                    "weight": 390,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-boolean-column.md",
@@ -34005,7 +34930,7 @@
                 "x-appwrite": {
                     "method": "createDatetimeColumn",
                     "group": "columns",
-                    "weight": 391,
+                    "weight": 397,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-datetime-column.md",
@@ -34114,7 +35039,7 @@
                 "x-appwrite": {
                     "method": "updateDatetimeColumn",
                     "group": "columns",
-                    "weight": 392,
+                    "weight": 398,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-datetime-column.md",
@@ -34228,7 +35153,7 @@
                 "x-appwrite": {
                     "method": "createEmailColumn",
                     "group": "columns",
-                    "weight": 393,
+                    "weight": 399,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-email-column.md",
@@ -34337,7 +35262,7 @@
                 "x-appwrite": {
                     "method": "updateEmailColumn",
                     "group": "columns",
-                    "weight": 394,
+                    "weight": 400,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-email-column.md",
@@ -34451,7 +35376,7 @@
                 "x-appwrite": {
                     "method": "createEnumColumn",
                     "group": "columns",
-                    "weight": 395,
+                    "weight": 401,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-enum-column.md",
@@ -34569,7 +35494,7 @@
                 "x-appwrite": {
                     "method": "updateEnumColumn",
                     "group": "columns",
-                    "weight": 396,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-enum-column.md",
@@ -34692,7 +35617,7 @@
                 "x-appwrite": {
                     "method": "createFloatColumn",
                     "group": "columns",
-                    "weight": 397,
+                    "weight": 403,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-float-column.md",
@@ -34811,7 +35736,7 @@
                 "x-appwrite": {
                     "method": "updateFloatColumn",
                     "group": "columns",
-                    "weight": 398,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-float-column.md",
@@ -34935,7 +35860,7 @@
                 "x-appwrite": {
                     "method": "createIntegerColumn",
                     "group": "columns",
-                    "weight": 399,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-integer-column.md",
@@ -35054,7 +35979,7 @@
                 "x-appwrite": {
                     "method": "updateIntegerColumn",
                     "group": "columns",
-                    "weight": 400,
+                    "weight": 406,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-integer-column.md",
@@ -35178,7 +36103,7 @@
                 "x-appwrite": {
                     "method": "createIpColumn",
                     "group": "columns",
-                    "weight": 401,
+                    "weight": 407,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-ip-column.md",
@@ -35287,7 +36212,7 @@
                 "x-appwrite": {
                     "method": "updateIpColumn",
                     "group": "columns",
-                    "weight": 402,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-ip-column.md",
@@ -35401,7 +36326,7 @@
                 "x-appwrite": {
                     "method": "createLineColumn",
                     "group": "columns",
-                    "weight": 403,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-line-column.md",
@@ -35513,7 +36438,7 @@
                 "x-appwrite": {
                     "method": "updateLineColumn",
                     "group": "columns",
-                    "weight": 404,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-line-column.md",
@@ -35633,7 +36558,7 @@
                 "x-appwrite": {
                     "method": "createPointColumn",
                     "group": "columns",
-                    "weight": 405,
+                    "weight": 411,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-point-column.md",
@@ -35745,7 +36670,7 @@
                 "x-appwrite": {
                     "method": "updatePointColumn",
                     "group": "columns",
-                    "weight": 406,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-point-column.md",
@@ -35865,7 +36790,7 @@
                 "x-appwrite": {
                     "method": "createPolygonColumn",
                     "group": "columns",
-                    "weight": 407,
+                    "weight": 413,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-polygon-column.md",
@@ -35977,7 +36902,7 @@
                 "x-appwrite": {
                     "method": "updatePolygonColumn",
                     "group": "columns",
-                    "weight": 408,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-polygon-column.md",
@@ -36097,7 +37022,7 @@
                 "x-appwrite": {
                     "method": "createRelationshipColumn",
                     "group": "columns",
-                    "weight": 409,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-relationship-column.md",
@@ -36231,7 +37156,7 @@
                 "x-appwrite": {
                     "method": "createStringColumn",
                     "group": "columns",
-                    "weight": 411,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-string-column.md",
@@ -36351,7 +37276,7 @@
                 "x-appwrite": {
                     "method": "updateStringColumn",
                     "group": "columns",
-                    "weight": 412,
+                    "weight": 418,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-string-column.md",
@@ -36470,7 +37395,7 @@
                 "x-appwrite": {
                     "method": "createUrlColumn",
                     "group": "columns",
-                    "weight": 413,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-url-column.md",
@@ -36579,7 +37504,7 @@
                 "x-appwrite": {
                     "method": "updateUrlColumn",
                     "group": "columns",
-                    "weight": 414,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-url-column.md",
@@ -36724,7 +37649,7 @@
                 "x-appwrite": {
                     "method": "getColumn",
                     "group": "columns",
-                    "weight": 386,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-column.md",
@@ -36798,7 +37723,7 @@
                 "x-appwrite": {
                     "method": "deleteColumn",
                     "group": "columns",
-                    "weight": 387,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-column.md",
@@ -36881,7 +37806,7 @@
                 "x-appwrite": {
                     "method": "updateRelationshipColumn",
                     "group": "columns",
-                    "weight": 410,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-relationship-column.md",
@@ -36992,7 +37917,7 @@
                 "x-appwrite": {
                     "method": "listIndexes",
                     "group": "indexes",
-                    "weight": 418,
+                    "weight": 424,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-indexes.md",
@@ -37077,7 +38002,7 @@
                 "x-appwrite": {
                     "method": "createIndex",
                     "group": "indexes",
-                    "weight": 415,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-index.md",
@@ -37209,7 +38134,7 @@
                 "x-appwrite": {
                     "method": "getIndex",
                     "group": "indexes",
-                    "weight": 416,
+                    "weight": 422,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-index.md",
@@ -37283,7 +38208,7 @@
                 "x-appwrite": {
                     "method": "deleteIndex",
                     "group": "indexes",
-                    "weight": 417,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-index.md",
@@ -37366,7 +38291,7 @@
                 "x-appwrite": {
                     "method": "listTableLogs",
                     "group": "tables",
-                    "weight": 384,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-table-logs.md",
@@ -37452,7 +38377,7 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 427,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-rows.md",
@@ -37514,6 +38439,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -37540,7 +38475,7 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 419,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-row.md",
@@ -37571,7 +38506,8 @@
                                 "tableId",
                                 "rowId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -37598,7 +38534,8 @@
                             "parameters": [
                                 "databaseId",
                                 "tableId",
-                                "rows"
+                                "rows",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -37679,6 +38616,11 @@
                                         "items": {
                                             "type": "object"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -37709,7 +38651,7 @@
                 "x-appwrite": {
                     "method": "upsertRows",
                     "group": "rows",
-                    "weight": 424,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-rows.md",
@@ -37737,7 +38679,8 @@
                             "parameters": [
                                 "databaseId",
                                 "tableId",
-                                "rows"
+                                "rows",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -37799,6 +38742,11 @@
                                         "items": {
                                             "type": "object"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 },
                                 "required": [
@@ -37832,7 +38780,7 @@
                 "x-appwrite": {
                     "method": "updateRows",
                     "group": "rows",
-                    "weight": 422,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-rows.md",
@@ -37899,6 +38847,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -37929,7 +38882,7 @@
                 "x-appwrite": {
                     "method": "deleteRows",
                     "group": "rows",
-                    "weight": 426,
+                    "weight": 432,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-rows.md",
@@ -37991,6 +38944,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -38023,7 +38981,7 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 420,
+                    "weight": 426,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-row.md",
@@ -38095,6 +39053,16 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "transactionId",
+                        "description": "Transaction ID to read uncommitted changes within the transaction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TRANSACTION_ID>"
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -38121,7 +39089,7 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 423,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-row.md",
@@ -38152,7 +39120,8 @@
                                 "tableId",
                                 "rowId",
                                 "data",
-                                "permissions"
+                                "permissions",
+                                "transactionId"
                             ],
                             "required": [
                                 "databaseId",
@@ -38230,6 +39199,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -38260,7 +39234,7 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 421,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-row.md",
@@ -38339,6 +39313,11 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -38362,7 +39341,7 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 425,
+                    "weight": 431,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-row.md",
@@ -38422,7 +39401,23 @@
                         },
                         "in": "path"
                     }
-                ]
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/rows\/{rowId}\/logs": {
@@ -38449,7 +39444,7 @@
                 "x-appwrite": {
                     "method": "listRowLogs",
                     "group": "logs",
-                    "weight": 428,
+                    "weight": 434,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-row-logs.md",
@@ -38545,7 +39540,7 @@
                 "x-appwrite": {
                     "method": "decrementRowColumn",
                     "group": "rows",
-                    "weight": 430,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/decrement-row-column.md",
@@ -38631,6 +39626,11 @@
                                         "type": "number",
                                         "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -38663,7 +39663,7 @@
                 "x-appwrite": {
                     "method": "incrementRowColumn",
                     "group": "rows",
-                    "weight": 429,
+                    "weight": 435,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/increment-row-column.md",
@@ -38749,6 +39749,11 @@
                                         "type": "number",
                                         "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
                                     }
                                 }
                             }
@@ -38781,7 +39786,7 @@
                 "x-appwrite": {
                     "method": "getTableUsage",
                     "group": null,
-                    "weight": 385,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-table-usage.md",
@@ -38876,7 +39881,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 377,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-usage.md",
@@ -40088,7 +41093,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 507,
+                    "weight": 519,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -40138,7 +41143,10 @@
                         "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: expire",
                         "required": false,
                         "schema": {
-                            "type": "string",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": []
                         },
                         "in": "query"
@@ -40168,7 +41176,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 505,
+                    "weight": 517,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -40257,7 +41265,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 506,
+                    "weight": 518,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -40317,7 +41325,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 508,
+                    "weight": 520,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -40387,7 +41395,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 509,
+                    "weight": 521,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",
@@ -46209,6 +47217,34 @@
                 "example": {
                     "total": 5,
                     "targets": ""
+                }
+            },
+            "transactionList": {
+                "description": "Transaction List",
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of transactions that matched your query.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "transactions": {
+                        "type": "array",
+                        "description": "List of transactions.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/transaction"
+                        },
+                        "x-example": ""
+                    }
+                },
+                "required": [
+                    "total",
+                    "transactions"
+                ],
+                "example": {
+                    "total": 5,
+                    "transactions": ""
                 }
             },
             "migrationList": {
@@ -56888,6 +57924,59 @@
                     "smsTotal": 100,
                     "pushTotal": 100,
                     "subscribe": "users"
+                }
+            },
+            "transaction": {
+                "description": "Transaction",
+                "type": "object",
+                "properties": {
+                    "$id": {
+                        "type": "string",
+                        "description": "Transaction ID.",
+                        "x-example": "259125845563242502"
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Transaction creation time in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Transaction update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Current status of the transaction. One of: pending, committing, committed, rolled_back, failed.",
+                        "x-example": "pending"
+                    },
+                    "operations": {
+                        "type": "integer",
+                        "description": "Number of operations in the transaction.",
+                        "x-example": 5,
+                        "format": "int32"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "description": "Expiration time in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    }
+                },
+                "required": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "status",
+                    "operations",
+                    "expiresAt"
+                ],
+                "example": {
+                    "$id": "259125845563242502",
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "status": "pending",
+                    "operations": 5,
+                    "expiresAt": "2020-10-15T06:38:00.000+00:00"
                 }
             },
             "subscriber": {

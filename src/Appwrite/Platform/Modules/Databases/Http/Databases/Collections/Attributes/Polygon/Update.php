@@ -43,8 +43,8 @@ class Update extends Action
             ->label('audits.event', 'attribute.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-polygon-attribute.md',
                 auth: [AuthType::KEY],
