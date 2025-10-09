@@ -32,7 +32,7 @@ class XList extends CollectionLogXList
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'listCollectionLogs',
                 description: '/docs/references/documentsdb/get-collection-logs.md',
                 auth: [AuthType::ADMIN],
                 responses: [

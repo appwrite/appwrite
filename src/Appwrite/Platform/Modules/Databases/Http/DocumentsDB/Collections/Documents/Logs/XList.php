@@ -32,7 +32,7 @@ class XList extends DocumentLogXList
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'logs',
-                name: self::getName(),
+                name: 'listDocumentLogs',
                 description: '/docs/references/documentsdb/get-document-logs.md',
                 auth: [AuthType::ADMIN],
                 responses: [

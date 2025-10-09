@@ -36,7 +36,7 @@ class Get extends CollectionUsageGet
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: null,
-                name: self::getName(),
+                name: 'getCollectionUsage',
                 description: '/docs/references/documentsdb/get-collection-usage.md',
                 auth: [AuthType::ADMIN],
                 responses: [

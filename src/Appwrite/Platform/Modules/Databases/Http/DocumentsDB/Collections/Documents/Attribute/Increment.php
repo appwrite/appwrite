@@ -43,7 +43,7 @@ class Increment extends IncrementDocumentAttribute
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
-                name: self::getName(),
+                name: 'incrementDocumentAttribute',
                 description: '/docs/references/documentsdb/increment-document-attribute.md',
                 auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
                 responses: [

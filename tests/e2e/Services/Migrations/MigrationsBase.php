@@ -898,6 +898,194 @@ trait MigrationsBase
     }
 
     /**
+     * DocumentsDB (schemaless)
+     */
+    public function testAppwriteMigrationDocumentsDBDatabase(): array
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/documentsdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'DocsDB - Migration DB'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $databaseId = $response['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_DATABASE,
+            ],
+            'endpoint' => 'http://localhost/v1',
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_DATABASE], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($databaseId, $response['body']['$id']);
+        $this->assertEquals('DocsDB - Migration DB', $response['body']['name']);
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        return [
+            'databaseId' => $databaseId,
+        ];
+    }
+
+    /**
+     * @depends testAppwriteMigrationDocumentsDBDatabase
+     */
+    public function testAppwriteMigrationDocumentsDBCollection(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'DocsDB - Movies',
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_DATABASE,
+                Resource::TYPE_TABLE, // collections in DocumentsDB map to tables in migration
+            ],
+            'endpoint' => 'http://localhost/v1',
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals('completed', $result['status']);
+        foreach ([Resource::TYPE_DATABASE, Resource::TYPE_TABLE] as $resource) {
+            $this->assertArrayHasKey($resource, $result['statusCounters']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
+            $this->assertEquals(1, $result['statusCounters'][$resource]['success']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['processing']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['warning']);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId . '/collections/' . $collectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($collectionId, $response['body']['$id']);
+        $this->assertEquals('DocsDB - Movies', $response['body']['name']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+        ];
+    }
+
+    /**
+     * @depends testAppwriteMigrationDocumentsDBCollection
+     */
+    public function testAppwriteMigrationDocumentsDBDocument(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $document = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Migration Test Movie',
+                'releaseYear' => 1999,
+            ]
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_DATABASE,
+                Resource::TYPE_TABLE,
+                Resource::TYPE_ROW,
+            ],
+            'endpoint' => 'http://localhost/v1',
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        foreach ([Resource::TYPE_DATABASE] as $resource) {
+            $this->assertArrayHasKey($resource, $result['statusCounters']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
+            $this->assertEquals(1, $result['statusCounters'][$resource]['success']);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($documentId, $response['body']['$id']);
+        var_dump($response['body']);
+        $this->assertEquals('Migration Test Movie', $response['body']['title']);
+        $this->assertEquals(1999, $response['body']['releaseYear']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    /**
      * Import documents from a CSV file.
      */
     public function testCreateCsvMigration(): void
