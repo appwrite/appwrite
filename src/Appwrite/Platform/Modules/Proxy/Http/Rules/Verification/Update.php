@@ -72,6 +72,7 @@ class Update extends Action
         Database $dbForPlatform,
         Log $log
     ) {
+        var_dump("entered update rule verification");
         $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getSequence()) {
@@ -90,12 +91,15 @@ class Update extends Action
             $this->verifyRule($rule, $log);
             $updates->setAttribute('verificationLogs', '');
         } catch (Exception $err) {
+            var_dump("error in update rule verification, setting verification logs");
             $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'verificationLogs' => $err->getMessage(),
             ]));
+            var_dump($dbForPlatform->getDocument('rules', $rule->getId()));
             throw $err;
         }
 
+        var_dump("setting status to generating certificate");
         $updates->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
 
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
