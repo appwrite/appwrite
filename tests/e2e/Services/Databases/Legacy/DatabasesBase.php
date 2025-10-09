@@ -1503,12 +1503,14 @@ trait DatabasesBase
 
         // Test case for lengths array overriding
         // set a length for an array attribute, it should get overridden with Database::ARRAY_INDEX_LENGTH
-        // MongoDB doesn't support identical indexes, so delete the existing one first
-        $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/indexes/index-actors", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
+        if ($this->isMongoDB()) {
+            // MongoDB doesn't support identical indexes, so delete the existing one first
+            $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/indexes/index-actors", [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]);
+        }
 
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
