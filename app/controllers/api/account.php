@@ -4153,18 +4153,36 @@ App::get('/v1/account/mfa/factors')
     ])
     ->inject('response')
     ->inject('user')
-    ->action(function (Response $response, Document $user) {
+    ->inject('session')
+    ->action(function (Response $response, Document $user, Document $session) {
 
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-        $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
+        $isRecoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
 
         $totp = TOTP::getAuthenticatorFromUser($user);
+        
+        $isTotpEnabled = $totp !== null && $totp->getAttribute('verified', false);
+        $isEmailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+        $isPhoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+        
+        // Disallow email or phone as 2nd factor, if it was used as 1st factor already
+        // This is just for informative purposes, actual protection lies in unique check when adding a factor
+        if(!is_null($session)) {
+            $existingFactors = $session->getAttribute('factors', []);
+         
+            if(\in_array(Type::EMAIL, $existingFactors) && $isEmailEnabled) {
+                $isEmailEnabled = false;
+            }
+            if(\in_array(Type::PHONE, $existingFactors) && $isPhoneEnabled) {
+                $isPhoneEnabled = false;
+            }
+        }
 
         $factors = new Document([
-            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
-            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
-            Type::RECOVERY_CODE => $recoveryCodeEnabled
+            Type::TOTP => $isTotpEnabled,
+            Type::EMAIL => $isEmailEnabled,
+            Type::PHONE => $isPhoneEnabled,
+            Type::RECOVERY_CODE => $isRecoveryCodeEnabled
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
