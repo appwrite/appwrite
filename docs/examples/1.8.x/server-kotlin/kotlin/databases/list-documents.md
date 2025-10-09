@@ -12,5 +12,6 @@ val databases = Databases(client)
 val response = databases.listDocuments(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    transactionId = "<TRANSACTION_ID>" // optional
 )

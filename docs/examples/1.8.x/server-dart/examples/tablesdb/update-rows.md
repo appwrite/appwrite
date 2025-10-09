@@ -12,4 +12,5 @@ RowList result = await tablesDB.updateRows(
     tableId: '<TABLE_ID>',
     data: {}, // (optional)
     queries: [], // (optional)
+    transactionId: '<TRANSACTION_ID>', // (optional)
 );

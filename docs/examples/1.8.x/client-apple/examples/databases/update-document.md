@@ -11,6 +11,7 @@ let document = try await databases.updateDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: "<DOCUMENT_ID>",
     data: [:], // optional
-    permissions: ["read("any")"] // optional
+    permissions: ["read("any")"], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

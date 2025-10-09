@@ -1,5 +1,9 @@
 # Change Log
 
+## 17.4.0
+
+* Add transaction support for Databases and TablesDB
+
 ## 17.3.0
 
 * Deprecate `createVerification` method in `Account` service

@@ -16,5 +16,6 @@ X-Appwrite-JWT: <YOUR_JWT>
     "age": 30,
     "isAdmin": false
   },
-  "permissions": ["read(\"any\")"]
+  "permissions": ["read(\"any\")"],
+  "transactionId": "<TRANSACTION_ID>"
 }

@@ -21,4 +21,5 @@ response, error := service.IncrementDocumentAttribute(
     "",
     databases.WithIncrementDocumentAttributeValue(0),
     databases.WithIncrementDocumentAttributeMax(0),
+    databases.WithIncrementDocumentAttributeTransactionId("<TRANSACTION_ID>"),
 )

@@ -13,5 +13,6 @@ result = tables_db.update_rows(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
     data: {}, # optional
-    queries: [] # optional
+    queries: [], # optional
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

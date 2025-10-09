@@ -21,4 +21,5 @@ response, error := service.DecrementRowColumn(
     "",
     tablesdb.WithDecrementRowColumnValue(0),
     tablesdb.WithDecrementRowColumnMin(0),
+    tablesdb.WithDecrementRowColumnTransactionId("<TRANSACTION_ID>"),
 )

@@ -13,4 +13,5 @@ val result = databases.getDocument(
     collectionId = "<COLLECTION_ID>", 
     documentId = "<DOCUMENT_ID>", 
     queries = listOf(), // (optional)
+    transactionId = "<TRANSACTION_ID>", // (optional)
 )
