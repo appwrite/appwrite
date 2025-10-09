@@ -46,25 +46,35 @@ class SDKs extends Action
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
             ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
+            ->param('release', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we create releases?', optional: true)
+            ->param('commit', null, new Nullable(new WhiteList(['yes', 'no'])), 'Actually create releases (yes) or dry-run (no)?', optional: true)
             ->callback($this->action(...));
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void
+    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit): void
     {
         $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
         $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $version ??= Console::confirm('Choose an Appwrite version');
 
-        $git ??= Console::confirm('Should we use git push? (yes/no)');
-        $git = $git === 'yes';
+        $createRelease = ($release === 'yes');
+        $commitRelease =  ($commit === 'yes');
 
-        if ($git) {
-            $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
-            $production = $production === 'Appwrite';
-            $message ??= Console::confirm('Please enter your commit message:');
+        if (!$createRelease) {
+            $git ??= Console::confirm('Should we use git push? (yes/no)');
+            $git = ($git === 'yes');
 
-            $createPr = Console::confirm('Should we create pull request automatically? (yes/no)');
-            $createPr = $createPr === 'yes';
+            $prUrls = [];
+            $createPr = false;
+
+            if ($git) {
+                $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
+                $production = $production === 'Appwrite';
+                $message ??= Console::confirm('Please enter your commit message:');
+
+                $createPr = Console::confirm('Should we create pull request automatically? (yes/no)');
+                $createPr = ($createPr === 'yes');
+            }
         }
 
         if (!\in_array($version, [
@@ -243,6 +253,97 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
 
+                if ($createRelease) {
+                    $releaseVersion = $language['version'];
+
+                    $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
+                    $releaseNotes = $this->extractReleaseNotes($changelog, $releaseVersion);
+                    if (empty($releaseNotes)) {
+                        $releaseNotes = "Release version {$releaseVersion}";
+                    }
+
+                    $releaseTitle = $releaseVersion;
+                    $releaseTarget = $language['repoBranch'] ?? 'main';
+
+                    if ($repoName === '/') {
+                        Console::warning("{$language['name']} SDK is not an SDK, skipping release");
+                        continue;
+                    }
+
+                    // Check if release already exists
+                    $checkReleaseCommand = 'gh release view "' . $releaseVersion . '" --repo "' . $repoName . '" --json url --jq ".url" 2>/dev/null';
+                    $existingReleaseUrl = trim(\shell_exec($checkReleaseCommand) ?? '');
+
+                    if (!empty($existingReleaseUrl)) {
+                        Console::warning("Release {$releaseVersion} already exists for {$language['name']} SDK, skipping...");
+                        Console::info("Existing release: {$existingReleaseUrl}");
+                        continue;
+                    }
+
+                    $previousVersion = '';
+                    $tagListCommand = 'gh release list --repo "' . $repoName . '" --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
+                    $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
+
+                    $formattedNotes = "## What's Changed\n\n";
+                    $formattedNotes .= $releaseNotes . "\n\n";
+
+                    if (!empty($previousVersion)) {
+                        $formattedNotes .= "**Full Changelog**: https://github.com/" . $repoName . "/compare/" . $previousVersion . "..." . $releaseVersion;
+                    } else {
+                        $formattedNotes .= "**Full Changelog**: https://github.com/" . $repoName . "/releases/tag/" . $releaseVersion;
+                    }
+
+                    if (!$commitRelease) {
+                        Console::info("[DRY RUN] Would create release for {$language['name']} SDK:");
+                        Console::log("  Repository: {$repoName}");
+                        Console::log("  Version: {$releaseVersion}");
+                        Console::log("  Title: {$releaseTitle}");
+                        Console::log("  Target Branch: {$releaseTarget}");
+                        Console::log("  Previous Version: " . ($previousVersion ?: 'N/A'));
+                        Console::log("  Release Notes:");
+                        Console::log("  " . str_replace("\n", "\n  ", $formattedNotes));
+                        Console::log('');
+                    } else {
+                        Console::info("Creating release {$releaseVersion} for {$language['name']} SDK...");
+
+                        $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
+                        \file_put_contents($tempNotesFile, $formattedNotes);
+
+                        $releaseCommand = 'gh release create "' . $releaseVersion . '" \
+                            --repo "' . $repoName . '" \
+                            --title "' . $releaseTitle . '" \
+                            --notes-file "' . $tempNotesFile . '" \
+                            --target "' . $releaseTarget . '" \
+                            2>&1';
+
+                        $releaseOutput = [];
+                        $releaseReturnCode = 0;
+                        \exec($releaseCommand, $releaseOutput, $releaseReturnCode);
+
+                        \unlink($tempNotesFile);
+
+                        if ($releaseReturnCode === 0) {
+                            // Extract release URL from output
+                            $releaseUrl = '';
+                            foreach ($releaseOutput as $line) {
+                                if (strpos($line, 'https://github.com/') !== false) {
+                                    $releaseUrl = trim($line);
+                                    break;
+                                }
+                            }
+
+                            Console::success("Successfully created release {$releaseVersion} for {$language['name']} SDK");
+                            if (!empty($releaseUrl)) {
+                                Console::info("Release URL: {$releaseUrl}");
+                            }
+                        } else {
+                            $errorMessage = implode("\n", $releaseOutput);
+                            Console::error("Failed to create release for {$language['name']} SDK: " . $errorMessage);
+                        }
+                    }
+                    continue;
+                }
+
                 Console::info("Generating {$language['name']} SDK...");
 
                 $sdk = new SDK($config, new Swagger2($spec));
@@ -346,7 +447,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         if ($prReturnCode === 0) {
                             Console::success("Successfully created pull request for {$language['name']} SDK");
                             if (!empty($prOutput)) {
-                                Console::info("PR URL: " . end($prOutput));
+                                $prUrls[$language['name']] = end($prOutput);
                             }
                         } else {
                             $errorMessage = implode("\n", $prOutput);
@@ -366,6 +467,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                                 if ($updateReturnCode === 0) {
                                     Console::success("Successfully updated pull request for {$language['name']} SDK");
+
+                                    $prUrlCommand = 'cd ' . $target . ' && \
+                                        gh pr view "' . $gitBranch . '" \
+                                        --repo "' . $repoName . '" \
+                                        --json url \
+                                        --jq .url \
+                                        2>&1';
+
+                                    $prUrlOutput = [];
+                                    $prUrlReturnCode = 0;
+                                    \exec($prUrlCommand, $prUrlOutput, $prUrlReturnCode);
+
+                                    if ($prUrlReturnCode === 0 && !empty($prUrlOutput)) {
+                                        $prUrls[$language['name']] = $prUrlOutput[0];
+                                    }
                                 } else {
                                     $updateErrorMessage = implode("\n", $updateOutput);
                                     Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
@@ -396,5 +512,57 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
             }
         }
+
+        if (!empty($prUrls)) {
+            Console::log('');
+            Console::log('Pull Request Summary');
+            foreach ($prUrls as $sdkName => $url) {
+                Console::log("{$sdkName}: {$url}");
+            }
+            Console::log('');
+        }
+    }
+
+    /**
+     * Extract release notes from changelog for a specific version
+     *
+     * @param string $changelog
+     * @param string $version
+     * @return string
+     */
+    private function extractReleaseNotes(string $changelog, string $version): string
+    {
+        if (empty($changelog)) {
+            return '';
+        }
+
+        // Changelog version header pattern: ## 0.14.0
+        $pattern = '/^##\s+' . preg_quote($version, '/') . '\s*$/m';
+        $startPos = false;
+        if (preg_match($pattern, $changelog, $matches, PREG_OFFSET_CAPTURE)) {
+            $startPos = $matches[0][1];
+        }
+
+        if ($startPos === false) {
+            return '';
+        }
+
+        $contentStart = strpos($changelog, "\n", $startPos);
+        if ($contentStart === false) {
+            return '';
+        }
+        $contentStart++;
+
+        $nextHeaderPattern = '/^##?\s+/m';
+        $remainingContent = substr($changelog, $contentStart);
+
+        if (preg_match($nextHeaderPattern, $remainingContent, $matches, PREG_OFFSET_CAPTURE)) {
+            $endPos = $matches[0][1];
+            $notes = substr($remainingContent, 0, $endPos);
+        } else {
+            $notes = $remainingContent;
+        }
+
+        return trim($notes);
     }
 }

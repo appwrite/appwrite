@@ -211,6 +211,11 @@ return [
         'description' => 'User with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::USER_EMAIL_NOT_FOUND => [
+        'name' => Exception::USER_EMAIL_NOT_FOUND,
+        'description' => 'User email could not be found.',
+        'code' => 400,
+    ],
     Exception::USER_EMAIL_ALREADY_EXISTS => [
         'name' => Exception::USER_EMAIL_ALREADY_EXISTS,
         'description' => 'A user with the same email already exists in the current project.',
@@ -312,10 +317,20 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_EMAIL_NOT_VERIFIED => [
+        'name' => Exception::USER_EMAIL_NOT_VERIFIED,
+        'description' => 'User email is not verified',
+        'code' => 400,
+    ],
     Exception::USER_EMAIL_ALREADY_VERIFIED => [
         'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
         'description' => 'User email is already verified',
         'code' => 409,
+    ],
+    Exception::USER_PHONE_NOT_VERIFIED => [
+        'name' => Exception::USER_PHONE_NOT_VERIFIED,
+        'description' => 'User phone is not verified',
+        'code' => 400,
     ],
     Exception::USER_PHONE_ALREADY_VERIFIED => [
         'name' => Exception::USER_PHONE_ALREADY_VERIFIED,

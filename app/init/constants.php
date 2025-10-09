@@ -90,6 +90,7 @@ const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
+const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
