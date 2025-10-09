@@ -39,6 +39,12 @@ class Migrations extends Action
     protected Document $project;
 
     /**
+     * @var callable(string $databaseDSN): Database
+     */
+    protected mixed $getDatabaseDB;
+
+
+    /**
      * Cached for performance.
      *
      * @var array<string, int>
@@ -66,6 +72,7 @@ class Migrations extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('getDatabaseDB')
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
@@ -75,10 +82,11 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $getDatabaseDB, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
     {
         $payload = $message->getPayload() ?? [];
         $this->deviceForImports = $deviceForImports;
+        $this->getDatabaseDB = $getDatabaseDB;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -170,6 +178,7 @@ class Migrations extends Action
                 'http://appwrite/v1',
                 $apiKey,
                 $this->dbForProject,
+                $this->getDatabaseDB,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
             default => throw new \Exception('Invalid destination type'),

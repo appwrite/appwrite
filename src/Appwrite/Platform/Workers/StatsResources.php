@@ -47,6 +47,7 @@ class StatsResources extends Action
             ->inject('project')
             ->inject('getProjectDB')
             ->inject('getLogsDB')
+            ->inject('getDatabaseDB')
             ->inject('dbForPlatform')
             ->inject('logError')
             ->callback($this->action(...));
@@ -60,7 +61,7 @@ class StatsResources extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    public function action(Message $message, Document $project, callable $getProjectDB, callable $getLogsDB, Database $dbForPlatform, callable $logError): void
+    public function action(Message $message, Document $project, callable $getProjectDB, callable $getLogsDB, callable $getDatabaseDB, Database $dbForPlatform, callable $logError): void
     {
         $this->logError = $logError;
 
@@ -77,13 +78,13 @@ class StatsResources extends Action
         $this->documents = [];
 
         $startTime = microtime(true);
-        $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
+        $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $getDatabaseDB, $project);
         $endTime = microtime(true);
         $executionTime = $endTime - $startTime;
         Console::info('Project: ' . $project->getId() . '(' . $project->getSequence() . ') aggregated in ' . $executionTime .' seconds');
     }
 
-    protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
+    protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, callable $getDatabaseDB, Document $project): void
     {
         Console::info('Begining count for: ' . $project->getId());
 
@@ -192,7 +193,7 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForDatabase($dbForProject, $region);
+                $this->countForDatabase($dbForProject, $getDatabaseDB, $region);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
             }
@@ -203,7 +204,7 @@ class StatsResources extends Action
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
 
-            $this->writeDocuments($dbForLogs, $project);
+            $this->writeDocuments($dbForProject, $project);
         } catch (Throwable $th) {
             call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
         }
@@ -252,20 +253,20 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, METRIC_FILES_IMAGES_TRANSFORMED, $totalImageTransformations);
     }
 
-    protected function countForDatabase(Database $dbForProject, string $region)
+    protected function countForDatabase(Database $dbForProject, callable $getDatabaseDB, string $region)
     {
         $totalCollections = 0;
         $totalDocuments = 0;
 
         $totalDatabaseStorage = 0;
 
-        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage) {
+        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $getDatabaseDB, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage) {
             $collections = $dbForProject->count('database_' . $database->getSequence());
 
             $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_COLLECTIONS);
             $this->createStatsDocuments($region, $metric, $collections);
 
-            [$documents, $storage] = $this->countForCollections($dbForProject, $database, $region);
+            [$documents, $storage] = $this->countForCollections($dbForProject, $getDatabaseDB, $database, $region);
 
             $totalDatabaseStorage += $storage;
             $totalDocuments += $documents;
@@ -276,17 +277,19 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, METRIC_DOCUMENTS, $totalDocuments);
         $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE, $totalDatabaseStorage);
     }
-    protected function countForCollections(Database $dbForProject, Document $database, string $region): array
+    protected function countForCollections(Database $dbForProject, callable $getDatabaseDB, Document $database, string $region): array
     {
         $databaseDocuments = 0;
         $databaseStorage = 0;
-        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $database, $region, &$databaseStorage, &$databaseDocuments) {
-            $documents = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+        /** @var Database $dbForDatabase */
+        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $dbForDatabase, $database, $region, &$databaseStorage, &$databaseDocuments) {
+            $documents = $dbForDatabase->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
             $this->createStatsDocuments($region, $metric, $documents);
             $databaseDocuments += $documents;
 
-            $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $collectionStorage = $dbForDatabase->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
             $this->createStatsDocuments($region, $metric, $collectionStorage);
             $databaseStorage += $collectionStorage;
@@ -430,7 +433,7 @@ class StatsResources extends Action
         }
     }
 
-    protected function writeDocuments(Database $dbForLogs, Document $project): void
+    protected function writeDocuments(Database $dbForProject, Document $project): void
     {
         $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
 
@@ -462,7 +465,7 @@ class StatsResources extends Action
         });
 
         try {
-            $dbForLogs->upsertDocuments(
+            $dbForProject->upsertDocuments(
                 'stats',
                 $this->documents,
             );

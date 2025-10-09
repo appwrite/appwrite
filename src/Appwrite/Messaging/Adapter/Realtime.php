@@ -178,7 +178,6 @@ class Realtime extends MessagingAdapter
      */
     public function getSubscribers(array $event): array
     {
-
         $receivers = [];
         /**
          * Check if project has subscriber.
@@ -298,6 +297,8 @@ class Realtime extends MessagingAdapter
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
+            case 'tablesdb':
+            case 'documentsdb':
                 $resource = $parts[4] ?? '';
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
@@ -315,27 +316,24 @@ class Realtime extends MessagingAdapter
                     $tableId = $payload->getAttribute('$tableId', '');
                     $collectionId = $payload->getAttribute('$collectionId', '');
                     $resourceId = $tableId ?: $collectionId;
-                    $databaseType = $database->getAttribute('type');
                     $channels = [];
                     // backward compat(tablesdb will have databases channels + tablesdb prefixed channels)
-                    if ($databaseType === 'legacy' || $databaseType === 'tablesdb') {
+                    if ($parts[0] === 'databases' || $parts[0] === 'tablesdb') {
                         $prefix = 'databases';
-                        $channels = array_merge(
-                            $channels,
-                            self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), $prefix)
-                        );
 
-                        $channels = array_merge(
-                            $channels,
-                            self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), $prefix)
-                        );
+                        $channels = self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), $prefix);
+
+                        $channels = array_unique([
+                            ...$channels,
+                            ...self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), $prefix)
+                        ]);
                     }
                     // prefixed channels -> tablesdb, documentsdb,etc
-                    if ($databaseType !== 'legacy') {
-                        $channels = array_merge(
-                            $channels,
-                            self::getDatabaseChannels($databaseType, $database->getId(), $resourceId, $payload->getId())
-                        );
+                    if ($parts[0] !== 'databases') {
+                        $channels = array_unique([
+                            ...$channels,
+                            ...self::getDatabaseChannels($parts[0], $database->getId(), $resourceId, $payload->getId()),
+                        ]);
                     }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
@@ -394,7 +392,6 @@ class Realtime extends MessagingAdapter
         ];
     }
 
-    // $prefixOverride to forcefully use a prefix(for backward-compat cases)
     public static function getDatabaseChannels(
         string $type = 'databases',
         string $databaseId = '',
