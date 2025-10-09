@@ -20,4 +20,5 @@ val result = databases.createDocument(
         "isAdmin" to false
     ), 
     permissions = listOf("read("any")"), // (optional)
+    transactionId = "<TRANSACTION_ID>", // (optional)
 )

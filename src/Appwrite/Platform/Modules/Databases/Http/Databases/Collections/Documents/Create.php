@@ -375,6 +375,12 @@ class Create extends Action
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
             }
 
+            $now = new \DateTime();
+            $expiresAt = new \DateTime($transaction->getAttribute('expiresAt', 'now'));
+            if ($now > $expiresAt) {
+                throw new Exception(Exception::TRANSACTION_EXPIRED);
+            }
+
             // Enforce max operations per transaction
             $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
             $existing = $transaction->getAttribute('operations', 0);

@@ -14,6 +14,7 @@ tablesDB.updateRow(
     "<ROW_ID>", // rowId 
     mapOf( "a" to "b" ), // data (optional)
     listOf("read("any")"), // permissions (optional)
+    "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

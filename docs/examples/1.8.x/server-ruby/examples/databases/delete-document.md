@@ -12,5 +12,6 @@ databases = Databases.new(client)
 result = databases.delete_document(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
-    document_id: '<DOCUMENT_ID>'
+    document_id: '<DOCUMENT_ID>',
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

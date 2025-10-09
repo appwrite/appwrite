@@ -20,5 +20,6 @@ val response = databases.createDocument(
         "age" to 30,
         "isAdmin" to false
     ),
-    permissions = listOf("read("any")") // optional
+    permissions = listOf("read("any")"), // optional
+    transactionId = "<TRANSACTION_ID>" // optional
 )

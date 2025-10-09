@@ -12,5 +12,6 @@ TablesDB tablesDB = new TablesDB(client);
 await tablesDB.DeleteRow(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    rowId: "<ROW_ID>"
+    rowId: "<ROW_ID>",
+    transactionId: "<TRANSACTION_ID>" // optional
 );
