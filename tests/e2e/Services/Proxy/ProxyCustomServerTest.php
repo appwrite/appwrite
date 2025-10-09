@@ -704,4 +704,37 @@ class ProxyCustomServerTest extends Scope
 
         $this->cleanupRule($rule['body']['$id']);
     }
+
+    public function testUpdateRuleVerificationWithSameDataUpdatesTimestamp(): void
+    {
+        $domain = \uniqid() . '-timestamp-test.webapp.com';
+        $rule = $this->createAPIRule($domain);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $rule['body']['status']);
+        $this->assertNotEmpty($rule['body']['verificationLogs']);
+
+        $ruleId = $rule['body']['$id'];
+        $initialUpdatedAt = $rule['body']['$updatedAt'];
+        $initialVerificationLogs = $rule['body']['verificationLogs'];
+
+        sleep(1);
+
+        $updatedRule = $this->updateRuleVerification($ruleId);
+
+        $this->assertEquals(400, $updatedRule['headers']['status-code']);
+        $this->assertStringContainsString($initialVerificationLogs, $updatedRule['body']['message']);
+
+        $ruleAfterUpdate = $this->getRule($ruleId);
+        $this->assertEquals(200, $ruleAfterUpdate['headers']['status-code']);
+        $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $ruleAfterUpdate['body']['status']);
+        $this->assertEquals($initialVerificationLogs, $ruleAfterUpdate['body']['verificationLogs']);
+        $this->assertNotEquals($initialUpdatedAt, $ruleAfterUpdate['body']['$updatedAt']);
+
+        $initialTime = new \DateTime($initialUpdatedAt);
+        $updatedTime = new \DateTime($ruleAfterUpdate['body']['$updatedAt']);
+        $this->assertGreaterThan($initialTime, $updatedTime);
+
+        $this->cleanupRule($ruleId);
+    }
 }
