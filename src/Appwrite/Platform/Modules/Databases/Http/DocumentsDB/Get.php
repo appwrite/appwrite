@@ -28,7 +28,7 @@ class Get extends DatabaseGet
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: 'documentsdb',
                 name: 'get',
                 description: '/docs/references/documentsdb/get.md',

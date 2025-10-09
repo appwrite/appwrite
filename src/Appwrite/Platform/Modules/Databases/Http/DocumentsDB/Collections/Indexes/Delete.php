@@ -41,7 +41,7 @@ class Delete extends IndexDelete
             ->label('audits.event', 'index.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
                 name: 'deleteIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/documentsdb/delete-index.md',

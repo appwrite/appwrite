@@ -41,7 +41,7 @@ class Upsert extends DocumentsUpsert
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsdb',
+                    namespace: 'documentsDB',
                     group: $this->getSdkGroup(),
                     name: 'upsertDocuments',
                     description: '/docs/references/documentsdb/upsert-documents.md',

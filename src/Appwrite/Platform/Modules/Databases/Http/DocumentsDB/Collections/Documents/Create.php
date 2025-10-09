@@ -50,7 +50,7 @@ class Create extends DocumentCreate
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsdb',
+                    namespace: 'documentsDB',
                     group: $this->getSdkGroup(),
                     name: 'createDocument',
                     desc: 'Create document',
@@ -72,7 +72,7 @@ class Create extends DocumentCreate
                     ]
                 ),
                 new Method(
-                    namespace: 'documentsdb',
+                    namespace: 'documentsDB',
                     group: $this->getSdkGroup(),
                     name: $this->getBulkActionName(self::getName()),
                     desc: 'Create documents',

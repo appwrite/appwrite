@@ -33,7 +33,7 @@ class Update extends DatabaseUpdate
             ->label('audits.event', 'database.update')
             ->label('audits.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: 'documentsdb',
                 name: 'update',
                 description: '/docs/references/documentsdb/update.md',

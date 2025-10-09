@@ -42,7 +42,7 @@ class Create extends IndexCreate
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
                 name: 'createIndex',
                 description: '/docs/references/documentsdb/create-index.md',

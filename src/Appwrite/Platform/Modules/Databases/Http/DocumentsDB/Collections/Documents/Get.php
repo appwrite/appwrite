@@ -35,7 +35,7 @@ class Get extends DocumentGet
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
                 name: 'getDocument',
                 description: '/docs/references/documentsdb/get-document.md',

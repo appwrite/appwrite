@@ -34,7 +34,7 @@ class Get extends IndexGet
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
                 name: 'getIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/documentsdb/get-index.md',

@@ -41,7 +41,7 @@ class Decrement extends DecrementDocumentAttribute
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/documentsdb/decrement-document-attribute.md',

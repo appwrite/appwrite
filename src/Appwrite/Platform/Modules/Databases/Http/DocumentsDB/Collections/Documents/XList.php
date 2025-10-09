@@ -35,7 +35,7 @@ class XList extends DocumentXList
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
                 name: 'listDocuments',
                 description: '/docs/references/documentsdb/list-documents.md',

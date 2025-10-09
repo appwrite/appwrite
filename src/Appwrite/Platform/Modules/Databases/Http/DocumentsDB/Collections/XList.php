@@ -35,7 +35,7 @@ class XList extends CollectionXList
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: 'collections',
                 name: 'listCollections',
                 description: '/docs/references/documentsdb/list-collections.md',

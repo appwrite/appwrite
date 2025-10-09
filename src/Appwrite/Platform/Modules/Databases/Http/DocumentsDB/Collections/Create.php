@@ -40,7 +40,7 @@ class Create extends CollectionCreate
             ->label('audits.event', 'collections.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: 'collections',
                 name: 'createCollection',
                 description: '/docs/references/documentsdb/create-collection.md',

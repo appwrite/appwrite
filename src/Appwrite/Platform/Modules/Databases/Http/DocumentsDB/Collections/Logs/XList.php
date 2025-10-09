@@ -30,7 +30,7 @@ class XList extends CollectionLogXList
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsdb',
+                namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
                 name: self::getName(),
                 description: '/docs/references/documentsdb/get-collection-logs.md',
