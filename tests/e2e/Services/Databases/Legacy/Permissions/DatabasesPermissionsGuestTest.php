@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Legacy;
+namespace Tests\E2E\Services\Databases\Legacy\Permissions;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;

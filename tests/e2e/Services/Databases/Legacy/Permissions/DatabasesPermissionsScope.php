@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\TablesDB;
+namespace Tests\E2E\Services\Databases\Legacy\Permissions;
 
 use Tests\E2E\Client;
 

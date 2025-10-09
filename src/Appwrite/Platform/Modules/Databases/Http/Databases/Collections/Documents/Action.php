@@ -76,7 +76,7 @@ abstract class Action extends AppwriteAction
      *
      * Can be used for XList operations as well!
      */
-    protected function getSdkGroup(): string
+    protected function getSDKGroup(): string
     {
         return $this->isCollectionsAPI() ? 'documents' : 'rows';
     }
@@ -84,7 +84,7 @@ abstract class Action extends AppwriteAction
     /**
      * Get the SDK namespace for the current action.
      */
-    protected function getSdkNamespace(): string
+    protected function getSDKNamespace(): string
     {
         return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }

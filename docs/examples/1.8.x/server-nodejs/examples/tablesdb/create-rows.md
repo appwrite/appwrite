@@ -10,5 +10,6 @@ const tablesDB = new sdk.TablesDB(client);
 const result = await tablesDB.createRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    rows: []
+    rows: [],
+    transactionId: '<TRANSACTION_ID>' // optional
 });

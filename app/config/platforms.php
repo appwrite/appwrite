@@ -24,7 +24,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev',
+                'gitBranch' => 'feat-txn',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/web/CHANGELOG.md'),
                 'demos' => [
                     [
@@ -275,7 +275,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'dev',
+                'gitBranch' => 'feat-txn',
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/nodejs/CHANGELOG.md'),
             ],
             [
