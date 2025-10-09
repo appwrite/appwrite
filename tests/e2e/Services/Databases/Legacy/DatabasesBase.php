@@ -1502,7 +1502,14 @@ trait DatabasesBase
         $this->assertEquals([128, 200], $index['body']['lengths']);
 
         // Test case for lengths array overriding
-        // set a length for an array attribute, it should get overriden with Database::ARRAY_INDEX_LENGTH
+        // set a length for an array attribute, it should get overridden with Database::ARRAY_INDEX_LENGTH
+        // MongoDB doesn't support identical indexes, so delete the existing one first
+        $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/indexes/index-actors", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1512,7 +1519,6 @@ trait DatabasesBase
             'type' => 'key',
             'attributes' => ['actors'],
             'lengths' => [120],
-            'orders' => [Database::ORDER_DESC],
         ]);
 
         $this->assertEquals(202, $create['headers']['status-code']);

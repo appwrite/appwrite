@@ -196,6 +196,7 @@ class Create extends Action
         $supportForSpatialAttributes = $dbForProject->getAdapter()->getSupportForSpatialAttributes();
         $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
         $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
+        $supportForAttributes = $dbForProject->getAdapter()->getSupportForAttributes();
         $supportForMultipleFulltextIndexes = $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes();
         $supportForIdenticalIndexes = $dbForProject->getAdapter()->getSupportForIdenticalIndexes();
 
@@ -208,6 +209,7 @@ class Create extends Action
             $supportForSpatialAttributes,
             $supportForSpatialIndexNull,
             $supportForSpatialIndexOrder,
+            $supportForAttributes,
             $supportForMultipleFulltextIndexes,
             $supportForIdenticalIndexes
         );
