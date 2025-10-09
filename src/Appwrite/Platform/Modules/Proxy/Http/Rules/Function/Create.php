@@ -183,7 +183,7 @@ class Create extends Action
             'type' => 'deployment',
             'trigger' => 'manual',
             'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
-            'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),
+            'deploymentInternalId' => $deployment->getSequence(),
             'deploymentResourceType' => 'function',
             'deploymentResourceId' => $function->getId(),
             'deploymentResourceInternalId' => $function->getSequence(),

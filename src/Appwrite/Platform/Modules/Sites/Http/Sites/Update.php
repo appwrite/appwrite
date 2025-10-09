@@ -166,7 +166,7 @@ class Update extends Base
         $enabled ??= $site->getAttribute('enabled', true);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
-        $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
+        $repositoryInternalId = $site->getAttribute('repositoryInternalId');
 
         $isConnected = !empty($site->getAttribute('providerRepositoryId', ''));
 
@@ -189,7 +189,7 @@ class Update extends Base
             $providerRootDirectory = '';
             $providerSilentMode = true;
             $repositoryId = '';
-            $repositoryInternalId = '';
+            $repositoryInternalId = null;
         }
 
         // Git connect logic
