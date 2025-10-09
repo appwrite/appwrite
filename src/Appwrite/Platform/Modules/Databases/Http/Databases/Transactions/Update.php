@@ -403,10 +403,11 @@ class Update extends Action
             $data['$id'] = $documentId;
         }
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
-            $state[$collectionId][$data['$id']] = $dbForProject->createDocument(
+            $doc = $dbForProject->createDocument(
                 $collectionId,
                 new Document($data),
             );
+            $state[$collectionId][$doc->getId()] = $doc;
         });
     }
 
@@ -493,11 +494,12 @@ class Update extends Action
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
-            $state[$collectionId][$documentId] = $dbForProject->upsertDocument(
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
+            $doc = $dbForProject->upsertDocument(
                 $collectionId,
                 new Document($data),
             );
+            $state[$collectionId][$doc->getId()] = $doc;
         });
     }
 

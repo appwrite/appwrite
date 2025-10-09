@@ -5176,4 +5176,143 @@ trait TransactionsBase
             $this->assertEquals('processed', $response['body']['flag'], 'Bulk update should have matched document created in same transaction');
         }
     }
+
+    /**
+     * Test upsert with auto-generated ID followed by update
+     * This tests that the transaction state properly stores the document under its actual ID,
+     * not under null when the ID is auto-generated
+     */
+    public function testUpsertAutoIdThenUpdate(): void
+    {
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'UpsertAutoIDTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        // Create columns
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'counter',
+            'required' => false,
+            'min' => 0,
+            'max' => 10000,
+        ]);
+
+        sleep(3);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // First create a document in the transaction
+        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Initial document',
+                'counter' => 5
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $docId = $response['body']['$id'];
+
+        // Now upsert the same document using ID::unique() in the path
+        // The database will recognize it exists and update it, generating a new auto ID if needed
+        // This tests that handleUpsertOperation properly captures the actual document ID
+        $response = $this->client->call(Client::METHOD_PUT, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/{$docId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'name' => 'Upserted in transaction',
+                'counter' => 10
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Now try to update the same document again in the same transaction
+        // This verifies that the upsert properly stored the document under its actual ID in state
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/{$docId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'name' => 'Updated after upsert',
+                'counter' => 20
+            ],
+            'transactionId' => $transactionId
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Commit transaction
+        $response = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Verify the document has the final updated values
+        $response = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/{$docId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Updated after upsert', $response['body']['name']);
+        $this->assertEquals(20, $response['body']['counter']);
+    }
 }
