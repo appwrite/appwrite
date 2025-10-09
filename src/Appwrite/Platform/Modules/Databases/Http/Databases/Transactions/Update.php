@@ -573,8 +573,8 @@ class Update extends Action
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data) {
-            $dbForProject->increaseDocumentAttribute(
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
+            $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
                 attribute: $data[$this->getAttributeKey()],
