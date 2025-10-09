@@ -97,6 +97,10 @@ class V23 extends Migration
             $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
 
             switch ($id) {
+                case '_metadata':
+                    $this->createCollection('transactions');
+                    $this->createCollection('transactionLogs');
+                    break;
                 case 'projects':
                     $attributes = [
                         'pingCount',
