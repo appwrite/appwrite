@@ -82,6 +82,7 @@ class Upsert extends Action
             ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('user')
@@ -89,6 +90,8 @@ class Upsert extends Action
             ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('transactionState')
+            ->inject('plan')
             ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
@@ -128,6 +131,8 @@ class Upsert extends Action
         ];
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
+
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 

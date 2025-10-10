@@ -65,10 +65,12 @@ class Get extends Action
             ->param('documentId', '', new UID(), 'Document ID.')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabaseDB')
             ->inject('queueForStatsUsage')
+            ->inject('transactionState')
             ->inject('transactionState')
             ->callback($this->action(...));
     }
@@ -100,6 +102,7 @@ class Get extends Action
         try {
             $selects = Query::groupByType($queries)['selections'] ?? [];
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
@@ -109,7 +112,7 @@ class Get extends Action
                 $document = $dbForDatabase->getDocument($collectionTableId, $documentId, $queries);
             } else {
                 // has no selects, disable relationship looping on documents!
-                $document = $dbForDatabase->skipRelationships(fn () => $dbForProject->getDocument($collectionTableId, $documentId, $queries));
+                $document = $dbForDatabase->skipRelationships(fn () => $dbForDatabase->getDocument($collectionTableId, $documentId, $queries));
             }
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());

@@ -72,6 +72,7 @@ class Delete extends Action
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabaseDB')
@@ -192,7 +193,7 @@ class Delete extends Action
 
         $response->dynamic(new Document([
             'total' => $modified,
-            $this->getSDKGroup() => $documents,
+            $this->getSDKGroup() => $documents
         ]), $this->getResponseModel());
 
         $this->triggerBulk(

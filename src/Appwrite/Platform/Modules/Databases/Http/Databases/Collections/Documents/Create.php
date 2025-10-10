@@ -83,6 +83,7 @@ class Create extends Action
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
                         new Parameter('transactionId', optional: true),
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -108,6 +109,7 @@ class Create extends Action
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
                         new Parameter('transactionId', optional: true),
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -122,6 +124,7 @@ class Create extends Action
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabaseDB')
@@ -131,6 +134,7 @@ class Create extends Action
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
+            ->inject('plan')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -485,7 +489,7 @@ class Create extends Action
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($documents),
-                $this->getSdkGroup() => $documents
+                $this->getSDKGroup() => $documents
             ]), $this->getBulkResponseModel());
 
             $this->triggerBulk(

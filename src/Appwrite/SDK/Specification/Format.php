@@ -239,7 +239,7 @@ abstract class Format
                         }
                 }
                 break;
-            case 'documentsdb':
+            case 'documentsDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
@@ -496,7 +496,7 @@ abstract class Format
                 }
                 break;
             case 'databases':
-            case 'documentsdb':
+            case 'documentsDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
