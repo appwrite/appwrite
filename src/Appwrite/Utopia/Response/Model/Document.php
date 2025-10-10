@@ -82,7 +82,7 @@ class Document extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
-        
+
         if (!$document->isEmpty()) {
             $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
         }
