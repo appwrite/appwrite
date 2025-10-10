@@ -89,6 +89,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -99,6 +100,8 @@ services:
       - -e
       - app/http.php
     environment:
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
@@ -373,7 +376,10 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     environment:
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -427,11 +433,14 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - mariadb
       - mongodb
     environment:
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -711,6 +720,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - mongodb
@@ -798,6 +808,8 @@ services:
       - mariadb
       - mongodb
     environment:
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -830,6 +842,8 @@ services:
       - mariadb
       - mongodb
     environment:
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
