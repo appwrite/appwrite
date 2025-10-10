@@ -45,7 +45,7 @@ class Update extends Action
             ->label('audits.resource', 'database/{request.databaseId}/collections/{request.collectionId}')
             ->label('sdk', new Method(
                 namespace: 'databases',
-                group: $this->getSdkGroup(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-collection.md',
                 auth: [AuthType::KEY],

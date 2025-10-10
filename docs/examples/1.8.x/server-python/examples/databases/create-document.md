@@ -19,5 +19,6 @@ result = databases.create_document(
         "age": 30,
         "isAdmin": False
     },
-    permissions = ["read("any")"] # optional
+    permissions = ["read("any")"], # optional
+    transaction_id = '<TRANSACTION_ID>' # optional
 )

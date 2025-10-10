@@ -14,5 +14,6 @@ Row result = await tablesDB.UpsertRow(
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
     data: [object], // optional
-    permissions: ["read("any")"] // optional
+    permissions: ["read("any")"], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 );

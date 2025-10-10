@@ -1,5 +1,14 @@
 # Change Log
 
+## 10.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 10.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 10.0.1
 
 * Fix CLI Dart model generation issues

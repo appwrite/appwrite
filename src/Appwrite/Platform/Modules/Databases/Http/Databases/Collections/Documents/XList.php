@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -45,8 +46,8 @@ class XList extends Action
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/list-documents.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -65,14 +66,16 @@ class XList extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabaseDB')
             ->inject('queueForStatsUsage')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -124,17 +127,22 @@ class XList extends Action
 
         try {
             $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
-            if (! empty($selectQueries)) {
+            // Use transaction-aware document retrieval if transactionId is provided
+            if ($transactionId !== null) {
+                $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
+                $total = $transactionState->countDocuments($collectionTableId, $transactionId, $queries);
+            } elseif (! empty($selectQueries)) {
                 // has selects, allow relationship on documents
-                $documents = $dbForDatabase->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries);
+                $documents = $dbForDatabase->find($collectionTableId, $queries);
+                $total = $dbForDatabase->count($collectionTableId, $queries, APP_LIMIT_COUNT);
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
-                $documents = $dbForDatabase->skipRelationships(fn () => $dbForDatabase->find('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries));
+                $documents = $dbForDatabase->skipRelationships(fn () => $dbForProject->find($collectionTableId, $queries));
+                $total = $dbForDatabase->count($collectionTableId, $queries, APP_LIMIT_COUNT);
             }
-
-            $total = $dbForDatabase->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $queries, APP_LIMIT_COUNT);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
@@ -164,7 +172,7 @@ class XList extends Action
         $response->dynamic(new Document([
             'total' => $total,
             // rows or documents
-            $this->getSdkGroup() => $documents,
+            $this->getSDKGroup() => $documents,
         ]), $this->getResponseModel());
     }
 }

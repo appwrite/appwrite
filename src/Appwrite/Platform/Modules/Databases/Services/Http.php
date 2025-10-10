@@ -3,10 +3,9 @@
 namespace Appwrite\Platform\Modules\Databases\Services;
 
 use Appwrite\Platform\Modules\Databases\Http\Init\Timeout;
-use Appwrite\Platform\Modules\Databases\Services\Registry\Collections as CollectionsRegistry;
-use Appwrite\Platform\Modules\Databases\Services\Registry\Databases as DatabasesRegistry;
 use Appwrite\Platform\Modules\Databases\Services\Registry\DocumentsDB as DocumentsDBRegistry;
-use Appwrite\Platform\Modules\Databases\Services\Registry\TablesDB as TablesDBRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\Legacy as LegacyRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\TablesDB as TablesDBDBRegistry;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -18,9 +17,8 @@ class Http extends Service
         $this->addAction(Timeout::getName(), new Timeout());
 
         foreach ([
-            DatabasesRegistry::class,
-            CollectionsRegistry::class,
-            TablesDBRegistry::class,
+            LegacyRegistry::class,
+            TablesDBDBRegistry::class,
             DocumentsDBRegistry::class
         ] as $registrar) {
             new $registrar($this);

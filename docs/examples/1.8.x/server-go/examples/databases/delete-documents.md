@@ -18,4 +18,5 @@ response, error := service.DeleteDocuments(
     "<DATABASE_ID>",
     "<COLLECTION_ID>",
     databases.WithDeleteDocumentsQueries([]interface{}{}),
+    databases.WithDeleteDocumentsTransactionId("<TRANSACTION_ID>"),
 )

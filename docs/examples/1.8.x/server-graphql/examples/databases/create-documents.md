@@ -2,7 +2,8 @@ mutation {
     databasesCreateDocuments(
         databaseId: "<DATABASE_ID>",
         collectionId: "<COLLECTION_ID>",
-        documents: []
+        documents: [],
+        transactionId: "<TRANSACTION_ID>"
     ) {
         total
         documents {

@@ -12,5 +12,6 @@ val tablesDB = TablesDB(client)
 val response = tablesDB.upsertRows(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
-    rows = listOf()
+    rows = listOf(),
+    transactionId = "<TRANSACTION_ID>" // optional
 )

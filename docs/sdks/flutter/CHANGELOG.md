@@ -1,5 +1,14 @@
 # Change Log
 
+## 20.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 20.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 19.1.0
 
 * Add `orderRandom` query support
