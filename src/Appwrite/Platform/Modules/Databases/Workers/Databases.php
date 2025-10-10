@@ -68,7 +68,6 @@ class Databases extends Action
          * @var Database $dbForDatabase
          */
         $dbForDatabase = call_user_func($getDatabaseDB, $database);
-
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 

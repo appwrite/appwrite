@@ -99,7 +99,6 @@ class XList extends Action
         }
 
         $dbForDatabase = call_user_func($getDatabaseDB, $database);
-
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */

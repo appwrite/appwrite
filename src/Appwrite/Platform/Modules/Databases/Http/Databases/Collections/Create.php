@@ -114,7 +114,6 @@ class Create extends Action
         }
 
         $dbForDatabase = call_user_func($getDatabaseDB, $database);
-
         try {
             $dbForDatabase->createCollection(
                 id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),

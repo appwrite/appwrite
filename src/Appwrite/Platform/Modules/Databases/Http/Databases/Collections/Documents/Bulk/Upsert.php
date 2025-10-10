@@ -74,7 +74,6 @@ class Upsert extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabaseDB')
@@ -160,7 +159,6 @@ class Upsert extends Action
         }
 
         $dbForDatabase = call_user_func($getDatabaseDB, $database);
-
         $upserted = [];
 
         try {

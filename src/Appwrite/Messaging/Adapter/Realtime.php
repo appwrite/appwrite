@@ -392,7 +392,18 @@ class Realtime extends MessagingAdapter
         ];
     }
 
-    public static function getDatabaseChannels(
+    /**
+     * Generate realtime channels for database events
+     *
+     * @param string $type The database API type
+     * @param string $databaseId The database ID
+     * @param string $resourceId The collection/table ID
+     * @param string $payloadId The document/row ID
+     * @param string $prefixOverride Override the channel prefix when different API types share the same terminology but need different prefixes
+     * (e.g., 'databases' and 'documentsdb' use same terminology but need different prefixes)
+     * @return array Array of channel names
+     */
+    private static function getDatabaseChannels(
         string $type = 'databases',
         string $databaseId = '',
         string $resourceId = '',

@@ -105,7 +105,6 @@ class Update extends Action
         );
 
         $dbForDatabase = call_user_func($getDatabaseDB, $database);
-
         $dbForDatabase->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
 
         $queueForEvents

@@ -594,7 +594,7 @@ class UsageTest extends Scope
         $collectionsTotal = $data['collectionsTotal'];
         $documentsTotal = $data['documentsTotal'];
 
-        sleep(self::WAIT * 5);
+        sleep(self::WAIT);
 
         $this->assertEventually(function () use ($requestsTotal, $databasesTotal, $documentsTotal) {
             $response = $this->client->call(
@@ -847,7 +847,7 @@ class UsageTest extends Scope
         $tablesTotal = $data['tablesTotal'];
         $databasesTotal = $data['databasesTotal'];
 
-        sleep(self::WAIT * 5);
+        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -1067,7 +1067,7 @@ class UsageTest extends Scope
         $collectionsTotal = $data['documentsDbCollectionsTotal'];
         $documentsTotal = $data['documentsDbDocumentsTotal'];
 
-        sleep(self::WAIT * 5);
+        sleep(self::WAIT);
 
         $response = $this->client->call(
             Client::METHOD_GET,

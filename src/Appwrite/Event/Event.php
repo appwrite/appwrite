@@ -578,7 +578,7 @@ class Event
         $eventValues = \array_values($events);
 
         /**
-         * Return a combined list of table, collection events and if tablesdb include all for backward compatibility
+         * Return a combined list of table, collection events and if tablesdb present then include all for backward compatibility
         */
         return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
     }
@@ -668,6 +668,9 @@ class Event
         return array_unique($events);
     }
 
+    /**
+     * Maps event terminology based on database type
+    */
     private static function getDatabaseTypeEvents(Document $database, array $event): array
     {
         $eventMap = [];

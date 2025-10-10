@@ -79,13 +79,11 @@ class Decrement extends Action
             ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
             ->param('min', null, new Numeric(), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true)
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabaseDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
-            ->inject('plan')
             ->inject('plan')
             ->callback($this->action(...));
     }
@@ -169,7 +167,6 @@ class Decrement extends Action
         }
 
         $dbForDatabase = call_user_func($getDatabaseDB, $database);
-
         try {
             $document = $dbForDatabase->decreaseDocumentAttribute(
                 collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),

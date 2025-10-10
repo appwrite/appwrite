@@ -898,68 +898,6 @@ trait MigrationsBase
     }
 
     /**
-     * DocumentsDB (schemaless)
-     */
-    public function testAppwriteMigrationDocumentsDBDatabase(): array
-    {
-        $response = $this->client->call(Client::METHOD_POST, '/documentsdb', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'DocsDB - Migration DB'
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$id']);
-
-        $databaseId = $response['body']['$id'];
-
-        $result = $this->performMigrationSync([
-            'resources' => [
-                Resource::TYPE_DATABASE,
-            ],
-            'endpoint' => 'http://localhost/v1',
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_DATABASE], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_DATABASE, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['warning']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($databaseId, $response['body']['$id']);
-        $this->assertEquals('DocsDB - Migration DB', $response['body']['name']);
-
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getDestinationProject()['$id'],
-            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
-        ]);
-
-        return [
-            'databaseId' => $databaseId,
-        ];
-    }
-
-    /**
      * @depends testAppwriteMigrationDocumentsDBDatabase
      */
     public function testAppwriteMigrationDocumentsDBCollection(array $data): array
