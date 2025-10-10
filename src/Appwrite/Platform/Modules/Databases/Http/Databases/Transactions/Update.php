@@ -558,6 +558,28 @@ class Update extends Action
     }
 
     /**
+     * Get the attribute/column name from data, with fallback for cross-API compatibility
+     *
+     * @param array $data The operation data
+     * @return string The attribute/column name
+     */
+    private function getAttributeNameFromData(array $data): string
+    {
+        $expectedKey = $this->getAttributeKey();
+        if (isset($data[$expectedKey])) {
+            return $data[$expectedKey];
+        }
+
+        // Try the opposite key for cross-API compatibility
+        $fallbackKey = $expectedKey === 'attribute' ? 'column' : 'attribute';
+        if (isset($data[$fallbackKey])) {
+            return $data[$fallbackKey];
+        }
+
+        return '';
+    }
+
+    /**
      * Handle increment operation
      *
      * @param Database $dbForProject
@@ -579,23 +601,24 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
+        $attribute = $this->getAttributeNameFromData($data);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
             $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
@@ -624,23 +647,24 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
+        $attribute = $this->getAttributeNameFromData($data);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
             $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );

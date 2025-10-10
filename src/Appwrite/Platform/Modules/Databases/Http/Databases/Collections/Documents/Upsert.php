@@ -301,9 +301,10 @@ class Upsert extends Action
             });
 
             // Return successful response without actually upserting document
+            $groupId = $this->getGroupId();
             $mockDocument = new Document([
                 '$id' => $documentId,
-                '$collectionId' => $collectionId,
+                '$' . $groupId => $collectionId,
                 '$databaseId' => $databaseId,
                 ...$data
             ]);
