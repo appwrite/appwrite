@@ -580,11 +580,7 @@ class Event
         /**
          * Return a combined list of table, collection events and if tablesdb include all for backward compatibility
         */
-        if ($database && ($database->getAttribute('type') === 'legacy' || $database->getAttribute('type') === 'tablesdb')) {
-            return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
-        }
-
-        return $eventValues;
+        return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
     }
 
     /**
