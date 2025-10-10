@@ -59,7 +59,7 @@ class Delete extends DocumentsDelete
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')

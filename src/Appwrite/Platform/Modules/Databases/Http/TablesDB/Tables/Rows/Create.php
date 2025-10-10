@@ -103,7 +103,7 @@ class Create extends DocumentCreate
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')

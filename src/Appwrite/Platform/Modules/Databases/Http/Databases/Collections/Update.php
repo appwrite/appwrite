@@ -69,12 +69,12 @@ class Update extends Action
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -104,8 +104,8 @@ class Update extends Action
                 ->setAttribute('search', \implode(' ', [$collectionId, $name]))
         );
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
-        $dbForDatabase->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
+        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $permissions, $documentSecurity);
 
         $queueForEvents
             ->setContext('database', $database)

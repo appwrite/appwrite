@@ -82,7 +82,7 @@ class Update extends Action
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
@@ -92,7 +92,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -115,7 +115,7 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+        $dbForDatabases = $getDatabasesDB($database);
         // Read permission should not be required for update
         /** @var Document $document */
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
@@ -124,7 +124,7 @@ class Update extends Action
             // Use transaction-aware document retrieval to see changes from same transaction
             $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
-            $document = Authorization::skip(fn () => $dbForDatabase->getDocument($collectionTableId, $documentId));
+            $document = Authorization::skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -311,9 +311,9 @@ class Update extends Action
 
 
         try {
-            $document = $dbForDatabase->withRequestTimestamp(
+            $document = $dbForDatabases->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForDatabase->withPreserveDates(fn () => $dbForDatabase->updateDocument(
+                fn () => $dbForDatabases->withPreserveDates(fn () => $dbForDatabases->updateDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $document->getId(),
                     $newDocument

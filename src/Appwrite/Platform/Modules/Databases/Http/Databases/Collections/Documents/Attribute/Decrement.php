@@ -81,14 +81,14 @@ class Decrement extends Action
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -166,9 +166,9 @@ class Decrement extends Action
             return;
         }
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+        $dbForDatabases = $getDatabasesDB($database);
         try {
-            $document = $dbForDatabase->decreaseDocumentAttribute(
+            $document = $dbForDatabases->decreaseDocumentAttribute(
                 collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 id: $documentId,
                 attribute: $attribute,

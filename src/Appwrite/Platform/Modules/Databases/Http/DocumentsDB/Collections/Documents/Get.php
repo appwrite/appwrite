@@ -55,7 +55,7 @@ class Get extends DocumentGet
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->callback($this->action(...));

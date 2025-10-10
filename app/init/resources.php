@@ -431,11 +431,17 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('getDatabaseDB', function (Group $pools, Cache $cache, Document $project, Request $request, StatsUsage $queueForStatsUsage) {
+App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, StatsUsage $queueForStatsUsage) {
 
     return function (Document $database) use ($pools, $cache, $project, $request, $queueForStatsUsage): Database {
         $databaseType = $database->getAttribute('database', '');
-        $databaseDSN = new DSN($databaseType);
+        try {
+            $databaseDSN = new DSN($databaseType);
+        } catch (\InvalidArgumentException) {
+            // for old databases migrated through patch script
+            // databaseType determines the adapter
+            $databaseDSN = new DSN('mysql://'.$databaseType);
+        }
         try {
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {

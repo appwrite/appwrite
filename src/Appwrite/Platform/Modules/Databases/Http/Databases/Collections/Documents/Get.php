@@ -68,14 +68,14 @@ class Get extends Action
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -87,7 +87,7 @@ class Get extends Action
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+        $dbForDatabases = $getDatabasesDB($database);
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
         }
@@ -108,10 +108,10 @@ class Get extends Action
                 $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId, $queries);
             } elseif (! empty($selects)) {
                 // has selects, allow relationship on documents!
-                $document = $dbForDatabase->getDocument($collectionTableId, $documentId, $queries);
+                $document = $dbForDatabases->getDocument($collectionTableId, $documentId, $queries);
             } else {
                 // has no selects, disable relationship looping on documents!
-                $document = $dbForDatabase->skipRelationships(fn () => $dbForDatabase->getDocument($collectionTableId, $documentId, $queries));
+                $document = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $queries));
             }
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());

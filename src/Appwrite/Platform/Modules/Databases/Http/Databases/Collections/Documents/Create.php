@@ -126,7 +126,7 @@ class Create extends Action
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
@@ -136,7 +136,7 @@ class Create extends Action
             ->inject('plan')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -435,12 +435,12 @@ class Create extends Action
             return;
         }
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+        $dbForDatabases = $getDatabasesDB($database);
         try {
             $created = [];
-            $dbForDatabase->withPreserveDates(
-                function () use (&$created, $dbForDatabase, $database, $collection, $documents) {
-                    $dbForDatabase->createDocuments(
+            $dbForDatabases->withPreserveDates(
+                function () use (&$created, $dbForDatabases, $database, $collection, $documents) {
+                    $dbForDatabases->createDocuments(
                         'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                         $documents,
                         onNext: function ($doc) use (&$created) {

@@ -192,7 +192,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
-Server::setResource('getDatabaseDB', function (Cache $cache, Registry $register, Document $project) {
+Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project) {
     return function (Document $database) use ($cache, $register, $project): Database {
         $databaseType = $database->getAttribute('database', '');
         $databaseDSN = new DSN($databaseType);

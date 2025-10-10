@@ -76,7 +76,7 @@ class Upsert extends Action
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
@@ -86,7 +86,7 @@ class Upsert extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
@@ -158,12 +158,12 @@ class Upsert extends Action
             return;
         }
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+        $dbForDatabases = $getDatabasesDB($database);
         $upserted = [];
 
         try {
-            $modified = $dbForDatabase->withPreserveDates(function () use ($dbForDatabase, $database, $collection, $documents, $plan, &$upserted) {
-                return $dbForDatabase->upsertDocuments(
+            $modified = $dbForDatabases->withPreserveDates(function () use ($dbForDatabases, $database, $collection, $documents, $plan, &$upserted) {
+                return $dbForDatabases->upsertDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documents,
                     onNext: function (Document $document) use ($plan, &$upserted) {

@@ -113,7 +113,7 @@ $register->set('pools', function () {
     $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => 'mongodb',
         'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
-        'port' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB_PORT', '27017'),
+        'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),

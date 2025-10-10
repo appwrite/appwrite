@@ -77,13 +77,13 @@ class Create extends Action
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -103,9 +103,9 @@ class Create extends Action
             Query::equal('databaseInternalId', [$db->getSequence()])
         ], 61);
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $db);
+        $dbForDatabases = $getDatabasesDB($db);
 
-        $limit = $dbForDatabase->getLimitForIndexes();
+        $limit = $dbForDatabases->getLimitForIndexes();
 
         if ($count >= $limit) {
             throw new Exception($this->getLimitException(), 'Index limit exceeded');
@@ -146,7 +146,7 @@ class Create extends Action
         ];
 
         $contextType = $this->getParentContext();
-        if ($dbForDatabase->getAdapter()->getSupportForAttributes()) {
+        if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
             foreach ($attributes as $i => $attribute) {
                 // find attribute metadata in collection document
                 $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
@@ -210,9 +210,9 @@ class Create extends Action
             $supportForSpatialAttributes,
             $supportForSpatialIndexNull,
             $supportForSpatialIndexOrder,
-            $dbForDatabase->getAdapter()->getSupportForAttributes(),
-            $dbForDatabase->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForDatabase->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForAttributes(),
+            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
         );
 
         if (!$validator->isValid($index)) {

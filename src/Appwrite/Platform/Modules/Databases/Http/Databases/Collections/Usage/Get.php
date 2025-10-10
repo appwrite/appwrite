@@ -63,16 +63,16 @@ class Get extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB): void
+    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
-        $collection = $dbForDatabase->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
+        $dbForDatabases = $getDatabasesDB($database);
+        $collection = $dbForDatabases->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
 
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException());

@@ -64,7 +64,7 @@ class Update extends DocumentUpdate
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')

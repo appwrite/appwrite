@@ -62,13 +62,13 @@ class Delete extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -85,8 +85,8 @@ class Delete extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, "Failed to remove $type from DB");
         }
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
-        $dbForDatabase->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
         $queueForDatabase
             ->setType(DATABASE_TYPE_DELETE_COLLECTION)

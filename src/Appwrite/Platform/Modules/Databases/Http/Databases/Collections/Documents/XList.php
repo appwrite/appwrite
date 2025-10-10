@@ -70,14 +70,14 @@ class XList extends Action
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabaseDB')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabaseDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -98,7 +98,7 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $dbForDatabase = call_user_func($getDatabaseDB, $database);
+        $dbForDatabases = $getDatabasesDB($database);
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
@@ -116,7 +116,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForDatabase->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = Authorization::skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -135,13 +135,13 @@ class XList extends Action
                 $total = $transactionState->countDocuments($collectionTableId, $transactionId, $queries);
             } elseif (! empty($selectQueries)) {
                 // has selects, allow relationship on documents
-                $documents = $dbForDatabase->find($collectionTableId, $queries);
-                $total = $dbForDatabase->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                $documents = $dbForDatabases->find($collectionTableId, $queries);
+                $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
-                $documents = $dbForDatabase->skipRelationships(fn () => $dbForDatabase->find($collectionTableId, $queries));
-                $total = $dbForDatabase->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                $documents = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
+                $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
             }
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
