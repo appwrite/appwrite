@@ -419,9 +419,10 @@ class Create extends Action
                     'total' => \count($documents),
                 ]), $this->getBulkResponseModel());
             } else {
+                $groupId = $this->getGroupId();
                 $mockDocument = new Document([
                     '$id' => $documents[0]['$id'] ?? $documentId,
-                    '$collectionId' => $collectionId,
+                    '$' . $groupId => $collectionId,
                     '$databaseId' => $databaseId,
                     ...$documents[0]
                 ]);

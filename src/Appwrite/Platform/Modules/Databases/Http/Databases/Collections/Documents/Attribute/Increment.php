@@ -136,7 +136,7 @@ class Increment extends Action
                 'documentId' => $documentId,
                 'action' => 'increment',
                 'data' => [
-                    'attribute' => $attribute,
+                    $this->getAttributeKey() => $attribute,
                     'value' => $value,
                     'max' => $max,
                 ],
@@ -153,9 +153,10 @@ class Increment extends Action
             });
 
             // Return successful response without actually incrementing
+            $groupId = $this->getGroupId();
             $mockDocument = new Document([
                 '$id' => $documentId,
-                '$collectionId' => $collectionId,
+                '$' . $groupId => $collectionId,
                 '$databaseId' => $databaseId,
                 $attribute => $value,
             ]);

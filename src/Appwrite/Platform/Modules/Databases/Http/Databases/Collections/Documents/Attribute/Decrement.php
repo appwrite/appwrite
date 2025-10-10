@@ -136,7 +136,7 @@ class Decrement extends Action
                 'documentId' => $documentId,
                 'action' => 'decrement',
                 'data' => [
-                    'attribute' => $attribute,
+                    $this->getAttributeKey() => $attribute,
                     'value' => $value,
                     'min' => $min,
                 ],
@@ -153,9 +153,10 @@ class Decrement extends Action
             });
 
             // Return successful response without actually decrementing
+            $groupId = $this->getGroupId();
             $mockDocument = new Document([
                 '$id' => $documentId,
-                '$collectionId' => $collectionId,
+                '$' . $groupId => $collectionId,
                 '$databaseId' => $databaseId,
                 $attribute => $value,
             ]);
