@@ -73,7 +73,7 @@ Database::addFilter(
         $attributes = $database->find('attributes', [
             Query::equal('collectionInternalId', [$document->getSequence()]),
             Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-            Query::limit($database->getLimitForAttributes()),
+            Query::limit(PHP_INT_MAX),
         ]);
 
         foreach ($attributes as $attribute) {

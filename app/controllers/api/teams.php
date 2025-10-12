@@ -76,9 +76,9 @@ App::post('/v1/teams')
             )
         ]
     ))
-    ->param('teamId', '', new CustomId(), 'Team ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('teamId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
-    ->param('roles', ['owner'], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true)
+    ->param('roles', ['owner'], fn (Database $dbForProject) => new ArrayList(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true, ['dbForProject'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -239,7 +239,7 @@ App::get('/v1/teams/:teamId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $teamId, Response $response, Database $dbForProject) {
@@ -270,7 +270,7 @@ App::get('/v1/teams/:teamId/prefs')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $teamId, Response $response, Database $dbForProject) {
@@ -312,7 +312,7 @@ App::put('/v1/teams/:teamId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -358,7 +358,7 @@ App::put('/v1/teams/:teamId/prefs')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
@@ -406,7 +406,7 @@ App::delete('/v1/teams/:teamId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('getProjectDB')
     ->inject('dbForProject')
@@ -465,21 +465,20 @@ App::post('/v1/teams/:teamId/memberships')
         ]
     ))
     ->label('abuse-limit', 10)
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('email', '', new Email(), 'Email of the new team member.', true)
-    ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of the user to be added to a team.', true, ['dbForProject'])
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('roles', [], function (Document $project) {
+    ->param('roles', [], function (Document $project, Database $dbForProject) {
         if ($project->getId() === 'console') {
-            ;
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
                 return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
-        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
-    }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+        return new ArrayList(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE);
+    }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project', 'dbForProject'])
     ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
@@ -835,7 +834,7 @@ App::get('/v1/teams/:teamId/memberships')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -977,8 +976,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1064,9 +1063,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], function (Document $project) {
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
+    ->param('roles', [], function (Document $project, Database $dbForProject) {
         if ($project->getId() === 'console') {
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
@@ -1074,8 +1073,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
-        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
-    }, 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+        return new ArrayList(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE);
+    }, 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project', 'dbForProject'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1174,9 +1173,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('userId', '', new UID(), 'User ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Secret key.')
     ->inject('request')
     ->inject('response')
@@ -1333,8 +1332,8 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
     ->inject('user')
     ->inject('project')
     ->inject('response')
@@ -1428,7 +1427,7 @@ App::get('/v1/teams/:teamId/logs')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
