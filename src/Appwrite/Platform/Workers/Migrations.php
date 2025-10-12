@@ -38,10 +38,17 @@ class Migrations extends Action
 
     protected Document $project;
 
+    protected Document $sourceProject;
+
     /**
-     * @var callable(string $databaseDSN): Database
+     * @var callable(Document $databaseDSN): Database
      */
     protected mixed $getDatabasesDB;
+
+    /**
+     * @var callable(Document $databaseDSN): Database
+     */
+    protected mixed $getProjectDB;
 
 
     /**
@@ -76,17 +83,19 @@ class Migrations extends Action
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
+            ->inject('getProjectDB')
             ->callback($this->action(...));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $getDatabasesDB, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $getDatabasesDB, callable $logError, Realtime $queueForRealtime, Device $deviceForImports, callable $getProjectDB): void
     {
         $payload = $message->getPayload() ?? [];
         $this->deviceForImports = $deviceForImports;
         $this->getDatabasesDB = $getDatabasesDB;
+        $this->getProjectDB = $getProjectDB;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -123,7 +132,12 @@ class Migrations extends Action
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
-
+        if ($credentials['projectId']) {
+            $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
+            $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+        }
+        $getDatabasesDB = fn (Document $database): Database =>
+                $this->getDatabasesDBForProject($database);
         $migrationSource = match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
@@ -150,6 +164,9 @@ class Migrations extends Action
                 $credentials['projectId'],
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
+                SourceAppwrite::SOURCE_DATABASE,
+                $projectDB,
+                $getDatabasesDB,
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -424,5 +441,13 @@ class Migrations extends Action
                 $source?->success();
             }
         }
+    }
+
+    protected function getDatabasesDBForProject(Document $database)
+    {
+        if ($this->sourceProject) {
+            return call_user_func($this->getDatabasesDB, $database, $this->sourceProject);
+        }
+        return call_user_func($this->getDatabasesDB, $database);
     }
 }
