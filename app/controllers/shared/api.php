@@ -557,7 +557,8 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            // Plan-level disable (legacy) - -1 means disabled
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1;
 
             $key = $request->cacheIdentifier();
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -571,10 +572,18 @@ App::init()
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
-                if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {
+                if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
+                    // If bucket explicitly disables image transformations, set disabled flag
+                    $bucketImageTransformations = $bucket->getAttribute('imageTransformations', true);
+                    $isDisabled = $isDisabled || !$bucketImageTransformations;
+
+                    // Only proceed for preview when not disabled; other routes unaffected
+                    if ($isImageTransformation && $isDisabled) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                    }
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -605,8 +614,9 @@ App::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
-                    //Do not update transformedAt if it's a console user
-                    if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                    // Update transformedAt only when bucket and plan allow image transformations
+                    $allowImageTransformations = $bucket->getAttribute('imageTransformations', true);
+                    if ($allowImageTransformations) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());

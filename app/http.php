@@ -272,6 +272,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'encryption' => true,
                     'antivirus' => true,
                     'fileSecurity' => true,
+                    'imageTransformations' => true,
                     '$permissions' => [
                         Permission::create(Role::any()),
                         Permission::read(Role::any()),
@@ -325,6 +326,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'encryption' => false,
                     'antivirus' => false,
                     'fileSecurity' => true,
+                    'imageTransformations' => true,
                     '$permissions' => [],
                     'search' => 'buckets Screenshots',
                 ])));
