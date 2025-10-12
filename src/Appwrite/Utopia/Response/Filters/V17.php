@@ -39,6 +39,11 @@ class V17 extends Filter
 
     protected function parseProject(array $content)
     {
+        // Ensure compatibility: provide createdAt and resource identification
+        $content['$createdAt'] = $content['$createdAt'] ?? ($content['createdAt'] ?? '');
+        $content['resourceType'] = $content['resourceType'] ?? 'projects';
+        $content['resourceId'] = $content['resourceId'] ?? ($content['$id'] ?? ($content['id'] ?? ''));
+
         $content['providers'] = $content['oAuthProviders'];
         unset($content['oAuthProviders']);
         return $content;

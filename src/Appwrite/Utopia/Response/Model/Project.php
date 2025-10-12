@@ -30,6 +30,18 @@ class Project extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Resource type for SDK compatibility.',
+                'default' => '',
+                'example' => 'projects',
+            ])
+            ->addRule('resourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Resource id for SDK compatibility.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Project update date in ISO 8601 format.',
@@ -404,6 +416,11 @@ class Project extends Model
         }
 
         $document->setAttribute('oAuthProviders', $projectProviders);
+
+        // Ensure response contains resource identification fields and createdAt
+        $document->setAttribute('$createdAt', $document->getAttribute('$createdAt', $document->getAttribute('createdAt', '')));
+        $document->setAttribute('resourceType', $document->getAttribute('resourceType', 'projects'));
+        $document->setAttribute('resourceId', $document->getId());
 
         return $document;
     }

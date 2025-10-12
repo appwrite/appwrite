@@ -81,6 +81,13 @@ class V19 extends Filter
 
     protected function parseProject(array $content)
     {
+        // Ensure $createdAt is present for older clients expecting it
+        $content['$createdAt'] = $content['$createdAt'] ?? ($content['createdAt'] ?? '');
+
+        // Provide resource identification fields used by various SDKs
+        $content['resourceType'] = $content['resourceType'] ?? 'projects';
+        $content['resourceId'] = $content['resourceId'] ?? ($content['$id'] ?? ($content['id'] ?? ''));
+
         unset($content['devKeys']);
         return $content;
     }

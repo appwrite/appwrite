@@ -237,6 +237,9 @@ class V19Test extends TestCase
                     'name' => 'test-project',
                 ],
                 [
+                    '$createdAt' => '',
+                    'resourceType' => 'projects',
+                    'resourceId' => '',
                     'name' => 'test-project',
                 ]
             ],
@@ -245,6 +248,23 @@ class V19Test extends TestCase
                     'name' => 'test-project',
                 ],
                 [
+                    '$createdAt' => '',
+                    'resourceType' => 'projects',
+                    'resourceId' => '',
+                    'name' => 'test-project',
+                ]
+            ],
+            'include createdAt and id' => [
+                [
+                    '$createdAt' => '2020-01-01T00:00:00+00:00',
+                    '$id' => 'proj123',
+                    'devKeys' => ['k1'],
+                    'name' => 'test-project',
+                ],
+                [
+                    '$createdAt' => '2020-01-01T00:00:00+00:00',
+                    'resourceType' => 'projects',
+                    'resourceId' => 'proj123',
                     'name' => 'test-project',
                 ]
             ],
