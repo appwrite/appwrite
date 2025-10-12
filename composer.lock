@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b2d376e36ec13c9dc9295c61a2d3a78f",
+    "content-hash": "1e4422c6cbca9b7b99c329ecc02e695d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -952,7 +952,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2025-08-20T17:20:16+00:00"
+            "time": "2023-10-02T10:01:54+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -3170,86 +3170,6 @@
             "time": "2025-06-23T16:12:55+00:00"
         },
         {
-            "name": "symfony/polyfill-php85",
-            "version": "v1.33.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-php85.git",
-                "reference": "d4e5fcd4ab3d998ab16c0db48e6cbb9a01993f91"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/d4e5fcd4ab3d998ab16c0db48e6cbb9a01993f91",
-                "reference": "d4e5fcd4ab3d998ab16c0db48e6cbb9a01993f91",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.2"
-            },
-            "type": "library",
-            "extra": {
-                "thanks": {
-                    "url": "https://github.com/symfony/polyfill",
-                    "name": "symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ],
-                "psr-4": {
-                    "Symfony\\Polyfill\\Php85\\": ""
-                },
-                "classmap": [
-                    "Resources/stubs"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nicolas Grekas",
-                    "email": "p@tchwork.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill backporting some PHP 8.5+ features to lower PHP versions",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "polyfill",
-                "portable",
-                "shim"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.33.0"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/nicolas-grekas",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2025-06-23T16:12:55+00:00"
-        },
-        {
             "name": "symfony/service-contracts",
             "version": "v3.6.0",
             "source": {
@@ -3871,29 +3791,26 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a9e4f07fa2a2f36b4ed69adb7dd4e590acc05d60"
+                "reference": "42404499f0f8b459a4ab7b29153fa3fccbb711b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a9e4f07fa2a2f36b4ed69adb7dd4e590acc05d60",
-                "reference": "a9e4f07fa2a2f36b4ed69adb7dd4e590acc05d60",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/42404499f0f8b459a4ab7b29153fa3fccbb711b5",
+                "reference": "42404499f0f8b459a4ab7b29153fa3fccbb711b5",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
-                "ext-mongodb": "*",
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
                 "php": ">=8.1",
                 "utopia-php/cache": "0.13.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/mongo": "0.10.*",
-                "utopia-php/mongo": "0.10.*",
                 "utopia-php/pools": "0.8.*"
             },
             "require-dev": {
                 "fakerphp/faker": "1.23.*",
-                "laravel/pint": "*",
                 "laravel/pint": "*",
                 "pcov/clobber": "2.*",
                 "phpstan/phpstan": "1.*",
@@ -3924,7 +3841,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-documentsdb"
             },
-            "time": "2025-10-07T05:15:47+00:00"
+            "time": "2025-10-12T13:34:24+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4428,12 +4345,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "f072649b1102b3657f6624fac4e9a0ababfceeee"
+                "reference": "b79066f3583d4351b532e55649961d2f488815a5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f072649b1102b3657f6624fac4e9a0ababfceeee",
-                "reference": "f072649b1102b3657f6624fac4e9a0ababfceeee",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b79066f3583d4351b532e55649961d2f488815a5",
+                "reference": "b79066f3583d4351b532e55649961d2f488815a5",
                 "shasum": ""
             },
             "require": {
@@ -4441,7 +4358,7 @@
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
-                "utopia-php/database": "1.*",
+                "utopia-php/database": "dev-feat-documentsdb as 1.4.5",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/storage": "0.18.*"
@@ -4476,7 +4393,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/feat-documents-db"
             },
-            "time": "2025-10-10T14:52:21+00:00"
+            "time": "2025-10-11T13:59:15+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8828,12 +8745,12 @@
             "alias_normalized": "1.1.1.0"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": {
         "utopia-php/database": 20,
         "utopia-php/migration": 20
     },
-    "prefer-stable": false,
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.3.0",
