@@ -27,7 +27,7 @@ $member = [
     'subscribers.write',
     'subscribers.read',
     'assistant.read',
-    'rules.read'
+    'rules.read',
 ];
 
 $admins = [

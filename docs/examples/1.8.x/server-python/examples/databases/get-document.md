@@ -12,5 +12,6 @@ result = databases.get_document(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
     document_id = '<DOCUMENT_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    transaction_id = '<TRANSACTION_ID>' # optional
 )

@@ -9,7 +9,8 @@ const tablesDB = new TablesDB(client);
 const result = await tablesDB.createRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    rows: []
+    rows: [],
+    transactionId: '<TRANSACTION_ID>' // optional
 });
 
 console.log(result);

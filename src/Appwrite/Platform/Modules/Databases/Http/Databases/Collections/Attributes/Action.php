@@ -66,7 +66,7 @@ abstract class Action extends UtopiaAction
      *
      * Can be used for XList operations as well!
      */
-    protected function getSdkGroup(): string
+    protected function getSDKGroup(): string
     {
         return $this->isCollectionsAPI() ? 'attributes' : 'columns';
     }
@@ -74,7 +74,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the SDK namespace for the current action.
      */
-    protected function getSdkNamespace(): string
+    protected function getSDKNamespace(): string
     {
         return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
@@ -122,7 +122,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the correct invalid structure message.
      */
-    protected function getInvalidStructureException(): string
+    protected function getStructureException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_INVALID_STRUCTURE
@@ -366,13 +366,27 @@ abstract class Action extends UtopiaAction
                 'filters' => $filters,
                 'options' => $options,
             ]);
+            if (
+                !$dbForProject->getAdapter()->getSupportForSpatialIndexNull() &&
+                \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
+                $attribute->getAttribute('required')
+            ) {
+                $hasData = !Authorization::skip(fn () => $dbForProject
+                    ->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence()))
+                    ->isEmpty();
 
+                if ($hasData) {
+                    throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');
+                }
+            }
             $dbForProject->checkAttribute($collection, $attribute);
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (LimitException) {
             throw new Exception($this->getLimitException());
+        } catch (StructureException $e) {
+            throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
             $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
@@ -416,7 +430,7 @@ abstract class Action extends UtopiaAction
             } catch (LimitException) {
                 throw new Exception($this->getLimitException());
             } catch (StructureException) {
-                throw new Exception($this->getInvalidStructureException());
+                throw new Exception($this->getStructureException());
             } catch (Throwable $e) {
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
                 throw $e;
@@ -580,7 +594,7 @@ abstract class Action extends UtopiaAction
             } catch (RelationshipException $e) {
                 throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
             } catch (StructureException $e) {
-                throw new Exception($this->getInvalidStructureException(), $e->getMessage());
+                throw new Exception($this->getStructureException(), $e->getMessage());
             }
 
             if ($primaryDocumentOptions['twoWay']) {

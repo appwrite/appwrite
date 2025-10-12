@@ -1,5 +1,14 @@
 # Change Log
 
+## 12.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 12.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 9.1.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service

@@ -23,10 +23,11 @@ class Column extends Model
                 'example' => 'string',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
                 'default' => '',
                 'example' => 'available',
+                'enum' => ['available', 'processing', 'deleting', 'stuck', 'failed'],
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,

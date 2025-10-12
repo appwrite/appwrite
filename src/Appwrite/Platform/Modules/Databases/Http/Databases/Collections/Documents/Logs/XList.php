@@ -48,7 +48,7 @@ class XList extends Action
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: $this->getSDKNamespace(),
                 group: 'logs',
                 name: self::getName(),
                 description: '/docs/references/databases/get-document-logs.md',
@@ -108,10 +108,7 @@ class XList extends Action
         $audit = new Audit($dbForProject);
         $type = $this->getCollectionsEventsContext();
         $context = $this->getContext();
-        $resource = match ($context) {
-            ROWS   => "database/$databaseId/grid/$type/$collectionId/$context/{$document->getId()}",
-            default => "database/$databaseId/$type/$collectionId/$context/{$document->getId()}",
-        };
+        $resource = "database/$databaseId/$type/$collectionId/$context/{$document->getId()}";
 
         $logs = $audit->getLogsByResource($resource, $queries);
 

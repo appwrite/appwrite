@@ -607,11 +607,18 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $code = 500;
         }
 
+        $message = $th->getMessage();
+
+        // sanitize 0 && 5xx errors
+        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+            $message = 'Error: Server Error';
+        }
+
         $response = [
             'type' => 'error',
             'data' => [
                 'code' => $code,
-                'message' => $th->getMessage()
+                'message' => $message
             ]
         ];
 
@@ -717,11 +724,23 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
     } catch (Throwable $th) {
+        $code = $th->getCode();
+        if (!is_int($code)) {
+            $code = 500;
+        }
+
+        $message = $th->getMessage();
+
+        // sanitize 0 && 5xx errors
+        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+            $message = 'Error: Server Error';
+        }
+
         $response = [
             'type' => 'error',
             'data' => [
-                'code' => $th->getCode(),
-                'message' => $th->getMessage()
+                'code' => $code,
+                'message' => $message
             ]
         ];
 

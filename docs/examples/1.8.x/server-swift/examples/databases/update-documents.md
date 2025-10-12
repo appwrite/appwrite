@@ -11,6 +11,7 @@ let documentList = try await databases.updateDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     data: [:], // optional
-    queries: [] // optional
+    queries: [], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

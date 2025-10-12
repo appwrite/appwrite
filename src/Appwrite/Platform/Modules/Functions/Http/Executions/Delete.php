@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -100,7 +99,7 @@ class Delete extends Base
         if ($status === 'scheduled') {
             $schedule = $dbForPlatform->findOne('schedules', [
                 Query::equal('resourceId', [$execution->getId()]),
-                Query::equal('resourceType', [ScheduleExecutions::getSupportedResource()]),
+                Query::equal('resourceType', [SCHEDULE_RESOURCE_TYPE_EXECUTION]),
                 Query::equal('active', [true]),
             ]);
 

@@ -19,4 +19,5 @@ response, error := service.UpdateDocuments(
     "<COLLECTION_ID>",
     databases.WithUpdateDocumentsData(map[string]interface{}{}),
     databases.WithUpdateDocumentsQueries([]interface{}{}),
+    databases.WithUpdateDocumentsTransactionId("<TRANSACTION_ID>"),
 )

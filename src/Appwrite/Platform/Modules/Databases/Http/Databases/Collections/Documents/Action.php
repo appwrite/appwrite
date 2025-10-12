@@ -76,7 +76,7 @@ abstract class Action extends AppwriteAction
      *
      * Can be used for XList operations as well!
      */
-    protected function getSdkGroup(): string
+    protected function getSDKGroup(): string
     {
         return $this->isCollectionsAPI() ? 'documents' : 'rows';
     }
@@ -84,7 +84,7 @@ abstract class Action extends AppwriteAction
     /**
      * Get the SDK namespace for the current action.
      */
-    protected function getSdkNamespace(): string
+    protected function getSDKNamespace(): string
     {
         return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
@@ -160,7 +160,7 @@ abstract class Action extends AppwriteAction
     /**
      * Get the correct invalid structure message.
      */
-    protected function getInvalidStructureException(): string
+    protected function getStructureException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_INVALID_STRUCTURE
@@ -203,6 +203,31 @@ abstract class Action extends AppwriteAction
     protected function getCollectionsEventsContext(): string
     {
         return $this->isCollectionsAPI() ? 'collection' : 'table';
+    }
+
+    /**
+     * Get the correct attribute/column key for increment/decrement operations.
+     */
+    protected function getAttributeKey(): string
+    {
+        return $this->isCollectionsAPI() ? 'attribute' : 'column';
+    }
+
+    /**
+     * Get the key used in ID parameters (e.g., 'collectionId' or 'tableId').
+     */
+    protected function getGroupId(): string
+    {
+        return $this->getCollectionsEventsContext() . 'Id';
+    }
+
+    /**
+     * Get the resource ID key for the current action.
+     */
+    protected function getResourceId(): string
+    {
+        $resource = $this->isCollectionsAPI() ? 'document' : 'row';
+        return $resource . 'Id';
     }
 
     /**

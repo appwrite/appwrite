@@ -13,7 +13,7 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "body": "<BODY>",
   "data": {},
   "action": "<ACTION>",
-  "image": "[ID1:ID2]",
+  "image": "<ID1:ID2>",
   "icon": "<ICON>",
   "sound": "<SOUND>",
   "color": "<COLOR>",

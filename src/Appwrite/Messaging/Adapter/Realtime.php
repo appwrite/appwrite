@@ -312,13 +312,17 @@ class Realtime extends MessagingAdapter
                         throw new \Exception('Collection or the Table needs to be passed to Realtime for Document/Row events in the Database.');
                     }
 
+                    $tableId = $payload->getAttribute('$tableId', '');
+                    $collectionId = $payload->getAttribute('$collectionId', '');
+                    $resourceId = $tableId ?: $collectionId;
+
                     $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $payload->getAttribute('$tableId') . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $payload->getAttribute('$tableId') . '.rows.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $resourceId . '.rows';
+                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $resourceId . '.rows.' . $payload->getId();
 
                     $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $resourceId . '.documents';
+                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $resourceId . '.documents.' . $payload->getId();
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())

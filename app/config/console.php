@@ -48,6 +48,7 @@ $console = [
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
     ],
+    'smtpBaseTemplate' => APP_BRANDED_EMAIL_BASE_TEMPLATE,
 ];
 
 return $console;
