@@ -298,7 +298,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
 
-    if (APP_MODE_ADMIN !== $mode) {
+    if (APP_MODE_ADMIN === $mode) {
+        $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+    } else {
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
@@ -308,8 +310,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
                 $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
             }
         }
-    } else {
-        $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
     }
 
     if (
