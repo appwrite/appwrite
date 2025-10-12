@@ -2823,7 +2823,7 @@ App::post('/v1/account/jwts')
             ->dynamic(new Document([
                 'jwt' => $jwt->encode([
                     'userId' => $user->getId(),
-                    'sessionId' => $current->getId(),
+                    'sessionId' => $sessionId,
                 ])
             ]), Response::MODEL_JWT);
     });
