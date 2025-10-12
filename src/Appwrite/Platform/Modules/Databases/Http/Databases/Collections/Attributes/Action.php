@@ -66,7 +66,7 @@ abstract class Action extends UtopiaAction
      *
      * Can be used for XList operations as well!
      */
-    protected function getSdkGroup(): string
+    protected function getSDKGroup(): string
     {
         return $this->isCollectionsAPI() ? 'attributes' : 'columns';
     }
@@ -74,7 +74,7 @@ abstract class Action extends UtopiaAction
     /**
      * Get the SDK namespace for the current action.
      */
-    protected function getSdkNamespace(): string
+    protected function getSDKNamespace(): string
     {
         return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }

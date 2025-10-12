@@ -13,5 +13,6 @@ result = databases.update_documents(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     data: {}, # optional
-    queries: [] # optional
+    queries: [], # optional
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

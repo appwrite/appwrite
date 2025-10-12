@@ -11,5 +11,6 @@ const result = await tablesDB.updateRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     data: {}, // optional
-    queries: [] // optional
+    queries: [], // optional
+    transactionId: '<TRANSACTION_ID>' // optional
 });

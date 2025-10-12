@@ -13,4 +13,5 @@ Row result = await tablesDB.upsertRow(
     rowId: '<ROW_ID>',
     data: {}, // (optional)
     permissions: ["read("any")"], // (optional)
+    transactionId: '<TRANSACTION_ID>', // (optional)
 );

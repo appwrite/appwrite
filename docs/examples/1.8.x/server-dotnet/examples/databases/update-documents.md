@@ -13,5 +13,6 @@ DocumentList result = await databases.UpdateDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     data: [object], // optional
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 );

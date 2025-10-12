@@ -2,7 +2,8 @@ mutation {
     databasesDeleteDocuments(
         databaseId: "<DATABASE_ID>",
         collectionId: "<COLLECTION_ID>",
-        queries: []
+        queries: [],
+        transactionId: "<TRANSACTION_ID>"
     ) {
         total
         documents {

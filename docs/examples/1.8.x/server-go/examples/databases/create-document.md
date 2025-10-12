@@ -26,4 +26,5 @@ response, error := service.CreateDocument(
         "isAdmin": false
     },
     databases.WithCreateDocumentPermissions(interface{}{"read("any")"}),
+    databases.WithCreateDocumentTransactionId("<TRANSACTION_ID>"),
 )

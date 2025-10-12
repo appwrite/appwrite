@@ -9,5 +9,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
 
 {
   "value": 0,
-  "min": 0
+  "min": 0,
+  "transactionId": "<TRANSACTION_ID>"
 }

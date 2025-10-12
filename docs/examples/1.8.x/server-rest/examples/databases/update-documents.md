@@ -7,5 +7,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
 
 {
   "data": {},
-  "queries": []
+  "queries": [],
+  "transactionId": "<TRANSACTION_ID>"
 }

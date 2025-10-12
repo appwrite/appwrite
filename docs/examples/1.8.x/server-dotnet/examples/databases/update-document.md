@@ -14,5 +14,6 @@ Document result = await databases.UpdateDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: "<DOCUMENT_ID>",
     data: [object], // optional
-    permissions: ["read("any")"] // optional
+    permissions: ["read("any")"], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 );

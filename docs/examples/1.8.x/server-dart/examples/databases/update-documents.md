@@ -12,4 +12,5 @@ DocumentList result = await databases.updateDocuments(
     collectionId: '<COLLECTION_ID>',
     data: {}, // (optional)
     queries: [], // (optional)
+    transactionId: '<TRANSACTION_ID>', // (optional)
 );
