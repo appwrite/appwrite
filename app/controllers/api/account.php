@@ -325,7 +325,8 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -369,7 +370,7 @@ App::post('/v1/account')
             }
         }
 
-        if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
             $disposableEmails = Config::getParam('disposableEmails', []);
             $emailDomain = substr(strrchr($email, "@"), 1);
             if (isset($disposableEmails[$emailDomain])) {
@@ -1942,7 +1943,8 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -1975,7 +1977,7 @@ App::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
-            if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
                 $disposableEmails = Config::getParam('disposableEmails', []);
                 $emailDomain = substr(strrchr($email, "@"), 1);
                 if (isset($disposableEmails[$emailDomain])) {
@@ -2202,7 +2204,8 @@ App::post('/v1/account/tokens/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2233,7 +2236,7 @@ App::post('/v1/account/tokens/email')
                 throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
-            if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
                 $disposableEmails = Config::getParam('disposableEmails', []);
                 $emailDomain = substr(strrchr($email, "@"), 1);
                 if (isset($disposableEmails[$emailDomain])) {
@@ -3048,7 +3051,8 @@ App::patch('/v1/account/email')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, array $plan) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3074,7 +3078,7 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
-        if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
             $disposableEmails = Config::getParam('disposableEmails', []);
             $emailDomain = substr(strrchr($email, "@"), 1);
             if (isset($disposableEmails[$emailDomain])) {
