@@ -21,7 +21,8 @@ class Argon2 extends Hash
      */
     public function hash(string $password): string
     {
-        return \password_hash($password, PASSWORD_ARGON2ID, $this->getOptions());
+        $options = $this->normalizeOptions($this->getOptions());
+        return \password_hash($password, PASSWORD_ARGON2ID, $options);
     }
 
     /**
@@ -43,5 +44,24 @@ class Argon2 extends Hash
     public function getDefaultOptions(): array
     {
         return ['memory_cost' => 65536, 'time_cost' => 4, 'threads' => 3];
+    }
+
+    /**
+     * Normalize options to convert between camelCase and snake_case formats
+     * This ensures backward compatibility with existing hash options
+     *
+     * @param array $options
+     * @return array normalized options
+     */
+    private function normalizeOptions(array $options): array
+    {
+        $normalized = [];
+        
+        // Handle both camelCase (API format) and snake_case (internal format)
+        $normalized['memory_cost'] = $options['memory_cost'] ?? $options['memoryCost'] ?? $this->getDefaultOptions()['memory_cost'];
+        $normalized['time_cost'] = $options['time_cost'] ?? $options['timeCost'] ?? $this->getDefaultOptions()['time_cost'];
+        $normalized['threads'] = $options['threads'] ?? $this->getDefaultOptions()['threads'];
+        
+        return $normalized;
     }
 }
