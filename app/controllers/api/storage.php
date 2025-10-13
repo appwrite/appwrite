@@ -1121,9 +1121,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        // Update transformedAt only when image transformations are allowed
-        $allowImageTransformations = $bucket->getAttribute('imageTransformations', true);
-        if ($allowImageTransformations) {
+    // Update transformedAt only when image transformations are allowed
+    // Do not count Console/privileged requests — we only want to record
+    // transformedAt for actual API uses.
+    $allowImageTransformations = $bucket->getAttribute('imageTransformations', true);
+    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+    if ($allowImageTransformations && !$isPrivilegedUser) {
             $transformedAt = $file->getAttribute('transformedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                 $file->setAttribute('transformedAt', DateTime::now());

@@ -580,12 +580,16 @@ App::init()
                     $bucketImageTransformations = $bucket->getAttribute('imageTransformations', true);
                     $isDisabled = $isDisabled || !$bucketImageTransformations;
 
-                    // Only proceed for preview when not disabled; other routes unaffected
-                    if ($isImageTransformation && $isDisabled) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
-                    }
+                    // Evaluate token/privileged status first so Console/privileged users
+                    // and valid resource tokens are not blocked by the per-bucket disable.
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+                    // Only proceed for preview when not disabled; other routes unaffected
+                    // Skip the block for privileged console users and resource tokens.
+                    if ($isImageTransformation && $isDisabled && !$isPrivilegedUser && !$isToken) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                    }
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
