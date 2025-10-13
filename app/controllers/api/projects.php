@@ -1022,44 +1022,6 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/disposable-emails')
-    ->desc('Update disposable emails check')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'auth',
-        name: 'updateDisposableEmails',
-        description: '/docs/references/projects/update-disposable-emails.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('enabled', false, new Boolean(false), 'Set whether or not to block disposable email addresses. Default is false.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $auths = $project->getAttribute('auths', []);
-        $auths['disposableEmails'] = $enabled;
-
-        $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
 App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->desc('Update project user sessions limit')
     ->groups(['api', 'projects'])
