@@ -47,6 +47,9 @@ class V17Test extends TestCase
                             'enabled' => true,
                         ],
                     ],
+                    '$createdAt' => '',
+                    'resourceType' => 'projects',
+                    'resourceId' => '',
                 ],
             ],
         ];

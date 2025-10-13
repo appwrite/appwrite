@@ -266,6 +266,7 @@ class V19Test extends TestCase
                     'resourceType' => 'projects',
                     'resourceId' => 'proj123',
                     'name' => 'test-project',
+                    '$id' => 'proj123',
                 ]
             ],
         ];

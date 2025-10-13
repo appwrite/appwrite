@@ -131,6 +131,9 @@ class V18Test extends TestCase
                     ],
                 ],
                 [
+                    '$createdAt' => '',
+                    'resourceType' => 'projects',
+                    'resourceId' => '',
                 ]
             ]
         ];
