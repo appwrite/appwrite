@@ -199,7 +199,7 @@ class V16Test extends TestCase
                             'enabled' => true,
                         ],
                     ],
-                    'domains' => []
+                    'domains' => [],
                 ],
             ],
             'domains' => [
