@@ -199,10 +199,7 @@ class V16Test extends TestCase
                             'enabled' => true,
                         ],
                     ],
-                    'domains' => [],
-                    '$createdAt' => '',
-                    'resourceType' => 'projects',
-                    'resourceId' => '',
+                    'domains' => []
                 ],
             ],
             'domains' => [
@@ -210,9 +207,6 @@ class V16Test extends TestCase
                 ],
                 [
                     'domains' => [],
-                    '$createdAt' => '',
-                    'resourceType' => 'projects',
-                    'resourceId' => '',
                 ],
             ],
         ];

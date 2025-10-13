@@ -93,11 +93,6 @@ class V16 extends Filter
             unset($content['oAuthProviders'][$i]['key']);
         }
 
-        // Ensure compatibility: provide createdAt and resource identification
-        $content['$createdAt'] = $content['$createdAt'] ?? ($content['createdAt'] ?? '');
-        $content['resourceType'] = $content['resourceType'] ?? 'projects';
-        $content['resourceId'] = $content['resourceId'] ?? ($content['$id'] ?? ($content['id'] ?? ''));
-
         $content['domains'] = [];
         return $content;
     }
