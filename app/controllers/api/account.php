@@ -369,6 +369,14 @@ App::post('/v1/account')
             }
         }
 
+        if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+            $disposableEmails = Config::getParam('disposableEmails', []);
+            $emailDomain = substr(strrchr($email, "@"), 1);
+            if (isset($disposableEmails[$emailDomain])) {
+                throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+            }
+        }
+
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -1967,6 +1975,14 @@ App::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
+            if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+                $disposableEmails = Config::getParam('disposableEmails', []);
+                $emailDomain = substr(strrchr($email, "@"), 1);
+                if (isset($disposableEmails[$emailDomain])) {
+                    throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+                }
+            }
+
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
             $user->setAttributes([
@@ -2215,6 +2231,14 @@ App::post('/v1/account/tokens/email')
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+            }
+
+            if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+                $disposableEmails = Config::getParam('disposableEmails', []);
+                $emailDomain = substr(strrchr($email, "@"), 1);
+                if (isset($disposableEmails[$emailDomain])) {
+                    throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+                }
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -3048,6 +3072,14 @@ App::patch('/v1/account/email')
         ]);
         if (!$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
+        }
+
+        if ($project->getAttribute('auths', [])['disposableEmails'] ?? false) {
+            $disposableEmails = Config::getParam('disposableEmails', []);
+            $emailDomain = substr(strrchr($email, "@"), 1);
+            if (isset($disposableEmails[$emailDomain])) {
+                throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+            }
         }
 
         $user

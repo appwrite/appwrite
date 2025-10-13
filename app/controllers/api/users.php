@@ -97,6 +97,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             }
         }
 
+
         $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = new Document([
             '$id' => $userId,
@@ -1323,6 +1324,7 @@ App::patch('/v1/users/:userId/password')
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
+
 
         if (\strlen($password) === 0) {
             $user

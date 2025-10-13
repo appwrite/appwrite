@@ -40,3 +40,4 @@ Config::load('storage-outputs', __DIR__ . '/../config/storage/outputs.php');
 Config::load('specifications', __DIR__ . '/../config/specifications.php');
 Config::load('templates-function', __DIR__ . '/../config/templates/function.php');
 Config::load('templates-site', __DIR__ . '/../config/templates/site.php');
+Config::load('disposableEmails', __DIR__ . '/../config/domains/disposable-emails.php'); // (eldad) following cloud camelCase format. Wish we could be consistent with the rest of the codebase.
