@@ -285,12 +285,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $latestCommitSha = trim(\shell_exec($latestCommitCommand) ?? '');
 
                     if (!empty($latestCommitSha)) {
-                        $commitReleasesCommand = 'gh api repos/' . $repoName . '/releases --jq ".[] | select(.target_commitish == \"' . $releaseTarget . '\") | .tag_name" 2>/dev/null | head -n 1';
-                        $existingCommitRelease = trim(\shell_exec($commitReleasesCommand) ?? '');
-
-                        if (!empty($existingCommitRelease)) {
-                            Console::warning("Latest commit on {$releaseTarget} already has a release ({$existingCommitRelease}) for {$language['name']} SDK, skipping to avoid empty release...");
-                            continue;
+                        $latestReleaseTagCommand = 'gh api repos/' . $repoName . '/releases --jq ".[0] | .tag_name" 2>/dev/null';
+                        $latestReleaseTag = trim(\shell_exec($latestReleaseTagCommand) ?? '');
+                        
+                        if (!empty($latestReleaseTag)) {
+                            $tagCommitCommand = 'gh api repos/' . $repoName . '/git/ref/tags/' . $latestReleaseTag . ' --jq ".object.sha" 2>/dev/null';
+                            $tagCommitSha = trim(\shell_exec($tagCommitCommand) ?? '');
+                            
+                            if (!empty($tagCommitSha) && $latestCommitSha === $tagCommitSha) {
+                                Console::warning("Latest commit on {$releaseTarget} already has a release ({$latestReleaseTag}) for {$language['name']} SDK, skipping to avoid empty release...");
+                                continue;
+                            }
                         }
                     }
 
