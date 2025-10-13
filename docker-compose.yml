@@ -89,18 +89,16 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
-      - mongodb
       # - clamav
     entrypoint:
       - php
       - -e
       - app/http.php
     environment:
-      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
-      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
@@ -133,12 +131,12 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -270,9 +268,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
-      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -283,6 +280,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -304,8 +302,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -314,6 +311,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -334,8 +332,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
     environment:
@@ -343,6 +340,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -365,8 +363,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -377,8 +374,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
-      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
-      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -386,6 +381,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -434,11 +430,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
-      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
-      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
@@ -446,6 +439,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -472,8 +466,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -485,6 +478,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -540,8 +534,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -563,6 +556,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -583,9 +577,8 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - openruntimes-executor
-      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -596,6 +589,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -628,7 +622,6 @@ services:
     depends_on:
       - redis
       - maildev
-      - mongodb
       # - smtp
     environment:
       - _APP_ENV
@@ -672,6 +665,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -719,8 +713,7 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -736,6 +729,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -758,7 +752,6 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -774,6 +767,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -802,14 +796,12 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
-      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
-      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -836,14 +828,12 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
-      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
-      - _APP_DATABASE_DOCUMENTSDB_KEYS
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -870,12 +860,12 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
-      - mongodb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -901,9 +891,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
-      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -912,6 +901,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -930,9 +920,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
-      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -941,6 +930,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -958,9 +948,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
-      - mongodb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -969,6 +958,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -1081,7 +1071,7 @@ services:
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
-  
+
   mongodb:
     image: mongo:8.0.10
     container_name: appwrite-mongodb
@@ -1101,18 +1091,9 @@ services:
       - MONGO_INITDB_USERNAME=${_APP_DB_USER}
       - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
     # healthcheck:
-    #   test: |
-    #     bash -c "
-    #       if mongosh -u root -p password --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null; then
-    #         exit 0
-    #       else
-    #         mongosh -u root -p password --authenticationDatabase admin --quiet --eval \"
-    #           rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})
-    #         \" 2>/dev/null || exit 1
-    #       fi
-    #     "
-    #   interval: 10s
-    #   timeout: 10s
+    #   test: ["CMD", "mongosh", "--username", "root", "--password", "${_APP_DB_ROOT_PASS}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+    #   interval: 1s
+    #   timeout: 5s
     #   retries: 10
     #   start_period: 30s
 
@@ -1123,14 +1104,13 @@ services:
       - appwrite
     ports:
       - "8082:8081"
-    depends_on:
-      - mongodb
     environment:
       ME_CONFIG_MONGODB_SERVER: appwrite-mongodb
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${_APP_DB_ROOT_PASS}
       ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
+
 
   redis:
     image: redis:7.2.4-alpine

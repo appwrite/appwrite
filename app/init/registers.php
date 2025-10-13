@@ -103,7 +103,7 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
         'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => System::getEnv('_APP_DB_PORT', '3306'),
         'user' => System::getEnv('_APP_DB_USER', ''),
@@ -111,7 +111,7 @@ $register->set('pools', function () {
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
     $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mongodb',
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
         'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
         'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
@@ -243,7 +243,7 @@ $register->set('pools', function () {
                         ]);
                     });
                 },
-                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $key) {
                     try {
                         $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
                         @$mongo->connect();
@@ -266,7 +266,7 @@ $register->set('pools', function () {
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
-            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn, $key) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -278,6 +278,9 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDatabase($dsn->getPath());
+                        if ($key === 'documentsdb') {
+                            $adapter->setSupportForAttributes(false);
+                        }
                         return $adapter;
                     case 'pubsub':
                         return match ($dsn->getScheme()) {
