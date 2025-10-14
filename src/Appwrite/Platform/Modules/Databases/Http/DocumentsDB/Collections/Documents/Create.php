@@ -74,7 +74,7 @@ class Create extends DocumentCreate
                 new Method(
                     namespace: 'documentsDB',
                     group: $this->getSdkGroup(),
-                    name: $this->getBulkActionName(self::getName()),
+                    name: 'createDocuments',
                     desc: 'Create documents',
                     description: '/docs/references/documentsdb/create-documents.md',
                     auth: [AuthType::ADMIN, AuthType::KEY],
