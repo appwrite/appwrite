@@ -497,9 +497,9 @@ return [
         'description' => 'The requested file is not publicly readable.',
         'code' => 403,
     ],
-    Exception::STORAGE_IMAGE_TRANSFORMATIONS_DISABLED => [
-        'name' => Exception::STORAGE_IMAGE_TRANSFORMATIONS_DISABLED,
-        'description' => 'Image transformations are disabled for this storage bucket.',
+    Exception::STORAGE_TRANSFORMATIONS_DISABLED => [
+        'name' => Exception::STORAGE_TRANSFORMATIONS_DISABLED,
+        'description' => 'Transformations are disabled for this storage bucket.',
         'code' => 401,
     ],
 

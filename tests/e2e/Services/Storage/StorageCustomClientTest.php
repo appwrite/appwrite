@@ -1387,18 +1387,18 @@ class StorageCustomClientTest extends Scope
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
 
-    public function testImageTransformationsDisabledBlocksPreviewForAllUsers(): array
+    public function testTransformationsDisabledBlocksPreviewForAllUsers(): array
     {
-        // Create a bucket with imageTransformations disabled
+        // Create a bucket with transformations disabled
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
-            'name' => 'ImageTransformDisabled',
+            'name' => 'TransformDisabled',
             'fileSecurity' => false,
-            'imageTransformations' => false,
+            'transformations' => false,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -1443,9 +1443,9 @@ class StorageCustomClientTest extends Scope
     }
 
     /**
-     * @depends testImageTransformationsDisabledBlocksPreviewForAllUsers
+     * @depends testTransformationsDisabledBlocksPreviewForAllUsers
      */
-    public function testToggleImageTransformationsEnablesAndDisablesPreview(array $data): void
+    public function testToggleTransformationsEnablesAndDisablesPreview(array $data): void
     {
         $bucketId = $data['bucketId'];
         $fileId = $data['fileId'];
@@ -1456,8 +1456,8 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'name' => 'ImageTransformDisabled',
-            'imageTransformations' => true,
+            'name' => 'TransformDisabled',
+            'transformations' => true,
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
@@ -1485,8 +1485,8 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'name' => 'ImageTransformDisabled',
-            'imageTransformations' => false,
+            'name' => 'TransformDisabled',
+            'transformations' => false,
         ]);
 
         $this->assertEquals(200, $update2['headers']['status-code']);
@@ -1509,9 +1509,9 @@ class StorageCustomClientTest extends Scope
         $this->assertEquals(401, $previewKey2['headers']['status-code']);
     }
 
-    public function testConsoleClientBypassesImageTransformationRestrictions(): void
+    public function testConsoleClientBypassesTransformationRestrictions(): void
     {
-        // Create a fresh bucket with imageTransformations explicitly disabled
+        // Create a fresh bucket with transformations explicitly disabled
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1520,7 +1520,7 @@ class StorageCustomClientTest extends Scope
             'bucketId' => ID::unique(),
             'name' => 'ConsoleClientTestBucket',
             'fileSecurity' => false,
-            'imageTransformations' => false,
+            'transformations' => false,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -1551,10 +1551,10 @@ class StorageCustomClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(401, $userPreview['headers']['status-code']);
-        $this->assertEquals('storage_image_transformations_disabled', $userPreview['body']['type']);
-        $this->assertStringContainsString('Image transformations are disabled', $userPreview['body']['message']);
+        $this->assertEquals('storage_transformations_disabled', $userPreview['body']['type']);
+        $this->assertStringContainsString('Transformations are disabled', $userPreview['body']['message']);
 
-        // Console Client request with admin mode should work despite imageTransformations being disabled
+        // Console Client request with admin mode should work despite transformations being disabled
         $consolePreview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

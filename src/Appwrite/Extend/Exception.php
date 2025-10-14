@@ -148,7 +148,7 @@ class Exception extends \Exception
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
     public const STORAGE_INVALID_APPWRITE_ID       = 'storage_invalid_appwrite_id';
     public const STORAGE_FILE_NOT_PUBLIC           = 'storage_file_not_public';
-    public const STORAGE_IMAGE_TRANSFORMATIONS_DISABLED = 'storage_image_transformations_disabled';
+    public const STORAGE_TRANSFORMATIONS_DISABLED  = 'storage_transformations_disabled';
 
     /** VCS */
     public const INSTALLATION_NOT_FOUND            = 'installation_not_found';

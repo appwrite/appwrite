@@ -557,7 +557,7 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isPlanImageTransformationsDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            $isPlanTransformationsDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
 
 
             $key = $request->cacheIdentifier();
@@ -579,19 +579,19 @@ App::init()
                     $bucketId = $parts[1] ?? null;
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    // Check if bucket explicitly disables image transformations
-                    $isBucketImageTransformationsDisabled = !$bucket->getAttribute('imageTransformations', true);
+                    // Check if bucket explicitly disables transformations
+                    $isBucketTransformationsDisabled = !$bucket->getAttribute('imageTransformations', true);
 
                     // Combined check: disabled if either plan or bucket disables it
-                    $isImageTransformationsBlocked = $isPlanImageTransformationsDisabled || $isBucketImageTransformationsDisabled;
+                    $isTransformationsBlocked = $isPlanTransformationsDisabled || $isBucketTransformationsDisabled;
 
                     // Evaluate token status for resource token access
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
 
                     // Only proceed for preview when not disabled; other routes unaffected
                     // Skip the block only when transformations remain enabled.
-                    if ($isImageTransformation && $isImageTransformationsBlocked) {
-                        throw new Exception(Exception::STORAGE_IMAGE_TRANSFORMATIONS_DISABLED);
+                    if ($isImageTransformation && $isTransformationsBlocked) {
+                        throw new Exception(Exception::STORAGE_TRANSFORMATIONS_DISABLED);
                     }
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
@@ -621,9 +621,9 @@ App::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
-                    // Update transformedAt only when bucket and plan allow image transformations
-                    $allowImageTransformations = $bucket->getAttribute('imageTransformations', true);
-                    if ($allowImageTransformations) {
+                    // Update transformedAt only when bucket and plan allow transformations
+                    $allowTransformations = $bucket->getAttribute('imageTransformations', true);
+                    if ($allowTransformations) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
@@ -638,7 +638,7 @@ App::init()
                     ->setContentType($cacheLog->getAttribute('mimeType'));
                 // Determine if user can bypass transformation blocks
                 $canBypassBlock = ($type === 'bucket') && ($isPrivilegedUser || $isToken);
-                if (!$isImageTransformation || !$isImageTransformationsBlocked || $canBypassBlock) {
+                if (!$isImageTransformation || !$isTransformationsBlocked || $canBypassBlock) {
                     $response->send($data);
                 }
             } else {
