@@ -33476,7 +33476,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "documents.read",
+                        "rows.read"
+                    ],
                     "platforms": [
                         "server",
                         "client",
@@ -33541,7 +33544,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client",
@@ -33609,7 +33615,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "documents.read",
+                        "rows.read"
+                    ],
                     "platforms": [
                         "server",
                         "client",
@@ -33671,7 +33680,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client",
@@ -33747,7 +33759,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client",
@@ -33811,7 +33826,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client",
@@ -57250,13 +57268,12 @@
                     "status": {
                         "type": "string",
                         "description": "Domain verification status. Possible values are \"created\", \"verifying\", \"verified\" and \"unverified\"",
-                        "x-example": "verified",
-                        "enum": [
-                            "created",
-                            "verifying",
-                            "verified",
-                            "unverified"
-                        ]
+                        "x-example": "verified"
+                    },
+                    "verificationLogs": {
+                        "type": "string",
+                        "description": "DNS verification logs. This contains error from last verification attempt.",
+                        "x-example": "Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record."
                     },
                     "logs": {
                         "type": "string",
@@ -57283,6 +57300,7 @@
                     "deploymentResourceId",
                     "deploymentVcsProviderBranch",
                     "status",
+                    "verificationLogs",
                     "logs",
                     "renewAt"
                 ],
@@ -57300,6 +57318,7 @@
                     "deploymentResourceId": "n3u9feiwmf",
                     "deploymentVcsProviderBranch": "main",
                     "status": "verified",
+                    "verificationLogs": "Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.",
                     "logs": "HTTP challegne failed.",
                     "renewAt": "datetime"
                 }

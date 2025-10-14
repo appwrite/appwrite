@@ -24171,7 +24171,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "documents.read",
+                        "rows.read"
+                    ],
                     "platforms": [
                         "server",
                         "client"
@@ -24238,7 +24241,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client"
@@ -24308,7 +24314,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.read",
+                    "scope": [
+                        "documents.read",
+                        "rows.read"
+                    ],
                     "platforms": [
                         "server",
                         "client"
@@ -24371,7 +24380,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client"
@@ -24450,7 +24462,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client"
@@ -24515,7 +24530,10 @@
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
-                    "scope": "rows.write",
+                    "scope": [
+                        "documents.write",
+                        "rows.write"
+                    ],
                     "platforms": [
                         "server",
                         "client"
