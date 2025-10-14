@@ -612,7 +612,7 @@ class Messaging extends Action
             $cc,
             $bcc,
             $attachments,
-            $html,
+            $html
         );
     }
 
