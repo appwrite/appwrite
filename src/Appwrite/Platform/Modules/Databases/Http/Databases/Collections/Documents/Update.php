@@ -296,9 +296,10 @@ class Update extends Action
             });
 
             // Return successful response without actually updating document
+            $groupId = $this->getGroupId();
             $mockDocument = new Document([
                 '$id' => $documentId,
-                '$collectionId' => $collectionId,
+                '$' . $groupId => $collectionId,
                 '$databaseId' => $databaseId,
                 ...$document->getArrayCopy(),
                 ...$data
