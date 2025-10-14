@@ -3733,6 +3733,149 @@ trait TransactionsBase
     }
 
     /**
+     * Test individual increment/decrement endpoints with transactions for Legacy Collections API
+     * This test ensures that:
+     * 1. Transaction logs store the correct attribute key ('attribute' for Collections API)
+     * 2. Mock responses return the correct ID keys ('$collectionId' not '$tableId')
+     */
+    public function testIncrementDecrementEndpointsWithTransaction(): void
+    {
+        // Create database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'IncrDecrEndpointTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'AccountsCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        // Add balance attribute
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'balance',
+            'required' => false,
+            'default' => 0,
+        ]);
+
+        sleep(2);
+
+        // Create initial documents
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'joe',
+            'data' => ['balance' => 100]
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'jane',
+            'data' => ['balance' => 50]
+        ]);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test: Decrement using individual endpoint - should store 'attribute' not 'column' in transaction log
+        $decrementResponse = $this->client->call(
+            Client::METHOD_PATCH,
+            "/databases/{$databaseId}/collections/{$collectionId}/documents/joe/balance/decrement",
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'transactionId' => $transactionId,
+                'value' => 50,
+                'min' => 0,
+            ]
+        );
+
+        // Test: Response should return '$collectionId' not '$tableId' for Collections API
+        $this->assertEquals(200, $decrementResponse['headers']['status-code']);
+        $this->assertArrayHasKey('$collectionId', $decrementResponse['body'], 'Response should contain $collectionId for Collections API');
+        $this->assertArrayNotHasKey('$tableId', $decrementResponse['body'], 'Response should not contain $tableId for Collections API');
+        $this->assertEquals($collectionId, $decrementResponse['body']['$collectionId']);
+
+        // Test increment endpoint
+        $incrementResponse = $this->client->call(
+            Client::METHOD_PATCH,
+            "/databases/{$databaseId}/collections/{$collectionId}/documents/jane/balance/increment",
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'transactionId' => $transactionId,
+                'value' => 50,
+            ]
+        );
+
+        $this->assertEquals(200, $incrementResponse['headers']['status-code']);
+        $this->assertArrayHasKey('$collectionId', $incrementResponse['body'], 'Response should contain $collectionId for Collections API');
+        $this->assertArrayNotHasKey('$tableId', $incrementResponse['body'], 'Response should not contain $tableId for Collections API');
+        $this->assertEquals($collectionId, $incrementResponse['body']['$collectionId']);
+
+        // Commit transaction - this will fail if transaction log has 'column' instead of 'attribute'
+        $commitResponse = $this->client->call(Client::METHOD_PATCH, "/databases/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $commitResponse['headers']['status-code'], 'Transaction commit should succeed');
+
+        // Verify final values
+        $joe = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/joe", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $jane = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/documents/jane", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $joe['headers']['status-code']);
+        $this->assertEquals(50, $joe['body']['balance'], 'Joe should have 100 - 50 = 50');
+
+        $this->assertEquals(200, $jane['headers']['status-code']);
+        $this->assertEquals(100, $jane['body']['balance'], 'Jane should have 50 + 50 = 100');
+    }
+
+    /**
      * Test bulk update operations in transaction
      */
     public function testBulkUpdateOperations(): void

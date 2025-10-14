@@ -11,5 +11,6 @@ databases = Databases(client)
 result = databases.list_documents(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    transaction_id = '<TRANSACTION_ID>' # optional
 )

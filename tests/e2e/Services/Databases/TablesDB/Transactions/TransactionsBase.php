@@ -3867,6 +3867,252 @@ trait TransactionsBase
         $this->assertEquals('updated', $row['body']['status'], 'Status should be updated');
     }
 
+    /**
+     * Test individual increment/decrement endpoints with transactions
+     * This test ensures that:
+     * 1. Transaction logs store the correct attribute key ('column' for TablesDB)
+     * 2. Mock responses return the correct ID keys ('$tableId' not '$collectionId')
+     */
+    public function testIncrementDecrementEndpointsWithTransaction(): void
+    {
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'IncrDecrEndpointTestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'AccountsTable',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        // Add balance column
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'balance',
+            'required' => false,
+            'default' => 0,
+        ]);
+
+        sleep(2);
+
+        // Create initial rows
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'joe',
+            'data' => ['balance' => 100]
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'jane',
+            'data' => ['balance' => 50]
+        ]);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test Bug 1: Decrement using individual endpoint - should store 'column' not 'attribute' in transaction log
+        $decrementResponse = $this->client->call(
+            Client::METHOD_PATCH,
+            "/tablesdb/{$databaseId}/tables/{$tableId}/rows/joe/balance/decrement",
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'transactionId' => $transactionId,
+                'value' => 50,
+                'min' => 0,
+            ]
+        );
+
+        // Test Bug 2: Response should return '$tableId' not '$collectionId'
+        $this->assertEquals(200, $decrementResponse['headers']['status-code']);
+        $this->assertArrayHasKey('$tableId', $decrementResponse['body'], 'Response should contain $tableId for TablesDB API');
+        $this->assertArrayNotHasKey('$collectionId', $decrementResponse['body'], 'Response should not contain $collectionId for TablesDB API');
+        $this->assertEquals($tableId, $decrementResponse['body']['$tableId']);
+
+        // Test increment endpoint
+        $incrementResponse = $this->client->call(
+            Client::METHOD_PATCH,
+            "/tablesdb/{$databaseId}/tables/{$tableId}/rows/jane/balance/increment",
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'transactionId' => $transactionId,
+                'value' => 50,
+            ]
+        );
+
+        $this->assertEquals(200, $incrementResponse['headers']['status-code']);
+        $this->assertArrayHasKey('$tableId', $incrementResponse['body'], 'Response should contain $tableId for TablesDB API');
+        $this->assertArrayNotHasKey('$collectionId', $incrementResponse['body'], 'Response should not contain $collectionId for TablesDB API');
+        $this->assertEquals($tableId, $incrementResponse['body']['$tableId']);
+
+        // Commit transaction - this will fail if transaction log has 'attribute' instead of 'column'
+        $commitResponse = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $commitResponse['headers']['status-code'], 'Transaction commit should succeed');
+
+        // Verify final values
+        $joe = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/joe", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $jane = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/jane", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $joe['headers']['status-code']);
+        $this->assertEquals(50, $joe['body']['balance'], 'Joe should have 100 - 50 = 50');
+
+        $this->assertEquals(200, $jane['headers']['status-code']);
+        $this->assertEquals(100, $jane['body']['balance'], 'Jane should have 50 + 50 = 100');
+    }
+
+    /**
+     * Test cross-API compatibility: stage operations via TablesDB, commit via Collections API
+     * This ensures fallback logic works when APIs are mixed
+     */
+    public function testCrossAPIIncrementDecrement(): void
+    {
+        // Create database and table
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'CrossAPITestDB'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'CrossAPITable',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        // Add balance column
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/integer", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'balance',
+            'required' => false,
+            'default' => 0,
+        ]);
+
+        sleep(2);
+
+        // Create initial row
+        $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'test',
+            'data' => ['balance' => 100]
+        ]);
+
+        // Create transaction using TablesDB API
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $transactionId = $transaction['body']['$id'];
+
+        // Stage operations using TablesDB API (will store 'column' key)
+        $this->client->call(
+            Client::METHOD_PATCH,
+            "/tablesdb/{$databaseId}/tables/{$tableId}/rows/test/balance/decrement",
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'transactionId' => $transactionId,
+                'value' => 30,
+            ]
+        );
+
+        // Commit using Collections API (expects 'attribute' key but should fallback to 'column')
+        $commitResponse = $this->client->call(
+            Client::METHOD_PATCH,
+            "/databases/transactions/{$transactionId}",
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'commit' => true
+            ]
+        );
+
+        $this->assertEquals(200, $commitResponse['headers']['status-code'], 'Cross-API commit should succeed');
+
+        // Verify final value
+        $row = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/test", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        $this->assertEquals(70, $row['body']['balance'], 'Balance should be 100 - 30 = 70');
+    }
+
     public function testBulkUpdateWithDependentDocuments(): void
     {
         // Create database and table

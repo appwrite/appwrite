@@ -12,4 +12,5 @@ Row result = await tablesDB.updateRow(
     rowId: '<ROW_ID>',
     data: {}, // optional
     permissions: ["read("any")"], // optional
+    transactionId: '<TRANSACTION_ID>', // optional
 );

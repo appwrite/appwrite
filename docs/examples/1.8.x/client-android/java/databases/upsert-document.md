@@ -14,6 +14,7 @@ databases.upsertDocument(
     "<DOCUMENT_ID>", // documentId 
     mapOf( "a" to "b" ), // data 
     listOf("read("any")"), // permissions (optional)
+    "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

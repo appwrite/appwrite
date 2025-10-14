@@ -9,7 +9,7 @@ const migrations = new Migrations(client);
 const result = await migrations.createCsvMigration({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    resourceId: '[ID1:ID2]',
+    resourceId: '<ID1:ID2>',
     internalFile: false // optional
 });
 

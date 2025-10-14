@@ -32,6 +32,41 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
         $this->assertEquals(401, $function['headers']['status-code']);
+
+
+        /**
+         * Test for DUPLICATE functionId
+         */
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'timeout' => 10,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'functionId' => $functionId,
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(409, $response['headers']['status-code']);
     }
 
     public function testCreateExecution()

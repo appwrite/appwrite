@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.21.2
+
+* Fix: handle Object[] during array deserialization
+
+## 0.21.1
+
+* Add transaction support for Databases and TablesDB
+
 ## 0.20.0
 
 * Deprecate `createVerification` method in `Account` service

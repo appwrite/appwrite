@@ -10,6 +10,7 @@ let tablesDB = TablesDB(client)
 let rowList = try await tablesDB.createRows(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    rows: []
+    rows: [],
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

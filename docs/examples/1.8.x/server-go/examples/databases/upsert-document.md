@@ -20,4 +20,5 @@ response, error := service.UpsertDocument(
     "<DOCUMENT_ID>",
     map[string]interface{}{},
     databases.WithUpsertDocumentPermissions(interface{}{"read("any")"}),
+    databases.WithUpsertDocumentTransactionId("<TRANSACTION_ID>"),
 )

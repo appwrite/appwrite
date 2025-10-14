@@ -30,7 +30,7 @@ class Create extends TransactionsCreate
             ->setHttpPath('/v1/tablesdb/transactions')
             ->desc('Create transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'rows.write')
+            ->label('scope', ['documents.write', 'rows.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
@@ -49,6 +49,7 @@ class Create extends TransactionsCreate
             ->param('ttl', APP_DATABASE_TXN_TTL_DEFAULT, new Range(min: APP_DATABASE_TXN_TTL_MIN, max: APP_DATABASE_TXN_TTL_MAX), 'Seconds before the transaction expires.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->callback($this->action(...));
     }
 }

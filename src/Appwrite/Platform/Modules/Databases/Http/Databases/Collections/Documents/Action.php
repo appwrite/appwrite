@@ -206,6 +206,31 @@ abstract class Action extends AppwriteAction
     }
 
     /**
+     * Get the correct attribute/column key for increment/decrement operations.
+     */
+    protected function getAttributeKey(): string
+    {
+        return $this->isCollectionsAPI() ? 'attribute' : 'column';
+    }
+
+    /**
+     * Get the key used in ID parameters (e.g., 'collectionId' or 'tableId').
+     */
+    protected function getGroupId(): string
+    {
+        return $this->getCollectionsEventsContext() . 'Id';
+    }
+
+    /**
+     * Get the resource ID key for the current action.
+     */
+    protected function getResourceId(): string
+    {
+        $resource = $this->isCollectionsAPI() ? 'document' : 'row';
+        return $resource . 'Id';
+    }
+
+    /**
      * Remove configured removable attributes from a document.
      * Used for relationship path handling to remove API-specific attributes.
      */
