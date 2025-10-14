@@ -572,10 +572,10 @@ App::init()
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
+                // Initialize variables for use in response send logic
+                $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+                $isTransformationsBlocked = false;
                 if ($type === 'bucket') {
-                    // Check privileged status early to avoid unnecessary DB requests
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
                     $bucketId = $parts[1] ?? null;
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -637,7 +637,7 @@ App::init()
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
                 // Determine if user can bypass transformation blocks
-                $canBypassBlock = ($type === 'bucket') && ($isPrivilegedUser || $isToken);
+                $canBypassBlock = ($type === 'bucket') && $isPrivilegedUser;
                 if (!$isImageTransformation || !$isTransformationsBlocked || $canBypassBlock) {
                     $response->send($data);
                 }
