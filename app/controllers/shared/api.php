@@ -557,7 +557,7 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            $isPlanImageTransformationsDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
 
 
             $key = $request->cacheIdentifier();
@@ -573,21 +573,24 @@ App::init()
                 $type = $parts[0] ?? null;
 
                 if ($type === 'bucket') {
+                    // Check privileged status early to avoid unnecessary DB requests
+                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
                     $bucketId = $parts[1] ?? null;
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    // If bucket explicitly disables image transformations, set disabled flag
-                    $bucketImageTransformations = $bucket->getAttribute('imageTransformations', true);
-                    $isDisabled = $isDisabled || !$bucketImageTransformations;
+                    // Check if bucket explicitly disables image transformations
+                    $isBucketImageTransformationsDisabled = !$bucket->getAttribute('imageTransformations', true);
 
-                    // Evaluate token/privileged status first so Console/privileged users
-                    // and valid resource tokens are not blocked by the per-bucket disable.
+                    // Combined check: disabled if either plan or bucket disables it
+                    $isImageTransformationsBlocked = $isPlanImageTransformationsDisabled || $isBucketImageTransformationsDisabled;
+
+                    // Evaluate token status for resource token access
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
                     // Only proceed for preview when not disabled; other routes unaffected
                     // Skip the block for privileged console users and resource tokens.
-                    if ($isImageTransformation && $isDisabled && !$isPrivilegedUser && !$isToken) {
+                    if ($isImageTransformation && $isImageTransformationsBlocked && !$isPrivilegedUser && !$isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
@@ -633,7 +636,7 @@ App::init()
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
-                if (!$isImageTransformation || !$isDisabled) {
+                if (!$isImageTransformation || !$isImageTransformationsBlocked) {
                     $response->send($data);
                 }
             } else {
