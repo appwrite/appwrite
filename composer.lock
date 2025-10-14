@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "773efb29b9b584b1249790e0016c823a",
+    "content-hash": "568800edca746c4e8d0d50648b25f589",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4136,16 +4136,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.18.2",
+            "version": "0.19.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "0d364edacf4d4867964c7e17f653031dd39394bf"
+                "reference": "0b866d54e70c792a3c4f5ca9c12a6d358a31f4b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0d364edacf4d4867964c7e17f653031dd39394bf",
-                "reference": "0d364edacf4d4867964c7e17f653031dd39394bf",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0b866d54e70c792a3c4f5ca9c12a6d358a31f4b8",
+                "reference": "0b866d54e70c792a3c4f5ca9c12a6d358a31f4b8",
                 "shasum": ""
             },
             "require": {
@@ -4181,9 +4181,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.18.2"
+                "source": "https://github.com/utopia-php/messaging/tree/0.19.0"
             },
-            "time": "2025-07-21T18:27:03+00:00"
+            "time": "2025-10-14T11:46:49+00:00"
         },
         {
             "name": "utopia-php/migration",
