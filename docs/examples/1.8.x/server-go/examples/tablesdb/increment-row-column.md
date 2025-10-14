@@ -21,4 +21,5 @@ response, error := service.IncrementRowColumn(
     "",
     tablesdb.WithIncrementRowColumnValue(0),
     tablesdb.WithIncrementRowColumnMax(0),
+    tablesdb.WithIncrementRowColumnTransactionId("<TRANSACTION_ID>"),
 )

@@ -20,4 +20,5 @@ response, error := service.UpdateRow(
     "<ROW_ID>",
     tablesdb.WithUpdateRowData(map[string]interface{}{}),
     tablesdb.WithUpdateRowPermissions(interface{}{"read("any")"}),
+    tablesdb.WithUpdateRowTransactionId("<TRANSACTION_ID>"),
 )

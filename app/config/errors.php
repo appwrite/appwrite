@@ -578,6 +578,11 @@ return [
         'description' => 'The requested runtime is either inactive or unsupported. Please check the value of the _APP_FUNCTIONS_RUNTIMES environment variable.',
         'code' => 404,
     ],
+    Exception::FUNCTION_ALREADY_EXISTS => [
+        'name' => Exception::FUNCTION_ALREADY_EXISTS,
+        'description' => 'Function with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
         'name' => Exception::FUNCTION_ENTRYPOINT_MISSING,
         'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
@@ -979,6 +984,48 @@ return [
         'name' => Exception::COLUMN_INDEX_DEPENDENCY,
         'description' => 'Column cannot be renamed or deleted. Please remove the associated index first.',
         'code' => 409,
+    ],
+
+    /** Transactions */
+    Exception::TRANSACTION_NOT_FOUND => [
+        'name' => Exception::TRANSACTION_NOT_FOUND,
+        'description' => 'Transaction with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TRANSACTION_ALREADY_EXISTS => [
+        'name' => Exception::TRANSACTION_ALREADY_EXISTS,
+        'description' => 'Transaction with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::TRANSACTION_INVALID => [
+        'name' => Exception::TRANSACTION_INVALID,
+        'description' => 'The transaction is invalid. Please check the transaction state and try again.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_FAILED => [
+        'name' => Exception::TRANSACTION_FAILED,
+        'description' => 'The transaction has errored. Please check the transaction data and try again.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_EXPIRED => [
+        'name' => Exception::TRANSACTION_EXPIRED,
+        'description' => 'The transaction has expired. Please create a new transaction and try again.',
+        'code' => 410,
+    ],
+    Exception::TRANSACTION_CONFLICT => [
+        'name' => Exception::TRANSACTION_CONFLICT,
+        'description' => 'The transaction has a conflict. Please resolve the conflict and try again.',
+        'code' => 409,
+    ],
+    Exception::TRANSACTION_LIMIT_EXCEEDED => [
+        'name' => Exception::TRANSACTION_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of operations per transaction has been exceeded.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_NOT_READY => [
+        'name' => Exception::TRANSACTION_NOT_READY,
+        'description' => 'The transaction is not ready yet. Please try again later.',
+        'code' => 400,
     ],
 
     /** Project Errors */

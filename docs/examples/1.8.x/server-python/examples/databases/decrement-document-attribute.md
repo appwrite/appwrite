@@ -14,5 +14,6 @@ result = databases.decrement_document_attribute(
     document_id = '<DOCUMENT_ID>',
     attribute = '',
     value = None, # optional
-    min = None # optional
+    min = None, # optional
+    transaction_id = '<TRANSACTION_ID>' # optional
 )

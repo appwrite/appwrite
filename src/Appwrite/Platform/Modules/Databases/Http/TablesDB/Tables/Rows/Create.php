@@ -50,8 +50,8 @@ class Create extends DocumentCreate
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     desc: 'Create row',
                     description: '/docs/references/tablesdb/create-row.md',
@@ -69,11 +69,12 @@ class Create extends DocumentCreate
                         new Parameter('rowId', optional: false),
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
+                        new Parameter('transactionId', optional: true),
                     ]
                 ),
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: $this->getBulkActionName(self::getName()),
                     desc: 'Create rows',
                     description: '/docs/references/tablesdb/create-rows.md',
@@ -89,6 +90,7 @@ class Create extends DocumentCreate
                         new Parameter('databaseId', optional: false),
                         new Parameter('tableId', optional: false),
                         new Parameter('rows', optional: false),
+                        new Parameter('transactionId', optional: true),
                     ]
                 )
             ])
@@ -98,6 +100,7 @@ class Create extends DocumentCreate
             ->param('data', [], new JSON(), 'Row data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('rows', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of rows data as JSON objects.', true, ['plan'])
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -106,6 +109,7 @@ class Create extends DocumentCreate
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 }

@@ -14,4 +14,5 @@ Document result = await databases.decrementDocumentAttribute(
     attribute: '',
     value: 0, // (optional)
     min: 0, // (optional)
+    transactionId: '<TRANSACTION_ID>', // (optional)
 );

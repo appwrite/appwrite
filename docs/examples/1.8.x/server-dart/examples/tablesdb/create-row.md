@@ -19,4 +19,5 @@ Row result = await tablesDB.createRow(
         "isAdmin": false
     },
     permissions: ["read("any")"], // (optional)
+    transactionId: '<TRANSACTION_ID>', // (optional)
 );

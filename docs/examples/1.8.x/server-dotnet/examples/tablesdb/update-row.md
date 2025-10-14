@@ -14,5 +14,6 @@ Row result = await tablesDB.UpdateRow(
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
     data: [object], // optional
-    permissions: ["read("any")"] // optional
+    permissions: ["read("any")"], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 );

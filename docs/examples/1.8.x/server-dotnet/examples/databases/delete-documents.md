@@ -12,5 +12,6 @@ Databases databases = new Databases(client);
 await databases.DeleteDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 );

@@ -18,24 +18,24 @@ class StatsUsage extends Action
     /**
      * In memory per project metrics calculation
      */
-    private array $stats = [];
-    private int $lastTriggeredTime = 0;
-    private int $keys = 0;
-    private const INFINITY_PERIOD = '_inf_';
-    private const BATCH_SIZE_DEVELOPMENT = 1;
-    private const BATCH_SIZE_PRODUCTION = 10_000;
+    protected array $stats = [];
+    protected int $lastTriggeredTime = 0;
+    protected int $keys = 0;
+    protected const INFINITY_PERIOD = '_inf_';
+    protected const BATCH_SIZE_DEVELOPMENT = 1;
+    protected const BATCH_SIZE_PRODUCTION = 10_000;
 
     /**
     * Stats for batch write separated per project
     * @var array
     */
-    private array $projects = [];
+    protected array $projects = [];
 
     /**
      * Array of stat documents to batch write to logsDB
      * @var array
      */
-    private array $statDocuments = [];
+    protected array $statDocuments = [];
 
     protected Registry $register;
 
@@ -101,7 +101,7 @@ class StatsUsage extends Action
         return 'stats-usage';
     }
 
-    private function getBatchSize(): int
+    protected function getBatchSize(): int
     {
         return System::getEnv('_APP_ENV', 'development') === 'development'
             ? self::BATCH_SIZE_DEVELOPMENT
@@ -195,7 +195,7 @@ class StatsUsage extends Action
     * @param  callable(): Database $getProjectDB
     * @return void
     */
-    private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
+    protected function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -435,6 +435,7 @@ class StatsUsage extends Action
                         return $cmp;
                     }
 
+                    unset($this->projects[$sequence]);
                     // Period ASC
                     $cmp = strcmp($a['period'], $b['period']);
                     if ($cmp !== 0) {

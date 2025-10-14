@@ -23,6 +23,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -200,36 +201,40 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        $function = $dbForProject->createDocument('functions', new Document([
-            '$id' => $functionId,
-            'execute' => $execute,
-            'enabled' => $enabled,
-            'live' => true,
-            'logging' => $logging,
-            'name' => $name,
-            'runtime' => $runtime,
-            'deploymentInternalId' => '',
-            'deploymentId' => '',
-            'events' => $events,
-            'schedule' => $schedule,
-            'scheduleInternalId' => '',
-            'scheduleId' => '',
-            'timeout' => $timeout,
-            'entrypoint' => $entrypoint,
-            'commands' => $commands,
-            'scopes' => $scopes,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v5',
-            'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getSequence(),
-            'providerRepositoryId' => $providerRepositoryId,
-            'repositoryId' => '',
-            'repositoryInternalId' => '',
-            'providerBranch' => $providerBranch,
-            'providerRootDirectory' => $providerRootDirectory,
-            'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification
-        ]));
+        try {
+            $function = $dbForProject->createDocument('functions', new Document([
+                '$id' => $functionId,
+                'execute' => $execute,
+                'enabled' => $enabled,
+                'live' => true,
+                'logging' => $logging,
+                'name' => $name,
+                'runtime' => $runtime,
+                'deploymentInternalId' => '',
+                'deploymentId' => '',
+                'events' => $events,
+                'schedule' => $schedule,
+                'scheduleInternalId' => '',
+                'scheduleId' => '',
+                'timeout' => $timeout,
+                'entrypoint' => $entrypoint,
+                'commands' => $commands,
+                'scopes' => $scopes,
+                'search' => implode(' ', [$functionId, $name, $runtime]),
+                'version' => 'v5',
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getSequence(),
+                'providerRepositoryId' => $providerRepositoryId,
+                'repositoryId' => '',
+                'repositoryInternalId' => '',
+                'providerBranch' => $providerBranch,
+                'providerRootDirectory' => $providerRootDirectory,
+                'providerSilentMode' => $providerSilentMode,
+                'specification' => $specification
+            ]));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
+        }
 
         $schedule = Authorization::skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
