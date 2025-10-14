@@ -557,7 +557,7 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isPlanTransformationsDisabled = isset($plan['transformations']) && $plan['transformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            $isPlanTransformationsDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
 
 
             $key = $request->cacheIdentifier();

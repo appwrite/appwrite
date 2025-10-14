@@ -141,7 +141,7 @@ App::post('/v1/storage/buckets')
                 'compression' => $compression,
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
-                'imageTransformations' => $transformations,
+                'transformations' => $transformations,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
