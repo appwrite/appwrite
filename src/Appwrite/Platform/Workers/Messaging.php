@@ -592,14 +592,12 @@ class Messaging extends Action
         $subject = $data['subject'];
         $content = $data['content'];
         $html = $data['html'] ?? false;
-        $defaultRecipient = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
         // For SMTP, move all recipients to BCC and use default recipient in TO field
         if ($provider->getAttribute('provider') === 'smtp') {
             foreach ($to as $recipient) {
                 $bcc[] = ['email' => $recipient];
             }
-
             $to = [];
         }
 
@@ -615,7 +613,6 @@ class Messaging extends Action
             $bcc,
             $attachments,
             $html,
-            $defaultRecipient
         );
     }
 
