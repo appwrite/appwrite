@@ -590,7 +590,7 @@ App::init()
 
                     // Only proceed for preview when not disabled; other routes unaffected
                     // Skip the block only when transformations remain enabled.
-                    if ($isImageTransformation && $isTransformationsBlocked) {
+                    if ($isImageTransformation && $isTransformationsBlocked && !$isPrivilegedUser) {
                         throw new Exception(Exception::STORAGE_TRANSFORMATIONS_DISABLED);
                     }
 

@@ -1124,7 +1124,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         // Update transformedAt only when image transformations are allowed
         // Do not count Console/privileged requests — we only want to record
         // transformedAt for actual API uses.
-        $allowTransformations = $bucket->getAttribute('transformations', true);
+        $allowTransformations = $bucket->getAttribute('imageTransformations', true);
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         if ($allowTransformations && !$isPrivilegedUser) {
             $transformedAt = $file->getAttribute('transformedAt', '');
