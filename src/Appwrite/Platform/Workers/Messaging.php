@@ -593,6 +593,14 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
+        // For SMTP, move all recipients to BCC and use default recipient in TO field
+        if ($provider->getAttribute('provider') === 'smtp') {
+            foreach ($to as $recipient) {
+                $bcc[] = ['email' => $recipient];
+            }
+            $to = [];
+        }
+
         return new Email(
             $to,
             $subject,
