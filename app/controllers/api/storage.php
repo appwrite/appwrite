@@ -314,7 +314,7 @@ App::put('/v1/storage/buckets/:bucketId')
         $encryption ??= $bucket->getAttribute('encryption', true);
         $antivirus ??= $bucket->getAttribute('antivirus', true);
         $compression ??= $bucket->getAttribute('compression', Compression::NONE);
-        $transformations ??= $bucket->getAttribute('imageTransformations', true);
+        $transformations ??= $bucket->getAttribute('transformations', true);
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
@@ -326,7 +326,7 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
             ->setAttribute('fileSecurity', $fileSecurity)
             ->setAttribute('enabled', $enabled)
-            ->setAttribute('imageTransformations', $transformations)
+            ->setAttribute('transformations', $transformations)
             ->setAttribute('encryption', $encryption)
             ->setAttribute('compression', $compression)
             ->setAttribute('antivirus', $antivirus));
@@ -990,7 +990,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         // Check bucket-level transformations flag
-        $allowTransformations = $bucket->getAttribute('imageTransformations', true);
+        $allowTransformations = $bucket->getAttribute('transformations', true);
         if (!$allowTransformations && !$isToken && !$isPrivilegedUser) {
             // Transformations are disabled for this bucket
             throw new Exception(Exception::STORAGE_TRANSFORMATIONS_DISABLED);
@@ -1124,7 +1124,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         // Update transformedAt only when image transformations are allowed
         // Do not count Console/privileged requests — we only want to record
         // transformedAt for actual API uses.
-        $allowTransformations = $bucket->getAttribute('imageTransformations', true);
+        $allowTransformations = $bucket->getAttribute('transformations', true);
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         if ($allowTransformations && !$isPrivilegedUser) {
             $transformedAt = $file->getAttribute('transformedAt', '');
@@ -2034,7 +2034,7 @@ App::get('/v1/storage/:bucketId/usage')
             'filesStorageTotal' => $usage[$metrics[1]]['total'],
             'files' => $usage[$metrics[0]]['data'],
             'storage' => $usage[$metrics[1]]['data'],
-            'transformations' => $usage[$metrics[2]]['data'],
-            'transformationsTotal' => $usage[$metrics[2]]['total'],
+            'imageTransformations' => $usage[$metrics[2]]['data'],
+            'imageTransformationsTotal' => $usage[$metrics[2]]['total'],
         ]), Response::MODEL_USAGE_BUCKETS);
     });

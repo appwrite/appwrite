@@ -557,7 +557,7 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isPlanTransformationsDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            $isPlanTransformationsDisabled = isset($plan['transformations']) && $plan['transformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
 
 
             $key = $request->cacheIdentifier();
@@ -580,7 +580,7 @@ App::init()
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     // Check if bucket explicitly disables transformations
-                    $isBucketTransformationsDisabled = !$bucket->getAttribute('imageTransformations', true);
+                    $isBucketTransformationsDisabled = !$bucket->getAttribute('transformations', true);
 
                     // Combined check: disabled if either plan or bucket disables it
                     $isTransformationsBlocked = $isPlanTransformationsDisabled || $isBucketTransformationsDisabled;
@@ -622,7 +622,7 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                     // Update transformedAt only when bucket and plan allow transformations
-                    $allowTransformations = $bucket->getAttribute('imageTransformations', true);
+                    $allowTransformations = $bucket->getAttribute('transformations', true);
                     if ($allowTransformations) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {

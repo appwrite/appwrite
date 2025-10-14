@@ -1528,7 +1528,7 @@ return [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('imageTransformations'),
+                '$id' => ID::custom('transformations'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
