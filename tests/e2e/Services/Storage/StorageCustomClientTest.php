@@ -1386,4 +1386,194 @@ class StorageCustomClientTest extends Scope
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
+
+    public function testTransformationsDisabledBlocksPreviewForAllUsers(): array
+    {
+        // Create a bucket with transformations disabled
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'TransformDisabled',
+            'fileSecurity' => false,
+            'transformations' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+        $this->assertNotEmpty($bucketId);
+
+        // Upload an image to the bucket
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+        $this->assertNotEmpty($fileId);
+
+        // Attempt preview as normal project session user -> should be unauthorized
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $preview['headers']['status-code']);
+
+        // Attempt preview using project API key (previously privileged) -> should also be unauthorized
+        $previewKey = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(401, $previewKey['headers']['status-code']);
+
+        return ['bucketId' => $bucketId, 'fileId' => $fileId];
+    }
+
+    /**
+     * @depends testTransformationsDisabledBlocksPreviewForAllUsers
+     */
+    public function testToggleTransformationsEnablesAndDisablesPreview(array $data): void
+    {
+        $bucketId = $data['bucketId'];
+        $fileId = $data['fileId'];
+
+        // Enable image transformations via bucket update
+        $update = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'TransformDisabled',
+            'transformations' => true,
+        ]);
+
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        // Now preview should be allowed for session user
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+
+        // And allowed for project API key
+        $previewKey = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $previewKey['headers']['status-code']);
+
+        // Now disable image transformations again
+        $update2 = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'TransformDisabled',
+            'transformations' => false,
+        ]);
+
+        $this->assertEquals(200, $update2['headers']['status-code']);
+
+        // Preview should now be unauthorized again for session
+        $preview2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $preview2['headers']['status-code']);
+
+        // And for API key
+        $previewKey2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(401, $previewKey2['headers']['status-code']);
+    }
+
+    public function testConsoleClientBypassesTransformationRestrictions(): void
+    {
+        // Create a fresh bucket with transformations explicitly disabled
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'ConsoleClientTestBucket',
+            'fileSecurity' => false,
+            'transformations' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+        $this->assertNotEmpty($bucketId);
+
+        // Upload an image to the bucket
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+        $this->assertNotEmpty($fileId);
+
+        // Verify regular users cannot access preview with transformations disabled
+        $userPreview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $userPreview['headers']['status-code']);
+        $this->assertEquals('storage_transformations_disabled', $userPreview['body']['type']);
+        $this->assertStringContainsString('Transformations are disabled', $userPreview['body']['message']);
+
+        // Console Client request with admin mode should work despite transformations being disabled
+        $consolePreview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]);
+
+        $this->assertEquals(200, $consolePreview['headers']['status-code']);
+        $this->assertStringStartsWith('image/', $consolePreview['headers']['content-type']);
+
+        // Console Client should also support image transformations with parameters
+        $consolePreviewWithTransforms = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview?width=100&height=100&quality=80', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]);
+
+        $this->assertEquals(200, $consolePreviewWithTransforms['headers']['status-code']);
+        $this->assertStringStartsWith('image/', $consolePreviewWithTransforms['headers']['content-type']);
+    }
 }

@@ -557,7 +557,8 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            $isPlanTransformationsDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+
 
             $key = $request->cacheIdentifier();
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -571,12 +572,27 @@ App::init()
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
-                if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {
+                // Initialize variables for use in response send logic
+                $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+                $isTransformationsBlocked = false;
+                if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
+                    // Check if bucket explicitly disables transformations
+                    $isBucketTransformationsDisabled = !$bucket->getAttribute('transformations', true);
+
+                    // Combined check: disabled if either plan or bucket disables it
+                    $isTransformationsBlocked = $isPlanTransformationsDisabled || $isBucketTransformationsDisabled;
+
+                    // Evaluate token status for resource token access
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+                    // Only proceed for preview when not disabled; other routes unaffected
+                    // Skip the block only when transformations remain enabled.
+                    if ($isImageTransformation && $isTransformationsBlocked && !$isPrivilegedUser) {
+                        throw new Exception(Exception::STORAGE_TRANSFORMATIONS_DISABLED);
+                    }
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -605,8 +621,9 @@ App::init()
                     if ($file->isEmpty()) {
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
-                    //Do not update transformedAt if it's a console user
-                    if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                    // Update transformedAt only when bucket and plan allow transformations
+                    $allowTransformations = $bucket->getAttribute('transformations', true);
+                    if ($allowTransformations) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
@@ -619,7 +636,9 @@ App::init()
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
-                if (!$isImageTransformation || !$isDisabled) {
+                // Determine if user can bypass transformation blocks
+                $canBypassBlock = ($type === 'bucket') && $isPrivilegedUser;
+                if (!$isImageTransformation || !$isTransformationsBlocked || $canBypassBlock) {
                     $response->send($data);
                 }
             } else {

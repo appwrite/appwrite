@@ -85,10 +85,11 @@ App::post('/v1/storage/buckets')
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD], true), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ',  [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('transformations', true, new Boolean(true), 'Enable transformations for this bucket. When set to false, image preview/transform routes will be disabled for non-privileged users.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, bool $transformations, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -128,7 +129,6 @@ App::post('/v1/storage/buckets')
                     'orders' => $index['orders'],
                 ]);
             }
-
             $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
@@ -141,6 +141,7 @@ App::post('/v1/storage/buckets')
                 'compression' => $compression,
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
+                'transformations' => $transformations,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
@@ -295,10 +296,11 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD], true), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('transformations', true, new Boolean(true), 'Enable transformations for this bucket. When set to false, image preview/transform routes will be disabled for non-privileged users.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, bool $transformations, Response $response, Database $dbForProject, Event $queueForEvents) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -312,6 +314,7 @@ App::put('/v1/storage/buckets/:bucketId')
         $encryption ??= $bucket->getAttribute('encryption', true);
         $antivirus ??= $bucket->getAttribute('antivirus', true);
         $compression ??= $bucket->getAttribute('compression', Compression::NONE);
+        $transformations ??= $bucket->getAttribute('transformations', true);
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
@@ -323,6 +326,7 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
             ->setAttribute('fileSecurity', $fileSecurity)
             ->setAttribute('enabled', $enabled)
+            ->setAttribute('transformations', $transformations)
             ->setAttribute('encryption', $encryption)
             ->setAttribute('compression', $compression)
             ->setAttribute('antivirus', $antivirus));
@@ -985,6 +989,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
+        // Check bucket-level transformations flag
+        $allowTransformations = $bucket->getAttribute('transformations', true);
+        if (!$allowTransformations && !$isToken && !$isPrivilegedUser) {
+            // Transformations are disabled for this bucket
+            throw new Exception(Exception::STORAGE_TRANSFORMATIONS_DISABLED);
+        }
+
         if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
@@ -1110,8 +1121,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
-        //Do not update transformedAt if it's a console user
-        if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+        // Update transformedAt only when image transformations are allowed
+        // Do not count Console/privileged requests — we only want to record
+        // transformedAt for actual API uses.
+        $allowTransformations = $bucket->getAttribute('transformations', true);
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        if ($allowTransformations && !$isPrivilegedUser) {
             $transformedAt = $file->getAttribute('transformedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                 $file->setAttribute('transformedAt', DateTime::now());
