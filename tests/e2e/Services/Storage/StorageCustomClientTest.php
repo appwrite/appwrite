@@ -1508,4 +1508,47 @@ class StorageCustomClientTest extends Scope
 
         $this->assertEquals(401, $previewKey2['headers']['status-code']);
     }
+
+    /**
+     * @depends testImageTransformationsDisabledBlocksPreviewForAllUsers
+     */
+    public function testConsoleClientBypassesImageTransformationRestrictions(array $data): void
+    {
+        $bucketId = $data['bucketId'];
+        $fileId = $data['fileId'];
+
+        // Console Client request with admin mode should work despite imageTransformations being disabled
+        $consolePreview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]);
+
+        $this->assertEquals(200, $consolePreview['headers']['status-code']);
+        $this->assertStringStartsWith('image/', $consolePreview['headers']['content-type']);
+
+        // Console Client should also support image transformations with parameters
+        $consolePreviewWithTransforms = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview?width=100&height=100&quality=80', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]);
+
+        $this->assertEquals(200, $consolePreviewWithTransforms['headers']['status-code']);
+        $this->assertStringStartsWith('image/', $consolePreviewWithTransforms['headers']['content-type']);
+
+        // Verify that regular users still cannot access preview with transformations disabled
+        $userPreview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(401, $userPreview['headers']['status-code']);
+        
+        // Verify the specific error type is returned for regular users
+        $this->assertEquals('storage_image_transformations_disabled', $userPreview['body']['type']);
+        $this->assertStringContainsString('Image transformations are disabled', $userPreview['body']['message']);
+    }
 }
