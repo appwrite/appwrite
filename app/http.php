@@ -174,8 +174,8 @@ include __DIR__ . '/controllers/general.php';
 
 function createDatabase(App $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
 {
-    $max = 10;
-    $sleep = 1;
+    $max = 15;
+    $sleep = 2;
     $attempts = 0;
 
     while (true) {
@@ -185,7 +185,7 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
@@ -196,12 +196,26 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
 
     Console::success("[Setup] - $dbName database init started...");
 
-    // Attempt to create the database
-    try {
-        Console::info("  └── Creating database: $dbName...");
-        $database->create();
-    } catch (\Exception $e) {
-        Console::info("  └── Skip: metadata table already exists");
+    $attempts = 0;
+    while (true) {
+        try {
+            $attempts++;
+            Console::info("  └── Creating database: $dbName...");
+            $database->create();
+            break; // exit loop on success
+        } catch (\Exception $e) {
+            if ($e instanceof DuplicateException) {
+                Console::info("  └── Skip: metadata table already exists");
+                break;
+            }
+
+            Console::warning("  └── Database create failed. Retrying ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
+            }
+
+            \sleep($sleep);
+        }
     }
 
     // Process collections
@@ -382,11 +396,25 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 ->setTenant(null)
                 ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
 
-            try {
-                Console::success('[Setup] - Creating project database: ' . $hostname . '...');
-                $dbForProject->create();
-            } catch (DuplicateException) {
-                Console::success('[Setup] - Skip: metadata table already exists');
+            $max = 15;
+            $sleep = 2;
+            $attempts = 0;
+            while (true) {
+                try {
+                    $attempts++;
+                    Console::success('[Setup] - Creating project database: ' . $hostname . '...');
+                    $dbForProject->create();
+                    break; // exit loop on success
+                } catch (DuplicateException) {
+                    Console::success('[Setup] - Skip: metadata table already exists');
+                    break;
+                } catch (\Throwable $e) {
+                    Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
+                    if ($attempts >= $max) {
+                        throw new \Exception('  └── Failed to create project database: ' . $e->getMessage());
+                    }
+                    sleep($sleep);
+                }
             }
 
             if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
