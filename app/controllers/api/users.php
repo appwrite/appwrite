@@ -1324,7 +1324,6 @@ App::patch('/v1/users/:userId/password')
             }
         }
 
-
         if (\strlen($password) === 0) {
             $user
                 ->setAttribute('password', '')
