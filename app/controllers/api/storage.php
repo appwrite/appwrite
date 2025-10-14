@@ -991,7 +991,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         // Check bucket-level image transformations flag
         $allowImageTransformations = $bucket->getAttribute('imageTransformations', true);
-        if (!$allowImageTransformations && !$isToken) {
+        if (!$allowImageTransformations && !$isToken && !$isPrivilegedUser) {
             // Image transformations are disabled for this bucket
             throw new Exception(Exception::STORAGE_IMAGE_TRANSFORMATIONS_DISABLED);
         }

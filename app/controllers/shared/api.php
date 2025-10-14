@@ -589,8 +589,8 @@ App::init()
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
 
                     // Only proceed for preview when not disabled; other routes unaffected
-                    // Skip the block for privileged console users and resource tokens.
-                    if ($isImageTransformation && $isImageTransformationsBlocked && !$isPrivilegedUser && !$isToken) {
+                    // Skip the block only when transformations remain enabled.
+                    if ($isImageTransformation && $isImageTransformationsBlocked) {
                         throw new Exception(Exception::STORAGE_IMAGE_TRANSFORMATIONS_DISABLED);
                     }
 
@@ -636,7 +636,9 @@ App::init()
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
-                if (!$isImageTransformation || !$isImageTransformationsBlocked) {
+                // Determine if user can bypass transformation blocks
+                $canBypassBlock = ($type === 'bucket') && ($isPrivilegedUser || $isToken);
+                if (!$isImageTransformation || !$isImageTransformationsBlocked || $canBypassBlock) {
                     $response->send($data);
                 }
             } else {
