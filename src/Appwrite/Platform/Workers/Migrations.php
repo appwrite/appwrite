@@ -164,9 +164,9 @@ class Migrations extends Action
                 $credentials['projectId'],
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
+                $getDatabasesDB,
                 SourceAppwrite::SOURCE_DATABASE,
                 $projectDB,
-                $getDatabasesDB,
             ),
             CSV::getName() => new CSV(
                 $resourceId,

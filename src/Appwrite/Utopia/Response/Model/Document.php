@@ -82,7 +82,11 @@ class Document extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
-        $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
+        $sequence = $document->getAttribute('$sequence', 0);
+        // to support both -> uuids(mongodb) and numeric ids(mariadb/mysql)
+        if (is_numeric($sequence)) {
+            $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
+        }
 
         foreach ($document->getAttributes() as $attribute) {
             if (\is_array($attribute)) {

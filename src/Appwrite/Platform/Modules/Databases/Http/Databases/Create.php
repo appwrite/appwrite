@@ -32,8 +32,9 @@ class Create extends Action
         return 'createDatabase';
     }
 
-    protected function getDatabaseDSN(string $region = 'default'): string
+    protected function getDatabaseDSN(Document $project): string
     {
+        $region = $project->getAttribute('region');
         $databases = [];
         $databaseKeys = [];
         /**
@@ -49,10 +50,8 @@ class Create extends Action
                 $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
                 break;
             default:
-                $databases = Config::getParam('pools-database', []);
-                $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-                $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST', 'mysql');
+                // legacy/tablesdb case where projects having the location of the database
+                return $project->getAttribute('database');
         }
 
         if ($region !== 'default') {
@@ -142,7 +141,7 @@ class Create extends Action
                 'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
                 'type' => $this->getDatabaseType(),
-                'database' => $this->getDatabaseDSN($project->getAttribute('region'))
+                'database' => $this->getDatabaseDSN($project)
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);

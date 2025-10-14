@@ -196,7 +196,12 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
     return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project): Database {
         $projectDocument ??= $project;
         $databaseType = $database->getAttribute('database', '');
-        $databaseDSN = new DSN($databaseType);
+
+        try {
+            $databaseDSN = new DSN($databaseType);
+        } catch (\InvalidArgumentException) {
+            $databaseDSN = new DSN('mysql://'.$databaseType);
+        }
 
         try {
             $dsn = new DSN($projectDocument->getAttribute('database'));
