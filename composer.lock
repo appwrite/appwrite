@@ -3791,12 +3791,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0330adf4cdf8ceada6b991ad2ca7e381a13d81d2"
+                "reference": "48a8de56fdcfda7316617119e928facfc2bf3d9b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0330adf4cdf8ceada6b991ad2ca7e381a13d81d2",
-                "reference": "0330adf4cdf8ceada6b991ad2ca7e381a13d81d2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/48a8de56fdcfda7316617119e928facfc2bf3d9b",
+                "reference": "48a8de56fdcfda7316617119e928facfc2bf3d9b",
                 "shasum": ""
             },
             "require": {
@@ -3841,7 +3841,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-mongodb"
             },
-            "time": "2025-10-14T03:37:01+00:00"
+            "time": "2025-10-14T06:02:29+00:00"
         },
         {
             "name": "utopia-php/detector",
