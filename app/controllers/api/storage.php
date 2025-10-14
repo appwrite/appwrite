@@ -993,7 +993,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $allowImageTransformations = $bucket->getAttribute('imageTransformations', true);
         if (!$allowImageTransformations && !$isToken) {
             // Image transformations are disabled for this bucket
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_IMAGE_TRANSFORMATIONS_DISABLED);
         }
 
         if ($fileSecurity && !$valid && !$isToken) {

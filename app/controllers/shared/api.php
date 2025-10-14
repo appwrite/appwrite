@@ -591,7 +591,7 @@ App::init()
                     // Only proceed for preview when not disabled; other routes unaffected
                     // Skip the block for privileged console users and resource tokens.
                     if ($isImageTransformation && $isImageTransformationsBlocked && !$isPrivilegedUser && !$isToken) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                        throw new Exception(Exception::STORAGE_IMAGE_TRANSFORMATIONS_DISABLED);
                     }
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
