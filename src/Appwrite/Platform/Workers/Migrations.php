@@ -463,8 +463,7 @@ class Migrations extends Action
         */
         $databaseOverride = '';
         $dbScheme = '';
-        $project = $this->project;
-        $region = $project->getAttribute('region');
+        $region = $this->project->getAttribute('region');
         switch ($databaseType) {
             case 'documentsdb':
                 $databases = Config::getParam('pools-documentsdb', []);
@@ -474,7 +473,7 @@ class Migrations extends Action
                 break;
             default:
                 // legacy/tablesdb case where projects having the location of the database
-                return $project->getAttribute('database');
+                return $this->project->getAttribute('database');
         }
 
         if ($region !== 'default') {
