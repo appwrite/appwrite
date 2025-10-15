@@ -105,6 +105,12 @@ class Get extends Action
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
+        $response
+            ->setContentType('application/gzip')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
+
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();
@@ -127,12 +133,6 @@ class Get extends Action
             $response->send($device->read($path, $start, ($end - $start + 1)));
             return;
         }
-
-        $response
-            ->setContentType('application/gzip')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
