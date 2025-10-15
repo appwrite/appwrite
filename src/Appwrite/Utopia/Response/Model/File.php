@@ -38,7 +38,7 @@ class File extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'File permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => [],
-                'example' => ['read("any")'],
+                'example' => ["read('any')"],
                 'array' => true,
             ])
             ->addRule('name', [
