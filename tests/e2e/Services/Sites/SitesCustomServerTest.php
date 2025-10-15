@@ -880,6 +880,11 @@ class SitesCustomServerTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 50000, 500);
 
+        // $lastEmail = $this->getLastEmail();
+        // if (!empty($lastEmail)) {
+        //     $this->assertNotEquals('Deployment failure for site Test Site', $lastEmail['subject']);
+        // }
+
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
             'activate' => 'false'
@@ -2600,6 +2605,9 @@ class SitesCustomServerTest extends Scope
 
             $this->assertEquals('failed', $deployment['body']['status']);
         }, 50000, 500);
+
+        // $lastEmail = $this->getLastEmail();
+        // $this->assertEquals('Deployment failure for site Static Site', $lastEmail['subject']);
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [

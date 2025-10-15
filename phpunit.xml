@@ -37,6 +37,9 @@
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
+            <file>./tests/e2e/Services/Sites/SitesBase.php</file>
+            <file>./tests/e2e/Services/Sites/SitesCustomServerTest.php</file>
+            <file>./tests/e2e/Services/Sites/SitesCustomClientTest.php</file>
         </testsuite>
     </testsuites>
 </phpunit>
