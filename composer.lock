@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "568800edca746c4e8d0d50648b25f589",
+    "content-hash": "993b564242c6cc863e21d28c09e61349",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3792,16 +3792,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.8.2",
+            "version": "dev-adapter-fixes-opensrs",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "caa294dcebd05c8af876c8afef3e992faccdf645"
+                "reference": "daef485644ec99f0d2547ea5450325ed23aeb544"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/caa294dcebd05c8af876c8afef3e992faccdf645",
-                "reference": "caa294dcebd05c8af876c8afef3e992faccdf645",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/daef485644ec99f0d2547ea5450325ed23aeb544",
+                "reference": "daef485644ec99f0d2547ea5450325ed23aeb544",
                 "shasum": ""
             },
             "require": {
@@ -3847,9 +3847,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/0.8.2"
+                "source": "https://github.com/utopia-php/domains/tree/adapter-fixes-opensrs"
             },
-            "time": "2025-10-06T09:56:54+00:00"
+            "time": "2025-10-15T06:06:24+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -8518,7 +8518,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/domains": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
