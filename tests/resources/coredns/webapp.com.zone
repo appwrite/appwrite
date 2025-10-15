@@ -1,4 +1,4 @@
-; Nessessary setup
+; Necessary setup
 $ORIGIN webapp.com.
 @ IN SOA ns1.webapp.com. hostmaster.webapp.com. (2025091201 7200 3600 1209600 3600)
 @ IN NS ns1.webapp.com.
