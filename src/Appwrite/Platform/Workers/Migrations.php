@@ -13,6 +13,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\DSN\DSN;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
@@ -188,6 +189,7 @@ class Migrations extends Action
     protected function processDestination(Document $migration, string $apiKey): Destination
     {
         $destination = $migration->getAttribute('destination');
+        $getDatabaseDSN = fn (string $databaseType): string => $this->getDatabaseDSN($databaseType);
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
@@ -196,6 +198,7 @@ class Migrations extends Action
                 $apiKey,
                 $this->dbForProject,
                 $this->getDatabasesDB,
+                $getDatabaseDSN,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
             default => throw new \Exception('Invalid destination type'),
@@ -449,5 +452,62 @@ class Migrations extends Action
             return call_user_func($this->getDatabasesDB, $database, $this->sourceProject);
         }
         return call_user_func($this->getDatabasesDB, $database);
+    }
+
+    protected function getDatabaseDSN(string $databaseType): string
+    {
+        $databases = [];
+        $databaseKeys = [];
+        /**
+         * @var string|null $databaseOverride
+        */
+        $databaseOverride = '';
+        $dbScheme = '';
+        $project = $this->project;
+        $region = $project->getAttribute('region');
+        switch ($databaseType) {
+            case 'documentsdb':
+                $databases = Config::getParam('pools-documentsdb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+                break;
+            default:
+                // legacy/tablesdb case where projects having the location of the database
+                return $project->getAttribute('database');
+        }
+
+        if ($region !== 'default') {
+            $keys = explode(',', $databaseKeys);
+            $databases = array_filter($keys, function ($value) use ($region) {
+                return str_contains($value, $region);
+            });
+        }
+
+        $index = \array_search($databaseOverride, $databases);
+        if ($index !== false) {
+            $dsn = $databases[$index];
+        } else {
+            $dsn = $databases[array_rand($databases)];
+        }
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (\in_array($dsn, $sharedTables)) {
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . $dsn . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
+        }
+        try {
+            // for validation
+            new DSN($dsn);
+        } catch (\InvalidArgumentException) {
+            $dsn = $dbScheme.'://' . $dsn;
+        }
+        return $dsn;
     }
 }
