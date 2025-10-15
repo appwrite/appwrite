@@ -102,12 +102,6 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $response
-            ->setContentType('application/gzip')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
-
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
@@ -131,7 +125,14 @@ class Get extends Action
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
             $response->send($device->read($path, $start, ($end - $start + 1)));
+            return;
         }
+
+        $response
+            ->setContentType('application/gzip')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
