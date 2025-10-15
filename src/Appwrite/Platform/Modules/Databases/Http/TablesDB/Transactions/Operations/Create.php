@@ -32,7 +32,7 @@ class Create extends OperationsCreate
             ->setHttpPath('/v1/tablesdb/transactions/:transactionId/operations')
             ->desc('Create operations')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'rows.write')
+            ->label('scope', ['documents.write', 'rows.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
