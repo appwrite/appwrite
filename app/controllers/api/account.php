@@ -2610,9 +2610,8 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->inject('store')
-    ->inject('proofForPassword')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
