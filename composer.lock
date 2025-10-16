@@ -3796,12 +3796,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "6b06f3eae2504100572424d91bb6881496d9850b"
+                "reference": "2085f8bc03a0977f4b8ebd090ec45e7fc5e8dcfc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/6b06f3eae2504100572424d91bb6881496d9850b",
-                "reference": "6b06f3eae2504100572424d91bb6881496d9850b",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/2085f8bc03a0977f4b8ebd090ec45e7fc5e8dcfc",
+                "reference": "2085f8bc03a0977f4b8ebd090ec45e7fc5e8dcfc",
                 "shasum": ""
             },
             "require": {
@@ -3849,7 +3849,7 @@
                 "issues": "https://github.com/utopia-php/domains/issues",
                 "source": "https://github.com/utopia-php/domains/tree/adapter-fixes-opensrs"
             },
-            "time": "2025-10-16T04:12:44+00:00"
+            "time": "2025-10-16T07:47:20+00:00"
         },
         {
             "name": "utopia-php/dsn",
