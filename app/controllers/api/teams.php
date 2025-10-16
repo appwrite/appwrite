@@ -474,9 +474,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], function (Document $project) {
         if ($project->getId() === 'console') {
-            ;
             $roles = array_keys(Config::getParam('roles', []));
-            array_filter($roles, function ($role) {
+            $roles = array_filter($roles, function ($role) {
                 return !in_array($role, [USER_ROLE_APPS, USER_ROLE_GUESTS, USER_ROLE_USERS]);
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
