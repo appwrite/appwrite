@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5634dc368b359aa28cbb2960c32bccd3",
+    "content-hash": "8a6a4234babe4408b47399967715f765",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -754,16 +754,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.32.1",
+            "version": "v4.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb"
+                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb",
-                "reference": "c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/b50269e23204e5ae859a326ec3d90f09efe3047d",
+                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d",
                 "shasum": ""
             },
             "require": {
@@ -792,9 +792,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.32.1"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.0"
             },
-            "time": "2025-09-14T05:14:52+00:00"
+            "time": "2025-10-15T20:10:28+00:00"
         },
         {
             "name": "league/csv",
@@ -3787,16 +3787,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-documentsdb",
+            "version": "dev-test-docsdb",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ff4c8af190e27157649cce500e770811dca8553d"
+                "reference": "b4e3d5501f7de6c849677d2cd1c923ea16562781"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ff4c8af190e27157649cce500e770811dca8553d",
-                "reference": "ff4c8af190e27157649cce500e770811dca8553d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b4e3d5501f7de6c849677d2cd1c923ea16562781",
+                "reference": "b4e3d5501f7de6c849677d2cd1c923ea16562781",
                 "shasum": ""
             },
             "require": {
@@ -3839,9 +3839,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-documentsdb"
+                "source": "https://github.com/utopia-php/database/tree/feat-mongodb"
             },
-            "time": "2025-10-13T07:13:57+00:00"
+            "time": "2025-10-14T08:05:04+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4345,12 +4345,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "de06db2b8ef50f315f2b61132b67d49d57c336ee"
+                "reference": "2a9e4b412fea8f943d2fcddd9c410cc43e6f594e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/de06db2b8ef50f315f2b61132b67d49d57c336ee",
-                "reference": "de06db2b8ef50f315f2b61132b67d49d57c336ee",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/2a9e4b412fea8f943d2fcddd9c410cc43e6f594e",
+                "reference": "2a9e4b412fea8f943d2fcddd9c410cc43e6f594e",
                 "shasum": ""
             },
             "require": {
@@ -4358,7 +4358,7 @@
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
-                "utopia-php/database": "dev-feat-documentsdb as 1.4.5",
+                "utopia-php/database": "dev-test-docsdb as 1.4.5",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/storage": "0.18.*"
@@ -4393,7 +4393,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/feat-documents-db"
             },
-            "time": "2025-10-14T19:29:55+00:00"
+            "time": "2025-10-16T08:36:57+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8734,7 +8734,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-feat-documentsdb",
+            "version": "dev-test-docsdb",
             "alias": "1.1.1",
             "alias_normalized": "1.1.1.0"
         },

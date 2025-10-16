@@ -1080,8 +1080,9 @@ services:
       - appwrite
     volumes:
       - appwrite-mongodb:/data/db
-      # we need to run the mongo-init.js file to create the user and the database
+      - appwrite-mongodb-keyfile:/data/keyfile
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
     ports:
       - "27017:27017"
     environment:
@@ -1090,12 +1091,22 @@ services:
       - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
       - MONGO_INITDB_USERNAME=${_APP_DB_USER}
       - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
-    # healthcheck:
-    #   test: ["CMD", "mongosh", "--username", "root", "--password", "${_APP_DB_ROOT_PASS}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
-    #   interval: 1s
-    #   timeout: 5s
-    #   retries: 10
-    #   start_period: 30s
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+    healthcheck:
+      test: |
+        bash -c "
+          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
+            exit 0
+          else
+            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]})
+            \" 2>/dev/null || exit 1
+          fi
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   appwrite-mongo-express:
     image: mongo-express
@@ -1105,11 +1116,11 @@ services:
     ports:
       - "8082:8081"
     environment:
-      ME_CONFIG_MONGODB_SERVER: appwrite-mongodb
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${_APP_DB_ROOT_PASS}
+      ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
       ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
+    depends_on:
+      - mongodb
 
 
   redis:
@@ -1211,6 +1222,7 @@ networks:
 volumes:
   appwrite-mariadb:
   appwrite-mongodb:
+  appwrite-mongodb-keyfile:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
