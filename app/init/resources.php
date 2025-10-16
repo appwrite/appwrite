@@ -316,6 +316,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     }
 
     if (
+        !$user ||
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken)
     ) { // Validate user has valid login token
