@@ -1211,6 +1211,7 @@ App::post('/v1/account/sessions/token')
     ->inject('queueForMails')
     ->inject('store')
     ->inject('proofForToken')
+    ->inject('proofForCode')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
