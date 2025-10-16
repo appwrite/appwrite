@@ -524,7 +524,7 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['x-example'] = '["' . str_ireplace("\"", "'", Permission::read(Role::any())) . '"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['type'] = $validator->getType();
@@ -606,8 +606,8 @@ class Swagger2 extends Format
                         $example = [
                             'action' => 'create',
                             'databaseId' => '<DATABASE_ID>',
-                            $collectionIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)).'>',
-                            $documentIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($documentIdKey)).'>',
+                            $collectionIdKey => '<' . \strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)) . '>',
+                            $documentIdKey => '<' . \strtoupper(Template::fromCamelCaseToSnake($documentIdKey)) . '>',
                             'data' => [
                                 'name' => 'Walter O\'Brien',
                             ],

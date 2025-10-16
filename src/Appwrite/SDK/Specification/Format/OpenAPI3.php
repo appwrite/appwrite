@@ -534,7 +534,7 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['schema']['x-example'] = '["' . str_ireplace("\"", "'", Permission::read(Role::any())) . '"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['schema']['type'] = $validator->getType();
@@ -619,8 +619,8 @@ class OpenAPI3 extends Format
                         $example = [
                             'action' => 'create',
                             'databaseId' => '<DATABASE_ID>',
-                            $collectionIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)).'>',
-                            $documentIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($documentIdKey)).'>',
+                            $collectionIdKey => '<' . \strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)) . '>',
+                            $documentIdKey => '<' . \strtoupper(Template::fromCamelCaseToSnake($documentIdKey)) . '>',
                             'data' => [
                                 'name' => 'Walter O\'Brien',
                             ],
