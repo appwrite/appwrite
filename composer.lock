@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9658991ad6520dad5807d7e1ed1e9bd4",
+    "content-hash": "064b0ddb6632a6e4b98786095563da28",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3851,12 +3851,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "2085f8bc03a0977f4b8ebd090ec45e7fc5e8dcfc"
+                "reference": "a5856879b17334526cabe3dcf46196d913065a14"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/2085f8bc03a0977f4b8ebd090ec45e7fc5e8dcfc",
-                "reference": "2085f8bc03a0977f4b8ebd090ec45e7fc5e8dcfc",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/a5856879b17334526cabe3dcf46196d913065a14",
+                "reference": "a5856879b17334526cabe3dcf46196d913065a14",
                 "shasum": ""
             },
             "require": {
@@ -3904,7 +3904,7 @@
                 "issues": "https://github.com/utopia-php/domains/issues",
                 "source": "https://github.com/utopia-php/domains/tree/adapter-fixes-opensrs"
             },
-            "time": "2025-10-16T07:47:20+00:00"
+            "time": "2025-10-16T10:01:54+00:00"
         },
         {
             "name": "utopia-php/dsn",
