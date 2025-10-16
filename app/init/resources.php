@@ -305,10 +305,12 @@ App::setResource('user', function (string $mode, Document $project, Document $co
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
-            if ($project->getId() === 'console') {
-                $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
-            } else {
-                $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+            if (!empty($store->getProperty('id', ''))) {
+                if ($project->getId() === 'console') {
+                    $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+                } else {
+                    $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+                }
             }
         }
     }
