@@ -229,9 +229,9 @@ class ProjectsConsoleClientTest extends Scope
      * @group projectsCRUD
      * @depends testCreateProject
      */
-    public function testListProject($data): void
+    public function testListProject($data): array
     {
-        $id = $data['projectId'];
+        $id = $data['projectId'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -274,7 +274,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(3, $response['body']['total']);
         $this->assertIsArray($response['body']['projects']);
         $this->assertCount(3, $response['body']['projects']);
-        $this->assertEquals($response['body']['projects'][0]['$id'], $id);
+        $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
 
         /**
          * Test pagination
@@ -432,6 +432,8 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
     }
 
     public function testGetProject(): void
