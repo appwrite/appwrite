@@ -299,6 +299,8 @@ App::setResource('user', function (string $mode, Document $project, Document $co
         $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
 
+    $user = new Document([]);
+
     if (APP_MODE_ADMIN === $mode) {
         $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
     } else {
@@ -316,7 +318,6 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     }
 
     if (
-        !$user ||
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken)
     ) { // Validate user has valid login token
