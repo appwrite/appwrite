@@ -150,6 +150,8 @@ class Install extends Action
 
         $input = [];
 
+        $password = new Password();
+        $token = new Token();
         foreach ($vars as $var) {
             if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
                 if ($data && $var['default'] !== null) {
@@ -158,13 +160,11 @@ class Install extends Action
                 }
 
                 if ($var['filter'] === 'token') {
-                    $token = new Token();
                     $input[$var['name']] = $token->generate();
                     continue;
                 }
 
                 if ($var['filter'] === 'password') {
-                    $password = new Password();
                     $input[$var['name']] = $password->generate();
                     continue;
                 }
