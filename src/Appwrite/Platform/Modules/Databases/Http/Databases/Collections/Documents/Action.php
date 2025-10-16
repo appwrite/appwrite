@@ -128,7 +128,7 @@ abstract class Action extends AppwriteAction
     }
 
     /**
-     * Get the appropriate already exists exception.
+     * Get the appropriate unique violation exception.
      */
     protected function getUniqueException(): string
     {

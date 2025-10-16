@@ -4285,6 +4285,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        $this->assertEquals('Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.', $duplicate['body']['message']);
 
         return $data;
     }
@@ -4322,7 +4323,7 @@ trait DatabasesBase
         ]);
         var_dump($document);
         $this->assertEquals(409, $document['headers']['status-code']);
-        $this->assertEquals('shmuel', 'fogel');
+        $this->assertEquals('Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.', $document['body']['message']);
     }
 
     /**
