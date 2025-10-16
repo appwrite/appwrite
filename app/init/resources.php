@@ -24,6 +24,7 @@ use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
@@ -232,7 +233,7 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
     ];
 }, ['request', 'console', 'project', 'dbForPlatform']);
 
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform, Store $store, Token $proofForToken) {
+App::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
@@ -249,8 +250,8 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
      *
      * Process:
      * 1. Checks the cookie based on mode:
-     *    - If in admin mode, redirects to the console.
-     *    - Otherwise, retrieves the project ID from the cookie.
+     *    - If in admin mode, uses console project id for key.
+     *    - Otherwise, sets the key using the project ID
      * 2. If no cookie is found, attempts to retrieve the fallback header `x-fallback-cookies`.
      *    - If this method is used, returns the header: `X-Debug-Fallback: true`.
      * 3. Fetches the user document from the appropriate database based on the mode.
