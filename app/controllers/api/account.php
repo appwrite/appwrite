@@ -174,7 +174,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 }
 ;
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode) {
 
     /** @var Utopia\Database\Document $user */
     $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -183,7 +183,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::USER_INVALID_TOKEN);
     }
 
-    $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret, $proofForToken);
+    $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret, $proofForToken)
+        ?: Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret, $proofForCode);
 
     if (!$verifiedToken) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -2518,10 +2519,11 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store) use ($createSession) {
+    ->inject('proofForCode')
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode);
     });
 
 App::put('/v1/account/sessions/phone')
@@ -2565,6 +2567,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('queueForMails')
     ->inject('store')
     ->inject('proofForToken')
+    ->inject('proofForCode')
     ->action($createSession);
 
 App::post('/v1/account/tokens/phone')
@@ -2607,8 +2610,8 @@ App::post('/v1/account/tokens/phone')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForPassword')
-    ->inject('proofForToken')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->inject('proofForCode')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2689,7 +2692,7 @@ App::post('/v1/account/tokens/phone')
             }
         }
 
-        $secret ??= $proofForToken->generate();
+        $secret ??= $proofForCode->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
@@ -2697,7 +2700,7 @@ App::post('/v1/account/tokens/phone')
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
             'type' => TOKEN_TYPE_PHONE,
-            'secret' => $proofForToken->hash($secret),
+            'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -2772,6 +2775,10 @@ App::post('/v1/account/tokens/phone')
             ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         // Encode secret for clients
+        $encoded = $store
+            ->setProperty('id', $user->getId())
+            ->setProperty('secret', $secret)
+            ->encode();
         $token->setAttribute('secret', $encoded);
 
         $response
