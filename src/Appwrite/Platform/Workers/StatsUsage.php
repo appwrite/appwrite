@@ -428,7 +428,7 @@ class StatsUsage extends Action
                 /**
                  * Sort by unique index key reduce locks/deadlocks
                  */
-                usort($projectStats['stats'], function ($a, $b) {
+                usort($projectStats['stats'], function ($a, $b) use ($sequence) {
                     // Metric DESC
                     $cmp = strcmp($b['metric'], $a['metric']);
                     if ($cmp !== 0) {
