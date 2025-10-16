@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "568800edca746c4e8d0d50648b25f589",
+    "content-hash": "2463278e1a0fb09c2f6d25f4245d3257",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -756,16 +756,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.32.1",
+            "version": "v4.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb"
+                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb",
-                "reference": "c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/b50269e23204e5ae859a326ec3d90f09efe3047d",
+                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d",
                 "shasum": ""
             },
             "require": {
@@ -794,9 +794,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.32.1"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.0"
             },
-            "time": "2025-09-14T05:14:52+00:00"
+            "time": "2025-10-15T20:10:28+00:00"
         },
         {
             "name": "league/csv",
@@ -3635,16 +3635,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "2.3.2",
+            "version": "dev-unique-exception",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "35c978ddd20b649d119296094686d3cc9fcf161f"
+                "reference": "968fff63dd423a92ac5684269d6207432e7ae9b3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/35c978ddd20b649d119296094686d3cc9fcf161f",
-                "reference": "35c978ddd20b649d119296094686d3cc9fcf161f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/968fff63dd423a92ac5684269d6207432e7ae9b3",
+                "reference": "968fff63dd423a92ac5684269d6207432e7ae9b3",
                 "shasum": ""
             },
             "require": {
@@ -3685,9 +3685,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/2.3.2"
+                "source": "https://github.com/utopia-php/database/tree/unique-exception"
             },
-            "time": "2025-10-07T03:09:32+00:00"
+            "time": "2025-10-16T09:10:18+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8516,9 +8516,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-unique-exception",
+            "alias": "2.3.2",
+            "alias_normalized": "2.3.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
