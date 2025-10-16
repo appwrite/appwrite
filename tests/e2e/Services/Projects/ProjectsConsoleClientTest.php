@@ -947,7 +947,6 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1173,18 +1172,39 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertTrue($response['body']['authInvalidateSessions']);
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testUpdateProjectOAuth($data): array
+    public function testUpdateProjectOAuth(): void
     {
-        $id = $data['projectId'] ?? '';
+        // Create a team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Update Project OAuth Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // Create a project
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Project Test',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $id = $response['body']['$id'];
+
         $providers = require(__DIR__ . '/../../../../app/config/oAuthProviders.php');
 
         /**
          * Test for SUCCESS
          */
-
         foreach ($providers as $key => $provider) {
             $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
                 'content-type' => 'application/json',
@@ -1269,7 +1289,6 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/oauth2', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1280,18 +1299,37 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testUpdateProjectAuthStatus($data): array
+    public function testUpdateProjectAuthStatus(): void
     {
-        $id = $data['projectId'] ?? '';
-        $auth = require(__DIR__ . '/../../../../app/config/auth.php');
+        // Create a team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Update Project Auth Status Test Team',
+        ]);
 
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // Create a project
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Project Test',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $id = $response['body']['$id'];
+
+        $auth = require(__DIR__ . '/../../../../app/config/auth.php');
         $originalEmail = uniqid() . 'user@localhost.test';
         $originalPassword = 'password';
         $originalName = 'User Name';
@@ -1425,8 +1463,6 @@ class ProjectsConsoleClientTest extends Scope
                 'status' => true,
             ]);
         }
-
-        return $data;
     }
 
     /**
