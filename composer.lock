@@ -756,16 +756,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.32.1",
+            "version": "v4.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb"
+                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb",
-                "reference": "c4ed1c1f9bbc1e91766e2cd6c0af749324fe87cb",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/b50269e23204e5ae859a326ec3d90f09efe3047d",
+                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d",
                 "shasum": ""
             },
             "require": {
@@ -794,9 +794,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.32.1"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.0"
             },
-            "time": "2025-09-14T05:14:52+00:00"
+            "time": "2025-10-15T20:10:28+00:00"
         },
         {
             "name": "league/csv",
@@ -3796,12 +3796,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "c814e86bb9ffbfa3baf023a20b8d1160b654783a"
+                "reference": "6b06f3eae2504100572424d91bb6881496d9850b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/c814e86bb9ffbfa3baf023a20b8d1160b654783a",
-                "reference": "c814e86bb9ffbfa3baf023a20b8d1160b654783a",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/6b06f3eae2504100572424d91bb6881496d9850b",
+                "reference": "6b06f3eae2504100572424d91bb6881496d9850b",
                 "shasum": ""
             },
             "require": {
@@ -3849,7 +3849,7 @@
                 "issues": "https://github.com/utopia-php/domains/issues",
                 "source": "https://github.com/utopia-php/domains/tree/adapter-fixes-opensrs"
             },
-            "time": "2025-10-15T09:58:21+00:00"
+            "time": "2025-10-16T04:12:44+00:00"
         },
         {
             "name": "utopia-php/dsn",
