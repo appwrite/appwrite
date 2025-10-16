@@ -28,6 +28,12 @@ use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\XList as Li
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Create as CreateTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Delete as DeleteTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Get as GetTablesDatabase;
+use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Create as CreateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Delete as DeleteTransaction;
+use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Get as GetTransaction;
+use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Operations\Create as CreateOperations;
+use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Update as UpdateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Update as UpdateTablesDatabase;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Usage\Get as GetTablesDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Usage\XList as ListTablesDatabaseUsage;
@@ -42,6 +48,7 @@ class DocumentsDB extends Base
         $this->registerTableActions($service);
         $this->registerIndexActions($service);
         $this->registerRowActions($service);
+        $this->registerTransactionActions($service);
     }
 
     private function registerDatabaseActions(Service $service): void
@@ -88,5 +95,15 @@ class DocumentsDB extends Base
         $service->addAction(ListRowLogs::getName(), new ListRowLogs());
         $service->addAction(IncrementRowColumn::getName(), new IncrementRowColumn());
         $service->addAction(DecrementRowColumn::getName(), new DecrementRowColumn());
+    }
+
+    private function registerTransactionActions(Service $service): void
+    {
+        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
+        $service->addAction(GetTransaction::getName(), new GetTransaction());
+        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
+        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
+        $service->addAction(ListTransactions::getName(), new ListTransactions());
+        $service->addAction(CreateOperations::getName(), new CreateOperations());
     }
 }

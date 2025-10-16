@@ -2646,7 +2646,7 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
-
+        sleep(2);
         // test for failure
         $duplicate = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',

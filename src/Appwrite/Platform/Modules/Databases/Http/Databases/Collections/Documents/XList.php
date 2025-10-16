@@ -131,8 +131,8 @@ class XList extends Action
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
-                $total = $transactionState->countDocuments($collectionTableId, $transactionId, $queries);
+                $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
+                $total = $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries);
             } elseif (! empty($selectQueries)) {
                 // has selects, allow relationship on documents
                 $documents = $dbForDatabases->find($collectionTableId, $queries);

@@ -105,7 +105,7 @@ class Get extends Action
 
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId, $queries);
+                $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId, $queries);
             } elseif (! empty($selects)) {
                 // has selects, allow relationship on documents!
                 $document = $dbForDatabases->getDocument($collectionTableId, $documentId, $queries);

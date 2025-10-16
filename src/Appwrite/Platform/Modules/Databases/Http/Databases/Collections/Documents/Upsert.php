@@ -138,7 +138,7 @@ class Upsert extends Action
         if (\is_null($permissions)) {
             if ($transactionId !== null) {
                 // Use transaction-aware document retrieval to see changes from same transaction
-                $oldDocument = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+                $oldDocument = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
             } else {
                 $oldDocument = Authorization::skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
             }
@@ -346,7 +346,7 @@ class Upsert extends Action
         if (empty($upserted[0])) {
             if ($transactionId !== null) {
                 // For transactions, get the document with transaction changes applied
-                $upserted[0] = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+                $upserted[0] = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
             } else {
                 $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
             }

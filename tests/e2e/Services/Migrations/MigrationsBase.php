@@ -1217,7 +1217,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DOCUMENTSDB_DATABASE,
+                Resource::TYPE_DATABASE_DOCUMENTSDB,
             ],
             'endpoint' => 'http://localhost/v1',
             'projectId' => $this->getProject()['$id'],
@@ -1225,13 +1225,13 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_DOCUMENTSDB_DATABASE], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_DOCUMENTSDB_DATABASE, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['warning']);
+        $this->assertEquals([Resource::TYPE_DATABASE_DOCUMENTSDB], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_DOCUMENTSDB, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['warning']);
 
         $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId, [
             'content-type' => 'application/json',
@@ -1279,7 +1279,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DOCUMENTSDB_DATABASE,
+                Resource::TYPE_DATABASE_DOCUMENTSDB,
                 Resource::TYPE_COLLECTION, // collections in DocumentsDB map to tables in migration
             ],
             'endpoint' => 'http://localhost/v1',
@@ -1287,7 +1287,7 @@ trait MigrationsBase
             'apiKey' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals('completed', $result['status']);
-        foreach ([Resource::TYPE_DOCUMENTSDB_DATABASE, Resource::TYPE_COLLECTION] as $resource) {
+        foreach ([Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION] as $resource) {
             $this->assertArrayHasKey($resource, $result['statusCounters']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
@@ -1345,7 +1345,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DOCUMENTSDB_DATABASE,
+                Resource::TYPE_DATABASE_DOCUMENTSDB,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_DOCUMENT,
             ],
@@ -1356,7 +1356,7 @@ trait MigrationsBase
 
         $this->assertEquals('completed', $result['status']);
 
-        foreach ([Resource::TYPE_DOCUMENTSDB_DATABASE] as $resource) {
+        foreach ([Resource::TYPE_DATABASE_DOCUMENTSDB] as $resource) {
             $this->assertArrayHasKey($resource, $result['statusCounters']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
@@ -1516,7 +1516,7 @@ trait MigrationsBase
                 Resource::TYPE_TABLE,
                 Resource::TYPE_COLUMN,
                 Resource::TYPE_ROW,
-                Resource::TYPE_DOCUMENTSDB_DATABASE,
+                Resource::TYPE_DATABASE_DOCUMENTSDB,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_DOCUMENT,
             ],
@@ -1534,7 +1534,7 @@ trait MigrationsBase
             Resource::TYPE_TABLE,
             Resource::TYPE_COLUMN,
             Resource::TYPE_ROW,
-            Resource::TYPE_DOCUMENTSDB_DATABASE,
+            Resource::TYPE_DATABASE_DOCUMENTSDB,
             Resource::TYPE_COLLECTION,
             Resource::TYPE_DOCUMENT,
         ], $result['resources']);
@@ -1572,12 +1572,12 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ROW]['warning']);
 
         // Assert DocumentsDB counters
-        $this->assertArrayHasKey(Resource::TYPE_DOCUMENTSDB_DATABASE, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENTSDB_DATABASE]['warning']);
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_DOCUMENTSDB, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['warning']);
 
         // Assert Collection counters
         $this->assertArrayHasKey(Resource::TYPE_COLLECTION, $result['statusCounters']);
