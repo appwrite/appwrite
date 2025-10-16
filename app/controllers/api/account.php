@@ -2646,8 +2646,6 @@ App::post('/v1/account/tokens/phone')
                 'status' => true,
                 'password' => null,
                 'passwordUpdate' => null,
-                'hash' => $proofForPassword->getHash()->getName(),
-                'hashOptions' => $proofForPassword->getHash()->getOptions(),
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
