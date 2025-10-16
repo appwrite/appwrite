@@ -4302,7 +4302,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'hello',
+            'documentId' => 'i_am_unique',
             'data' => [
                 'title' => 'Hello 1',
                 'releaseYear' => 2000
@@ -4315,13 +4315,12 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'hello',
+            'documentId' => 'i_am_unique',
             'data' => [
                 'title' => 'Hello 2',
                 'releaseYear' => 2000
             ]
         ]);
-        var_dump($document);
         $this->assertEquals(409, $document['headers']['status-code']);
         $this->assertEquals('Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.', $document['body']['message']);
     }
