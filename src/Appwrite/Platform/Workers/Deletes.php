@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -708,7 +707,7 @@ class Deletes extends Action
     private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
     {
         $dbForProject = $getProjectDB($project);
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
 
         // Delete Sessions
