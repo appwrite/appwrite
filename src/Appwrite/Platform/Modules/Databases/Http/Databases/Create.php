@@ -49,6 +49,12 @@ class Create extends Action
                 $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
                 $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
                 break;
+            case 'vectordb':
+                $databases = Config::getParam('pools-vectordb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'pstgres');
+                break;
             default:
                 // legacy/tablesdb case where projects having the location of the database
                 return $project->getAttribute('database');
@@ -88,6 +94,13 @@ class Create extends Action
         return $dsn;
     }
 
+    protected function getDatabaseCollection()
+    {
+        return match ($this->getDatabaseType()) {
+            'vectordb' => (Config::getParam('collections', [])['vectordb'] ?? [])['collections'] ?? [],
+            default => (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [],
+        };
+    }
     public function __construct()
     {
         $this
@@ -151,7 +164,7 @@ class Create extends Action
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        $collections = (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [];
+        $collections = $this->getDatabaseCollection();
         if (empty($collections)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
         }
