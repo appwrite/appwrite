@@ -534,7 +534,6 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-
         $response = $this->client->call(Client::METHOD_GET, '/projects/empty', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
