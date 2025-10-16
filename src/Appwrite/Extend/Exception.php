@@ -212,6 +212,7 @@ class Exception extends \Exception
     public const string DOCUMENT_MISSING_DATA = 'document_missing_data';
     public const string DOCUMENT_MISSING_PAYLOAD = 'document_missing_payload';
     public const string DOCUMENT_ALREADY_EXISTS = 'document_already_exists';
+    public const string DOCUMENT_UNIQUE_VIOLATION = 'document_unique_violation';
     public const string DOCUMENT_UPDATE_CONFLICT = 'document_update_conflict';
     public const string DOCUMENT_DELETE_RESTRICTED = 'document_delete_restricted';
 
@@ -221,6 +222,7 @@ class Exception extends \Exception
     public const string ROW_MISSING_DATA = 'row_missing_data';
     public const string ROW_MISSING_PAYLOAD = 'row_missing_payload';
     public const string ROW_ALREADY_EXISTS = 'row_already_exists';
+    public const string ROW_UNIQUE_VIOLATION = 'row_unique_violation';
     public const string ROW_UPDATE_CONFLICT = 'row_update_conflict';
     public const string ROW_DELETE_RESTRICTED = 'row_delete_restricted';
 

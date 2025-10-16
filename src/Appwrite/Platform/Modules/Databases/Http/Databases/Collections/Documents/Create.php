@@ -17,6 +17,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
@@ -135,6 +136,7 @@ class Create extends Action
     }
     public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
+        var_dump('shmuel');
         $data = \is_string($data)
             ? \json_decode($data, true)
             : $data;
@@ -440,6 +442,8 @@ class Create extends Action
                     $documents,
                 )
             );
+        } catch (UniqueException) {
+            throw new Exception($this->getUniqueException());
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (NotFoundException) {

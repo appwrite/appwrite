@@ -4290,6 +4290,42 @@ trait DatabasesBase
     }
 
     /**
+     * @depends testDefaultPermissions
+     */
+    public function testUniqueUid(array $data): void
+    {
+        /**
+         * Test duplicate on unique $id
+         */
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'hello',
+            'data' => [
+                'title' => 'Hello 1',
+                'releaseYear' => 2000
+            ]
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'hello',
+            'data' => [
+                'title' => 'Hello 2',
+                'releaseYear' => 2000
+            ]
+        ]);
+        var_dump($document);
+        $this->assertEquals(409, $document['headers']['status-code']);
+        $this->assertEquals('shmuel', 'fogel');
+    }
+
+    /**
      * @depends testUniqueIndexDuplicate
      */
     public function testPersistentCreatedAt(array $data): array
