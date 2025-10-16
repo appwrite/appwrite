@@ -15,7 +15,7 @@ class Create extends TransactionsCreate
 {
     public static function getName(): string
     {
-        return 'createTransaction';
+        return 'createDocumentsDBTransaction';
     }
 
     protected function getResponseModel(): string

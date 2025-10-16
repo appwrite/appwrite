@@ -15,7 +15,7 @@ class XList extends TransactionsList
 {
     public static function getName(): string
     {
-        return 'listTransactions';
+        return 'listDocumentsDBTransactions';
     }
 
     protected function getResponseModel(): string

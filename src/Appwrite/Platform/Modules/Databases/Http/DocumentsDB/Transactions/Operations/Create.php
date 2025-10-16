@@ -17,7 +17,7 @@ class Create extends OperationsCreate
 {
     public static function getName(): string
     {
-        return 'createOperations';
+        return 'createDocumentsDBOperations';
     }
 
     protected function getResponseModel(): string

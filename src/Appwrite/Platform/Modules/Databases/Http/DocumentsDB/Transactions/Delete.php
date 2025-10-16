@@ -15,7 +15,7 @@ class Delete extends TransactionsDelete
 {
     public static function getName(): string
     {
-        return 'deleteTransaction';
+        return 'deleteDocumentsDBTransaction';
     }
 
     protected function getResponseModel(): string

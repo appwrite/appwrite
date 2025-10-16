@@ -15,7 +15,7 @@ class Get extends TransactionsGet
 {
     public static function getName(): string
     {
-        return 'getTransaction';
+        return 'getDocumentsDBTransaction';
     }
 
     protected function getResponseModel(): string
