@@ -112,13 +112,33 @@ class ProjectsConsoleClientTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateDuplicateProject($data)
+    public function testCreateDuplicateProject(): void
     {
-        $teamId = $data['teamId'] ?? '';
-        $projectId = $data['projectId'] ?? '';
+        // Create a team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Duplicate Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // Create a project
+        $projectId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $projectId,
+            'name' => 'Original Project',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -207,11 +227,68 @@ class ProjectsConsoleClientTest extends Scope
 
     /**
      * @group projectsCRUD
-     * @depends testCreateProject
      */
-    public function testListProject($data): array
+    public function testListProject(): void
     {
-        $id = $data['projectId'] ?? '';
+        // Create a team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Project Test',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        // Create first project
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Project Test',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $id = $response['body']['$id'];
+
+        // Create second project
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Project Test',
+            'teamId' => $team['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Create a third project with different name
+        $team2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Team 1',
+        ]);
+
+        $this->assertEquals(201, $team2['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Team 1 Project',
+            'teamId' => $team2['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -412,16 +489,34 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testGetProject($data): array
+    public function testGetProject(): void
     {
-        $id = $data['projectId'] ?? '';
+        // Create a team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Get Project Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        // Create a project
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Project Test',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $id = $response['body']['$id'];
 
         /**
          * Test for SUCCESS
@@ -453,8 +548,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
     /**
@@ -542,7 +635,6 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -950,10 +1042,32 @@ class ProjectsConsoleClientTest extends Scope
         return ['projectId' => $projectId];
     }
 
-    /** @depends testCreateProject */
-    public function testUpdateProjectInvalidateSessions($data): array
+    public function testUpdateProjectInvalidateSessions(): void
     {
-        $id = $data['projectId'];
+        // Create a team for the test project
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Session Invalidation Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        // Create a test project
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Session Invalidation Test Project',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $id = $response['body']['$id'];
 
         // Check defaults
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
@@ -995,8 +1109,6 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['authInvalidateSessions']);
-
-        return $data;
     }
 
     /**
@@ -1456,9 +1568,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $sessionCookie = $response['headers']['set-cookie'];
         $sessionId2 = $response['body']['$id'];
-
-        // request was called in parallel and test failed
-        sleep(5);
 
         /**
          * List sessions
@@ -3357,15 +3466,15 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'] ?? '';
 
-        sleep(1);
+        $this->assertEventually(function () use ($id) {
+            $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), []);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(8, $response['body']['total']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(8, $response['body']['total']);
+        });
 
         /**
          * Test for FAILURE
@@ -4015,16 +4124,16 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(204, $project1['headers']['status-code']);
 
-        \sleep(3);
-
         // Ensure project 2 user is still there
-        $user2 = $this->client->call(Client::METHOD_GET, '/users/' . $user2['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $project2Id,
-            'x-appwrite-key' => $key2['body']['secret'],
-        ]);
+        $this->assertEventually(function () use ($user2, $project2Id, $key2) {
+            $response = $this->client->call(Client::METHOD_GET, '/users/' . $user2['body']['$id'], [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project2Id,
+                'x-appwrite-key' => $key2['body']['secret'],
+            ]);
 
-        $this->assertEquals(200, $user2['headers']['status-code']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+        });
 
         // Create another user in project 2 in case read hits stale cache
         $user3 = $this->client->call(Client::METHOD_POST, '/users', [
