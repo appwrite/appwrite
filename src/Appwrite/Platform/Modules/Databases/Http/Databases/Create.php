@@ -19,7 +19,9 @@ use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -28,6 +30,62 @@ class Create extends Action
     public static function getName(): string
     {
         return 'createDatabase';
+    }
+
+    protected function getDatabaseDSN(Document $project): string
+    {
+        $region = $project->getAttribute('region');
+        $databases = [];
+        $databaseKeys = [];
+        /**
+         * @var string|null $databaseOverride
+        */
+        $databaseOverride = '';
+        $dbScheme = '';
+        switch ($this->getDatabaseType()) {
+            case 'documentsdb':
+                $databases = Config::getParam('pools-documentsdb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+                break;
+            default:
+                // legacy/tablesdb case where projects having the location of the database
+                return $project->getAttribute('database');
+        }
+
+        if ($region !== 'default') {
+            $keys = explode(',', $databaseKeys);
+            $databases = array_filter($keys, function ($value) use ($region) {
+                return str_contains($value, $region);
+            });
+        }
+
+        $index = \array_search($databaseOverride, $databases);
+        if ($index !== false) {
+            $dsn = $databases[$index];
+        } else {
+            $dsn = $databases[array_rand($databases)];
+        }
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (\in_array($dsn, $sharedTables)) {
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . $dsn . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
+        }
+        try {
+            // for validation
+            new DSN($dsn);
+        } catch (\InvalidArgumentException) {
+            $dsn = $dbScheme.'://' . $dsn;
+        }
+        return $dsn;
     }
 
     public function __construct()
@@ -62,16 +120,17 @@ class Create extends Action
                     )
                 )
             ])
-            ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $name, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $name, bool $enabled, Document $project, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -82,6 +141,7 @@ class Create extends Action
                 'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
                 'type' => $this->getDatabaseType(),
+                'database' => $this->getDatabaseDSN($project)
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);

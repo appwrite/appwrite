@@ -1301,6 +1301,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function testColumnRowWidthLimit()
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB does not have a row collection attribute limit');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3242,6 +3247,11 @@ class DatabasesCustomServerTest extends Scope
      */
     public function testColumnUpdateStringResize(array $data)
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB does not have an attribute resize limit');
+        }
+
         $key = 'string';
         $databaseId = $data['databaseId'];
         $tableId = $data['tableId'];
@@ -3613,6 +3623,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function createRelationshipTables(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         // Prepare the database with tables and relationships
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
@@ -3673,6 +3688,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function testColumnRenameRelationshipOneToMany()
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = 'database1';
         $table1Id = 'table1';
         $table2Id = 'table2';
@@ -3787,6 +3807,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function testColumnRenameRelationshipOneToOne()
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = 'database1';
         $table1Id = 'table1';
         $table2Id = 'table2';
@@ -3901,6 +3926,10 @@ class DatabasesCustomServerTest extends Scope
 
     public function testColumnRenameRelationshipManyToOne()
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = 'database1';
         $table1Id = 'table1';
         $table2Id = 'table2';
@@ -4019,6 +4048,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function testColumnRenameRelationshipManyToMany()
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = 'database1';
         $table1Id = 'table1';
         $table2Id = 'table2';
@@ -6135,6 +6169,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function testSpatialBulkOperations(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
@@ -6544,6 +6583,11 @@ class DatabasesCustomServerTest extends Scope
 
     public function testSpatialBulkOperationsWithLineStrings(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',

@@ -68,21 +68,22 @@ class Create extends Action
                     replaceWith: 'tablesDB.createIndex',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('key', null, new Key(), 'Index Key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('key', null, fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
             ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL]), 'Index type.')
-            ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
+            ->param('attributes', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.', false, ['dbForProject'])
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -102,12 +103,13 @@ class Create extends Action
             Query::equal('databaseInternalId', [$db->getSequence()])
         ], 61);
 
-        $limit = $dbForProject->getLimitForIndexes();
+        $dbForDatabases = $getDatabasesDB($db);
+
+        $limit = $dbForDatabases->getLimitForIndexes();
 
         if ($count >= $limit) {
             throw new Exception($this->getLimitException(), 'Index limit exceeded');
         }
-
         // Convert Document array to array of attribute metadata
         $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
 
@@ -144,35 +146,37 @@ class Create extends Action
         ];
 
         $contextType = $this->getParentContext();
-        foreach ($attributes as $i => $attribute) {
-            // find attribute metadata in collection document
-            $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
+        if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+            foreach ($attributes as $i => $attribute) {
+                // find attribute metadata in collection document
+                $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
-            if ($attributeIndex === false) {
-                throw new Exception($this->getParentUnknownException(), "Unknown $contextType: " . $attribute . ". Verify the $contextType name or create the $contextType.");
-            }
+                if ($attributeIndex === false) {
+                    throw new Exception($this->getParentUnknownException(), "Unknown $contextType: " . $attribute . ". Verify the $contextType name or create the $contextType.");
+                }
 
-            $attributeStatus = $oldAttributes[$attributeIndex]['status'];
-            $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
+                $attributeStatus = $oldAttributes[$attributeIndex]['status'];
+                $attributeType = $oldAttributes[$attributeIndex]['type'];
+                $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
-            if ($attributeType === Database::VAR_RELATIONSHIP) {
-                throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
-            }
+                if ($attributeType === Database::VAR_RELATIONSHIP) {
+                    throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
+                }
 
-            // ensure attribute is available
-            if ($attributeStatus !== 'available') {
-                $contextType = ucfirst($contextType);
-                throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
-            }
+                // ensure attribute is available
+                if ($attributeStatus !== 'available') {
+                    $contextType = ucfirst($contextType);
+                    throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
+                }
 
-            if (empty($lengths[$i])) {
-                $lengths[$i] = null;
-            }
+                if (empty($lengths[$i])) {
+                    $lengths[$i] = null;
+                }
 
-            if ($attributeArray === true) {
-                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
-                $orders[$i] = null;
+                if ($attributeArray === true) {
+                    $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                    $orders[$i] = null;
+                }
             }
         }
 
@@ -190,21 +194,28 @@ class Create extends Action
             'orders' => $orders,
         ]);
 
-        $maxIndexLength = $dbForProject->getAdapter()->getMaxIndexLength();
-        $internalIndexesKeys = $dbForProject->getAdapter()->getInternalIndexesKeys();
-        $supportForIndexArray = $dbForProject->getAdapter()->getSupportForIndexArray();
-        $supportForSpatialAttributes = $dbForProject->getAdapter()->getSupportForSpatialAttributes();
-        $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
-        $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
+        $maxIndexLength = $dbForDatabases->getAdapter()->getMaxIndexLength();
+        $internalIndexesKeys = $dbForDatabases->getAdapter()->getInternalIndexesKeys();
+        $supportForIndexArray = $dbForDatabases->getAdapter()->getSupportForIndexArray();
+        $supportForSpatialAttributes = $dbForDatabases->getAdapter()->getSupportForSpatialAttributes();
+        $supportForSpatialIndexNull = $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull();
+        $supportForSpatialIndexOrder = $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder();
+        $supportForAttributes = $dbForDatabases->getAdapter()->getSupportForAttributes();
+        $supportForMultipleFulltextIndexes = $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes();
+        $supportForIdenticalIndexes = $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes();
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
+            $collection->getAttribute('indexes'),
             $maxIndexLength,
             $internalIndexesKeys,
             $supportForIndexArray,
             $supportForSpatialAttributes,
             $supportForSpatialIndexNull,
-            $supportForSpatialIndexOrder
+            $supportForSpatialIndexOrder,
+            $supportForAttributes,
+            $supportForMultipleFulltextIndexes,
+            $supportForIdenticalIndexes
         );
 
         if (!$validator->isValid($index)) {

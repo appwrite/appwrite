@@ -47,6 +47,9 @@ class V23 extends Migration
         // so first creating the attribute then bulk updating the attribute
         $this->createAttributeFromCollection($this->dbForProject, 'databases', 'type');
         $this->dbForProject->updateDocuments('databases', new Document(['type' => 'legacy']));
-    }
 
+        // database dsn
+        $this->createAttributeFromCollection($this->dbForProject, 'databases', 'database');
+        $this->dbForProject->updateDocuments('databases', new Document(['database' => $this->project->getAttribute('database')]));
+    }
 }

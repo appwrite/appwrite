@@ -359,7 +359,6 @@ App::setResource('user', function (string $mode, Document $project, Document $co
             }
         }
     }
-
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
 
@@ -458,6 +457,126 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
 
     return $database;
 }, ['pools', 'cache']);
+
+App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, StatsUsage $queueForStatsUsage) {
+
+    return function (Document $database) use ($pools, $cache, $project, $request, $queueForStatsUsage): Database {
+        $databaseType = $database->getAttribute('database', '');
+        try {
+            $databaseDSN = new DSN($databaseType);
+        } catch (\InvalidArgumentException) {
+            // for old databases migrated through patch script
+            // databaseType determines the adapter
+            $databaseDSN = new DSN('mysql://'.$databaseType);
+        }
+        try {
+            $dsn = new DSN($project->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // TODO: Temporary until all projects are using shared tables
+            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        }
+
+        $pool = $pools->get($databaseDSN->getHost());
+
+        $adapter = new DatabasePool($pool);
+        $database = new Database($adapter, $cache);
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        $database
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId())
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        if (\in_array($dsn->getHost(), $sharedTables)) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant((int)$project->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence());
+        }
+        $timeout = \intval($request->getHeader('x-appwrite-timeout'));
+        if (!empty($timeout) && App::isDevelopment()) {
+            $database->setTimeout($timeout);
+        }
+
+        // Register database event listeners for usage stats collection
+        $database
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+                $value = 1;
+
+                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
+                    $parts = explode('_', $document->getCollection());
+                    $databaseInternalId   = $parts[1] ?? 0;
+                    $collectionInternalId = $parts[3] ?? 0;
+                    $queueForStatsUsage
+                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                }
+            })
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+                $value = -1;
+
+                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
+                    $parts = explode('_', $document->getCollection());
+                    $databaseInternalId   = $parts[1] ?? 0;
+                    $collectionInternalId = $parts[3] ?? 0;
+                    $queueForStatsUsage
+                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                }
+            })
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+                $value = $document->getAttribute('modified', 0);
+
+                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
+                    $parts = explode('_', $document->getCollection());
+                    $databaseInternalId   = $parts[1] ?? 0;
+                    $collectionInternalId = $parts[3] ?? 0;
+                    $queueForStatsUsage
+                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                }
+            })
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+                $value = -1 * $document->getAttribute('modified', 0);
+
+                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
+                    $parts = explode('_', $document->getCollection());
+                    $databaseInternalId   = $parts[1] ?? 0;
+                    $collectionInternalId = $parts[3] ?? 0;
+                    $queueForStatsUsage
+                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                }
+            })
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+                $value = $document->getAttribute('created', 0);
+
+                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
+                    $parts = explode('_', $document->getCollection());
+                    $databaseInternalId   = $parts[1] ?? 0;
+                    $collectionInternalId = $parts[3] ?? 0;
+                    $queueForStatsUsage
+                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                }
+            });
+
+        return $database;
+    };
+
+}, ['pools','cache','project','request','queueForStatsUsage']);
+
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = [];
@@ -928,6 +1047,8 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         }
     }
 
+    // if teamInternalId is empty, return an empty document
+
     if (empty($teamInternalId)) {
         return new Document([]);
     }
@@ -1102,6 +1223,6 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
 
-App::setResource('transactionState', function (Database $dbForProject) {
-    return new TransactionState($dbForProject);
-}, ['dbForProject']);
+App::setResource('transactionState', function (Database $dbForProject, callable $getDatabasesDB) {
+    return new TransactionState($dbForProject, $getDatabasesDB);
+}, ['dbForProject', 'getDatabasesDB']);

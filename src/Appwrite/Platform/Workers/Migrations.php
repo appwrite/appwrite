@@ -13,6 +13,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\DSN\DSN;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
@@ -37,6 +38,19 @@ class Migrations extends Action
     protected Device $deviceForImports;
 
     protected Document $project;
+
+    protected Document $sourceProject;
+
+    /**
+     * @var callable(Document $databaseDSN): Database
+     */
+    protected mixed $getDatabasesDB;
+
+    /**
+     * @var callable(Document $databaseDSN): Database
+     */
+    protected mixed $getProjectDB;
+
 
     /**
      * Cached for performance.
@@ -66,19 +80,23 @@ class Migrations extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('getDatabasesDB')
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
+            ->inject('getProjectDB')
             ->callback($this->action(...));
     }
 
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $logError, Realtime $queueForRealtime, Device $deviceForImports): void
+    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $getDatabasesDB, callable $logError, Realtime $queueForRealtime, Device $deviceForImports, callable $getProjectDB): void
     {
         $payload = $message->getPayload() ?? [];
         $this->deviceForImports = $deviceForImports;
+        $this->getDatabasesDB = $getDatabasesDB;
+        $this->getProjectDB = $getProjectDB;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -115,7 +133,12 @@ class Migrations extends Action
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
-
+        if ($credentials['projectId']) {
+            $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
+            $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+        }
+        $getDatabasesDB = fn (Document $database): Database =>
+                $this->getDatabasesDBForProject($database);
         $migrationSource = match ($source) {
             Firebase::getName() => new Firebase(
                 json_decode($credentials['serviceAccount'], true),
@@ -142,6 +165,9 @@ class Migrations extends Action
                 $credentials['projectId'],
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
+                $getDatabasesDB,
+                SourceAppwrite::SOURCE_DATABASE,
+                $projectDB,
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -163,6 +189,7 @@ class Migrations extends Action
     protected function processDestination(Document $migration, string $apiKey): Destination
     {
         $destination = $migration->getAttribute('destination');
+        $getDatabaseDSN = fn (string $databaseType): string => $this->getDatabaseDSN($databaseType);
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
@@ -170,6 +197,8 @@ class Migrations extends Action
                 'http://appwrite/v1',
                 $apiKey,
                 $this->dbForProject,
+                $this->getDatabasesDB,
+                $getDatabaseDSN,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
             default => throw new \Exception('Invalid destination type'),
@@ -415,5 +444,69 @@ class Migrations extends Action
                 $source?->success();
             }
         }
+    }
+
+    protected function getDatabasesDBForProject(Document $database)
+    {
+        if ($this->sourceProject) {
+            return call_user_func($this->getDatabasesDB, $database, $this->sourceProject);
+        }
+        return call_user_func($this->getDatabasesDB, $database);
+    }
+
+    protected function getDatabaseDSN(string $databaseType): string
+    {
+        $databases = [];
+        $databaseKeys = [];
+        /**
+         * @var string|null $databaseOverride
+        */
+        $databaseOverride = '';
+        $dbScheme = '';
+        $region = $this->project->getAttribute('region');
+        switch ($databaseType) {
+            case 'documentsdb':
+                $databases = Config::getParam('pools-documentsdb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+                break;
+            default:
+                // legacy/tablesdb case where projects having the location of the database
+                return $this->project->getAttribute('database');
+        }
+
+        if ($region !== 'default') {
+            $keys = explode(',', $databaseKeys);
+            $databases = array_filter($keys, function ($value) use ($region) {
+                return str_contains($value, $region);
+            });
+        }
+
+        $index = \array_search($databaseOverride, $databases);
+        if ($index !== false) {
+            $dsn = $databases[$index];
+        } else {
+            $dsn = $databases[array_rand($databases)];
+        }
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        if (\in_array($dsn, $sharedTables)) {
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $dsn = $schema . '://' . $dsn . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $dsn .= '&namespace=' . $namespace;
+            }
+        }
+        try {
+            // for validation
+            new DSN($dsn);
+        } catch (\InvalidArgumentException) {
+            $dsn = $dbScheme.'://' . $dsn;
+        }
+        return $dsn;
     }
 }

@@ -66,7 +66,7 @@ class Create extends Action
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
-            ->param('resourceId', '', new UID(), 'ID of parent resource.')
+            ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of parent resource.', false, ['dbForProject'])
             ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.')
             ->inject('response')
             ->inject('project')

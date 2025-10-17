@@ -52,6 +52,7 @@ class Update extends TransactionsUpdate
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('transactionState')
             ->inject('queueForDeletes')
