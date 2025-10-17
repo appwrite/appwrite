@@ -243,7 +243,7 @@ $register->set('pools', function () {
                         ]);
                     });
                 },
-                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $key) {
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
                     try {
                         $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
                         @$mongo->connect();
@@ -319,7 +319,7 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
-    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
     $dsn = '';
 
     switch ($dbAdapter) {
