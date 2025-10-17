@@ -762,6 +762,11 @@ return [
         'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UNIQUE_VIOLATION => [
+        'name' => Exception::DOCUMENT_UNIQUE_VIOLATION,
+        'description' => 'Document unique constraint violation. Please try again with different data.',
+        'code' => 409,
+    ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
         'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
         'description' => 'Remote document is newer than local.',
@@ -797,6 +802,11 @@ return [
     Exception::ROW_ALREADY_EXISTS => [
         'name' => Exception::ROW_ALREADY_EXISTS,
         'description' => 'Row with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::ROW_UNIQUE_VIOLATION => [
+        'name' => Exception::ROW_UNIQUE_VIOLATION,
+        'description' => 'Row unique constraint violation. Please try again with different data.',
         'code' => 409,
     ],
     Exception::ROW_UPDATE_CONFLICT => [

@@ -128,6 +128,16 @@ abstract class Action extends AppwriteAction
     }
 
     /**
+     * Get the appropriate unique violation exception.
+     */
+    protected function getUniqueException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_UNIQUE_VIOLATION
+            : Exception::ROW_UNIQUE_VIOLATION;
+    }
+
+    /**
      * Get the appropriate already exists exception.
      */
     protected function getDuplicateException(): string

@@ -20,6 +20,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Unique as UniqueException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -440,6 +441,8 @@ class Create extends Action
                     $documents,
                 )
             );
+        } catch (UniqueException) {
+            throw new Exception($this->getUniqueException());
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (NotFoundException) {
