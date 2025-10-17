@@ -126,6 +126,7 @@ class XList extends Base
         }
 
         $this->applySelectQueries($request, $response, Response::MODEL_DEPLOYMENT);
+
         $response->dynamic(new Document([
             'deployments' => $results,
             'total' => $total,

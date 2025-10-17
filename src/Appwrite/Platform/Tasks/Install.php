@@ -231,6 +231,24 @@ class Install extends Action
             Console::exit(1);
         }
 
+        // Copy MongoDB initialization files for replica set setup
+        if ($database === 'mongodb') {
+            $mongoInitScript = __DIR__ . '/../../../../mongo-init.js';
+            $mongoEntrypoint = __DIR__ . '/../../../../mongo-entrypoint.sh';
+
+            if (file_exists($mongoInitScript)) {
+                if (!copy($mongoInitScript, $this->path . '/mongo-init.js')) {
+                    Console::warning('Failed to copy mongo-init.js');
+                }
+            }
+
+            if (file_exists($mongoEntrypoint)) {
+                if (!copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh')) {
+                    Console::warning('Failed to copy mongo-entrypoint.sh');
+                }
+            }
+        }
+
         $env = '';
         $stdout = '';
         $stderr = '';

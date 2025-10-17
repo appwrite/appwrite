@@ -32,7 +32,8 @@ class Update extends Action
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
+            ->setHttpPath('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship/:key')
+            ->httpAlias('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
             ->desc('Update relationship attribute')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', 'collections.write')

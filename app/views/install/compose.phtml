@@ -778,7 +778,6 @@ $dbService = $this->getParam('database');
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_ADAPTER
-      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -961,15 +960,16 @@ mariadb:
 <?php elseif ($dbService === 'mongodb'): ?>
 
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0.10
     container_name: appwrite-mongodb
     <<: *x-logging
     networks:
       - appwrite
     volumes:
       - appwrite-mongodb:/data/db
-      # we need to run the mongo-init.js file to create the user and the database
+      - appwrite-mongodb-keyfile:/data/keyfile
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
     ports:
       - "27017:27017"
     environment:
@@ -978,10 +978,20 @@ mariadb:
       - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
       - MONGO_INITDB_USERNAME=${_APP_DB_USER}
       - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
     healthcheck:
-      test: ["CMD", "mongosh", "--username", "root", "--password", "${_APP_DB_ROOT_PASS}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
-      interval: 1s
-      timeout: 5s
+      test: |
+        bash -c "
+          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
+            exit 0
+          else
+            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]})
+            \" 2>/dev/null || exit 1
+          fi
+        "
+      interval: 10s
+      timeout: 10s
       retries: 10
       start_period: 30s
 
@@ -1024,6 +1034,7 @@ volumes:
   appwrite-mariadb:
 <?php elseif ($dbService === 'mongodb'): ?>
   appwrite-mongodb:
+  appwrite-mongodb-keyfile:
 <?php endif; ?>
   appwrite-redis:
   appwrite-cache:
