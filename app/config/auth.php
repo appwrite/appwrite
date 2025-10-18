@@ -52,4 +52,11 @@ return [
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreatePhoneToken',
         'enabled' => true,
     ],
+    'cli' => [
+        'name' => 'CLI',
+        'key' => 'cli',
+        'icon' => '/images/users/cli.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateCLIToken',
+        'enabled' => true,
+    ],
 ];

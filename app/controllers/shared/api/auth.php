@@ -100,6 +100,12 @@ App::init()
                 }
                 break;
 
+            case 'cli':
+                if (($auths[Config::getParam('auth')['cli']['key']] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'CLI authentication is disabled for this project');
+                }
+                break;
+
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
         }

@@ -111,6 +111,7 @@ const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
 const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
 const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
 const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+const TOKEN_EXPIRATION_CLI = 60 * 15;            /* 15 minutes */
 
 /**
  * Token Lengths.
@@ -133,6 +134,7 @@ const TOKEN_TYPE_PHONE = 6;
 const TOKEN_TYPE_OAUTH2 = 7;
 const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
+const TOKEN_TYPE_CLI = 10;
 
 /**
  * Session Providers.
@@ -144,6 +146,7 @@ const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
+const SESSION_PROVIDER_CLI = 'cli';
 
 /**
  * Activity associated with user or the app.

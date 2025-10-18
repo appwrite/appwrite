@@ -200,6 +200,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $factor = (match ($verifiedToken->getAttribute('type')) {
         TOKEN_TYPE_MAGIC_URL,
         TOKEN_TYPE_OAUTH2,
+        TOKEN_TYPE_CLI,
         TOKEN_TYPE_EMAIL => Type::EMAIL,
         TOKEN_TYPE_PHONE => Type::PHONE,
         TOKEN_TYPE_GENERIC => 'token',
@@ -2782,6 +2783,145 @@ App::post('/v1/account/tokens/phone')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN);
+    });
+
+App::post('/v1/account/tokens/cli')
+    ->desc('Create CLI token')
+    ->groups(['api', 'account', 'auth'])
+    ->label('scope', 'sessions.write')
+    ->label('auth.type', 'cli')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'tokens',
+        name: 'createCLIToken',
+        description: '/docs/references/account/create-token-cli.md',
+        auth: [AuthType::SESSION, AuthType::JWT],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_TOKEN,
+            )
+        ],
+        contentType: ContentType::JSON,
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{userId}')
+    ->param('publicKey', '', new Text(2048), 'Public key associated with the CLI token. Used for cryptographic authentication.', false)
+    ->param('name', '', new Text(256), 'A descriptive name for the CLI token to help identify its purpose or usage.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('proofForCode')
+    ->action(function (string $publicKey, string $name, Request $request, Response $response, Document $user, Database $dbForProject, ProofsCode $proofForCode) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        $secret = strtoupper(substr($proofForCode->generate(), 0, 6));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CLI));
+
+        $token = new Document([
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getSequence(),
+            'type' => TOKEN_TYPE_CLI,
+            'secret' => $proofForCode->hash($secret),
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+            'publicKey' => $publicKey,
+            'name' => $name,
+        ]);
+
+        Authorization::setRole(Role::user($user->getId())->toString());
+
+        try {
+            $token = $dbForProject->createDocument('tokens', $token
+                ->setAttribute('$permissions', [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TOKEN_ALREADY_EXISTS);
+        }
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $token->setAttribute('secret', $secret);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->json([
+                '$id' => $token->getId(),
+                '$createdAt' => DateTime::formatTz($token->getAttribute('$createdAt')),
+                'userId' => $token->getAttribute('userId'),
+                'secret' => $secret,
+                'expire' => DateTime::formatTz($token->getAttribute('expire')),
+            ]);
+    });
+
+App::post('/v1/account/sessions/cli')
+    ->alias('/v1/account/sessions')
+    ->desc('Create CLI session')
+    ->groups(['api', 'account', 'auth', 'session'])
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
+    ->label('scope', 'sessions.write')
+    ->label('auth.type', 'cli')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk', new Method(
+        namespace: 'account',
+        group: 'sessions',
+        name: 'createCLISession',
+        description: '/docs/references/account/create-session-cli.md',
+        auth: [],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_SESSION,
+            )
+        ],
+        contentType: ContentType::JSON
+    ))
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('secret', '', new Text(256), 'Secret of a CLI token generated by login methods. For example, the `createCLIToken` method.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('queueForEvents')
+    ->inject('queueForMails')
+    ->inject('hooks')
+    ->inject('store')
+    ->inject('proofForPassword')
+    ->inject('proofForToken')
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+        /** @var Utopia\Database\Document $user */
+        $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+
+        if ($userFromRequest->isEmpty()) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret, $proofForToken);
+        if (!$verifiedToken) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $user->setAttributes($userFromRequest->getArrayCopy());
+
+        // work in progress
+        // idea is to create a session, create a JWT and encrypt it using the the public and send it to the client
+        // for providerUid we will use token name, for eg. cli_chiragaggarwal@Chirags-MacBook-Pro.local_1760805986
     });
 
 App::post('/v1/account/jwts')
