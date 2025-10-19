@@ -983,9 +983,9 @@ App::setResource('store', function (): Store {
 App::setResource('proofForPassword', function (): Password {
     $hash = new Argon2();
     $hash
-        ->setMemoryCost(7168)
-        ->setTimeCost(5)
-        ->setThreads(1);
+        ->setMemoryCost(2048)
+        ->setTimeCost(4)
+        ->setThreads(3);
 
     $password = new Password();
     $password
