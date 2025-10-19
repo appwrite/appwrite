@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2fbd76a832756d8b21adf27e5b0a7cc7",
+    "content-hash": "16bb025bc719fc989a11800ec450fd5b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3900,16 +3900,16 @@
         },
         {
             "name": "utopia-php/emails",
-            "version": "0.4.0",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/emails.git",
-                "reference": "48d772c854a176f063e495d0179a1369087fd4f0"
+                "reference": "aebfd79cd8c39f230fb9a238ca12a4f7a1f7e0cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/emails/zipball/48d772c854a176f063e495d0179a1369087fd4f0",
-                "reference": "48d772c854a176f063e495d0179a1369087fd4f0",
+                "url": "https://api.github.com/repos/utopia-php/emails/zipball/aebfd79cd8c39f230fb9a238ca12a4f7a1f7e0cd",
+                "reference": "aebfd79cd8c39f230fb9a238ca12a4f7a1f7e0cd",
                 "shasum": ""
             },
             "require": {
@@ -3954,9 +3954,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/emails/issues",
-                "source": "https://github.com/utopia-php/emails/tree/0.4.0"
+                "source": "https://github.com/utopia-php/emails/tree/0.5.0"
             },
-            "time": "2025-10-19T20:31:42+00:00"
+            "time": "2025-10-19T20:51:56+00:00"
         },
         {
             "name": "utopia-php/fetch",
