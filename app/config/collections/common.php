@@ -520,28 +520,6 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('publicKey'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('name'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 256,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
             ]
         ],
         'indexes' => [
