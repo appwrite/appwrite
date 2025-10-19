@@ -2813,7 +2813,8 @@ App::post('/v1/account/tokens/cli')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('proofForCode')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, ProofsCode $proofForCode) {
+    ->inject('queueForEvents')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, ProofsCode $proofForCode, Event $queueForEvents) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -2842,7 +2843,10 @@ App::post('/v1/account/tokens/cli')
             ]));
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
-        $token->setAttribute('secret', $secret);
+        $token->setAttribute('secret', $secret); // return secret in plain text to the client
+
+        $queueForEvents
+            ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
