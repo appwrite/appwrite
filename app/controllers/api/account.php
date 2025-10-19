@@ -1978,9 +1978,8 @@ App::post('/v1/account/tokens/magic-url')
             }
 
             if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
-                $disposableEmails = Config::getParam('disposableEmails', []);
-                $emailDomain = substr(strrchr($email, "@"), 1);
-                if (isset($disposableEmails[$emailDomain])) {
+                $emailNotDisposableValidator = new EmailNotDisposable();
+                if (!$emailNotDisposableValidator->isValid($email)) {
                     throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
                 }
             }
@@ -2237,9 +2236,8 @@ App::post('/v1/account/tokens/email')
             }
 
             if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
-                $disposableEmails = Config::getParam('disposableEmails', []);
-                $emailDomain = substr(strrchr($email, "@"), 1);
-                if (isset($disposableEmails[$emailDomain])) {
+                $emailNotDisposableValidator = new EmailNotDisposable();
+                if (!$emailNotDisposableValidator->isValid($email)) {
                     throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
                 }
             }
