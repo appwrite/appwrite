@@ -21,6 +21,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Utopia\Emails\Validator\Email;
+use Utopia\Emails\Validator\EmailNotDisposable;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -371,9 +372,8 @@ App::post('/v1/account')
         }
 
         if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
-            $disposableEmails = Config::getParam('disposableEmails', []);
-            $emailDomain = substr(strrchr($email, "@"), 1);
-            if (isset($disposableEmails[$emailDomain])) {
+            $emailNotDisposableValidator = new EmailNotDisposable();
+            if (!$emailNotDisposableValidator->isValid($email)) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
         }
@@ -3079,9 +3079,8 @@ App::patch('/v1/account/email')
         }
 
         if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false)) {
-            $disposableEmails = Config::getParam('disposableEmails', []);
-            $emailDomain = substr(strrchr($email, "@"), 1);
-            if (isset($disposableEmails[$emailDomain])) {
+            $emailNotDisposableValidator = new EmailNotDisposable();
+            if (!$emailNotDisposableValidator->isValid($email)) {
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
         }
