@@ -1,4 +1,4 @@
-> We just announced Timestamp Overrides for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-timestamp-overrides)
+> We just announced Transactions API for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-transactions-api)
 
 > Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 
