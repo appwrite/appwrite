@@ -2807,13 +2807,13 @@ App::post('/v1/account/tokens/cli')
         contentType: ContentType::JSON,
     ))
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},userId:{userId}')
+    ->label('abuse-key', 'url:{url},ip:{ip}')
     ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('proofForCode')
-    ->action(function (string $publicKey, string $name, Request $request, Response $response, Document $user, Database $dbForProject, ProofsCode $proofForCode) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, ProofsCode $proofForCode) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
