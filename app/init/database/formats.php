@@ -1,9 +1,9 @@
 <?php
 
-use Utopia\Emails\Validator\Email;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
+use Utopia\Emails\Validator\Email;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
 use Utopia\Validator\URL;

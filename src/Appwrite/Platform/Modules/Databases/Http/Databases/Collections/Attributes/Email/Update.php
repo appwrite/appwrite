@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Email;
 
 use Appwrite\Event\Event;
-use Utopia\Emails\Validator\Email;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -14,6 +13,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Validator\Email;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
