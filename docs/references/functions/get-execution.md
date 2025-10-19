@@ -1,4 +1,4 @@
-Get a function execution log by its unique ID.
+mGet a function execution log by its unique ID.
 
 ## Session and Permission Requirements
 
