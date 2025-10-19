@@ -10,7 +10,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Email;
+use Utopia\Emails\Validator\Email;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\SDK\AuthType;

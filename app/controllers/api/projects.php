@@ -9,7 +9,7 @@ use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Platform;
-use Appwrite\Network\Validator\Email;
+use Utopia\Emails\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;

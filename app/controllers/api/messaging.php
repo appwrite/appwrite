@@ -8,7 +8,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
-use Appwrite\Network\Validator\Email;
+use Utopia\Emails\Validator\Email;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\SDK\AuthType;

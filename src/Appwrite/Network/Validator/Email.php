@@ -2,34 +2,23 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Validator;
+use Utopia\Emails\Validator\Email as UtopiaEmailValidator;
 
 /**
  * Email
  *
  * Validate that an variable is a valid email address
+ * Extends the new Utopia Emails validator to maintain backward compatibility
  *
- * @package Utopia\Validator
+ * @package Appwrite\Network\Validator
  */
-class Email extends Validator
+class Email extends UtopiaEmailValidator
 {
     protected bool $allowEmpty;
 
     public function __construct(bool $allowEmpty = false)
     {
         $this->allowEmpty = $allowEmpty;
-    }
-
-    /**
-     * Get Description
-     *
-     * Returns validator description
-     *
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return 'Value must be a valid email address';
     }
 
     /**
@@ -46,34 +35,6 @@ class Email extends Validator
             return true;
         }
 
-        if (!\filter_var($value, FILTER_VALIDATE_EMAIL)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Is array
-     *
-     * Function will return true if object is array.
-     *
-     * @return bool
-     */
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return self::TYPE_STRING;
+        return parent::isValid($value);
     }
 }

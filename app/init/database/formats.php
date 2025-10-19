@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Network\Validator\Email;
+use Utopia\Emails\Validator\Email;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;

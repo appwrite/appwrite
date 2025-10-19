@@ -273,7 +273,7 @@ class Mapper
             case 'Appwrite\Event\Validator\Event':
             case 'Appwrite\Event\Validator\FunctionEvent':
             case 'Appwrite\Network\Validator\CNAME':
-            case 'Appwrite\Network\Validator\Email':
+            case 'Utopia\Emails\Validator\Email':
             case 'Appwrite\Network\Validator\Redirect':
             case 'Appwrite\Network\Validator\DNS':
             case 'Appwrite\Network\Validator\Origin':
