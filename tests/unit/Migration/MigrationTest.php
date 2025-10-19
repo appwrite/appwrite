@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use Utopia\Database\Document;
 
-abstract class MigrationTest extends TestCase
+class MigrationTest extends TestCase
 {
     /**
      * @var Migration

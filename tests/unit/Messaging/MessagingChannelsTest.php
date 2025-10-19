@@ -59,7 +59,7 @@ class MessagingChannelsTest extends TestCase
                             'confirm' => true,
                             'roles' => [
                                 empty($index % 2)
-                                    ? Auth::USER_ROLE_ADMIN
+                                    ? USER_ROLE_ADMIN
                                     : 'member',
                             ]
                         ]
@@ -294,7 +294,7 @@ class MessagingChannelsTest extends TestCase
             }
 
             $role = empty($index % 2)
-                ? Auth::USER_ROLE_ADMIN
+                ? USER_ROLE_ADMIN
                 : 'member';
 
             $permissions = [

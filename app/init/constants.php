@@ -92,6 +92,72 @@ const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
+// User Roles
+const USER_ROLE_ANY = 'any';
+const USER_ROLE_GUESTS = 'guests';
+const USER_ROLE_USERS = 'users';
+const USER_ROLE_ADMIN = 'admin';
+const USER_ROLE_DEVELOPER = 'developer';
+const USER_ROLE_OWNER = 'owner';
+const USER_ROLE_APPS = 'apps';
+const USER_ROLE_SYSTEM = 'system';
+
+/**
+ * Token Expiration times.
+ */
+const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
+const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
+const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
+const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
+const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+
+/**
+ * Token Lengths.
+ */
+const TOKEN_LENGTH_MAGIC_URL = 64;
+const TOKEN_LENGTH_VERIFICATION = 256;
+const TOKEN_LENGTH_RECOVERY = 256;
+const TOKEN_LENGTH_OAUTH2 = 64;
+const TOKEN_LENGTH_SESSION = 256;
+
+/**
+ * Token Types.
+ */
+const TOKEN_TYPE_LOGIN = 1; // Deprecated
+const TOKEN_TYPE_VERIFICATION = 2;
+const TOKEN_TYPE_RECOVERY = 3;
+const TOKEN_TYPE_INVITE = 4;
+const TOKEN_TYPE_MAGIC_URL = 5;
+const TOKEN_TYPE_PHONE = 6;
+const TOKEN_TYPE_OAUTH2 = 7;
+const TOKEN_TYPE_GENERIC = 8;
+const TOKEN_TYPE_EMAIL = 9; // OTP
+
+/**
+ * Session Providers.
+ */
+const SESSION_PROVIDER_EMAIL = 'email';
+const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+const SESSION_PROVIDER_PHONE = 'phone';
+const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_TOKEN = 'token';
+const SESSION_PROVIDER_SERVER = 'server';
+
+/**
+ * Activity associated with user or the app.
+ */
+const ACTIVITY_TYPE_APP = 'app';
+const ACTIVITY_TYPE_USER = 'user';
+const ACTIVITY_TYPE_GUEST = 'guest';
+
+/**
+ * MFA
+ */
+const MFA_RECENT_DURATION = 1800; // 30 mins
+
+
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
