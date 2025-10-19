@@ -22,8 +22,8 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Text;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Text;
 
 class XList extends Action
 {

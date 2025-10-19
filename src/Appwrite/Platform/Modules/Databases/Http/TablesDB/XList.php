@@ -10,8 +10,8 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Swoole\Response as SwooleResponse;
-use Utopia\Validator\Text;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Text;
 
 class XList extends DatabaseXList
 {
