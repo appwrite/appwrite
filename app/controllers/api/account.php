@@ -2834,16 +2834,12 @@ App::post('/v1/account/tokens/cli')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        try {
-            $token = $dbForProject->createDocument('tokens', $token
-                ->setAttribute('$permissions', [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ]));
-        } catch (Duplicate) {
-            throw new Exception(Exception::USER_TOKEN_ALREADY_EXISTS);
-        }
+        $token = $dbForProject->createDocument('tokens', $token
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
         $token->setAttribute('secret', $secret);

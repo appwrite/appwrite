@@ -70,7 +70,6 @@ class Exception extends \Exception
     public const string USER_ALREADY_EXISTS = 'user_already_exists';
     public const string USER_BLOCKED = 'user_blocked';
     public const string USER_INVALID_TOKEN = 'user_invalid_token';
-    public const string USER_TOKEN_ALREADY_EXISTS = 'user_token_already_exists';
     public const string USER_PASSWORD_RESET_REQUIRED = 'user_password_reset_required';
     public const string USER_EMAIL_NOT_WHITELISTED = 'user_email_not_whitelisted';
     public const string USER_IP_NOT_WHITELISTED = 'user_ip_not_whitelisted';

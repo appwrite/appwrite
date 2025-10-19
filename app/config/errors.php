@@ -171,11 +171,6 @@ return [
         'description' => 'Invalid token passed in the request.',
         'code' => 401,
     ],
-    Exception::USER_TOKEN_ALREADY_EXISTS => [
-        'name' => Exception::USER_TOKEN_ALREADY_EXISTS,
-        'description' => 'A token with the same ID already exists.',
-        'code' => 409,
-    ],
     Exception::USER_PASSWORD_RESET_REQUIRED => [
         'name' => Exception::USER_PASSWORD_RESET_REQUIRED,
         'description' => 'The current user requires a password reset.',
