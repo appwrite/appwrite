@@ -1,6 +1,5 @@
 <?php
 
-use Utopia\Auth\Hashes\Argon2;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
@@ -173,7 +172,7 @@ return [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => (new Argon2())->getName(),
+                'default' => 'argon2',
                 'array' => false,
                 'filters' => [],
             ],
@@ -184,7 +183,7 @@ return [
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => (new Argon2())->getOptions(),
+                'default' => ['type' => 'argon2', 'memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3],
                 'array' => false,
                 'filters' => ['json'],
             ],
