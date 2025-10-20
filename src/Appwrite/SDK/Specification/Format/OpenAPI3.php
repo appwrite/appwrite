@@ -240,6 +240,18 @@ class OpenAPI3 extends Format
                             'image/bmp',
                         ]) ? 'Image' : 'File',
                     ];
+
+                    if ($response->getCode() !== 204) {
+                        $temp['responses'][(string)$response->getCode() ?? '500']['content'] = [
+                            $produces => [
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'binary',
+                                ],
+                            ],
+                        ];
+                    }
+
                 } else {
                     if (\is_array($model)) {
                         $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
