@@ -386,7 +386,7 @@ class FunctionsCustomClientTest extends Scope
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($templatesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $templatesWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($templatesWithIncludeTotalFalse['body']);
         $this->assertIsArray($templatesWithIncludeTotalFalse['body']['templates']);
         $this->assertIsInt($templatesWithIncludeTotalFalse['body']['total']);

@@ -644,7 +644,7 @@ trait MessagingBase
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($subscribersWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $subscribersWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($subscribersWithIncludeTotalFalse['body']);
         $this->assertIsArray($subscribersWithIncludeTotalFalse['body']['subscribers']);
         $this->assertIsInt($subscribersWithIncludeTotalFalse['body']['total']);

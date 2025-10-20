@@ -65,7 +65,7 @@ class DatabasesCustomServerTest extends Scope
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($databasesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $databasesWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($databasesWithIncludeTotalFalse['body']);
         $this->assertIsArray($databasesWithIncludeTotalFalse['body']['databases']);
         $this->assertIsInt($databasesWithIncludeTotalFalse['body']['total']);

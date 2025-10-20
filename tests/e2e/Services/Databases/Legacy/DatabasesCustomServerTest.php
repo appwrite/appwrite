@@ -65,7 +65,7 @@ class DatabasesCustomServerTest extends Scope
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($databasesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $databasesWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($databasesWithIncludeTotalFalse['body']);
         $this->assertIsArray($databasesWithIncludeTotalFalse['body']['databases']);
         $this->assertIsInt($databasesWithIncludeTotalFalse['body']['total']);
@@ -422,7 +422,7 @@ class DatabasesCustomServerTest extends Scope
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($collectionsWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $collectionsWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($collectionsWithIncludeTotalFalse['body']);
         $this->assertIsArray($collectionsWithIncludeTotalFalse['body']['collections']);
         $this->assertIsInt($collectionsWithIncludeTotalFalse['body']['total']);
@@ -4592,7 +4592,7 @@ class DatabasesCustomServerTest extends Scope
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($documentsWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $documentsWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($documentsWithIncludeTotalFalse['body']);
         $this->assertIsArray($documentsWithIncludeTotalFalse['body']['documents']);
         $this->assertIsInt($documentsWithIncludeTotalFalse['body']['total']);

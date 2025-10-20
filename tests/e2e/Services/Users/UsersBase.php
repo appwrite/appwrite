@@ -808,7 +808,7 @@ trait UsersBase
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($usersWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $usersWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($usersWithIncludeTotalFalse['body']);
         $this->assertIsArray($usersWithIncludeTotalFalse['body']['users']);
         $this->assertIsInt($usersWithIncludeTotalFalse['body']['total']);

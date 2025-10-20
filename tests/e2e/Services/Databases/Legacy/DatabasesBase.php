@@ -972,7 +972,7 @@ trait DatabasesBase
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($attributesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $attributesWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($attributesWithIncludeTotalFalse['body']);
         $this->assertIsArray($attributesWithIncludeTotalFalse['body']['attributes']);
         $this->assertIsInt($attributesWithIncludeTotalFalse['body']['total']);

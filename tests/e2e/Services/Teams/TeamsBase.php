@@ -332,7 +332,7 @@ trait TeamsBase
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($teamsWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $teamsWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($teamsWithIncludeTotalFalse['body']);
         $this->assertIsArray($teamsWithIncludeTotalFalse['body']['teams']);
         $this->assertIsInt($teamsWithIncludeTotalFalse['body']['total']);

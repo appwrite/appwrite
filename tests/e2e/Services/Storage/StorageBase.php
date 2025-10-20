@@ -389,7 +389,7 @@ trait StorageBase
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($filesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $filesWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($filesWithIncludeTotalFalse['body']);
         $this->assertIsArray($filesWithIncludeTotalFalse['body']['files']);
         $this->assertIsInt($filesWithIncludeTotalFalse['body']['total']);

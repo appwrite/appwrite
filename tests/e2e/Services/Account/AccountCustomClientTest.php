@@ -248,7 +248,7 @@ class AccountCustomClientTest extends Scope
             'includeTotal' => false
         ]);
 
-        $this->assertEquals($sessionsWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertEquals(200, $sessionsWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($sessionsWithIncludeTotalFalse['body']);
         $this->assertIsArray($sessionsWithIncludeTotalFalse['body']['sessions']);
         $this->assertIsInt($sessionsWithIncludeTotalFalse['body']['total']);
