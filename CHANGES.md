@@ -4,340 +4,340 @@
 
 ### Notable changes
 
-* Do not allow full range by @basert in https://github.com/appwrite/appwrite/pull/9847
-* Expose internal id as a part of auto increment id by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/9713
-* Expose sequence by @abnegate in https://github.com/appwrite/appwrite/pull/9870
-* Add flutter 3.32 and dart 3.8 runtimes by @lohanidamodar in https://github.com/appwrite/appwrite/pull/9914
-* Shorten commit url and branch url by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9919
-* Remove powered by from error pages by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9927
-* Enable resource limits on GIF previews by @basert in https://github.com/appwrite/appwrite/pull/9940
-* Only run maintenance task for projects accessed in last 24 hours by @christyjacob4 in https://github.com/appwrite/appwrite/pull/9989
-* Add increment + decrement routes by @abnegate in https://github.com/appwrite/appwrite/pull/9986
-* Only run maintenance task for projects accessed in last 30 days by @christyjacob4 in https://github.com/appwrite/appwrite/pull/9995
-* Update appwrite-assistant image version to 0.8.3 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10003
-* Update emails to use button by @ItzNotABug in https://github.com/appwrite/appwrite/pull/9590
-* Create commit & branch url for first git deployment when site is linked to repo by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9969
-* Handle React Native schemes by @loks0n in https://github.com/appwrite/appwrite/pull/9650
-* Handle origin validation for web extensions by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10107
-* Preview text for emails by @hmacr in https://github.com/appwrite/appwrite/pull/10198
-* Create email target when using email OTP registration by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10224
-* Add CSV imports by @abnegate in https://github.com/appwrite/appwrite/pull/10231
-* Add support for svg favicons by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10255
-* Realtime support for bulk api by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10096
-* Skip redundant subqueries in users list route by @abnegate in https://github.com/appwrite/appwrite/pull/10297
-* Add native sign in with Apple function template by @adityaoberai in https://github.com/appwrite/appwrite/pull/10286
-* Add support for HEAD requests by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10304
-* Update invite email copy by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10309
-* Increase dynamic API key expiration by @Meldiron in https://github.com/appwrite/appwrite/pull/10328
-* Add TablesDB service by @abnegate in https://github.com/appwrite/appwrite/pull/10333
-* Add execution.deploymentId to response model by @Meldiron in https://github.com/appwrite/appwrite/pull/10357
-* Switch Union China Pay to just Union Pay by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10372 and https://github.com/appwrite/appwrite/pull/10382
-* Add execution id and log id to response headers by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10379
-* Add executionId and client IP to function headers by @JoshiJoshiJoshi in https://github.com/appwrite/appwrite/pull/9147
-* Allow HEAD requests in function executions by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10385
-* Add support for select queries when listing deployments by @Meldiron in https://github.com/appwrite/appwrite/pull/10380
-* Add spatial type attributes by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10356 and https://github.com/appwrite/appwrite/pull/10443
-* Add realtime support for bulk upserts by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10425
-* Add previewUrl to vcs comment from vcs controller by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10396
-* Rename verification SDK methods to be more specific by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10606
-* Add project name in email subject by @hmacr in https://github.com/appwrite/appwrite/pull/10609
-* Throw error when email is not available for account verification by @hmacr in https://github.com/appwrite/appwrite/pull/10533
-* Add support for transactions by @abnegate in https://github.com/appwrite/appwrite/pull/10023 and https://github.com/appwrite/appwrite/pull/10624
-* Use bcc only emails for smtp by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10644
+* Do not allow full range in [#9847](https://github.com/appwrite/appwrite/pull/9847)
+* Expose internal id as a part of auto increment id in [#9713](https://github.com/appwrite/appwrite/pull/9713)
+* Expose sequence in [#9870](https://github.com/appwrite/appwrite/pull/9870)
+* Add flutter 3.32 and dart 3.8 runtimes in [#9914](https://github.com/appwrite/appwrite/pull/9914)
+* Shorten commit url and branch url in [#9919](https://github.com/appwrite/appwrite/pull/9919)
+* Remove powered by from error pages in [#9927](https://github.com/appwrite/appwrite/pull/9927)
+* Enable resource limits on GIF previews in [#9940](https://github.com/appwrite/appwrite/pull/9940)
+* Only run maintenance task for projects accessed in last 24 hours in [#9989](https://github.com/appwrite/appwrite/pull/9989)
+* Add increment + decrement routes in [#9986](https://github.com/appwrite/appwrite/pull/9986)
+* Only run maintenance task for projects accessed in last 30 days in [#9995](https://github.com/appwrite/appwrite/pull/9995)
+* Update appwrite-assistant image version to 0.8.3 in [#10003](https://github.com/appwrite/appwrite/pull/10003)
+* Update emails to use button in [#9590](https://github.com/appwrite/appwrite/pull/9590)
+* Create commit & branch url for first git deployment when site is linked to repo in [#9969](https://github.com/appwrite/appwrite/pull/9969)
+* Handle React Native schemes in [#9650](https://github.com/appwrite/appwrite/pull/9650)
+* Handle origin validation for web extensions in [#10107](https://github.com/appwrite/appwrite/pull/10107)
+* Preview text for emails in [#10198](https://github.com/appwrite/appwrite/pull/10198)
+* Create email target when using email OTP registration in [#10224](https://github.com/appwrite/appwrite/pull/10224)
+* Add CSV imports in [#10231](https://github.com/appwrite/appwrite/pull/10231)
+* Add support for svg favicons in [#10255](https://github.com/appwrite/appwrite/pull/10255)
+* Realtime support for bulk api in [#10096](https://github.com/appwrite/appwrite/pull/10096)
+* Skip redundant subqueries in users list route in [#10297](https://github.com/appwrite/appwrite/pull/10297)
+* Add native sign in with Apple function template in [#10286](https://github.com/appwrite/appwrite/pull/10286)
+* Add support for HEAD requests in [#10304](https://github.com/appwrite/appwrite/pull/10304)
+* Update invite email copy in [#10309](https://github.com/appwrite/appwrite/pull/10309)
+* Increase dynamic API key expiration in [#10328](https://github.com/appwrite/appwrite/pull/10328)
+* Add TablesDB service in [#10333](https://github.com/appwrite/appwrite/pull/10333)
+* Add execution.deploymentId to response model in [#10357](https://github.com/appwrite/appwrite/pull/10357)
+* Switch Union China Pay to just Union Pay in [#10372](https://github.com/appwrite/appwrite/pull/10372) and [#10382](https://github.com/appwrite/appwrite/pull/10382)
+* Add execution id and log id to response headers in [#10379](https://github.com/appwrite/appwrite/pull/10379)
+* Add executionId and client IP to function headers in [#9147](https://github.com/appwrite/appwrite/pull/9147)
+* Allow HEAD requests in function executions in [#10385](https://github.com/appwrite/appwrite/pull/10385)
+* Add support for select queries when listing deployments in [#10380](https://github.com/appwrite/appwrite/pull/10380)
+* Add spatial type attributes in [#10356](https://github.com/appwrite/appwrite/pull/10356) and [#10443](https://github.com/appwrite/appwrite/pull/10443)
+* Add realtime support for bulk upserts in [#10425](https://github.com/appwrite/appwrite/pull/10425)
+* Add previewUrl to vcs comment from vcs controller in [#10396](https://github.com/appwrite/appwrite/pull/10396)
+* Rename verification SDK methods to be more specific in [#10606](https://github.com/appwrite/appwrite/pull/10606)
+* Add project name in email subject in [#10609](https://github.com/appwrite/appwrite/pull/10609)
+* Throw error when email is not available for account verification in [#10533](https://github.com/appwrite/appwrite/pull/10533)
+* Add support for transactions in [#10023](https://github.com/appwrite/appwrite/pull/10023) and [#10624](https://github.com/appwrite/appwrite/pull/10624)
+* Use bcc only emails for smtp in [#10644](https://github.com/appwrite/appwrite/pull/10644)
 
 ### Fixes
 
-* Fix rules on active deployment by @Meldiron in https://github.com/appwrite/appwrite/pull/9902
-* Fix for upserts with differing optional parameter sets by @abnegate in https://github.com/appwrite/appwrite/pull/9928
-* Fix teams deletion by @ItzNotABug in https://github.com/appwrite/appwrite/pull/9888
-* Fix deletion logic by @ItzNotABug in https://github.com/appwrite/appwrite/pull/9938
-* Update database for upsert fix by @abnegate in https://github.com/appwrite/appwrite/pull/9941
-* Fix expire format in account recovery, verification, phone and mfa by @jmastr in https://github.com/appwrite/appwrite/pull/9600
-* Fix github comments and deployment creation on branch deletion by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9949
-* Fix cache issues with proxy for deployment download by @Meldiron in https://github.com/appwrite/appwrite/pull/9971
-* Redirect rule parent resource by @Meldiron in https://github.com/appwrite/appwrite/pull/9982
-* Fix usage queues by @lohanidamodar in https://github.com/appwrite/appwrite/pull/9946
-* Transfer control for the migration by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/9997
-* Prevent 'Attribute "factors" must be an array' error by @stnguyen90 in https://github.com/appwrite/appwrite/pull/10004
-* Fix all vcs urls missing region by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9998
-* Add readable error for csv imports by @ItzNotABug in https://github.com/appwrite/appwrite/pull/9947
-* Fix missing screenshot logs by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10024
-* Update executor to fix s3 endpoint bug by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10036
-* Fix build duration calculation by @Meldiron in https://github.com/appwrite/appwrite/pull/10053
-* Fix logs order by @Meldiron in https://github.com/appwrite/appwrite/pull/10052
-* Fix platform check for Sites with automatic rule by @Meldiron in https://github.com/appwrite/appwrite/pull/10043
-* Increase cache ttl to ensure hits by @christyjacob4 in https://github.com/appwrite/appwrite/pull/10079
-* Fix connect to existing repo flow by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10034
-* Fix migrations path and type by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10090
-* Fix JWT authentication database selection for admin mode by @arielweinberger in https://github.com/appwrite/appwrite/pull/10098
-* Use _APP_CONSOLE_DOMAIN, if not found, then use _APP_DOMAIN by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9999
-* Fix file tokens not working on file-security by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10120
-* Fix build activation race condition by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9952
-* Changed the default permission param of upsert document by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10129
-* Fix success validation in oauth2 redirect by @stnguyen90 in https://github.com/appwrite/appwrite/pull/10130
-* Update OAuth2 redirect URLs by @stnguyen90 in https://github.com/appwrite/appwrite/pull/10119
-* Fix specs with new env vars by @Meldiron in https://github.com/appwrite/appwrite/pull/10135
-* Skip deployment when commit is created by us by @hmacr in https://github.com/appwrite/appwrite/pull/10187
-* Use direct source for file-preview when empty by @hmacr in https://github.com/appwrite/appwrite/pull/10181
-* Better error message for invalid function scheduled time by @hmacr in https://github.com/appwrite/appwrite/pull/10201
-* Add defaultBranch in getRepository response by @hmacr in https://github.com/appwrite/appwrite/pull/10190
-* Filter sequence to int because any models skip rule checks by @abnegate in https://github.com/appwrite/appwrite/pull/10221
-* Fix 500 errors on robots and humans txt files by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10248
-* Fix atomic number ops with limit 0 by @abnegate in https://github.com/appwrite/appwrite/pull/10264
-* Update build command for flutter by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10288
-* Add a fallback locale by @Meldiron in https://github.com/appwrite/appwrite/pull/10307
-* Fix variables sharing across resources by @Meldiron in https://github.com/appwrite/appwrite/pull/10308
-* Fix uncaught invalid arg by @abnegate in https://github.com/appwrite/appwrite/pull/10318
-* Add missing upsert event by @abnegate in https://github.com/appwrite/appwrite/pull/10317
-* Improve font reliability by @Meldiron in https://github.com/appwrite/appwrite/pull/10332
-* Truncate logs in function worker by @samikshaaagarwal in https://github.com/appwrite/appwrite/pull/9773
-* Fix event template configuration issues by @adityaoberai in https://github.com/appwrite/appwrite/pull/10350
-* Fix users events & missed publisher logic for Functions by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10348
-* Fix incorrect file token expiry by @EVDOG4LIFE in https://github.com/appwrite/appwrite/pull/10329
-* Fix upserting that makes no change by @fogelito in https://github.com/appwrite/appwrite/pull/10363 and https://github.com/appwrite/appwrite/pull/10364
-* Fix domain validator by @Meldiron in https://github.com/appwrite/appwrite/pull/10374
-* Apply sequence integer casting and attribute cleanup fixes to Row model, TablesDB tests, and document processing by @Copilot in https://github.com/appwrite/appwrite/pull/10383
-* Fix domain validator by @abnegate in https://github.com/appwrite/appwrite/pull/10386
-* Fix sequence removal by @abnegate in https://github.com/appwrite/appwrite/pull/10388
-* Fix TablesDB scopes by @abnegate in https://github.com/appwrite/appwrite/pull/10387
-* Fix request filter by @abnegate in https://github.com/appwrite/appwrite/pull/10389
-* Fix nested filter selects by @abnegate in https://github.com/appwrite/appwrite/pull/10393
-* Fix readonly attr stripping on write by @abnegate in https://github.com/appwrite/appwrite/pull/10405
-* Replace %s with mustache placeholder by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10392
-* Support array headers for set-cookie by @Meldiron in https://github.com/appwrite/appwrite/pull/10427
-* Fix put prefs structure validation by @fogelito in https://github.com/appwrite/appwrite/pull/10436
-* Fix oauth identity check by @Meldiron in https://github.com/appwrite/appwrite/pull/10460
-* Fix check by @abnegate in https://github.com/appwrite/appwrite/pull/10489
-* Fix database usage metrics  by @Divyansha23 in https://github.com/appwrite/appwrite/pull/10483
-* Throw appropriate 400s from request filters by @abnegate in https://github.com/appwrite/appwrite/pull/10502
-* Catch query exception on bucket/file list by @abnegate in https://github.com/appwrite/appwrite/pull/10505
-* Use outputDirectory attribute from deployment by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/10571
-* Fix buildOutput attribute name in deployment check by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/10572
-* Update database for nested selection fix by @abnegate in https://github.com/appwrite/appwrite/pull/10577
-* Auto-allow sites domain for OAuth by @hmacr in https://github.com/appwrite/appwrite/pull/10503
-* Handle OIDC well-known endpoint errors by @hmacr in https://github.com/appwrite/appwrite/pull/10589
-* Correct invalid template links in Create temporary deployment endpoint by @Priyanshuthapliyal2005 in https://github.com/appwrite/appwrite/pull/10581
-* Update broken create table links in TablesDB docs by @Priyanshuthapliyal2005 in https://github.com/appwrite/appwrite/pull/10592
-* Fix cross API compatibility by @abnegate in https://github.com/appwrite/appwrite/pull/10626
-* Fix code 0 from databases on realtime by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10631
-* Throw duplicate error when function id already exists by @hmacr in https://github.com/appwrite/appwrite/pull/10618
+* Fix rules on active deployment in [#9902](https://github.com/appwrite/appwrite/pull/9902)
+* Fix for upserts with differing optional parameter sets in [#9928](https://github.com/appwrite/appwrite/pull/9928)
+* Fix teams deletion in [#9888](https://github.com/appwrite/appwrite/pull/9888)
+* Fix deletion logic in [#9938](https://github.com/appwrite/appwrite/pull/9938)
+* Update database for upsert fix in [#9941](https://github.com/appwrite/appwrite/pull/9941)
+* Fix expire format in account recovery, verification, phone and mfa in [#9600](https://github.com/appwrite/appwrite/pull/9600)
+* Fix github comments and deployment creation on branch deletion in [#9949](https://github.com/appwrite/appwrite/pull/9949)
+* Fix cache issues with proxy for deployment download in [#9971](https://github.com/appwrite/appwrite/pull/9971)
+* Redirect rule parent resource in [#9982](https://github.com/appwrite/appwrite/pull/9982)
+* Fix usage queues in [#9946](https://github.com/appwrite/appwrite/pull/9946)
+* Transfer control for the migration in [#9997](https://github.com/appwrite/appwrite/pull/9997)
+* Prevent 'Attribute "factors" must be an array' error in [#10004](https://github.com/appwrite/appwrite/pull/10004)
+* Fix all vcs urls missing region in [#9998](https://github.com/appwrite/appwrite/pull/9998)
+* Add readable error for csv imports in [#9947](https://github.com/appwrite/appwrite/pull/9947)
+* Fix missing screenshot logs in [#10024](https://github.com/appwrite/appwrite/pull/10024)
+* Update executor to fix s3 endpoint bug in [#10036](https://github.com/appwrite/appwrite/pull/10036)
+* Fix build duration calculation in [#10053](https://github.com/appwrite/appwrite/pull/10053)
+* Fix logs order in [#10052](https://github.com/appwrite/appwrite/pull/10052)
+* Fix platform check for Sites with automatic rule in [#10043](https://github.com/appwrite/appwrite/pull/10043)
+* Increase cache ttl to ensure hits in [#10079](https://github.com/appwrite/appwrite/pull/10079)
+* Fix connect to existing repo flow in [#10034](https://github.com/appwrite/appwrite/pull/10034)
+* Fix migrations path and type in [#10090](https://github.com/appwrite/appwrite/pull/10090)
+* Fix JWT authentication database selection for admin mode in [#10098](https://github.com/appwrite/appwrite/pull/10098)
+* Use _APP_CONSOLE_DOMAIN, if not found, then use _APP_DOMAIN in [#9999](https://github.com/appwrite/appwrite/pull/9999)
+* Fix file tokens not working on file-security in [#10120](https://github.com/appwrite/appwrite/pull/10120)
+* Fix build activation race condition in [#9952](https://github.com/appwrite/appwrite/pull/9952)
+* Changed the default permission param of upsert document in [#10129](https://github.com/appwrite/appwrite/pull/10129)
+* Fix success validation in oauth2 redirect in [#10130](https://github.com/appwrite/appwrite/pull/10130)
+* Update OAuth2 redirect URLs in [#10119](https://github.com/appwrite/appwrite/pull/10119)
+* Fix specs with new env vars in [#10135](https://github.com/appwrite/appwrite/pull/10135)
+* Skip deployment when commit is created by us in [#10187](https://github.com/appwrite/appwrite/pull/10187)
+* Use direct source for file-preview when empty in [#10181](https://github.com/appwrite/appwrite/pull/10181)
+* Better error message for invalid function scheduled time in [#10201](https://github.com/appwrite/appwrite/pull/10201)
+* Add defaultBranch in getRepository response in [#10190](https://github.com/appwrite/appwrite/pull/10190)
+* Filter sequence to int because any models skip rule checks in [#10221](https://github.com/appwrite/appwrite/pull/10221)
+* Fix 500 errors on robots and humans txt files in [#10248](https://github.com/appwrite/appwrite/pull/10248)
+* Fix atomic number ops with limit 0 in [#10264](https://github.com/appwrite/appwrite/pull/10264)
+* Update build command for flutter in [#10288](https://github.com/appwrite/appwrite/pull/10288)
+* Add a fallback locale in [#10307](https://github.com/appwrite/appwrite/pull/10307)
+* Fix variables sharing across resources in [#10308](https://github.com/appwrite/appwrite/pull/10308)
+* Fix uncaught invalid arg in [#10318](https://github.com/appwrite/appwrite/pull/10318)
+* Add missing upsert event in [#10317](https://github.com/appwrite/appwrite/pull/10317)
+* Improve font reliability in [#10332](https://github.com/appwrite/appwrite/pull/10332)
+* Truncate logs in function worker in [#9773](https://github.com/appwrite/appwrite/pull/9773)
+* Fix event template configuration issues in [#10350](https://github.com/appwrite/appwrite/pull/10350)
+* Fix users events & missed publisher logic for Functions in [#10348](https://github.com/appwrite/appwrite/pull/10348)
+* Fix incorrect file token expiry in [#10329](https://github.com/appwrite/appwrite/pull/10329)
+* Fix upserting that makes no change in [#10363](https://github.com/appwrite/appwrite/pull/10363) and [#10364](https://github.com/appwrite/appwrite/pull/10364)
+* Fix domain validator in [#10374](https://github.com/appwrite/appwrite/pull/10374)
+* Apply sequence integer casting and attribute cleanup fixes to Row model, TablesDB tests, and document processing in [#10383](https://github.com/appwrite/appwrite/pull/10383)
+* Fix domain validator in [#10386](https://github.com/appwrite/appwrite/pull/10386)
+* Fix sequence removal in [#10388](https://github.com/appwrite/appwrite/pull/10388)
+* Fix TablesDB scopes in [#10387](https://github.com/appwrite/appwrite/pull/10387)
+* Fix request filter in [#10389](https://github.com/appwrite/appwrite/pull/10389)
+* Fix nested filter selects in [#10393](https://github.com/appwrite/appwrite/pull/10393)
+* Fix readonly attr stripping on write in [#10405](https://github.com/appwrite/appwrite/pull/10405)
+* Replace %s with mustache placeholder in [#10392](https://github.com/appwrite/appwrite/pull/10392)
+* Support array headers for set-cookie in [#10427](https://github.com/appwrite/appwrite/pull/10427)
+* Fix put prefs structure validation in [#10436](https://github.com/appwrite/appwrite/pull/10436)
+* Fix oauth identity check in [#10460](https://github.com/appwrite/appwrite/pull/10460)
+* Fix check in [#10489](https://github.com/appwrite/appwrite/pull/10489)
+* Fix database usage metrics  in [#10483](https://github.com/appwrite/appwrite/pull/10483)
+* Throw appropriate 400s from request filters in [#10502](https://github.com/appwrite/appwrite/pull/10502)
+* Catch query exception on bucket/file list in [#10505](https://github.com/appwrite/appwrite/pull/10505)
+* Use outputDirectory attribute from deployment in [#10571](https://github.com/appwrite/appwrite/pull/10571)
+* Fix buildOutput attribute name in deployment check in [#10572](https://github.com/appwrite/appwrite/pull/10572)
+* Update database for nested selection fix in [#10577](https://github.com/appwrite/appwrite/pull/10577)
+* Auto-allow sites domain for OAuth in [#10503](https://github.com/appwrite/appwrite/pull/10503)
+* Handle OIDC well-known endpoint errors in [#10589](https://github.com/appwrite/appwrite/pull/10589)
+* Correct invalid template links in Create temporary deployment endpoint in [#10581](https://github.com/appwrite/appwrite/pull/10581)
+* Update broken create table links in TablesDB docs in [#10592](https://github.com/appwrite/appwrite/pull/10592)
+* Fix cross API compatibility in [#10626](https://github.com/appwrite/appwrite/pull/10626)
+* Fix code 0 from databases on realtime in [#10631](https://github.com/appwrite/appwrite/pull/10631)
+* Throw duplicate error when function id already exists in [#10618](https://github.com/appwrite/appwrite/pull/10618)
 
 ### Miscellaneous
 
-* Fix task coroutine hooks by @basert in https://github.com/appwrite/appwrite/pull/9850
-* Feat sync encrypt updates by @abnegate in https://github.com/appwrite/appwrite/pull/9871
-* Revert "Feat sync encrypt updates" by @abnegate in https://github.com/appwrite/appwrite/pull/9877
-* Add builds worker group by @loks0n in https://github.com/appwrite/appwrite/pull/9872
-* Revert encrypted attribute changes by @abnegate in https://github.com/appwrite/appwrite/pull/9898
-* Update sdk generator and sdks by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/9849
-* Release cli by @abnegate in https://github.com/appwrite/appwrite/pull/9900
-* Improve how rules are fetched by @Meldiron in https://github.com/appwrite/appwrite/pull/9915
-* Sync 1.6 by @abnegate in https://github.com/appwrite/appwrite/pull/9920
-* Update messaging library by @lohanidamodar in https://github.com/appwrite/appwrite/pull/9764
-* Disable TCP hook on stats resources by @abnegate in https://github.com/appwrite/appwrite/pull/9932
-* Remove JSON index on roles due to MySQL bug by @fogelito in https://github.com/appwrite/appwrite/pull/9924
-* Update queue by @abnegate in https://github.com/appwrite/appwrite/pull/9936
-* Fix flaky account tests by @loks0n in https://github.com/appwrite/appwrite/pull/9954
-* Fix flaky messaging test by @loks0n in https://github.com/appwrite/appwrite/pull/9957
-* Make usage tests robust by @loks0n in https://github.com/appwrite/appwrite/pull/9956
-* Increase deployment timeouts in tests by @loks0n in https://github.com/appwrite/appwrite/pull/9955
-* Graceful shutdown on SIGTERM by @basert in https://github.com/appwrite/appwrite/pull/9890
-* Bring back telemetry for storage by @basert in https://github.com/appwrite/appwrite/pull/9903
-* Update version to 1.7.4 and add experimental warnings by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/9959
-* Return queue pre-fetch results by @basert in https://github.com/appwrite/appwrite/pull/9731
-* Update SDK versions by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/9987
-* Restore unique filename for health check #9842 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/9993
-* Add after build hook by @loks0n in https://github.com/appwrite/appwrite/pull/9996
-* Remove endpoint selector by @loks0n in https://github.com/appwrite/appwrite/pull/10000
-* Use static code instead of astro in tests by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9966
-* Add ref param to vcs list contents by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9991
-* Update coderabbit config file by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10005
-* TAR support by @loks0n in https://github.com/appwrite/appwrite/pull/10016
-* Update delete project scope by @shimonewman in https://github.com/appwrite/appwrite/pull/10017
-* Lazy-load relationships by @ItzNotABug in https://github.com/appwrite/appwrite/pull/9669
-* Revert "Feat: Lazy-load relationships" by @abnegate in https://github.com/appwrite/appwrite/pull/10018
-* Revert "Update delete project scope" by @abnegate in https://github.com/appwrite/appwrite/pull/10022
-* 1.8.x by @abnegate in https://github.com/appwrite/appwrite/pull/9985
-* Update cli version and add bulk operation warnings by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10007
-* Update Appwrite description to include Sites, add MCP to products list by @ebenezerdon in https://github.com/appwrite/appwrite/pull/9867
-* Update README.md by @LauraDuRy in https://github.com/appwrite/appwrite/pull/10026
-* Fix duplication of platforms in swagger specs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10008
-* Update react native sdk and changelog by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10025
-* Update delete project signature by @shimonewman in https://github.com/appwrite/appwrite/pull/10028
-* Fix Golang SDK examples for docs by @adityaoberai in https://github.com/appwrite/appwrite/pull/10001
-* Revert "worker: Graceful shutdown on SIGTERM" by @stnguyen90 in https://github.com/appwrite/appwrite/pull/10035
-* Fix benchmark CI by @christyjacob4 in https://github.com/appwrite/appwrite/pull/10055
-* Use ->action(...)) instead of ->callback([$this, 'action']); by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9967
-* Override project via custom domains log by @shimonewman in https://github.com/appwrite/appwrite/pull/10011
-* Add database worker job logging by @abnegate in https://github.com/appwrite/appwrite/pull/10056
-* Add runtimeEntrypoint param by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10062
-* Add missing injections by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10061
-* Replace Console loop with Swoole Timer for stats resource m… by @christyjacob4 in https://github.com/appwrite/appwrite/pull/10054
-* Update README.md by @LauraDuRy in https://github.com/appwrite/appwrite/pull/10063
-* Fix parameter order in action function for robots.txt route by @christyjacob4 in https://github.com/appwrite/appwrite/pull/10067
-* Preview endpoint logging by @Meldiron in https://github.com/appwrite/appwrite/pull/10068
-* Fix flakyness of account tests by @Meldiron in https://github.com/appwrite/appwrite/pull/10066
-* Update cli to 8.1.0 and add changelog by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10070
-* Update composer.json and composer.lock to include appwrite-lab… by @christyjacob4 in https://github.com/appwrite/appwrite/pull/10051
-* Fix tests, for `Cloud` by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10085
-* Update README.md by @LauraDuRy in https://github.com/appwrite/appwrite/pull/10084
-* Revert "chore: update composer.json and composer.lock to include appwrite-lab…" by @abnegate in https://github.com/appwrite/appwrite/pull/10086
-* Update README to add Bulk API link by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10095
-* Add redis publisher to schedule base if available by @abnegate in https://github.com/appwrite/appwrite/pull/10099
-* Fix site template test by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10104
-* Update nodejs 17.1.0 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10088
-* Update README.md to add Upsert announcement by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10112
-* Reduce delete batch size by @fogelito in https://github.com/appwrite/appwrite/pull/10128
-* Update README.md by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10134
-* Speed up tests by @Meldiron in https://github.com/appwrite/appwrite/pull/10127
-* Update cli to 8.2.0 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10136
-* Prevent injected $user from being shadowed by @stnguyen90 in https://github.com/appwrite/appwrite/pull/10150
-* Update react native to 0.10.1 and dotnet to 0.14.0 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10138
-* Update README.md by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10153
-* Update cli 8.2.1 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10155
-* Fix build usage specification by @loks0n in https://github.com/appwrite/appwrite/pull/10157
-* Handle redirect validator in specs + GraphQL type mapper by @abnegate in https://github.com/appwrite/appwrite/pull/10158
-* Update dart 16.1.0, flutter 17.0.2 and cli 8.2.2 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10161
-* Improve invalid scheme error in origin check by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10164
-* 1.7.x by @Meldiron in https://github.com/appwrite/appwrite/pull/9897
-* Added the cases of null permissions in the upsert route and update th… by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10179
-* Fix 1.7.x specs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10197
-* Suppress git-action exception in deployment worker by @hmacr in https://github.com/appwrite/appwrite/pull/10199
-* Stats-usage on redis by @loks0n in https://github.com/appwrite/appwrite/pull/10156
-* Fix templates on `1.7.x`. by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10203
-* Change preview & body for MFA email by @hmacr in https://github.com/appwrite/appwrite/pull/10205
-* Add docs for nestedType, encode, from and toMap by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10204
-* Update sdks 1.7.x by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10202
-* Update migration release by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10222
-* Remove sequence on incoming docs by @abnegate in https://github.com/appwrite/appwrite/pull/10228
-* Filter certificates renewal task in maintenance by region by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10227
-* Move changelog to sdks platforms array by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10233
-* Update changelog and sdk gen by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10247
-* Telemetry for cache hits and misses by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10240
-* Add model examples + additonal examples to specs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10249
-* Update favicons endpoint to fallback to ico instead of throwing error by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10260
-* Update README.md by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10259
-* Check CAA record before issuing certificate by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10258
-* Revert "Check CAA record before issuing certificate" by @Meldiron in https://github.com/appwrite/appwrite/pull/10263
-* Test var id attribute by @fogelito in https://github.com/appwrite/appwrite/pull/10243
-* Add type attribute to the database creation flow by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10266
-* Add CAA validator by @Meldiron in https://github.com/appwrite/appwrite/pull/10267
-* Update database type to grids and legacy by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10273
-* Update README.md by @LauraDuRy in https://github.com/appwrite/appwrite/pull/10272
-* Upgrade composer for utopia migration by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10274
-* Update SDK generator and sdks by @christyjacob4 in https://github.com/appwrite/appwrite/pull/10271
-* Fix wrong resource path for audits by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10279
-* Update `grid` on resource events by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10282
-* Add readonly param to sequence, databaseId and collectionId by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10278
-* Update migrations by @abnegate in https://github.com/appwrite/appwrite/pull/10283
-* Add placeholder detection by @Meldiron in https://github.com/appwrite/appwrite/pull/10284
-* Update docker base to 0.10.3 by @abnegate in https://github.com/appwrite/appwrite/pull/10285
-* Make check for adding warning header stricter by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10293
-* Fix databases worker cache clearing bug by @abnegate in https://github.com/appwrite/appwrite/pull/10294
-* Reapply Redis functions queue by @Meldiron in https://github.com/appwrite/appwrite/pull/10299
-* Add new database query type tests by @abnegate in https://github.com/appwrite/appwrite/pull/10296
-* Update package by @abnegate in https://github.com/appwrite/appwrite/pull/10312
-* Update required attributes by @fogelito in https://github.com/appwrite/appwrite/pull/10311
-* Remove experiment warnings from bulk methods by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10310
-* Update README.md by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10313
-* Added internal file param to handle upload to internal bucket by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10321
-* Remove temp logging by @Meldiron in https://github.com/appwrite/appwrite/pull/10302
-* Improve sites test for stability by @Meldiron in https://github.com/appwrite/appwrite/pull/10331
-* Database lib bump to 0.71.15 by @fogelito in https://github.com/appwrite/appwrite/pull/10336
-* Clarify userId param in endpoints that create accounts by @ebenezerdon in https://github.com/appwrite/appwrite/pull/10117
-* Upgrade HTTP by @Meldiron in https://github.com/appwrite/appwrite/pull/10338
-* Remove unnessessary external dependnecies by @Meldiron in https://github.com/appwrite/appwrite/pull/10343
-* Sync main into 1.7.x by @stnguyen90 in https://github.com/appwrite/appwrite/pull/10347
-* Fix TablesDB casing by @abnegate in https://github.com/appwrite/appwrite/pull/10346
-* Add cookies test by @Meldiron in https://github.com/appwrite/appwrite/pull/10352
-* Update token tests with jwt decode by @EVDOG4LIFE in https://github.com/appwrite/appwrite/pull/10354
-* Utilize assets server for fonts by @Meldiron in https://github.com/appwrite/appwrite/pull/10358
-* Sync main into 1.7.x by @stnguyen90 in https://github.com/appwrite/appwrite/pull/10359
-* Bump 1.7.x by @fogelito in https://github.com/appwrite/appwrite/pull/10365
-* Fix queue health by @loks0n in https://github.com/appwrite/appwrite/pull/10369
-* Allow publisher messaging override in scheduler by @loks0n in https://github.com/appwrite/appwrite/pull/10370
-* Add replacewith and deprecated since to account methods by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10377
-* Update README.md  by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10376
-* Update CLI by @abnegate in https://github.com/appwrite/appwrite/pull/10390
-* Update default method in description by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10391
-* Rename namespace from tables-db to tablesdb in specs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10395
-* Update tables group in specs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10394
-* Update description for upsert methods by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10397
-* Update README.md by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10401
-* Added handling of database resources after migration by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10400
-* Revert "Added handling of database resources after migration" by @abnegate in https://github.com/appwrite/appwrite/pull/10406
-* Remove sdk deprecation warnings by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10408
-* Mark Row response model's param with readonly by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10409
-* Update exception thrown when svg sanitization fails by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10416
-* Fix allow null params by @abnegate in https://github.com/appwrite/appwrite/pull/10417
-* Allow running tests with specific response format by @abnegate in https://github.com/appwrite/appwrite/pull/10418
-* Make webhooks publisher overridable by @loks0n in https://github.com/appwrite/appwrite/pull/10419
-* Check audits logs by @fogelito in https://github.com/appwrite/appwrite/pull/10414
-* Remove direct publisher calls by @loks0n in https://github.com/appwrite/appwrite/pull/10420
-* removed spaital type response and will be using the json type for the… by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10433
-* Add tests for new time helpers by @abnegate in https://github.com/appwrite/appwrite/pull/10437
-* Move projects.list() to module by @Meldiron in https://github.com/appwrite/appwrite/pull/10441
-* Update cli to 9.1.0 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10442
-* Add requestBody param examples in specs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10431
-* Fix mysql tests by @abnegate in https://github.com/appwrite/appwrite/pull/10445
-* Upgrade platform lib to have older queue lib by @Meldiron in https://github.com/appwrite/appwrite/pull/10447
-* Fix router compression by @Meldiron in https://github.com/appwrite/appwrite/pull/10452
-* Upgrade http lib for backwards compatible default param by @Meldiron in https://github.com/appwrite/appwrite/pull/10455
-* Update examples by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10444
-* Automatic pr creation in sdk release script by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10457
-* Remove avatars command from cli by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10454
-* Remove deno from platforms array by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10453
-* Spatial type attributes sdk updates by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10463
-* Stats resources try catch by @fogelito in https://github.com/appwrite/appwrite/pull/10469
-* Move proxy endpoints to modules by @Meldiron in https://github.com/appwrite/appwrite/pull/10470
-* Add certificate valdiation override by @Meldiron in https://github.com/appwrite/appwrite/pull/10471
-* Generate SDKs by @abnegate in https://github.com/appwrite/appwrite/pull/10475
-* Spatial test tablesdb updates by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10473
-* Add colors to certificate logs by @vermakhushboo in https://github.com/appwrite/appwrite/pull/10438
-* appwrite db bump by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10479
-* Bump database by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10480
-* Health db queues by @loks0n in https://github.com/appwrite/appwrite/pull/10482
-* Attempt small size for website dependency by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10485
-* Worker stop by @loks0n in https://github.com/appwrite/appwrite/pull/10498
-* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/10506
-* Stats resources and usage sorting by unique field by @fogelito in https://github.com/appwrite/appwrite/pull/10472
-* Add spatial column validation during required mode and tests for exis… by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10509
-* Sub query variables order by by @fogelito in https://github.com/appwrite/appwrite/pull/10513
-* Update README.md by @Veera-mulge in https://github.com/appwrite/appwrite/pull/10514
-* bump database 1.5.0 by @fogelito in https://github.com/appwrite/appwrite/pull/10515
-* Don't remove required attributes by @abnegate in https://github.com/appwrite/appwrite/pull/10516
-* Catch query exception on bulk update/delete by @abnegate in https://github.com/appwrite/appwrite/pull/10517
-* Update cli to 10.0.0 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10511
-* Add type_enum support and update docs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10496
-* Improve code readability for schedules by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10522
-* Include response model enum names by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10538
-* SDK releases by @abnegate in https://github.com/appwrite/appwrite/pull/10539
-* Fix health status enum by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10540
-* Update afterbuild fn by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10541
-* Update afterbuild to also pass adapter by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10545
-* Update `z-index` to be the highest by @ItzNotABug in https://github.com/appwrite/appwrite/pull/9874
-* Update framework lib to 0.33.28 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10551
-* Fix enum typing for platform in specs by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10553
-* Add enums for database type and column status by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10561
-* Fix activities by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10586
-* Fix logs truncation tests by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10585
-* Remove related data in realtime payload by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10590
-* Update composer dependencies by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10601
-* Update sdks add response models by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10554
-* Sanitize 5xx errors on realtime by @ItzNotABug in https://github.com/appwrite/appwrite/pull/10598
-* Update database by @abnegate in https://github.com/appwrite/appwrite/pull/10596
-* Add both collection and table id in the realtime by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/10608
-* Chore bump db by @abnegate in https://github.com/appwrite/appwrite/pull/10611
-* Branded email for Console auth flows by @hmacr in https://github.com/appwrite/appwrite/pull/10501
-* Add minor releases for all SDKs - deprecate createVerification, add createEmailVerification by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10614
-* Add automatic releases by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10615
-* Feat txn sdks by @abnegate in https://github.com/appwrite/appwrite/pull/10621
-* Prevent empty releases in sdk release script by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10627
-* Update domains lib to 0.8.2 by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10629
-* Fix txn API scope backwards compat by @abnegate in https://github.com/appwrite/appwrite/pull/10640
-* Fix block schedules by @loks0n in https://github.com/appwrite/appwrite/pull/10620
-* Update .NET SDK to 0.21.2 and improve release detection by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/10641
-* Mmake methods protected for extending by @lohanidamodar in https://github.com/appwrite/appwrite/pull/10617
+* Fix task coroutine hooks in [#9850](https://github.com/appwrite/appwrite/pull/9850)
+* Feat sync encrypt updates in [#9871](https://github.com/appwrite/appwrite/pull/9871)
+* Revert "Feat sync encrypt updates" in [#9877](https://github.com/appwrite/appwrite/pull/9877)
+* Add builds worker group in [#9872](https://github.com/appwrite/appwrite/pull/9872)
+* Revert encrypted attribute changes in [#9898](https://github.com/appwrite/appwrite/pull/9898)
+* Update sdk generator and sdks in [#9849](https://github.com/appwrite/appwrite/pull/9849)
+* Release cli in [#9900](https://github.com/appwrite/appwrite/pull/9900)
+* Improve how rules are fetched in [#9915](https://github.com/appwrite/appwrite/pull/9915)
+* Sync 1.6 in [#9920](https://github.com/appwrite/appwrite/pull/9920)
+* Update messaging library in [#9764](https://github.com/appwrite/appwrite/pull/9764)
+* Disable TCP hook on stats resources in [#9932](https://github.com/appwrite/appwrite/pull/9932)
+* Remove JSON index on roles due to MySQL bug in [#9924](https://github.com/appwrite/appwrite/pull/9924)
+* Update queue in [#9936](https://github.com/appwrite/appwrite/pull/9936)
+* Fix flaky account tests in [#9954](https://github.com/appwrite/appwrite/pull/9954)
+* Fix flaky messaging test in [#9957](https://github.com/appwrite/appwrite/pull/9957)
+* Make usage tests robust in [#9956](https://github.com/appwrite/appwrite/pull/9956)
+* Increase deployment timeouts in tests in [#9955](https://github.com/appwrite/appwrite/pull/9955)
+* Graceful shutdown on SIGTERM in [#9890](https://github.com/appwrite/appwrite/pull/9890)
+* Bring back telemetry for storage in [#9903](https://github.com/appwrite/appwrite/pull/9903)
+* Update version to 1.7.4 and add experimental warnings in [#9959](https://github.com/appwrite/appwrite/pull/9959)
+* Return queue pre-fetch results in [#9731](https://github.com/appwrite/appwrite/pull/9731)
+* Update SDK versions in [#9987](https://github.com/appwrite/appwrite/pull/9987)
+* Restore unique filename for health check #9842 in [#9993](https://github.com/appwrite/appwrite/pull/9993)
+* Add after build hook in [#9996](https://github.com/appwrite/appwrite/pull/9996)
+* Remove endpoint selector in [#10000](https://github.com/appwrite/appwrite/pull/10000)
+* Use static code instead of astro in tests in [#9966](https://github.com/appwrite/appwrite/pull/9966)
+* Add ref param to vcs list contents in [#9991](https://github.com/appwrite/appwrite/pull/9991)
+* Update coderabbit config file in [#10005](https://github.com/appwrite/appwrite/pull/10005)
+* TAR support in [#10016](https://github.com/appwrite/appwrite/pull/10016)
+* Update delete project scope in [#10017](https://github.com/appwrite/appwrite/pull/10017)
+* Lazy-load relationships in [#9669](https://github.com/appwrite/appwrite/pull/9669)
+* Revert "Feat: Lazy-load relationships" in [#10018](https://github.com/appwrite/appwrite/pull/10018)
+* Revert "Update delete project scope" in [#10022](https://github.com/appwrite/appwrite/pull/10022)
+* 1.8.x in [#9985](https://github.com/appwrite/appwrite/pull/9985)
+* Update cli version and add bulk operation warnings in [#10007](https://github.com/appwrite/appwrite/pull/10007)
+* Update Appwrite description to include Sites, add MCP to products list in [#9867](https://github.com/appwrite/appwrite/pull/9867)
+* Update README.md in [#10026](https://github.com/appwrite/appwrite/pull/10026)
+* Fix duplication of platforms in swagger specs in [#10008](https://github.com/appwrite/appwrite/pull/10008)
+* Update react native sdk and changelog in [#10025](https://github.com/appwrite/appwrite/pull/10025)
+* Update delete project signature in [#10028](https://github.com/appwrite/appwrite/pull/10028)
+* Fix Golang SDK examples for docs in [#10001](https://github.com/appwrite/appwrite/pull/10001)
+* Revert "worker: Graceful shutdown on SIGTERM" in [#10035](https://github.com/appwrite/appwrite/pull/10035)
+* Fix benchmark CI in [#10055](https://github.com/appwrite/appwrite/pull/10055)
+* Use ->action(...)) instead of ->callback([$this, 'action']); in [#9967](https://github.com/appwrite/appwrite/pull/9967)
+* Override project via custom domains log in [#10011](https://github.com/appwrite/appwrite/pull/10011)
+* Add database worker job logging in [#10056](https://github.com/appwrite/appwrite/pull/10056)
+* Add runtimeEntrypoint param in [#10062](https://github.com/appwrite/appwrite/pull/10062)
+* Add missing injections in [#10061](https://github.com/appwrite/appwrite/pull/10061)
+* Replace Console loop with Swoole Timer for stats resource m… in [#10054](https://github.com/appwrite/appwrite/pull/10054)
+* Update README.md in [#10063](https://github.com/appwrite/appwrite/pull/10063)
+* Fix parameter order in action function for robots.txt route in [#10067](https://github.com/appwrite/appwrite/pull/10067)
+* Preview endpoint logging in [#10068](https://github.com/appwrite/appwrite/pull/10068)
+* Fix flakyness of account tests in [#10066](https://github.com/appwrite/appwrite/pull/10066)
+* Update cli to 8.1.0 and add changelog in [#10070](https://github.com/appwrite/appwrite/pull/10070)
+* Update composer.json and composer.lock to include appwrite-lab… in [#10051](https://github.com/appwrite/appwrite/pull/10051)
+* Fix tests, for `Cloud` in [#10085](https://github.com/appwrite/appwrite/pull/10085)
+* Update README.md in [#10084](https://github.com/appwrite/appwrite/pull/10084)
+* Revert "chore: update composer.json and composer.lock to include appwrite-lab…" in [#10086](https://github.com/appwrite/appwrite/pull/10086)
+* Update README to add Bulk API link in [#10095](https://github.com/appwrite/appwrite/pull/10095)
+* Add redis publisher to schedule base if available in [#10099](https://github.com/appwrite/appwrite/pull/10099)
+* Fix site template test in [#10104](https://github.com/appwrite/appwrite/pull/10104)
+* Update nodejs 17.1.0 in [#10088](https://github.com/appwrite/appwrite/pull/10088)
+* Update README.md to add Upsert announcement in [#10112](https://github.com/appwrite/appwrite/pull/10112)
+* Reduce delete batch size in [#10128](https://github.com/appwrite/appwrite/pull/10128)
+* Update README.md in [#10134](https://github.com/appwrite/appwrite/pull/10134)
+* Speed up tests in [#10127](https://github.com/appwrite/appwrite/pull/10127)
+* Update cli to 8.2.0 in [#10136](https://github.com/appwrite/appwrite/pull/10136)
+* Prevent injected $user from being shadowed in [#10150](https://github.com/appwrite/appwrite/pull/10150)
+* Update react native to 0.10.1 and dotnet to 0.14.0 in [#10138](https://github.com/appwrite/appwrite/pull/10138)
+* Update README.md in [#10153](https://github.com/appwrite/appwrite/pull/10153)
+* Update cli 8.2.1 in [#10155](https://github.com/appwrite/appwrite/pull/10155)
+* Fix build usage specification in [#10157](https://github.com/appwrite/appwrite/pull/10157)
+* Handle redirect validator in specs + GraphQL type mapper in [#10158](https://github.com/appwrite/appwrite/pull/10158)
+* Update dart 16.1.0, flutter 17.0.2 and cli 8.2.2 in [#10161](https://github.com/appwrite/appwrite/pull/10161)
+* Improve invalid scheme error in origin check in [#10164](https://github.com/appwrite/appwrite/pull/10164)
+* 1.7.x in [#9897](https://github.com/appwrite/appwrite/pull/9897)
+* Added the cases of null permissions in the upsert route and update th… in [#10179](https://github.com/appwrite/appwrite/pull/10179)
+* Fix 1.7.x specs in [#10197](https://github.com/appwrite/appwrite/pull/10197)
+* Suppress git-action exception in deployment worker in [#10199](https://github.com/appwrite/appwrite/pull/10199)
+* Stats-usage on redis in [#10156](https://github.com/appwrite/appwrite/pull/10156)
+* Fix templates on `1.7.x`. in [#10203](https://github.com/appwrite/appwrite/pull/10203)
+* Change preview & body for MFA email in [#10205](https://github.com/appwrite/appwrite/pull/10205)
+* Add docs for nestedType, encode, from and toMap in [#10204](https://github.com/appwrite/appwrite/pull/10204)
+* Update sdks 1.7.x in [#10202](https://github.com/appwrite/appwrite/pull/10202)
+* Update migration release in [#10222](https://github.com/appwrite/appwrite/pull/10222)
+* Remove sequence on incoming docs in [#10228](https://github.com/appwrite/appwrite/pull/10228)
+* Filter certificates renewal task in maintenance by region in [#10227](https://github.com/appwrite/appwrite/pull/10227)
+* Move changelog to sdks platforms array in [#10233](https://github.com/appwrite/appwrite/pull/10233)
+* Update changelog and sdk gen in [#10247](https://github.com/appwrite/appwrite/pull/10247)
+* Telemetry for cache hits and misses in [#10240](https://github.com/appwrite/appwrite/pull/10240)
+* Add model examples + additonal examples to specs in [#10249](https://github.com/appwrite/appwrite/pull/10249)
+* Update favicons endpoint to fallback to ico instead of throwing error in [#10260](https://github.com/appwrite/appwrite/pull/10260)
+* Update README.md in [#10259](https://github.com/appwrite/appwrite/pull/10259)
+* Check CAA record before issuing certificate in [#10258](https://github.com/appwrite/appwrite/pull/10258)
+* Revert "Check CAA record before issuing certificate" in [#10263](https://github.com/appwrite/appwrite/pull/10263)
+* Test var id attribute in [#10243](https://github.com/appwrite/appwrite/pull/10243)
+* Add type attribute to the database creation flow in [#10266](https://github.com/appwrite/appwrite/pull/10266)
+* Add CAA validator in [#10267](https://github.com/appwrite/appwrite/pull/10267)
+* Update database type to grids and legacy in [#10273](https://github.com/appwrite/appwrite/pull/10273)
+* Update README.md in [#10272](https://github.com/appwrite/appwrite/pull/10272)
+* Upgrade composer for utopia migration in [#10274](https://github.com/appwrite/appwrite/pull/10274)
+* Update SDK generator and sdks in [#10271](https://github.com/appwrite/appwrite/pull/10271)
+* Fix wrong resource path for audits in [#10279](https://github.com/appwrite/appwrite/pull/10279)
+* Update `grid` on resource events in [#10282](https://github.com/appwrite/appwrite/pull/10282)
+* Add readonly param to sequence, databaseId and collectionId in [#10278](https://github.com/appwrite/appwrite/pull/10278)
+* Update migrations in [#10283](https://github.com/appwrite/appwrite/pull/10283)
+* Add placeholder detection in [#10284](https://github.com/appwrite/appwrite/pull/10284)
+* Update docker base to 0.10.3 in [#10285](https://github.com/appwrite/appwrite/pull/10285)
+* Make check for adding warning header stricter in [#10293](https://github.com/appwrite/appwrite/pull/10293)
+* Fix databases worker cache clearing bug in [#10294](https://github.com/appwrite/appwrite/pull/10294)
+* Reapply Redis functions queue in [#10299](https://github.com/appwrite/appwrite/pull/10299)
+* Add new database query type tests in [#10296](https://github.com/appwrite/appwrite/pull/10296)
+* Update package in [#10312](https://github.com/appwrite/appwrite/pull/10312)
+* Update required attributes in [#10311](https://github.com/appwrite/appwrite/pull/10311)
+* Remove experiment warnings from bulk methods in [#10310](https://github.com/appwrite/appwrite/pull/10310)
+* Update README.md in [#10313](https://github.com/appwrite/appwrite/pull/10313)
+* Added internal file param to handle upload to internal bucket in [#10321](https://github.com/appwrite/appwrite/pull/10321)
+* Remove temp logging in [#10302](https://github.com/appwrite/appwrite/pull/10302)
+* Improve sites test for stability in [#10331](https://github.com/appwrite/appwrite/pull/10331)
+* Database lib bump to 0.71.15 in [#10336](https://github.com/appwrite/appwrite/pull/10336)
+* Clarify userId param in endpoints that create accounts in [#10117](https://github.com/appwrite/appwrite/pull/10117)
+* Upgrade HTTP in [#10338](https://github.com/appwrite/appwrite/pull/10338)
+* Remove unnessessary external dependnecies in [#10343](https://github.com/appwrite/appwrite/pull/10343)
+* Sync main into 1.7.x in [#10347](https://github.com/appwrite/appwrite/pull/10347)
+* Fix TablesDB casing in [#10346](https://github.com/appwrite/appwrite/pull/10346)
+* Add cookies test in [#10352](https://github.com/appwrite/appwrite/pull/10352)
+* Update token tests with jwt decode in [#10354](https://github.com/appwrite/appwrite/pull/10354)
+* Utilize assets server for fonts in [#10358](https://github.com/appwrite/appwrite/pull/10358)
+* Sync main into 1.7.x in [#10359](https://github.com/appwrite/appwrite/pull/10359)
+* Bump 1.7.x in [#10365](https://github.com/appwrite/appwrite/pull/10365)
+* Fix queue health in [#10369](https://github.com/appwrite/appwrite/pull/10369)
+* Allow publisher messaging override in scheduler in [#10370](https://github.com/appwrite/appwrite/pull/10370)
+* Add replacewith and deprecated since to account methods in [#10377](https://github.com/appwrite/appwrite/pull/10377)
+* Update README.md in [#10376](https://github.com/appwrite/appwrite/pull/10376)
+* Update CLI in [#10390](https://github.com/appwrite/appwrite/pull/10390)
+* Update default method in description in [#10391](https://github.com/appwrite/appwrite/pull/10391)
+* Rename namespace from tables-db to tablesdb in specs in [#10395](https://github.com/appwrite/appwrite/pull/10395)
+* Update tables group in specs in [#10394](https://github.com/appwrite/appwrite/pull/10394)
+* Update description for upsert methods in [#10397](https://github.com/appwrite/appwrite/pull/10397)
+* Update README.md in [#10401](https://github.com/appwrite/appwrite/pull/10401)
+* Added handling of database resources after migration in [#10400](https://github.com/appwrite/appwrite/pull/10400)
+* Revert "Added handling of database resources after migration" in [#10406](https://github.com/appwrite/appwrite/pull/10406)
+* Remove sdk deprecation warnings in [#10408](https://github.com/appwrite/appwrite/pull/10408)
+* Mark Row response model's param with readonly in [#10409](https://github.com/appwrite/appwrite/pull/10409)
+* Update exception thrown when svg sanitization fails in [#10416](https://github.com/appwrite/appwrite/pull/10416)
+* Fix allow null params in [#10417](https://github.com/appwrite/appwrite/pull/10417)
+* Allow running tests with specific response format in [#10418](https://github.com/appwrite/appwrite/pull/10418)
+* Make webhooks publisher overridable in [#10419](https://github.com/appwrite/appwrite/pull/10419)
+* Check audits logs in [#10414](https://github.com/appwrite/appwrite/pull/10414)
+* Remove direct publisher calls in [#10420](https://github.com/appwrite/appwrite/pull/10420)
+* removed spatial type response and will be using the json type for the… in [#10433](https://github.com/appwrite/appwrite/pull/10433)
+* Add tests for new time helpers in [#10437](https://github.com/appwrite/appwrite/pull/10437)
+* Move projects.list() to module in [#10441](https://github.com/appwrite/appwrite/pull/10441)
+* Update cli to 9.1.0 in [#10442](https://github.com/appwrite/appwrite/pull/10442)
+* Add requestBody param examples in specs in [#10431](https://github.com/appwrite/appwrite/pull/10431)
+* Fix mysql tests in [#10445](https://github.com/appwrite/appwrite/pull/10445)
+* Upgrade platform lib to have older queue lib in [#10447](https://github.com/appwrite/appwrite/pull/10447)
+* Fix router compression in [#10452](https://github.com/appwrite/appwrite/pull/10452)
+* Upgrade http lib for backwards compatible default param in [#10455](https://github.com/appwrite/appwrite/pull/10455)
+* Update examples in [#10444](https://github.com/appwrite/appwrite/pull/10444)
+* Automatic pr creation in sdk release script in [#10457](https://github.com/appwrite/appwrite/pull/10457)
+* Remove avatars command from cli in [#10454](https://github.com/appwrite/appwrite/pull/10454)
+* Remove deno from platforms array in [#10453](https://github.com/appwrite/appwrite/pull/10453)
+* Spatial type attributes sdk updates in [#10463](https://github.com/appwrite/appwrite/pull/10463)
+* Stats resources try catch in [#10469](https://github.com/appwrite/appwrite/pull/10469)
+* Move proxy endpoints to modules in [#10470](https://github.com/appwrite/appwrite/pull/10470)
+* Add certificate validation override in [#10471](https://github.com/appwrite/appwrite/pull/10471)
+* Generate SDKs in [#10475](https://github.com/appwrite/appwrite/pull/10475)
+* Spatial test tablesdb updates in [#10473](https://github.com/appwrite/appwrite/pull/10473)
+* Add colors to certificate logs in [#10438](https://github.com/appwrite/appwrite/pull/10438)
+* appwrite db bump in [#10479](https://github.com/appwrite/appwrite/pull/10479)
+* Bump database in [#10480](https://github.com/appwrite/appwrite/pull/10480)
+* Health db queues in [#10482](https://github.com/appwrite/appwrite/pull/10482)
+* Attempt small size for website dependency in [#10485](https://github.com/appwrite/appwrite/pull/10485)
+* Worker stop in [#10498](https://github.com/appwrite/appwrite/pull/10498)
+* Update database in [#10506](https://github.com/appwrite/appwrite/pull/10506)
+* Stats resources and usage sorting by unique field in [#10472](https://github.com/appwrite/appwrite/pull/10472)
+* Add spatial column validation during required mode and tests for exis… in [#10509](https://github.com/appwrite/appwrite/pull/10509)
+* Sub query variables order by in [#10513](https://github.com/appwrite/appwrite/pull/10513)
+* Update README.md in [#10514](https://github.com/appwrite/appwrite/pull/10514)
+* bump database 1.5.0 in [#10515](https://github.com/appwrite/appwrite/pull/10515)
+* Don't remove required attributes in [#10516](https://github.com/appwrite/appwrite/pull/10516)
+* Catch query exception on bulk update/delete in [#10517](https://github.com/appwrite/appwrite/pull/10517)
+* Update cli to 10.0.0 in [#10511](https://github.com/appwrite/appwrite/pull/10511)
+* Add type_enum support and update docs in [#10496](https://github.com/appwrite/appwrite/pull/10496)
+* Improve code readability for schedules in [#10522](https://github.com/appwrite/appwrite/pull/10522)
+* Include response model enum names in [#10538](https://github.com/appwrite/appwrite/pull/10538)
+* SDK releases in [#10539](https://github.com/appwrite/appwrite/pull/10539)
+* Fix health status enum in [#10540](https://github.com/appwrite/appwrite/pull/10540)
+* Update afterbuild fn in [#10541](https://github.com/appwrite/appwrite/pull/10541)
+* Update afterbuild to also pass adapter in [#10545](https://github.com/appwrite/appwrite/pull/10545)
+* Update `z-index` to be the highest in [#9874](https://github.com/appwrite/appwrite/pull/9874)
+* Update framework lib to 0.33.28 in [#10551](https://github.com/appwrite/appwrite/pull/10551)
+* Fix enum typing for platform in specs in [#10553](https://github.com/appwrite/appwrite/pull/10553)
+* Add enums for database type and column status in [#10561](https://github.com/appwrite/appwrite/pull/10561)
+* Fix activities in [#10586](https://github.com/appwrite/appwrite/pull/10586)
+* Fix logs truncation tests in [#10585](https://github.com/appwrite/appwrite/pull/10585)
+* Remove related data in realtime payload in [#10590](https://github.com/appwrite/appwrite/pull/10590)
+* Update composer dependencies in [#10601](https://github.com/appwrite/appwrite/pull/10601)
+* Update sdks add response models in [#10554](https://github.com/appwrite/appwrite/pull/10554)
+* Sanitize 5xx errors on realtime in [#10598](https://github.com/appwrite/appwrite/pull/10598)
+* Update database in [#10596](https://github.com/appwrite/appwrite/pull/10596)
+* Add both collection and table id in the realtime in [#10608](https://github.com/appwrite/appwrite/pull/10608)
+* Chore bump db in [#10611](https://github.com/appwrite/appwrite/pull/10611)
+* Branded email for Console auth flows in [#10501](https://github.com/appwrite/appwrite/pull/10501)
+* Add minor releases for all SDKs - deprecate createVerification, add createEmailVerification in [#10614](https://github.com/appwrite/appwrite/pull/10614)
+* Add automatic releases in [#10615](https://github.com/appwrite/appwrite/pull/10615)
+* Feat txn sdks in [#10621](https://github.com/appwrite/appwrite/pull/10621)
+* Prevent empty releases in sdk release script in [#10627](https://github.com/appwrite/appwrite/pull/10627)
+* Update domains lib to 0.8.2 in [#10629](https://github.com/appwrite/appwrite/pull/10629)
+* Fix txn API scope backwards compat in [#10640](https://github.com/appwrite/appwrite/pull/10640)
+* Fix block schedules in [#10620](https://github.com/appwrite/appwrite/pull/10620)
+* Update .NET SDK to 0.21.2 and improve release detection in [#10641](https://github.com/appwrite/appwrite/pull/10641)
+* Make methods protected for extending in [#10617](https://github.com/appwrite/appwrite/pull/10617)
 
 # Version 1.7.4
 
@@ -345,15 +345,15 @@
 
 ### Notable changes
 
-* Update console image to version 6.0.13  by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/9891
+* Update console image to version 6.0.13 in [#9891](https://github.com/appwrite/appwrite/pull/9891)
 
 ### Fixes
 
-* Fix createDeployment chunk upload by @Meldiron in https://github.com/appwrite/appwrite/pull/9886
+* Fix createDeployment chunk upload in [#9886](https://github.com/appwrite/appwrite/pull/9886)
 
 ### Miscellaneous
 
-* Update version from 1.7.3 to 1.7.4 by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/9893
+* Update version from 1.7.3 to 1.7.4 in [#9893](https://github.com/appwrite/appwrite/pull/9893)
 
 # Version 1.7.3
 
@@ -361,30 +361,30 @@
 
 ### Notable changes
 
-* Allow unlimited deployment size by @Meldiron in https://github.com/appwrite/appwrite/pull/9866
-* Bump console to version 6.0.11 by @stnguyen90 in https://github.com/appwrite/appwrite/pull/9881
+* Allow unlimited deployment size in [#9866](https://github.com/appwrite/appwrite/pull/9866)
+* Bump console to version 6.0.11 in [#9881](https://github.com/appwrite/appwrite/pull/9881)
 
 ### Fixes
 
-* Send deploymentResourceType in rules verification by @basert in https://github.com/appwrite/appwrite/pull/9859
-* Fix CNAME validation by @Meldiron in https://github.com/appwrite/appwrite/pull/9861
-* Fix bucket not included in path by @abnegate in https://github.com/appwrite/appwrite/pull/9864
-* Fix URL for view logs in github comment by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9875
-* Set owner and region while migrating rules by @stnguyen90 in https://github.com/appwrite/appwrite/pull/9856
-* Remove _APP_DEFAULT_REGION because it is not a valid env var by @stnguyen90 in https://github.com/appwrite/appwrite/pull/9883
+* Send deploymentResourceType in rules verification in [#9859](https://github.com/appwrite/appwrite/pull/9859)
+* Fix CNAME validation in [#9861](https://github.com/appwrite/appwrite/pull/9861)
+* Fix bucket not included in path in [#9864](https://github.com/appwrite/appwrite/pull/9864)
+* Fix URL for view logs in github comment in [#9875](https://github.com/appwrite/appwrite/pull/9875)
+* Set owner and region while migrating rules in [#9856](https://github.com/appwrite/appwrite/pull/9856)
+* Remove _APP_DEFAULT_REGION because it is not a valid env var in [#9883](https://github.com/appwrite/appwrite/pull/9883)
 
 ### Miscellaneous
 
-* Only load error page for development mode by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9860
-* Make max deployment and build size configurable by @vermakhushboo in https://github.com/appwrite/appwrite/pull/9863
-* Update flutter_web_auth_2 docs to match 4.x by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/9858
-* Use unique filename for health check by @ChiragAgg5k in https://github.com/appwrite/appwrite/pull/9842
-* Added encrypt property in the attribute string response model by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/9868
-* Add sequence by @abnegate in https://github.com/appwrite/appwrite/pull/9865
-* Add builds worker group by @loks0n in https://github.com/appwrite/appwrite/pull/9873
-* updated errro for the string encryption by @ArnabChatterjee20k in https://github.com/appwrite/appwrite/pull/9878
-* Revert "Add sequence" by @christyjacob4 in https://github.com/appwrite/appwrite/pull/9879
-* Prepare 1.7.3 release by @stnguyen90 in https://github.com/appwrite/appwrite/pull/9882
+* Only load error page for development mode in [#9860](https://github.com/appwrite/appwrite/pull/9860)
+* Make max deployment and build size configurable in [#9863](https://github.com/appwrite/appwrite/pull/9863)
+* Update flutter_web_auth_2 docs to match 4.x in [#9858](https://github.com/appwrite/appwrite/pull/9858)
+* Use unique filename for health check in [#9842](https://github.com/appwrite/appwrite/pull/9842)
+* Added encrypt property in the attribute string response model in [#9868](https://github.com/appwrite/appwrite/pull/9868)
+* Add sequence in [#9865](https://github.com/appwrite/appwrite/pull/9865)
+* Add builds worker group in [#9873](https://github.com/appwrite/appwrite/pull/9873)
+* updated errro for the string encryption in [#9878](https://github.com/appwrite/appwrite/pull/9878)
+* Revert "Add sequence" in [#9879](https://github.com/appwrite/appwrite/pull/9879)
+* Prepare 1.7.3 release in [#9882](https://github.com/appwrite/appwrite/pull/9882)
 
 # Version 1.6.2
 
@@ -392,263 +392,263 @@
 
 ### Notable changes
 
-* Delete git folder to reduce build size in [9076](https://github.com/appwrite/appwrite/pull/9076)
-* Upgrade assistant in [9100](https://github.com/appwrite/appwrite/pull/9100)
-* Use redis adapter for abuse in [9121](https://github.com/appwrite/appwrite/pull/9121)
-* Set base specification CPUs to 0.5 again in [9146](https://github.com/appwrite/appwrite/pull/9146)
-* Add new push message parameters in [9060](https://github.com/appwrite/appwrite/pull/9060)
-* Update audits to include user type in [9211](https://github.com/appwrite/appwrite/pull/9211)
-* Enable HEIC in [9251](https://github.com/appwrite/appwrite/pull/9251)
-* Added teamName to membership redirect url in [9269](https://github.com/appwrite/appwrite/pull/9269)
-* Add support endpoint url for S3 in [9303](https://github.com/appwrite/appwrite/pull/9303)
-* Added RuPay Credit Card Icon in Avatars Service in [5046](https://github.com/appwrite/appwrite/pull/5046)
-* Add figma oauth provider in [9623](https://github.com/appwrite/appwrite/pull/9623)
-* Update console to version 5.2.58 in [9637](https://github.com/appwrite/appwrite/pull/9637)
+* Delete git folder to reduce build size in [#9076](https://github.com/appwrite/appwrite/pull/9076)
+* Upgrade assistant in [#9100](https://github.com/appwrite/appwrite/pull/9100)
+* Use redis adapter for abuse in [#9121](https://github.com/appwrite/appwrite/pull/9121)
+* Set base specification CPUs to 0.5 again in [#9146](https://github.com/appwrite/appwrite/pull/9146)
+* Add new push message parameters in [#9060](https://github.com/appwrite/appwrite/pull/9060)
+* Update audits to include user type in [#9211](https://github.com/appwrite/appwrite/pull/9211)
+* Enable HEIC in [#9251](https://github.com/appwrite/appwrite/pull/9251)
+* Added teamName to membership redirect url in [#9269](https://github.com/appwrite/appwrite/pull/9269)
+* Add support endpoint url for S3 in [#9303](https://github.com/appwrite/appwrite/pull/9303)
+* Added RuPay Credit Card Icon in Avatars Service in [#5046](https://github.com/appwrite/appwrite/pull/5046)
+* Add figma oauth provider in [#9623](https://github.com/appwrite/appwrite/pull/9623)
+* Update console to version 5.2.58 in [#9637](https://github.com/appwrite/appwrite/pull/9637)
 
 ### Fixes
 
-* Remove failed attribute in [9032](https://github.com/appwrite/appwrite/pull/9032)
-* Fix delete notFound attribute in [9038](https://github.com/appwrite/appwrite/pull/9038)
-* 🇮🇸 Added missing Icelandic translations for email strings. in [4848](https://github.com/appwrite/appwrite/pull/4848)
-* fix doc comment for filter method in [5769](https://github.com/appwrite/appwrite/pull/5769)
-* Delete attribute No throwing Exception on not found in [9157](https://github.com/appwrite/appwrite/pull/9157)
-* Fix VCS identity collision in [9138](https://github.com/appwrite/appwrite/pull/9138)
-* Fix disabling of email-otp when user wants to in [9200](https://github.com/appwrite/appwrite/pull/9200)
-* Ensure user can delete session in [9209](https://github.com/appwrite/appwrite/pull/9209)
-* Fix resend invitation in [9218](https://github.com/appwrite/appwrite/pull/9218)
-* Fix phone number parsing exception handling in [9246](https://github.com/appwrite/appwrite/pull/9246)
-* Fix amazon oauth in [9253](https://github.com/appwrite/appwrite/pull/9253)
-* Fix slack oauth scopes, and updated to v2 in [9228](https://github.com/appwrite/appwrite/pull/9228)
-* Fix forwarded user agent in [9271](https://github.com/appwrite/appwrite/pull/9271)
-* Fix WEBP File Preview Rendering Issue in [9321](https://github.com/appwrite/appwrite/pull/9321)
-* Fix build memory specifications in [9360](https://github.com/appwrite/appwrite/pull/9360)
-* Fix Self Hosting functions by adding missed config in [9373](https://github.com/appwrite/appwrite/pull/9373)
-* Fix resend team invite if already accepted in [9348](https://github.com/appwrite/appwrite/pull/9348)
-* Fix null errors on team invite in [9391](https://github.com/appwrite/appwrite/pull/9391)
-* Fix email (smtp) to multiple recipients in [9243](https://github.com/appwrite/appwrite/pull/9243)
-* Fix stats timing by using receivedAt date when available in [9428](https://github.com/appwrite/appwrite/pull/9428)
-* Make min/max params optional for attribute update in [9387](https://github.com/appwrite/appwrite/pull/9387)
-* Fix blocking of phone sessions when disabled on console in [9447](https://github.com/appwrite/appwrite/pull/9447)
-* Fix logging config in [9467](https://github.com/appwrite/appwrite/pull/9467)
-* Update audit timestamp origin in [9481](https://github.com/appwrite/appwrite/pull/9481)
-* Fix certificates in deletes worker in [9466](https://github.com/appwrite/appwrite/pull/9466)
-* Fix console audits delete in [9547](https://github.com/appwrite/appwrite/pull/9547)
-* Fix migrations in [9633](https://github.com/appwrite/appwrite/pull/9633)
-* Ensure all 4xx errors in OAuth redirect lead to the failure URL in [9679](https://github.com/appwrite/appwrite/pull/9679)
-* Treat 0 as unlimited for CPUs and memory in [9638](https://github.com/appwrite/appwrite/pull/9638)
-* Add contextual dispatch logic to fix high CPU usage in [9687](https://github.com/appwrite/appwrite/pull/9687)
+* Remove failed attribute in [#9032](https://github.com/appwrite/appwrite/pull/9032)
+* Fix delete notFound attribute in [#9038](https://github.com/appwrite/appwrite/pull/9038)
+* 🇮🇸 Added missing Icelandic translations for email strings. in [#4848](https://github.com/appwrite/appwrite/pull/4848)
+* fix doc comment for filter method in [#5769](https://github.com/appwrite/appwrite/pull/5769)
+* Delete attribute No throwing Exception on not found in [#9157](https://github.com/appwrite/appwrite/pull/9157)
+* Fix VCS identity collision in [#9138](https://github.com/appwrite/appwrite/pull/9138)
+* Fix disabling of email-otp when user wants to in [#9200](https://github.com/appwrite/appwrite/pull/9200)
+* Ensure user can delete session in [#9209](https://github.com/appwrite/appwrite/pull/9209)
+* Fix resend invitation in [#9218](https://github.com/appwrite/appwrite/pull/9218)
+* Fix phone number parsing exception handling in [#9246](https://github.com/appwrite/appwrite/pull/9246)
+* Fix amazon oauth in [#9253](https://github.com/appwrite/appwrite/pull/9253)
+* Fix slack oauth scopes, and updated to v2 in [#9228](https://github.com/appwrite/appwrite/pull/9228)
+* Fix forwarded user agent in [#9271](https://github.com/appwrite/appwrite/pull/9271)
+* Fix WEBP File Preview Rendering Issue in [#9321](https://github.com/appwrite/appwrite/pull/9321)
+* Fix build memory specifications in [#9360](https://github.com/appwrite/appwrite/pull/9360)
+* Fix Self Hosting functions by adding missed config in [#9373](https://github.com/appwrite/appwrite/pull/9373)
+* Fix resend team invite if already accepted in [#9348](https://github.com/appwrite/appwrite/pull/9348)
+* Fix null errors on team invite in [#9391](https://github.com/appwrite/appwrite/pull/9391)
+* Fix email (smtp) to multiple recipients in [#9243](https://github.com/appwrite/appwrite/pull/9243)
+* Fix stats timing by using receivedAt date when available in [#9428](https://github.com/appwrite/appwrite/pull/9428)
+* Make min/max params optional for attribute update in [#9387](https://github.com/appwrite/appwrite/pull/9387)
+* Fix blocking of phone sessions when disabled on console in [#9447](https://github.com/appwrite/appwrite/pull/9447)
+* Fix logging config in [#9467](https://github.com/appwrite/appwrite/pull/9467)
+* Update audit timestamp origin in [#9481](https://github.com/appwrite/appwrite/pull/9481)
+* Fix certificates in deletes worker in [#9466](https://github.com/appwrite/appwrite/pull/9466)
+* Fix console audits delete in [#9547](https://github.com/appwrite/appwrite/pull/9547)
+* Fix migrations in [#9633](https://github.com/appwrite/appwrite/pull/9633)
+* Ensure all 4xx errors in OAuth redirect lead to the failure URL in [#9679](https://github.com/appwrite/appwrite/pull/9679)
+* Treat 0 as unlimited for CPUs and memory in [#9638](https://github.com/appwrite/appwrite/pull/9638)
+* Add contextual dispatch logic to fix high CPU usage in [#9687](https://github.com/appwrite/appwrite/pull/9687)
 
 ### Miscellaneous
 
-* Merge 1.6.x into feat-custom-cf-hostnames in [8904](https://github.com/appwrite/appwrite/pull/8904)
-* Improve compression param checks in [8922](https://github.com/appwrite/appwrite/pull/8922)
-* upgrade utopia storage in [8930](https://github.com/appwrite/appwrite/pull/8930)
-* Feat migration in [8797](https://github.com/appwrite/appwrite/pull/8797)
-* feat fix web routes in [8962](https://github.com/appwrite/appwrite/pull/8962)
-* Fix no pool access in [9027](https://github.com/appwrite/appwrite/pull/9027)
-* feat: use environment variable to check rules format in [9039](https://github.com/appwrite/appwrite/pull/9039)
-* Update storage.php in [9037](https://github.com/appwrite/appwrite/pull/9037)
-* Upgrade db 0.53.200 in [9050](https://github.com/appwrite/appwrite/pull/9050)
-* Chore: upgrade utopia storage in [9066](https://github.com/appwrite/appwrite/pull/9066)
-* Update usage-dump payload in [9085](https://github.com/appwrite/appwrite/pull/9085)
-* GitHub Workflows security hardening in [3728](https://github.com/appwrite/appwrite/pull/3728)
-* Update add-oauth2-provider.md in [4313](https://github.com/appwrite/appwrite/pull/4313)
-* update readme-cn some doc in [5278](https://github.com/appwrite/appwrite/pull/5278)
-* Add accessibility features in [7042](https://github.com/appwrite/appwrite/pull/7042)
-* Add Appwrite Cloud to read me. in [5445](https://github.com/appwrite/appwrite/pull/5445)
-* Migration throw error in [9092](https://github.com/appwrite/appwrite/pull/9092)
-* Fix usage payload bug in [9097](https://github.com/appwrite/appwrite/pull/9097)
-* chore: replace occurrences of dbForConsole to dbForPlatform in [9096](https://github.com/appwrite/appwrite/pull/9096)
-* fix(realtime): decrement connectionCounter only if connection is known in [9055](https://github.com/appwrite/appwrite/pull/9055)
-* payload bug fix in [9098](https://github.com/appwrite/appwrite/pull/9098)
-* Fix usage payload bug in [9099](https://github.com/appwrite/appwrite/pull/9099)
-* Usage payload debug in [9101](https://github.com/appwrite/appwrite/pull/9101)
-* Usage payload debug in [9103](https://github.com/appwrite/appwrite/pull/9103)
-* Usage payload debug in [9104](https://github.com/appwrite/appwrite/pull/9104)
-* Feat: createFunction abuse labels in [9102](https://github.com/appwrite/appwrite/pull/9102)
-* Docs-create-document in [9105](https://github.com/appwrite/appwrite/pull/9105)
-* Docs: Create document and unknown attribute error messages. in [5427](https://github.com/appwrite/appwrite/pull/5427)
-* Fix: update project accessed at from router and schedulers in [9109](https://github.com/appwrite/appwrite/pull/9109)
-* chore: initial commit in [9111](https://github.com/appwrite/appwrite/pull/9111)
-* chore: optimise webhooks payload in [9115](https://github.com/appwrite/appwrite/pull/9115)
-* Revert "chore: initial commit" in [9117](https://github.com/appwrite/appwrite/pull/9117)
-* chore: fix attribute name in [9118](https://github.com/appwrite/appwrite/pull/9118)
-* Migrate to redis abuse in [9124](https://github.com/appwrite/appwrite/pull/9124)
-* Added webhooks usage stats in [9125](https://github.com/appwrite/appwrite/pull/9125)
-* chore remove abuse cleanup in [9137](https://github.com/appwrite/appwrite/pull/9137)
-* fix: remove abuse delete trigger in [9139](https://github.com/appwrite/appwrite/pull/9139)
-* Remove firebase OAuth API endpoints in [9144](https://github.com/appwrite/appwrite/pull/9144)
-* chore: release client sdks in [9112](https://github.com/appwrite/appwrite/pull/9112)
-* Update general.php in [9155](https://github.com/appwrite/appwrite/pull/9155)
-* feat(swoole): allow configuration override of available cpus in [9177](https://github.com/appwrite/appwrite/pull/9177)
-* Usage databases api read writes addition in [9142](https://github.com/appwrite/appwrite/pull/9142)
-* Fix dead connections in [9190](https://github.com/appwrite/appwrite/pull/9190)
-* Add hostname to audits in [9165](https://github.com/appwrite/appwrite/pull/9165)
-* chore: shifted authphone usage tracking to api calls in [9191](https://github.com/appwrite/appwrite/pull/9191)
-* Revert "Fix dead connections" in [9201](https://github.com/appwrite/appwrite/pull/9201)
-* Add assertEventually to messaging provider logs test in [9192](https://github.com/appwrite/appwrite/pull/9192)
-* feat project sms usage in [9198](https://github.com/appwrite/appwrite/pull/9198)
-* chore: add audit labels to project resources in [9056](https://github.com/appwrite/appwrite/pull/9056)
-* fix sms usage in [9207](https://github.com/appwrite/appwrite/pull/9207)
-* Update database in [9202](https://github.com/appwrite/appwrite/pull/9202)
-* Fix dead connections in [9213](https://github.com/appwrite/appwrite/pull/9213)
-* Revert "Fix dead connections" in [9214](https://github.com/appwrite/appwrite/pull/9214)
-* Add logs db init for consistency in [9163](https://github.com/appwrite/appwrite/pull/9163)
-* Split the collection definitions in [9153](https://github.com/appwrite/appwrite/pull/9153)
-* Log path with populated parameters in [9220](https://github.com/appwrite/appwrite/pull/9220)
-* Add missing scope on function template in [9208](https://github.com/appwrite/appwrite/pull/9208)
-* Add relatedCollection default in [9225](https://github.com/appwrite/appwrite/pull/9225)
-* fix: function usage in [9235](https://github.com/appwrite/appwrite/pull/9235)
-* feat: optimise events payloads in [9232](https://github.com/appwrite/appwrite/pull/9232)
-* Optimise webhook events in [9168](https://github.com/appwrite/appwrite/pull/9168)
-* fix: maintenance job missing type in [9238](https://github.com/appwrite/appwrite/pull/9238)
-* Update Fetch to 0.3.0 in [9245](https://github.com/appwrite/appwrite/pull/9245)
-* Fix maintenance job in [9247](https://github.com/appwrite/appwrite/pull/9247)
-* chore: add missing case for executions in [9248](https://github.com/appwrite/appwrite/pull/9248)
-* Add index dependency exception in [9226](https://github.com/appwrite/appwrite/pull/9226)
-* chore: fix benchmarking test when made from fork in [9233](https://github.com/appwrite/appwrite/pull/9233)
-* Update SDK Generator versions in [9188](https://github.com/appwrite/appwrite/pull/9188)
-* chore: skipped job instead of throwing error in [9250](https://github.com/appwrite/appwrite/pull/9250)
-* Implement new SDK Class on 1.6.x in [9237](https://github.com/appwrite/appwrite/pull/9237)
-* Delete collection before Appwrite's attributes in [9256](https://github.com/appwrite/appwrite/pull/9256)
-* Feat batch usage dump in [9255](https://github.com/appwrite/appwrite/pull/9255)
-* Fix cloud tests in [9261](https://github.com/appwrite/appwrite/pull/9261)
-* Usage: Databases reads writes in [9260](https://github.com/appwrite/appwrite/pull/9260)
-* Update: Latest sdk specs in [9274](https://github.com/appwrite/appwrite/pull/9274)
-* Revert "Feat batch usage dump" in [9276](https://github.com/appwrite/appwrite/pull/9276)
-* feat: add fast2SMS adapter in [9263](https://github.com/appwrite/appwrite/pull/9263)
-* Update Sdk Generator dependency in [9280](https://github.com/appwrite/appwrite/pull/9280)
-* Transformed at addition in [9281](https://github.com/appwrite/appwrite/pull/9281)
-* Docs: clarify update endpoints only work on draft messages in [9236](https://github.com/appwrite/appwrite/pull/9236)
-* Update sdk generator dependency in [9282](https://github.com/appwrite/appwrite/pull/9282)
-* Revert "Transformed at addition" in [9284](https://github.com/appwrite/appwrite/pull/9284)
-* replaced init for cloud link in [9285](https://github.com/appwrite/appwrite/pull/9285)
-* Add transformed at in [9289](https://github.com/appwrite/appwrite/pull/9289)
-* Make migrations use Dynamic keys for destination in [9291](https://github.com/appwrite/appwrite/pull/9291)
-* Make sessions limit tests assert eventually in [9298](https://github.com/appwrite/appwrite/pull/9298)
-* Chore update database in [9306](https://github.com/appwrite/appwrite/pull/9306)
-* feat: add AMQP queues in [9287](https://github.com/appwrite/appwrite/pull/9287)
-* fix(test): use assertEventually instead of while(true) in [9308](https://github.com/appwrite/appwrite/pull/9308)
-* fix(certificate worker): events are published without queue name in [9309](https://github.com/appwrite/appwrite/pull/9309)
-* chore: update utopia-php/queue to 0.8.1 in [9311](https://github.com/appwrite/appwrite/pull/9311)
-* chore: update utopia-php/queue to 0.8.2 in [9312](https://github.com/appwrite/appwrite/pull/9312)
-* fix(schedule-tasks): revert back to direct pool usage in [9313](https://github.com/appwrite/appwrite/pull/9313)
-* feat: custom app schemes in [9262](https://github.com/appwrite/appwrite/pull/9262)
-* Revert "feat: custom app schemes" in [9319](https://github.com/appwrite/appwrite/pull/9319)
-* Restore "feat: custom app schemes"" in [9320](https://github.com/appwrite/appwrite/pull/9320)
-* Revert "Restore "feat: custom app schemes""" in [9323](https://github.com/appwrite/appwrite/pull/9323)
-* chore: update dependencies in [9330](https://github.com/appwrite/appwrite/pull/9330)
-* Feat: logs DB in [9272](https://github.com/appwrite/appwrite/pull/9272)
-* Catch invalid index in [9329](https://github.com/appwrite/appwrite/pull/9329)
-* Fix: missing call for image transformations counting in [9342](https://github.com/appwrite/appwrite/pull/9342)
-* Fix drop abuse on shared table project delete in [9346](https://github.com/appwrite/appwrite/pull/9346)
-* Only run all table mode tests on db update in [9338](https://github.com/appwrite/appwrite/pull/9338)
-* Fix: missing periodic metric in [9350](https://github.com/appwrite/appwrite/pull/9350)
-* feat(builds): check if function is blocked before building in [9332](https://github.com/appwrite/appwrite/pull/9332)
-* feat: batch create audit logs in [9347](https://github.com/appwrite/appwrite/pull/9347)
-* Chore: Update migrations in [9355](https://github.com/appwrite/appwrite/pull/9355)
-* Fix: metric time was not being written to DB in [9354](https://github.com/appwrite/appwrite/pull/9354)
-* Fix patch index validation in [9356](https://github.com/appwrite/appwrite/pull/9356)
-* Fix image trnasformation metrics in [9370](https://github.com/appwrite/appwrite/pull/9370)
-* Use batch delete in worker in [9375](https://github.com/appwrite/appwrite/pull/9375)
-* Fix Model Platform is missing response key: store  in [9361](https://github.com/appwrite/appwrite/pull/9361)
-* Feat key segmented usage in [9336](https://github.com/appwrite/appwrite/pull/9336)
-* Feat messaging metrics in [9353](https://github.com/appwrite/appwrite/pull/9353)
-* Fix removed audits for shared v2 in [9388](https://github.com/appwrite/appwrite/pull/9388)
-* chore: bump utopia-php/image to 0.8.0 in [9390](https://github.com/appwrite/appwrite/pull/9390)
-* Fix outdated CLI commands in documentation in [9122](https://github.com/appwrite/appwrite/pull/9122)
-* disable logs display in [9398](https://github.com/appwrite/appwrite/pull/9398)
-* Log batches per project in [9403](https://github.com/appwrite/appwrite/pull/9403)
-* Batch per project in [9410](https://github.com/appwrite/appwrite/pull/9410)
-* Fix: stats resources only queue projects accessed in last 3 hours in [9411](https://github.com/appwrite/appwrite/pull/9411)
-* Track options requests in [9397](https://github.com/appwrite/appwrite/pull/9397)
-* chore: bump docker-base in [9406](https://github.com/appwrite/appwrite/pull/9406)
-* refactor: migrate Realtime::send calls to queueForRealtime in [9325](https://github.com/appwrite/appwrite/pull/9325)
-* Revert "Fix: stats resources only queue projects accessed in last 3 hours" in [9424](https://github.com/appwrite/appwrite/pull/9424)
-* Remove usage and usage dump in favor of stats-usage and stats-usage-dump in [9339](https://github.com/appwrite/appwrite/pull/9339)
-* Fix: disable dual writing in [9429](https://github.com/appwrite/appwrite/pull/9429)
-* Disable transformedAt update for console users in [9425](https://github.com/appwrite/appwrite/pull/9425)
-* chore: add image transformation stats to usage endpoint in [9393](https://github.com/appwrite/appwrite/pull/9393)
-* chore: added timeout to deployment builds in tests in [9426](https://github.com/appwrite/appwrite/pull/9426)
-* fix: model for image transformations in usage project in [9442](https://github.com/appwrite/appwrite/pull/9442)
-* Feat: calculate database storage in stats-resources in [9443](https://github.com/appwrite/appwrite/pull/9443)
-* Activities batch writes in [9438](https://github.com/appwrite/appwrite/pull/9438)
-* chore: bump cache 0.12.x in [9412](https://github.com/appwrite/appwrite/pull/9412)
-* chore: queue console project for maintenance delete in [9479](https://github.com/appwrite/appwrite/pull/9479)
-* chore: added logsdb for deletes worker in [9462](https://github.com/appwrite/appwrite/pull/9462)
-* Feat: calculate and log time taken for each project in [9491](https://github.com/appwrite/appwrite/pull/9491)
-* chore: update initializing dbForLogs in [9494](https://github.com/appwrite/appwrite/pull/9494)
-* Feat bulk audit delete in [9487](https://github.com/appwrite/appwrite/pull/9487)
-* Prepare 1.6.2 release in [9499](https://github.com/appwrite/appwrite/pull/9499)
-* Regenerate specs in [9497](https://github.com/appwrite/appwrite/pull/9497)
-* Regenerate examples in [9498](https://github.com/appwrite/appwrite/pull/9498)
-* chore: bump sdk in [9414](https://github.com/appwrite/appwrite/pull/9414)
-* update queue to 0.9.* in [9505](https://github.com/appwrite/appwrite/pull/9505)
-* Feat improve delete queries in [9507](https://github.com/appwrite/appwrite/pull/9507)
-* Feat: Add rule attributes in [9508](https://github.com/appwrite/appwrite/pull/9508)
-* Sync main into 1.6.x in [9496](https://github.com/appwrite/appwrite/pull/9496)
-* Bump console to version 5.2.53 in [9495](https://github.com/appwrite/appwrite/pull/9495)
-* Prepare 1.6.1 release in [9294](https://github.com/appwrite/appwrite/pull/9294)
-* Improve delete ordering in [9512](https://github.com/appwrite/appwrite/pull/9512)
-* Cleanups in [9511](https://github.com/appwrite/appwrite/pull/9511)
-* Feat dynamic regions in [9408](https://github.com/appwrite/appwrite/pull/9408)
-* Feat env vars to system lib in [9515](https://github.com/appwrite/appwrite/pull/9515)
-* Feat: domains count in [9514](https://github.com/appwrite/appwrite/pull/9514)
-* Migration read from db in [9529](https://github.com/appwrite/appwrite/pull/9529)
-* feat: add pool telemetry in [9530](https://github.com/appwrite/appwrite/pull/9530)
-* Disable PDO persistence since we manage our own pool in [9526](https://github.com/appwrite/appwrite/pull/9526)
-* chore: set min operations to 1 for reads and writes in [9536](https://github.com/appwrite/appwrite/pull/9536)
-* Remove default region in [9430](https://github.com/appwrite/appwrite/pull/9430)
-* Use cursor pagination with bigger limit for maintenance project loop in [9546](https://github.com/appwrite/appwrite/pull/9546)
-* chore: stop tests on failure in [9525](https://github.com/appwrite/appwrite/pull/9525)
-* chore: only update total count for privileged users in [9554](https://github.com/appwrite/appwrite/pull/9554)
-* refactor: initialization of audit retention in [9563](https://github.com/appwrite/appwrite/pull/9563)
-* Delete worker queries fixes in [9523](https://github.com/appwrite/appwrite/pull/9523)
-* Bump database 0.62.x in [9568](https://github.com/appwrite/appwrite/pull/9568)
-* Fix: schedules region filtering in [9577](https://github.com/appwrite/appwrite/pull/9577)
-* Deletes worker fix selects for pagination in [9578](https://github.com/appwrite/appwrite/pull/9578)
-* Add $permissions for delete documents selects in [9579](https://github.com/appwrite/appwrite/pull/9579)
-* chore(audits): return queue pre-fetch results in [9533](https://github.com/appwrite/appwrite/pull/9533)
-* Revert "chore(audits): return queue pre-fetch results" in [9586](https://github.com/appwrite/appwrite/pull/9586)
-* Feat multi tenant insert in [9573](https://github.com/appwrite/appwrite/pull/9573)
-* Add order by for cursor in [9588](https://github.com/appwrite/appwrite/pull/9588)
-* Feat update fetch in [9592](https://github.com/appwrite/appwrite/pull/9592)
-* Fix tenant casting in [9598](https://github.com/appwrite/appwrite/pull/9598)
-* Feat update ws in [9602](https://github.com/appwrite/appwrite/pull/9602)
-* Update database in [9603](https://github.com/appwrite/appwrite/pull/9603)
-* Fix: image transformation cache in [9608](https://github.com/appwrite/appwrite/pull/9608)
-* Remove audit payload in [9610](https://github.com/appwrite/appwrite/pull/9610)
-* Sample rate from DSN in [9559](https://github.com/appwrite/appwrite/pull/9559)
-* Restrict role change for sole org owner in [9615](https://github.com/appwrite/appwrite/pull/9615)
-* chore: update php image to 0.8.1 in [9616](https://github.com/appwrite/appwrite/pull/9616)
-* feat: refactor executor setup in [9420](https://github.com/appwrite/appwrite/pull/9420)
-* chore: update gitpod.yml config in [9561](https://github.com/appwrite/appwrite/pull/9561)
-* chore: update dependencies in [9625](https://github.com/appwrite/appwrite/pull/9625)
-* Update migrations lib in [9628](https://github.com/appwrite/appwrite/pull/9628)
-* feat: cache telemetry in [9624](https://github.com/appwrite/appwrite/pull/9624)
-* Bump console to version 5.2.56 in [9631](https://github.com/appwrite/appwrite/pull/9631)
-* Multi region support in [8667](https://github.com/appwrite/appwrite/pull/8667)
-* Revert "Multi region support" in [9632](https://github.com/appwrite/appwrite/pull/9632)
-* Revert "Revert "Multi region support"" in [9636](https://github.com/appwrite/appwrite/pull/9636)
-* Fix tasks in [9644](https://github.com/appwrite/appwrite/pull/9644)
-* chore: updated the migration version to 8.6 in [9646](https://github.com/appwrite/appwrite/pull/9646)
-* Fix: merge the working of StatsUsage and StatsUsageDump in [9585](https://github.com/appwrite/appwrite/pull/9585)
-* Update database in [9643](https://github.com/appwrite/appwrite/pull/9643)
-* chore: fix error logging for CLI tasks in [9651](https://github.com/appwrite/appwrite/pull/9651)
-* fix: usage test assertion in [9653](https://github.com/appwrite/appwrite/pull/9653)
-* Fix keys in [9656](https://github.com/appwrite/appwrite/pull/9656)
-* Feat: multi tenant dual writing in [9583](https://github.com/appwrite/appwrite/pull/9583)
-* Fix/throwing 400 for null order attributes  in [9657](https://github.com/appwrite/appwrite/pull/9657)
-* feat: sdk group attribute in [9596](https://github.com/appwrite/appwrite/pull/9596)
-* Add configurable function and build size in [9648](https://github.com/appwrite/appwrite/pull/9648)
-* feat: update API endpoint in the code examples in [8933](https://github.com/appwrite/appwrite/pull/8933)
-* chore: abstract token secret hiding to response model in [9574](https://github.com/appwrite/appwrite/pull/9574)
-* chore: update sdks in [9655](https://github.com/appwrite/appwrite/pull/9655)
-* feat: allow non-critical events to ignore exceptions when enqueuing the event in [9680](https://github.com/appwrite/appwrite/pull/9680)
-* Revert "Add configurable function and build size" in [9681](https://github.com/appwrite/appwrite/pull/9681)
-* core: introduce endpoint.docs in specs in [9685](https://github.com/appwrite/appwrite/pull/9685)
-* fix: remove content-type header from get request specs in [9666](https://github.com/appwrite/appwrite/pull/9666)
-* chore: update flutter sdk in [9691](https://github.com/appwrite/appwrite/pull/9691)
+* Merge 1.6.x into feat-custom-cf-hostnames in [#8904](https://github.com/appwrite/appwrite/pull/8904)
+* Improve compression param checks in [#8922](https://github.com/appwrite/appwrite/pull/8922)
+* upgrade utopia storage in [#8930](https://github.com/appwrite/appwrite/pull/8930)
+* Feat migration in [#8797](https://github.com/appwrite/appwrite/pull/8797)
+* feat fix web routes in [#8962](https://github.com/appwrite/appwrite/pull/8962)
+* Fix no pool access in [#9027](https://github.com/appwrite/appwrite/pull/9027)
+* feat: use environment variable to check rules format in [#9039](https://github.com/appwrite/appwrite/pull/9039)
+* Update storage.php in [#9037](https://github.com/appwrite/appwrite/pull/9037)
+* Upgrade db 0.53.200 in [#9050](https://github.com/appwrite/appwrite/pull/9050)
+* Chore: upgrade utopia storage in [#9066](https://github.com/appwrite/appwrite/pull/9066)
+* Update usage-dump payload in [#9085](https://github.com/appwrite/appwrite/pull/9085)
+* GitHub Workflows security hardening in [#3728](https://github.com/appwrite/appwrite/pull/3728)
+* Update add-oauth2-provider.md in [#4313](https://github.com/appwrite/appwrite/pull/4313)
+* update readme-cn some doc in [#5278](https://github.com/appwrite/appwrite/pull/5278)
+* Add accessibility features in [#7042](https://github.com/appwrite/appwrite/pull/7042)
+* Add Appwrite Cloud to read me. in [#5445](https://github.com/appwrite/appwrite/pull/5445)
+* Migration throw error in [#9092](https://github.com/appwrite/appwrite/pull/9092)
+* Fix usage payload bug in [#9097](https://github.com/appwrite/appwrite/pull/9097)
+* chore: replace occurrences of dbForConsole to dbForPlatform in [#9096](https://github.com/appwrite/appwrite/pull/9096)
+* fix(realtime): decrement connectionCounter only if connection is known in [#9055](https://github.com/appwrite/appwrite/pull/9055)
+* payload bug fix in [#9098](https://github.com/appwrite/appwrite/pull/9098)
+* Fix usage payload bug in [#9099](https://github.com/appwrite/appwrite/pull/9099)
+* Usage payload debug in [#9101](https://github.com/appwrite/appwrite/pull/9101)
+* Usage payload debug in [#9103](https://github.com/appwrite/appwrite/pull/9103)
+* Usage payload debug in [#9104](https://github.com/appwrite/appwrite/pull/9104)
+* Feat: createFunction abuse labels in [#9102](https://github.com/appwrite/appwrite/pull/9102)
+* Docs-create-document in [#9105](https://github.com/appwrite/appwrite/pull/9105)
+* Docs: Create document and unknown attribute error messages. in [#5427](https://github.com/appwrite/appwrite/pull/5427)
+* Fix: update project accessed at from router and schedulers in [#9109](https://github.com/appwrite/appwrite/pull/9109)
+* chore: initial commit in [#9111](https://github.com/appwrite/appwrite/pull/9111)
+* chore: optimise webhooks payload in [#9115](https://github.com/appwrite/appwrite/pull/9115)
+* Revert "chore: initial commit" in [#9117](https://github.com/appwrite/appwrite/pull/9117)
+* chore: fix attribute name in [#9118](https://github.com/appwrite/appwrite/pull/9118)
+* Migrate to redis abuse in [#9124](https://github.com/appwrite/appwrite/pull/9124)
+* Added webhooks usage stats in [#9125](https://github.com/appwrite/appwrite/pull/9125)
+* chore remove abuse cleanup in [#9137](https://github.com/appwrite/appwrite/pull/9137)
+* fix: remove abuse delete trigger in [#9139](https://github.com/appwrite/appwrite/pull/9139)
+* Remove firebase OAuth API endpoints in [#9144](https://github.com/appwrite/appwrite/pull/9144)
+* chore: release client sdks in [#9112](https://github.com/appwrite/appwrite/pull/9112)
+* Update general.php in [#9155](https://github.com/appwrite/appwrite/pull/9155)
+* feat(swoole): allow configuration override of available cpus in [#9177](https://github.com/appwrite/appwrite/pull/9177)
+* Usage databases api read writes addition in [#9142](https://github.com/appwrite/appwrite/pull/9142)
+* Fix dead connections in [#9190](https://github.com/appwrite/appwrite/pull/9190)
+* Add hostname to audits in [#9165](https://github.com/appwrite/appwrite/pull/9165)
+* chore: shifted authphone usage tracking to api calls in [#9191](https://github.com/appwrite/appwrite/pull/9191)
+* Revert "Fix dead connections" in [#9201](https://github.com/appwrite/appwrite/pull/9201)
+* Add assertEventually to messaging provider logs test in [#9192](https://github.com/appwrite/appwrite/pull/9192)
+* feat project sms usage in [#9198](https://github.com/appwrite/appwrite/pull/9198)
+* chore: add audit labels to project resources in [#9056](https://github.com/appwrite/appwrite/pull/9056)
+* fix sms usage in [#9207](https://github.com/appwrite/appwrite/pull/9207)
+* Update database in [#9202](https://github.com/appwrite/appwrite/pull/9202)
+* Fix dead connections in [#9213](https://github.com/appwrite/appwrite/pull/9213)
+* Revert "Fix dead connections" in [#9214](https://github.com/appwrite/appwrite/pull/9214)
+* Add logs db init for consistency in [#9163](https://github.com/appwrite/appwrite/pull/9163)
+* Split the collection definitions in [#9153](https://github.com/appwrite/appwrite/pull/9153)
+* Log path with populated parameters in [#9220](https://github.com/appwrite/appwrite/pull/9220)
+* Add missing scope on function template in [#9208](https://github.com/appwrite/appwrite/pull/9208)
+* Add relatedCollection default in [#9225](https://github.com/appwrite/appwrite/pull/9225)
+* fix: function usage in [#9235](https://github.com/appwrite/appwrite/pull/9235)
+* feat: optimise events payloads in [#9232](https://github.com/appwrite/appwrite/pull/9232)
+* Optimise webhook events in [#9168](https://github.com/appwrite/appwrite/pull/9168)
+* fix: maintenance job missing type in [#9238](https://github.com/appwrite/appwrite/pull/9238)
+* Update Fetch to 0.3.0 in [#9245](https://github.com/appwrite/appwrite/pull/9245)
+* Fix maintenance job in [#9247](https://github.com/appwrite/appwrite/pull/9247)
+* chore: add missing case for executions in [#9248](https://github.com/appwrite/appwrite/pull/9248)
+* Add index dependency exception in [#9226](https://github.com/appwrite/appwrite/pull/9226)
+* chore: fix benchmarking test when made from fork in [#9233](https://github.com/appwrite/appwrite/pull/9233)
+* Update SDK Generator versions in [#9188](https://github.com/appwrite/appwrite/pull/9188)
+* chore: skipped job instead of throwing error in [#9250](https://github.com/appwrite/appwrite/pull/9250)
+* Implement new SDK Class on 1.6.x in [#9237](https://github.com/appwrite/appwrite/pull/9237)
+* Delete collection before Appwrite's attributes in [#9256](https://github.com/appwrite/appwrite/pull/9256)
+* Feat batch usage dump in [#9255](https://github.com/appwrite/appwrite/pull/9255)
+* Fix cloud tests in [#9261](https://github.com/appwrite/appwrite/pull/9261)
+* Usage: Databases reads writes in [#9260](https://github.com/appwrite/appwrite/pull/9260)
+* Update: Latest sdk specs in [#9274](https://github.com/appwrite/appwrite/pull/9274)
+* Revert "Feat batch usage dump" in [#9276](https://github.com/appwrite/appwrite/pull/9276)
+* feat: add fast2SMS adapter in [#9263](https://github.com/appwrite/appwrite/pull/9263)
+* Update Sdk Generator dependency in [#9280](https://github.com/appwrite/appwrite/pull/9280)
+* Transformed at addition in [#9281](https://github.com/appwrite/appwrite/pull/9281)
+* Docs: clarify update endpoints only work on draft messages in [#9236](https://github.com/appwrite/appwrite/pull/9236)
+* Update sdk generator dependency in [#9282](https://github.com/appwrite/appwrite/pull/9282)
+* Revert "Transformed at addition" in [#9284](https://github.com/appwrite/appwrite/pull/9284)
+* replaced init for cloud link in [#9285](https://github.com/appwrite/appwrite/pull/9285)
+* Add transformed at in [#9289](https://github.com/appwrite/appwrite/pull/9289)
+* Make migrations use Dynamic keys for destination in [#9291](https://github.com/appwrite/appwrite/pull/9291)
+* Make sessions limit tests assert eventually in [#9298](https://github.com/appwrite/appwrite/pull/9298)
+* Chore update database in [#9306](https://github.com/appwrite/appwrite/pull/9306)
+* feat: add AMQP queues in [#9287](https://github.com/appwrite/appwrite/pull/9287)
+* fix(test): use assertEventually instead of while(true) in [#9308](https://github.com/appwrite/appwrite/pull/9308)
+* fix(certificate worker): events are published without queue name in [#9309](https://github.com/appwrite/appwrite/pull/9309)
+* chore: update utopia-php/queue to 0.8.1 in [#9311](https://github.com/appwrite/appwrite/pull/9311)
+* chore: update utopia-php/queue to 0.8.2 in [#9312](https://github.com/appwrite/appwrite/pull/9312)
+* fix(schedule-tasks): revert back to direct pool usage in [#9313](https://github.com/appwrite/appwrite/pull/9313)
+* feat: custom app schemes in [#9262](https://github.com/appwrite/appwrite/pull/9262)
+* Revert "feat: custom app schemes" in [#9319](https://github.com/appwrite/appwrite/pull/9319)
+* Restore "feat: custom app schemes"" in [#9320](https://github.com/appwrite/appwrite/pull/9320)
+* Revert "Restore "feat: custom app schemes""" in [#9323](https://github.com/appwrite/appwrite/pull/9323)
+* chore: update dependencies in [#9330](https://github.com/appwrite/appwrite/pull/9330)
+* Feat: logs DB in [#9272](https://github.com/appwrite/appwrite/pull/9272)
+* Catch invalid index in [#9329](https://github.com/appwrite/appwrite/pull/9329)
+* Fix: missing call for image transformations counting in [#9342](https://github.com/appwrite/appwrite/pull/9342)
+* Fix drop abuse on shared table project delete in [#9346](https://github.com/appwrite/appwrite/pull/9346)
+* Only run all table mode tests on db update in [#9338](https://github.com/appwrite/appwrite/pull/9338)
+* Fix: missing periodic metric in [#9350](https://github.com/appwrite/appwrite/pull/9350)
+* feat(builds): check if function is blocked before building in [#9332](https://github.com/appwrite/appwrite/pull/9332)
+* feat: batch create audit logs in [#9347](https://github.com/appwrite/appwrite/pull/9347)
+* Chore: Update migrations in [#9355](https://github.com/appwrite/appwrite/pull/9355)
+* Fix: metric time was not being written to DB in [#9354](https://github.com/appwrite/appwrite/pull/9354)
+* Fix patch index validation in [#9356](https://github.com/appwrite/appwrite/pull/9356)
+* Fix image trnasformation metrics in [#9370](https://github.com/appwrite/appwrite/pull/9370)
+* Use batch delete in worker in [#9375](https://github.com/appwrite/appwrite/pull/9375)
+* Fix Model Platform is missing response key: store  in [#9361](https://github.com/appwrite/appwrite/pull/9361)
+* Feat key segmented usage in [#9336](https://github.com/appwrite/appwrite/pull/9336)
+* Feat messaging metrics in [#9353](https://github.com/appwrite/appwrite/pull/9353)
+* Fix removed audits for shared v2 in [#9388](https://github.com/appwrite/appwrite/pull/9388)
+* chore: bump utopia-php/image to 0.8.0 in [#9390](https://github.com/appwrite/appwrite/pull/9390)
+* Fix outdated CLI commands in documentation in [#9122](https://github.com/appwrite/appwrite/pull/9122)
+* disable logs display in [#9398](https://github.com/appwrite/appwrite/pull/9398)
+* Log batches per project in [#9403](https://github.com/appwrite/appwrite/pull/9403)
+* Batch per project in [#9410](https://github.com/appwrite/appwrite/pull/9410)
+* Fix: stats resources only queue projects accessed in last 3 hours in [#9411](https://github.com/appwrite/appwrite/pull/9411)
+* Track options requests in [#9397](https://github.com/appwrite/appwrite/pull/9397)
+* chore: bump docker-base in [#9406](https://github.com/appwrite/appwrite/pull/9406)
+* refactor: migrate Realtime::send calls to queueForRealtime in [#9325](https://github.com/appwrite/appwrite/pull/9325)
+* Revert "Fix: stats resources only queue projects accessed in last 3 hours" in [#9424](https://github.com/appwrite/appwrite/pull/9424)
+* Remove usage and usage dump in favor of stats-usage and stats-usage-dump in [#9339](https://github.com/appwrite/appwrite/pull/9339)
+* Fix: disable dual writing in [#9429](https://github.com/appwrite/appwrite/pull/9429)
+* Disable transformedAt update for console users in [#9425](https://github.com/appwrite/appwrite/pull/9425)
+* chore: add image transformation stats to usage endpoint in [#9393](https://github.com/appwrite/appwrite/pull/9393)
+* chore: added timeout to deployment builds in tests in [#9426](https://github.com/appwrite/appwrite/pull/9426)
+* fix: model for image transformations in usage project in [#9442](https://github.com/appwrite/appwrite/pull/9442)
+* Feat: calculate database storage in stats-resources in [#9443](https://github.com/appwrite/appwrite/pull/9443)
+* Activities batch writes in [#9438](https://github.com/appwrite/appwrite/pull/9438)
+* chore: bump cache 0.12.x in [#9412](https://github.com/appwrite/appwrite/pull/9412)
+* chore: queue console project for maintenance delete in [#9479](https://github.com/appwrite/appwrite/pull/9479)
+* chore: added logsdb for deletes worker in [#9462](https://github.com/appwrite/appwrite/pull/9462)
+* Feat: calculate and log time taken for each project in [#9491](https://github.com/appwrite/appwrite/pull/9491)
+* chore: update initializing dbForLogs in [#9494](https://github.com/appwrite/appwrite/pull/9494)
+* Feat bulk audit delete in [#9487](https://github.com/appwrite/appwrite/pull/9487)
+* Prepare 1.6.2 release in [#9499](https://github.com/appwrite/appwrite/pull/9499)
+* Regenerate specs in [#9497](https://github.com/appwrite/appwrite/pull/9497)
+* Regenerate examples in [#9498](https://github.com/appwrite/appwrite/pull/9498)
+* chore: bump sdk in [#9414](https://github.com/appwrite/appwrite/pull/9414)
+* update queue to 0.9.* in [#9505](https://github.com/appwrite/appwrite/pull/9505)
+* Feat improve delete queries in [#9507](https://github.com/appwrite/appwrite/pull/9507)
+* Feat: Add rule attributes in [#9508](https://github.com/appwrite/appwrite/pull/9508)
+* Sync main into 1.6.x in [#9496](https://github.com/appwrite/appwrite/pull/9496)
+* Bump console to version 5.2.53 in [#9495](https://github.com/appwrite/appwrite/pull/9495)
+* Prepare 1.6.1 release in [#9294](https://github.com/appwrite/appwrite/pull/9294)
+* Improve delete ordering in [#9512](https://github.com/appwrite/appwrite/pull/9512)
+* Cleanups in [#9511](https://github.com/appwrite/appwrite/pull/9511)
+* Feat dynamic regions in [#9408](https://github.com/appwrite/appwrite/pull/9408)
+* Feat env vars to system lib in [#9515](https://github.com/appwrite/appwrite/pull/9515)
+* Feat: domains count in [#9514](https://github.com/appwrite/appwrite/pull/9514)
+* Migration read from db in [#9529](https://github.com/appwrite/appwrite/pull/9529)
+* feat: add pool telemetry in [#9530](https://github.com/appwrite/appwrite/pull/9530)
+* Disable PDO persistence since we manage our own pool in [#9526](https://github.com/appwrite/appwrite/pull/9526)
+* chore: set min operations to 1 for reads and writes in [#9536](https://github.com/appwrite/appwrite/pull/9536)
+* Remove default region in [#9430](https://github.com/appwrite/appwrite/pull/9430)
+* Use cursor pagination with bigger limit for maintenance project loop in [#9546](https://github.com/appwrite/appwrite/pull/9546)
+* chore: stop tests on failure in [#9525](https://github.com/appwrite/appwrite/pull/9525)
+* chore: only update total count for privileged users in [#9554](https://github.com/appwrite/appwrite/pull/9554)
+* refactor: initialization of audit retention in [#9563](https://github.com/appwrite/appwrite/pull/9563)
+* Delete worker queries fixes in [#9523](https://github.com/appwrite/appwrite/pull/9523)
+* Bump database 0.62.x in [#9568](https://github.com/appwrite/appwrite/pull/9568)
+* Fix: schedules region filtering in [#9577](https://github.com/appwrite/appwrite/pull/9577)
+* Deletes worker fix selects for pagination in [#9578](https://github.com/appwrite/appwrite/pull/9578)
+* Add $permissions for delete documents selects in [#9579](https://github.com/appwrite/appwrite/pull/9579)
+* chore(audits): return queue pre-fetch results in [#9533](https://github.com/appwrite/appwrite/pull/9533)
+* Revert "chore(audits): return queue pre-fetch results" in [#9586](https://github.com/appwrite/appwrite/pull/9586)
+* Feat multi tenant insert in [#9573](https://github.com/appwrite/appwrite/pull/9573)
+* Add order by for cursor in [#9588](https://github.com/appwrite/appwrite/pull/9588)
+* Feat update fetch in [#9592](https://github.com/appwrite/appwrite/pull/9592)
+* Fix tenant casting in [#9598](https://github.com/appwrite/appwrite/pull/9598)
+* Feat update ws in [#9602](https://github.com/appwrite/appwrite/pull/9602)
+* Update database in [#9603](https://github.com/appwrite/appwrite/pull/9603)
+* Fix: image transformation cache in [#9608](https://github.com/appwrite/appwrite/pull/9608)
+* Remove audit payload in [#9610](https://github.com/appwrite/appwrite/pull/9610)
+* Sample rate from DSN in [#9559](https://github.com/appwrite/appwrite/pull/9559)
+* Restrict role change for sole org owner in [#9615](https://github.com/appwrite/appwrite/pull/9615)
+* chore: update php image to 0.8.1 in [#9616](https://github.com/appwrite/appwrite/pull/9616)
+* feat: refactor executor setup in [#9420](https://github.com/appwrite/appwrite/pull/9420)
+* chore: update gitpod.yml config in [#9561](https://github.com/appwrite/appwrite/pull/9561)
+* chore: update dependencies in [#9625](https://github.com/appwrite/appwrite/pull/9625)
+* Update migrations lib in [#9628](https://github.com/appwrite/appwrite/pull/9628)
+* feat: cache telemetry in [#9624](https://github.com/appwrite/appwrite/pull/9624)
+* Bump console to version 5.2.56 in [#9631](https://github.com/appwrite/appwrite/pull/9631)
+* Multi region support in [#8667](https://github.com/appwrite/appwrite/pull/8667)
+* Revert "Multi region support" in [#9632](https://github.com/appwrite/appwrite/pull/9632)
+* Revert "Revert "Multi region support"" in [#9636](https://github.com/appwrite/appwrite/pull/9636)
+* Fix tasks in [#9644](https://github.com/appwrite/appwrite/pull/9644)
+* chore: updated the migration version to 8.6 in [#9646](https://github.com/appwrite/appwrite/pull/9646)
+* Fix: merge the working of StatsUsage and StatsUsageDump in [#9585](https://github.com/appwrite/appwrite/pull/9585)
+* Update database in [#9643](https://github.com/appwrite/appwrite/pull/9643)
+* chore: fix error logging for CLI tasks in [#9651](https://github.com/appwrite/appwrite/pull/9651)
+* fix: usage test assertion in [#9653](https://github.com/appwrite/appwrite/pull/9653)
+* Fix keys in [#9656](https://github.com/appwrite/appwrite/pull/9656)
+* Feat: multi tenant dual writing in [#9583](https://github.com/appwrite/appwrite/pull/9583)
+* Fix/throwing 400 for null order attributes  in [#9657](https://github.com/appwrite/appwrite/pull/9657)
+* feat: sdk group attribute in [#9596](https://github.com/appwrite/appwrite/pull/9596)
+* Add configurable function and build size in [#9648](https://github.com/appwrite/appwrite/pull/9648)
+* feat: update API endpoint in the code examples in [#8933](https://github.com/appwrite/appwrite/pull/8933)
+* chore: abstract token secret hiding to response model in [#9574](https://github.com/appwrite/appwrite/pull/9574)
+* chore: update sdks in [#9655](https://github.com/appwrite/appwrite/pull/9655)
+* feat: allow non-critical events to ignore exceptions when enqueuing the event in [#9680](https://github.com/appwrite/appwrite/pull/9680)
+* Revert "Add configurable function and build size" in [#9681](https://github.com/appwrite/appwrite/pull/9681)
+* core: introduce endpoint.docs in specs in [#9685](https://github.com/appwrite/appwrite/pull/9685)
+* fix: remove content-type header from get request specs in [#9666](https://github.com/appwrite/appwrite/pull/9666)
+* chore: update flutter sdk in [#9691](https://github.com/appwrite/appwrite/pull/9691)
 
 # Version 1.6.1
 
