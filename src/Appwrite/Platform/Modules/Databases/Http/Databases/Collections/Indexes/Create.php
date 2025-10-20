@@ -171,7 +171,7 @@ class Create extends Action
             }
 
             if ($attributeArray === true) {
-                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                 $orders[$i] = null;
             }
         }
