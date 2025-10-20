@@ -4113,6 +4113,66 @@
             "time": "2024-05-07T02:01:25+00:00"
         },
         {
+            "name": "utopia-php/emails",
+            "version": "0.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/emails.git",
+                "reference": "aebfd79cd8c39f230fb9a238ca12a4f7a1f7e0cd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/emails/zipball/aebfd79cd8c39f230fb9a238ca12a4f7a1f7e0cd",
+                "reference": "aebfd79cd8c39f230fb9a238ca12a4f7a1f7e0cd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "utopia-php/cli": "^0.15",
+                "utopia-php/domains": "^0.8",
+                "utopia-php/fetch": "^0.4",
+                "utopia-php/framework": "0.33.*"
+            },
+            "require-dev": {
+                "laravel/pint": "1.25.*",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Emails\\": "src/Emails"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "Utopia Emails library is simple and lite library for parsing and validating email addresses. This library is aiming to be as simple and easy to learn and use.",
+            "keywords": [
+                "RFC5322",
+                "email",
+                "emails",
+                "framework",
+                "parsing",
+                "php",
+                "upf",
+                "utopia",
+                "validation"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/emails/issues",
+                "source": "https://github.com/utopia-php/emails/tree/0.5.0"
+            },
+            "time": "2025-10-19T20:51:56+00:00"
+        },
+        {
             "name": "utopia-php/fetch",
             "version": "0.4.2",
             "source": {

@@ -8,7 +8,6 @@ use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Platform;
-use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -37,6 +36,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Emails\Validator\Email;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
 use Utopia\System\System;
@@ -119,6 +119,7 @@ App::post('/v1/projects')
             'passwordDictionary' => false,
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
+            'disposableEmails' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
             'membershipsUserName' => false,

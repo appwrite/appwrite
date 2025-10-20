@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Email;
 
-use Appwrite\Network\Validator\Email;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Email\Create as EmailCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -10,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Validator\Email;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 
