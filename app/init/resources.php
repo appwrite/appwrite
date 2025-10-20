@@ -234,14 +234,6 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
 }, ['request', 'console', 'project', 'dbForPlatform']);
 
 App::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForPlatform */
-    /** @var string $mode */
-    /** @var Utopia\Auth\Store $store */
-
     /**
      * Handles user authentication and session validation.
      *
@@ -299,19 +291,20 @@ App::setResource('user', function (string $mode, Document $project, Document $co
         $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
 
-    Auth::$unique = $session['id'] ?? '';
-    Auth::$secret = $session['secret'] ?? '';
+    $user = new Document([]);
 
-    if ($mode === APP_MODE_ADMIN) {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
+    if (APP_MODE_ADMIN === $mode) {
+        $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
     } else {
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
-            if ($project->getId() === 'console') {
-                $user = $dbForPlatform->getDocument('users', Auth::$unique);
-            } else {
-                $user = $dbForProject->getDocument('users', Auth::$unique);
+            if (!empty($store->getProperty('id', ''))) {
+                if ($project->getId() === 'console') {
+                    $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+                } else {
+                    $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+                }
             }
         }
     }
@@ -322,14 +315,6 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
-
-    // if (APP_MODE_ADMIN === $mode) {
-    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-    //     } else {
-    //         $user = new Document([]);
-    //     }
-    // }
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
