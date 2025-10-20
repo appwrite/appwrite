@@ -3899,9 +3899,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/3.0.0"
+                "source": "https://github.com/utopia-php/database/tree/3.0.1"
             },
-            "time": "2025-10-20T05:51:31+00:00"
+            "time": "2025-10-20T13:21:17+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8793,7 +8793,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8817,5 +8817,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.2.0"
 }

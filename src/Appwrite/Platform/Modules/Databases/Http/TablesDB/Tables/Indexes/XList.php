@@ -51,7 +51,7 @@ class XList extends IndexXList
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).')
             ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following columns: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
-            ->param('includeTotal', true, new Boolean(), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->param('includeTotal', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
