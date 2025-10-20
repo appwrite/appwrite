@@ -379,6 +379,23 @@ trait StorageBase
         $this->assertGreaterThan(0, $files['body']['total']);
         $this->assertGreaterThan(0, count($files['body']['files']));
 
+        /**
+         * Test for SUCCESS with includeTotal=false
+         */
+        $filesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'includeTotal' => false
+        ]);
+
+        $this->assertEquals($filesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertIsArray($filesWithIncludeTotalFalse['body']);
+        $this->assertIsArray($filesWithIncludeTotalFalse['body']['files']);
+        $this->assertIsInt($filesWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $filesWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($filesWithIncludeTotalFalse['body']['files']));
+
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

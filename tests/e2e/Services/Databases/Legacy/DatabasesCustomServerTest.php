@@ -55,6 +55,23 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test1['body']['$id'], $databases['body']['databases'][0]['$id']);
         $this->assertEquals($test2['body']['$id'], $databases['body']['databases'][1]['$id']);
 
+        /**
+         * Test for SUCCESS with includeTotal=false
+         */
+        $databasesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'includeTotal' => false
+        ]);
+
+        $this->assertEquals($databasesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertIsArray($databasesWithIncludeTotalFalse['body']);
+        $this->assertIsArray($databasesWithIncludeTotalFalse['body']['databases']);
+        $this->assertIsInt($databasesWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $databasesWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($databasesWithIncludeTotalFalse['body']['databases']));
+
         $base = array_reverse($databases['body']['databases']);
 
         $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
@@ -394,6 +411,23 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
         $this->assertEquals($test2['body']['$id'], $collections['body']['collections'][1]['$id']);
         $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
+
+        /**
+         * Test for SUCCESS with includeTotal=false
+         */
+        $collectionsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'includeTotal' => false
+        ]);
+
+        $this->assertEquals($collectionsWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertIsArray($collectionsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($collectionsWithIncludeTotalFalse['body']['collections']);
+        $this->assertIsInt($collectionsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $collectionsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($collectionsWithIncludeTotalFalse['body']['collections']));
 
         $base = array_reverse($collections['body']['collections']);
 
@@ -4547,6 +4581,23 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(10, $documents['body']['total']);
+
+        /**
+         * Test for SUCCESS with includeTotal=false
+         */
+        $documentsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'includeTotal' => false
+        ]);
+
+        $this->assertEquals($documentsWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertIsArray($documentsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($documentsWithIncludeTotalFalse['body']['documents']);
+        $this->assertIsInt($documentsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $documentsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($documentsWithIncludeTotalFalse['body']['documents']));
 
         $returnedDocuments = $response['body']['documents'];
         $refetchedDocuments = $documents['body']['documents'];

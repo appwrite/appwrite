@@ -236,6 +236,25 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
         $this->assertEmpty($response['body']['sessions'][0]['secret']);
 
+        /**
+         * Test for SUCCESS with includeTotal=false
+         */
+        $sessionsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'includeTotal' => false
+        ]);
+
+        $this->assertEquals($sessionsWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertIsArray($sessionsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($sessionsWithIncludeTotalFalse['body']['sessions']);
+        $this->assertIsInt($sessionsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $sessionsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($sessionsWithIncludeTotalFalse['body']['sessions']));
+
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
         $this->assertEquals('WIN', $response['body']['sessions'][0]['osCode']);
         $this->assertEquals('10', $response['body']['sessions'][0]['osVersion']);

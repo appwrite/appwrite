@@ -1445,11 +1445,12 @@ App::get('/v1/teams/:teamId/logs')
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('includeTotal', true, new Boolean(), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1518,7 +1519,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

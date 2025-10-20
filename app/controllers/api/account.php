@@ -553,12 +553,13 @@ App::get('/v1/account/sessions')
         ],
         contentType: ContentType::JSON,
     ))
+    ->param('includeTotal', true, new Boolean(), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, Document $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
+    ->action(function (bool $includeTotal, Response $response, Document $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
 
         $sessions = $user->getAttribute('sessions', []);
@@ -576,7 +577,7 @@ App::get('/v1/account/sessions')
 
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'total' => count($sessions),
+            'total' => $includeTotal ? count($sessions) : 0,
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -2879,12 +2880,13 @@ App::get('/v1/account/logs')
         contentType: ContentType::JSON,
     ))
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('includeTotal', true, new Boolean(), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -2929,7 +2931,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getSequence(), $queries),
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
