@@ -376,6 +376,23 @@ class FunctionsCustomClientTest extends Scope
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
 
+        /**
+         * Test for SUCCESS with includeTotal=false
+         */
+        $templatesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'includeTotal' => false
+        ]);
+
+        $this->assertEquals($templatesWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertIsArray($templatesWithIncludeTotalFalse['body']);
+        $this->assertIsArray($templatesWithIncludeTotalFalse['body']['templates']);
+        $this->assertIsInt($templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($templatesWithIncludeTotalFalse['body']['templates']));
+
         foreach ($templates['body']['templates'] as $template) {
             $this->assertArrayHasKey('name', $template);
             $this->assertArrayHasKey('id', $template);

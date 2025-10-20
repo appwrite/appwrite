@@ -633,6 +633,24 @@ trait MessagingBase
             $this->assertEquals(1, $response['body']['total']);
         }
 
+        /**
+         * Test for SUCCESS with includeTotal=false
+         */
+        $subscribersWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'includeTotal' => false
+        ]);
+
+        $this->assertEquals($subscribersWithIncludeTotalFalse['headers']['status-code'], 200);
+        $this->assertIsArray($subscribersWithIncludeTotalFalse['body']);
+        $this->assertIsArray($subscribersWithIncludeTotalFalse['body']['subscribers']);
+        $this->assertIsInt($subscribersWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $subscribersWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($subscribersWithIncludeTotalFalse['body']['subscribers']));
+
         return $data;
     }
 
