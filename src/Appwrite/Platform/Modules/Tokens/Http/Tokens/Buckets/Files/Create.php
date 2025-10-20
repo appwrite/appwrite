@@ -59,8 +59,8 @@ class Create extends Action
             ],
             contentType: ContentType::JSON
         ))
-        ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
-        ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File unique ID.', false, ['dbForProject'])
+        ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', true, ['dbForProject'])
+        ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File unique ID.', true, ['dbForProject'])
         ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')

@@ -48,7 +48,7 @@ class Update extends TransactionsUpdate
                 contentType: ContentType::JSON
             ))
             ->param('transactionId', '', new UID(), 'Transaction ID.')
-            ->param('commit', false, new Boolean(), 'Commit transaction?', true)
+            ->param('commit', true, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
             ->inject('response')
             ->inject('dbForProject')
