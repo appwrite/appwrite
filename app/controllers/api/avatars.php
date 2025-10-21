@@ -660,7 +660,7 @@ App::get('/v1/avatars/screenshot')
         contentType: ContentType::IMAGE_PNG
     ))
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to capture.')
-    ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers to send with the browser request. Defaults to empty.', true)
+    ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Defaults to empty.', true)
     ->param('viewport', '1280x720', new Text(20), 'Browser viewport size. Pass a string like "1280x720" or "1920x1080". Defaults to "1280x720".', true)
     ->param('scale', 2, new Range(1, 5, Range::TYPE_FLOAT), 'Device pixel ratio. Pass a number between 1 to 5. Defaults to 2.', true)
     ->param('fullPage', false, new Boolean(true), 'Capture full page. Pass 0 for viewport only, or 1 for full page. Default value is set to 0.', true)
@@ -699,6 +699,23 @@ App::get('/v1/avatars/screenshot')
         $client->setTimeout(30);
         $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
 
+        // Ensure headers is always an associative array (object)
+        if (!is_array($headers)) {
+            $headers = [];
+        }
+        
+        // Convert to associative array if it's a regular array
+        if (is_array($headers) && array_keys($headers) === range(0, count($headers) - 1)) {
+            $headers = [];
+        }
+        
+        // Create a new object to ensure proper JSON serialization
+        $headersObject = new \stdClass();
+        foreach ($headers as $key => $value) {
+            $headersObject->$key = $value;
+        }
+
+        // Create the config with headers as an object
         $config = [
             'url' => $url,
             'width' => $browserWidth,
@@ -706,11 +723,28 @@ App::get('/v1/avatars/screenshot')
             'fullPage' => $fullPage,
             'sleep' => $sleep * 1000, // Convert seconds to milliseconds
             'scale' => $scale,
-            'headers' => $headers
+            'headers' => $headersObject
+        ];
+        
+        // Ensure the entire config is properly serialized as JSON
+        // This is a workaround to ensure headers are sent as an object
+        $configJson = json_encode($config, JSON_FORCE_OBJECT);
+        $configObject = json_decode($configJson, false); // false to keep objects as objects
+        
+        // Convert back to array for the fetch method, but ensure headers remains an object
+        $config = [
+            'url' => $configObject->url,
+            'width' => $configObject->width,
+            'height' => $configObject->height,
+            'fullPage' => $configObject->fullPage,
+            'sleep' => $configObject->sleep,
+            'scale' => $configObject->scale,
+            'headers' => $configObject->headers // Keep as object
         ];
 
         try {
             $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+
             $fetchResponse = $client->fetch(
                 url: $browserEndpoint . '/screenshots',
                 method: 'POST',
