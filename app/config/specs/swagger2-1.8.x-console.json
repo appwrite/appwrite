@@ -47352,7 +47352,7 @@
                         "type": "string"
                     },
                     "x-example": [
-                        "read('any')"
+                        "read(\"any\")"
                     ]
                 },
                 "databaseId": {
@@ -47450,7 +47450,7 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "$permissions": [
-                    "read('any')"
+                    "read(\"any\")"
                 ],
                 "databaseId": "5e5ea5c16897e",
                 "name": "My Collection",
@@ -48802,7 +48802,7 @@
                         "type": "string"
                     },
                     "x-example": [
-                        "read('any')"
+                        "read(\"any\")"
                     ]
                 },
                 "databaseId": {
@@ -48900,7 +48900,7 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "$permissions": [
-                    "read('any')"
+                    "read(\"any\")"
                 ],
                 "databaseId": "5e5ea5c16897e",
                 "name": "My Table",
@@ -50458,7 +50458,7 @@
                         "type": "string"
                     },
                     "x-example": [
-                        "read('any')"
+                        "read(\"any\")"
                     ]
                 }
             },
@@ -50480,7 +50480,7 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "$permissions": [
-                    "read('any')"
+                    "read(\"any\")"
                 ]
             }
         },
@@ -50529,7 +50529,7 @@
                         "type": "string"
                     },
                     "x-example": [
-                        "read('any')"
+                        "read(\"any\")"
                     ]
                 }
             },
@@ -50551,7 +50551,7 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "$permissions": [
-                    "read('any')"
+                    "read(\"any\")"
                 ],
                 "username": "john.doe",
                 "email": "john.doe@example.com",
@@ -51595,7 +51595,7 @@
                         "type": "string"
                     },
                     "x-example": [
-                        "read('any')"
+                        "read(\"any\")"
                     ]
                 },
                 "name": {
@@ -51651,7 +51651,7 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "$permissions": [
-                    "read('any')"
+                    "read(\"any\")"
                 ],
                 "name": "Pink.png",
                 "signature": "5d529fd02b544198ae075bd57c1762bb",
@@ -51687,7 +51687,7 @@
                         "type": "string"
                     },
                     "x-example": [
-                        "read('any')"
+                        "read(\"any\")"
                     ]
                 },
                 "fileSecurity": {
@@ -51757,7 +51757,7 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "$permissions": [
-                    "read('any')"
+                    "read(\"any\")"
                 ],
                 "fileSecurity": true,
                 "name": "Documents",
