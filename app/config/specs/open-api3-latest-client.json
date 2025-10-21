@@ -5558,7 +5558,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
@@ -5828,7 +5828,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
@@ -5946,7 +5946,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
@@ -7417,7 +7417,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
@@ -7591,7 +7591,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
@@ -8712,7 +8712,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
@@ -8975,7 +8975,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
@@ -9089,7 +9089,7 @@
                                     "permissions": {
                                         "type": "array",
                                         "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
-                                        "x-example": "[\"read('any')\"]",
+                                        "x-example": "['read(\"any\")']",
                                         "items": {
                                             "type": "string"
                                         }
