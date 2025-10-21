@@ -23,6 +23,8 @@ use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
@@ -633,6 +635,121 @@ App::get('/v1/avatars/initials')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($image->getImageBlob());
+    });
+
+App::get('/v1/avatars/screenshot')
+    ->desc('Get webpage screenshot')
+    ->groups(['api', 'avatars'])
+    ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resourceType', 'avatar/screenshot')
+    ->label('cache.resource', 'screenshot/{request.url}')
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        group: null,
+        name: 'getScreenshot',
+        description: '/docs/references/avatars/get-screenshot.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
+    ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to capture.')
+    ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers to send with the browser request. Defaults to empty.', true)
+    ->param('viewport', '1280x720', new Text(20), 'Browser viewport size. Pass a string like "1280x720" or "1920x1080". Defaults to "1280x720".', true)
+    ->param('scale', 2, new Range(1, 5, Range::TYPE_FLOAT), 'Device pixel ratio. Pass a number between 1 to 5. Defaults to 2.', true)
+    ->param('fullPage', false, new Boolean(true), 'Capture full page. Pass 0 for viewport only, or 1 for full page. Default value is set to 0.', true)
+    ->param('sleep', 0, new Range(0, 10), 'Wait time in seconds before taking the screenshot. Pass an integer between 0 to 10. Defaults to 0.', true)
+    ->param('width', 1280, new Range(1, 2000), 'Output image width. Pass an integer between 1 to 2000. Defaults to 1280.', true)
+    ->param('height', 720, new Range(1, 2000), 'Output image height. Pass an integer between 1 to 2000. Defaults to 720.', true)
+    ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
+    ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->inject('response')
+    ->action(function (string $url, array $headers, string $viewport, float $scale, bool $fullPage, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
+
+        if (!\extension_loaded('imagick')) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
+        }
+
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        // Parse viewport parameter
+        $viewportParts = \explode('x', $viewport);
+        if (\count($viewportParts) !== 2 || !\is_numeric($viewportParts[0]) || !\is_numeric($viewportParts[1])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Viewport must be in format "WIDTHxHEIGHT" (e.g., "1280x720")');
+        }
+
+        $browserWidth = (int) $viewportParts[0];
+        $browserHeight = (int) $viewportParts[1];
+
+        if ($browserWidth < 1 || $browserWidth > 1920 || $browserHeight < 1 || $browserHeight > 1080) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Browser viewport must be between 1x1 and 1920x1080');
+        }
+
+        $client = new Client();
+        $client->setTimeout(30);
+        $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
+
+        $config = [
+            'url' => $url,
+            'width' => $browserWidth,
+            'height' => $browserHeight,
+            'fullPage' => $fullPage,
+            'sleep' => $sleep * 1000, // Convert seconds to milliseconds
+            'scale' => $scale,
+            'headers' => $headers
+        ];
+
+        try {
+            $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+            $fetchResponse = $client->fetch(
+                url: $browserEndpoint . '/screenshots',
+                method: 'POST',
+                body: $config
+            );
+
+            if ($fetchResponse->getStatusCode() >= 400) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot service failed: ' . $fetchResponse->getBody());
+            }
+
+            $screenshot = $fetchResponse->getBody();
+
+            if (empty($screenshot)) {
+                throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND, 'Screenshot not generated');
+            }
+
+            // Resize the screenshot to the desired output dimensions
+            $image = new Image($screenshot);
+            $image->crop($width, $height);
+
+            // Determine output format
+            $outputs = Config::getParam('storage-outputs');
+            if (empty($output)) {
+                $output = 'png'; // Default to PNG for screenshots
+            }
+
+            $resizedScreenshot = $image->output($output, $quality);
+            unset($image);
+
+            $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['png'];
+
+            $response
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+                ->setContentType($contentType)
+                ->file($resizedScreenshot);
+
+        } catch (\Throwable $th) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot generation failed: ' . $th->getMessage());
+        }
     });
 
 App::get('/v1/cards/cloud')
