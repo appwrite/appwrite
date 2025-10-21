@@ -71,9 +71,26 @@ class ProxyCustomServerTest extends Scope
         $this->assertNotEmpty($deploymentId);
 
         $rule = $this->createSiteRule('commit-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createSiteRule('branch-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createSiteRule('anything-' . $domain, $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $domain =  \uniqid() . '-vcs.' . System::getEnv('_APP_DOMAIN_SITES', '');
+
+        $rule = $this->createSiteRule('commit-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
         $rule = $this->createSiteRule('branch-' . $domain, $siteId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+
+        $rule = $this->createSiteRule('subdomain.anything-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
         $rule = $this->createSiteRule('anything-' . $domain, $siteId);
@@ -109,15 +126,11 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('https://' . $domain);
         $this->assertEquals(400, $rule['headers']['status-code']);
 
-        // Unexpected I would say, but it is the current behaviour
         $rule = $this->createAPIRule('wss://' . $domain);
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
 
-        // Unexpected I would say, but it is the current behaviour
         $rule = $this->createAPIRule($domain . '/some-path');
-        $this->assertEquals(201, $rule['headers']['status-code']);
-        $this->cleanupRule($rule['body']['$id']);
+        $this->assertEquals(400, $rule['headers']['status-code']);
     }
 
     public function testCreateRedirectRule(): void

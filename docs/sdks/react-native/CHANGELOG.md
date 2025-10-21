@@ -1,5 +1,20 @@
 # Change log
 
+## 0.17.1
+
+* Add transaction support for Databases and TablesDB
+
+## 0.16.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 0.11.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `sequence` support to `Document` model
+* Fix autocompletion not working for `Document` model even when generic is passed
+
 ## 0.10.1
 
 * Fix URL based methods like `getFileViewURL`, `getFilePreviewURL` etc. by adding the missing `projectId` to searchParams

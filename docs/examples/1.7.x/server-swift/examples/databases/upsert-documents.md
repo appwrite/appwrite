@@ -10,6 +10,6 @@ let databases = Databases(client)
 let documentList = try await databases.upsertDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    documents: [] // optional
+    documents: []
 )
 

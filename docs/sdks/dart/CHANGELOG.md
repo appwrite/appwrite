@@ -1,5 +1,54 @@
 # Change Log
 
+## 19.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 19.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 18.1.0
+
+* Add `orderRandom` query support
+
+## 18.0.0
+
+* Rename `CreditCard` enum value `unionChinaPay` to `unionPay`
+* Add time between query support
+* Add spatial attribute support
+* Add spatial index support
+* Add spatial query support
+
+## 17.0.0
+
+* Support for Appwrite 1.8
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
+* Deprecated `updateMagicURLSession`
+* Deprecated `updatePhoneSession`
+* Deprecated Databases service
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
+  
+
+## 16.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `encrypt` support to string attribute model
+* Add `sequence` support to `Document` model
+
 ## 16.1.0
 
 * Add `gif` support to `ImageFormat` enum

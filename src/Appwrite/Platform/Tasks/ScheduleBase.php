@@ -11,7 +11,6 @@ use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -26,7 +25,9 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     protected BrokerPool $publisher;
-    protected ?BrokerPool $publisherRedis = null;
+    protected BrokerPool $publisherMigrations;
+    protected BrokerPool $publisherFunctions;
+    protected BrokerPool $publisherMessaging;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -36,7 +37,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
-    abstract protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void;
+    abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -44,7 +45,11 @@ abstract class ScheduleBase extends Action
 
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('pools')
+            ->inject('publisher')
+            ->inject('publisherMigrations')
+            ->inject('publisherFunctions')
+            ->inject('publisherMessaging')
+            ->inject('isResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
@@ -67,18 +72,15 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $isResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
-        $this->publisher = new BrokerPool($pools->get('publisher'));
-
-        try {
-            $this->publisherRedis = new BrokerPool($pools->get('publisherRedis'));
-        } catch (\Throwable) {
-            $this->publisherRedis = null;
-        }
+        $this->publisher = $publisher;
+        $this->publisherMigrations = $publisherMigrations;
+        $this->publisherFunctions = $publisherFunctions;
+        $this->publisherMessaging = $publisherMessaging;
 
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
@@ -87,21 +89,21 @@ abstract class ScheduleBase extends Action
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
-        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
+        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $isResourceBlocked);
 
         Console::success("Starting timers at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $isResourceBlocked) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
+            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $isResourceBlocked);
         });
 
         while (true) {
             try {
-                go(fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB));
+                go(fn () => $this->enqueueResources($dbForPlatform, $getProjectDB));
                 $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
                 sleep(static::ENQUEUE_TIMER);
             } catch (\Throwable $th) {
@@ -111,7 +113,7 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
+    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate, callable $isResourceBlocked): void
     {
         // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
@@ -177,34 +179,40 @@ abstract class ScheduleBase extends Action
                 $paginationQueries[] = Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate);
             }
 
-            $results = $dbForPlatform->find('schedules', $paginationQueries);
+            $collectionId = static::getCollectionId();
+            $schedules = $dbForPlatform->find('schedules', $paginationQueries);
+            $sum = count($schedules);
+            $total += $sum;
 
-            $sum = count($results);
-            $total = $total + $sum;
+            foreach ($schedules as $schedule) {
+                $existing = $this->schedules[$schedule->getSequence()] ?? null;
+                $updated = strtotime($existing['resourceUpdatedAt'] ?? '0') !== strtotime($schedule['resourceUpdatedAt'] ?? '0');
 
-            foreach ($results as $document) {
-                $localDocument = $this->schedules[$document->getSequence()] ?? null;
-
-                if ($localDocument !== null) {
-                    if (!$document['active']) {
-                        Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
-                        unset($this->schedules[$document->getSequence()]);
-                    } elseif (strtotime($localDocument['resourceUpdatedAt']) !== strtotime($document['resourceUpdatedAt'])) {
-                        Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
-                        $this->schedules[$document->getSequence()] = $getSchedule($document);
-                    }
-                } else {
+                if ($existing === null || $updated) {
                     try {
-                        $this->schedules[$document->getSequence()] = $getSchedule($document);
+                        $candidate = $getSchedule($schedule);
                     } catch (\Throwable $th) {
-                        $collectionId = static::getCollectionId();
-                        Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
+                        Console::error("Failed to load schedule for project {$schedule['projectId']} {$collectionId} {$schedule['resourceId']}");
                         Console::error($th->getMessage());
+                        continue;
                     }
+
+                    if (!$candidate['active']) {
+                        unset($this->schedules[$schedule->getSequence()]);
+                        continue;
+                    }
+
+                    if ($isResourceBlocked($candidate['project'], $collectionId, $candidate['resourceId'])) {
+                        unset($this->schedules[$schedule->getSequence()]);
+                        continue;
+                    }
+
+                    Console::info("Updating: {$schedule['resourceType']}::{$schedule['resourceId']}");
+                    $this->schedules[$schedule->getSequence()] = $candidate;
                 }
             }
 
-            $latestDocument = \end($results);
+            $latestDocument = \end($schedules);
         }
 
         $lastSyncUpdate = $time;
