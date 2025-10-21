@@ -47,8 +47,8 @@ class Update extends TransactionsUpdate
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', true, ['dbForProject'])
-            ->param('commit', true, new Boolean(), 'Commit transaction?', true)
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
             ->inject('response')
             ->inject('dbForProject')

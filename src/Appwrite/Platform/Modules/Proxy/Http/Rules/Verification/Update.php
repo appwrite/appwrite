@@ -56,7 +56,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', true, ['dbForProject'])
+            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('queueForCertificates')
             ->inject('queueForEvents')

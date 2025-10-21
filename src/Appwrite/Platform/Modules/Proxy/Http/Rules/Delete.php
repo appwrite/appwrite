@@ -52,7 +52,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', true, ['dbForProject'])
+            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')

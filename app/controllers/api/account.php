@@ -673,7 +673,7 @@ App::get('/v1/account/sessions/:sessionId')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', true, ['dbForProject'])
+    ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to get the current device session.', false, ['dbForProject'])
     ->inject('response')
     ->inject('user')
     ->inject('locale')
@@ -725,7 +725,7 @@ App::delete('/v1/account/sessions/:sessionId')
         contentType: ContentType::NONE
     ))
     ->label('abuse-limit', 100)
-    ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to delete the current device session.', true, ['dbForProject'])
+    ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to delete the current device session.', false, ['dbForProject'])
     ->inject('requestTimestamp')
     ->inject('request')
     ->inject('response')
@@ -813,7 +813,7 @@ App::patch('/v1/account/sessions/:sessionId')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to update the current device session.', true, ['dbForProject'])
+    ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Session ID. Use the string \'current\' to update the current device session.', false, ['dbForProject'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -5192,7 +5192,7 @@ App::put('/v1/account/targets/:targetId/push')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', true, ['dbForProject'])
+    ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->inject('queueForEvents')
     ->inject('user')
@@ -5257,7 +5257,7 @@ App::delete('/v1/account/targets/:targetId/push')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', true, ['dbForProject'])
+    ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
     ->inject('user')
@@ -5383,7 +5383,7 @@ App::delete('/v1/account/identities/:identityId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('identityId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Identity ID.', true, ['dbForProject'])
+    ->param('identityId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Identity ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

@@ -49,7 +49,7 @@ class XList extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', true, ['dbForProject'])
+            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
             ->param('queries', [], new DevKeys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', DevKeys::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForPlatform')

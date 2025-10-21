@@ -45,8 +45,8 @@ class Get extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', true, ['dbForProject'])
-            ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', true, ['dbForProject'])
+            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+            ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));

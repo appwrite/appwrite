@@ -70,7 +70,7 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', true, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('installCommand', null, new Text(8192, 0), 'Install Commands.', true)
             ->param('buildCommand', null, new Text(8192, 0), 'Build Commands.', true)
             ->param('outputDirectory', null, new Text(8192, 0), 'Output Directory.', true)

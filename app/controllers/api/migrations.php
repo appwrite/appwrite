@@ -528,7 +528,7 @@ App::get('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', true, ['dbForProject'])
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $migrationId, Response $response, Database $dbForProject) {
@@ -761,7 +761,7 @@ App::patch('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', true, ['dbForProject'])
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -813,7 +813,7 @@ App::delete('/v1/migrations/:migrationId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration ID.', true, ['dbForProject'])
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
