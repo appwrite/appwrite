@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Projects;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;
@@ -865,7 +866,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
+        $this->assertEquals(Auth::TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
 
         /**
          * Test for SUCCESS
@@ -1008,7 +1009,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1021,7 +1022,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
+        $this->assertEquals(Auth::TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
 
         return ['projectId' => $projectId];
     }
