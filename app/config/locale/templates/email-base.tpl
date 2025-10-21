@@ -44,6 +44,21 @@
                 color: currentColor;
                 word-break: break-all;
             }
+            a.button {
+                box-sizing: border-box;
+                display: inline-block;
+                text-align: center;
+                text-decoration: none;
+                padding: 9px 14px;
+                color: #ffffff;
+                background-color: #2D2D31;
+                border: 1px solid #414146;
+                border-radius: 8px;
+            }
+            a.button:hover,
+            a.button:focus {
+                opacity: 0.8;
+            }
             table {
                 width: 100%;
                 border-spacing: 0 !important;
@@ -94,9 +109,14 @@
             h* {
                 font-family: 'Poppins', sans-serif;
             }
-    
             p {
                 margin-bottom: 10px;
+            }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
             }
         </style>
     </head>

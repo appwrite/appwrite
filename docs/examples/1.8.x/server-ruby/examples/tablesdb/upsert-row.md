@@ -14,5 +14,6 @@ result = tables_db.upsert_row(
     table_id: '<TABLE_ID>',
     row_id: '<ROW_ID>',
     data: {}, # optional
-    permissions: ["read("any")"] # optional
+    permissions: ["read("any")"], # optional
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

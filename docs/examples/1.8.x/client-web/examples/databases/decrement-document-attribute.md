@@ -12,7 +12,8 @@ const result = await databases.decrementDocumentAttribute({
     documentId: '<DOCUMENT_ID>',
     attribute: '',
     value: null, // optional
-    min: null // optional
+    min: null, // optional
+    transactionId: '<TRANSACTION_ID>' // optional
 });
 
 console.log(result);

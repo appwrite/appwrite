@@ -12,5 +12,6 @@ TablesDB tablesDB = new TablesDB(client);
 RowList result = await tablesDB.CreateRows(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    rows: new List<object>()
+    rows: new List<object>(),
+    transactionId: "<TRANSACTION_ID>" // optional
 );

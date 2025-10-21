@@ -3,7 +3,8 @@ mutation {
         databaseId: "<DATABASE_ID>",
         collectionId: "<COLLECTION_ID>",
         data: "{}",
-        queries: []
+        queries: [],
+        transactionId: "<TRANSACTION_ID>"
     ) {
         total
         documents {

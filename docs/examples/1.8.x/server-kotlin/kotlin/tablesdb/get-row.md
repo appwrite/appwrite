@@ -13,5 +13,6 @@ val response = tablesDB.getRow(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
     rowId = "<ROW_ID>",
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    transactionId = "<TRANSACTION_ID>" // optional
 )

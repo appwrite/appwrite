@@ -10,5 +10,6 @@ const databases = new sdk.Databases(client);
 const result = await databases.listDocuments({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    transactionId: '<TRANSACTION_ID>' // optional
 });
