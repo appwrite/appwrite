@@ -558,4 +558,291 @@ trait AvatarsBase
         $this->assertEquals('PNG', $image->getImageFormat());
         $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/initials.png')), strlen($response['body']));
     }
+
+    public function testGetScreenshot(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (compatible; AppwriteBot/1.0)',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        /**
+         * Test for FAILURE - Invalid headers parameter types
+         */
+        
+        // Test with string headers (should fail)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => 'invalid-headers-string',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test with numeric headers (should fail)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => 123,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test with boolean headers (should fail)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => true,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test with null headers - framework converts null to empty array, so this passes
+        // Skipping this test as null is converted to [] by the framework before validation
+
+        // Test with regular array (indexed array) - should fail
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => ['value1', 'value2', 'value3'], // Indexed array
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test with mixed array (some numeric keys) - Assoc validator allows this
+        // Mixed arrays are considered associative by the Assoc validator
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => ['User-Agent' => 'MyApp', 'value2', 'Accept' => 'text/html'], // Mixed array
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Test with empty array (should pass - empty associative array)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => [], // Empty associative array should pass
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Test with valid headers object (should pass)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => [
+                'User-Agent' => 'MyApp/1.0',
+                'Accept' => 'text/html,application/xhtml+xml',
+                'Accept-Language' => 'en-US,en;q=0.9'
+            ],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Test with headers containing special characters (should pass)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'headers' => [
+                'X-Custom-Header' => 'custom-value',
+                'Authorization' => 'Bearer token123',
+                'Content-Type' => 'application/json'
+            ],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid URL parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'invalid-url',
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'ftp://example.com', // Non-HTTP/HTTPS URL
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid viewport parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'viewport' => 'invalid-viewport',
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'viewport' => '2000x1000', // Too large
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid width/height parameters
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 0, // Invalid width
+            'height' => 600,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 3000, // Invalid height
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid scale parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'scale' => 0.5, // Too small
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'scale' => 10, // Too large
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid sleep parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'sleep' => -1, // Negative sleep
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'sleep' => 15, // Too large
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid quality parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'quality' => -2, // Too small
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'quality' => 150, // Too large
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid output parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io',
+            'width' => 800,
+            'height' => 600,
+            'output' => 'invalid-format',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return [];
+    }
 }

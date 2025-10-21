@@ -23,7 +23,6 @@ use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
@@ -699,16 +698,11 @@ App::get('/v1/avatars/screenshot')
         $client->setTimeout(30);
         $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
 
-        // Ensure headers is always an associative array (object)
-        if (!is_array($headers)) {
+        // Convert indexed array to empty array (should not happen due to Assoc validator)
+        if (is_array($headers) && count($headers) > 0 && array_keys($headers) === range(0, count($headers) - 1)) {
             $headers = [];
         }
-        
-        // Convert to associative array if it's a regular array
-        if (is_array($headers) && array_keys($headers) === range(0, count($headers) - 1)) {
-            $headers = [];
-        }
-        
+
         // Create a new object to ensure proper JSON serialization
         $headersObject = new \stdClass();
         foreach ($headers as $key => $value) {
@@ -725,12 +719,12 @@ App::get('/v1/avatars/screenshot')
             'scale' => $scale,
             'headers' => $headersObject
         ];
-        
+
         // Ensure the entire config is properly serialized as JSON
         // This is a workaround to ensure headers are sent as an object
         $configJson = json_encode($config, JSON_FORCE_OBJECT);
         $configObject = json_decode($configJson, false); // false to keep objects as objects
-        
+
         // Convert back to array for the fetch method, but ensure headers remains an object
         $config = [
             'url' => $configObject->url,
