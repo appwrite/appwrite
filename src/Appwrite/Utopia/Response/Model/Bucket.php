@@ -33,7 +33,7 @@ class Bucket extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Bucket permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => [],
-                'example' => ["read('any')"],
+                'example' => ['read("any")'],
                 'array' => true,
             ])
             ->addRule('fileSecurity', [

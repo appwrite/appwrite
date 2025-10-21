@@ -33,7 +33,7 @@ class Table extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Table permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
-                'example' => ["read('any')"],
+                'example' => ['read("any")'],
                 'array' => true
             ])
             ->addRule('databaseId', [
