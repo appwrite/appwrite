@@ -2,7 +2,7 @@
 
 namespace Appwrite\Auth\Validator;
 
-use Utopia\Auth\Hash;
+use Appwrite\Auth\Auth;
 
 /**
  * Password.
@@ -12,14 +12,16 @@ use Utopia\Auth\Hash;
 class PasswordHistory extends Password
 {
     protected array $history;
-    protected Hash $hash;
+    protected string $algo;
+    protected array $algoOptions;
 
-    public function __construct(array $history, Hash $hash)
+    public function __construct(array $history, string $algo, array $algoOptions = [])
     {
         parent::__construct();
 
         $this->history = $history;
-        $this->hash = $hash;
+        $this->algo = $algo;
+        $this->algoOptions = $algoOptions;
     }
 
     /**
@@ -44,7 +46,7 @@ class PasswordHistory extends Password
     public function isValid($value): bool
     {
         foreach ($this->history as $hash) {
-            if (!empty($hash) && $this->hash->verify($value, $hash)) {
+            if (!empty($hash) && Auth::passwordVerify($value, $hash, $this->algo, $this->algoOptions)) {
                 return false;
             }
         }

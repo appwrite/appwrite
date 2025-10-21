@@ -24,16 +24,9 @@ use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
-use Utopia\Auth\Hashes\Argon2;
-use Utopia\Auth\Hashes\Sha;
-use Utopia\Auth\Proofs\Code;
-use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
-use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -233,93 +226,72 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
     ];
 }, ['request', 'console', 'project', 'dbForPlatform']);
 
-App::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken) {
+App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Database $dbForProject */
     /** @var Utopia\Database\Database $dbForPlatform */
     /** @var string $mode */
-    /** @var Utopia\Auth\Store $store */
-
-    /**
-     * Handles user authentication and session validation.
-     *
-     * This function follows a series of steps to determine the appropriate user session
-     * based on cookies, headers, and JWT tokens.
-     *
-     * Process:
-     * 1. Checks the cookie based on mode:
-     *    - If in admin mode, uses console project id for key.
-     *    - Otherwise, sets the key using the project ID
-     * 2. If no cookie is found, attempts to retrieve the fallback header `x-fallback-cookies`.
-     *    - If this method is used, returns the header: `X-Debug-Fallback: true`.
-     * 3. Fetches the user document from the appropriate database based on the mode.
-     * 4. If the user document is empty or the session key cannot be verified, sets an empty user document.
-     * 5. Regardless of the results from steps 1-4, attempts to fetch the JWT token.
-     * 6. If the JWT user has a valid session ID, updates the user variable with the user from `projectDB`,
-     *    overwriting the previous value.
-     */
 
     Authorization::setDefaultStatus(true);
 
-    $store->setKey('a_session_' . $project->getId());
+    Auth::setCookieName('a_session_' . $project->getId());
 
     if (APP_MODE_ADMIN === $mode) {
-        $store->setKey('a_session_' . $console->getId());
+        Auth::setCookieName('a_session_' . $console->getId());
     }
 
-    $store->decode(
+    $session = Auth::decodeSession(
         $request->getCookie(
-            $store->getKey(), // Get sessions
-            $request->getCookie($store->getKey() . '_legacy', '')
+            Auth::$cookieName, // Get sessions
+            $request->getCookie(Auth::$cookieName . '_legacy', '')
         )
     );
 
     // Get session from header for SSR clients
-    if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+    if (empty($session['id']) && empty($session['secret'])) {
         $sessionHeader = $request->getHeader('x-appwrite-session', '');
 
         if (!empty($sessionHeader)) {
-            $store->decode($sessionHeader);
+            $session = Auth::decodeSession($sessionHeader);
         }
     }
 
     // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
-    if ($response) { // if in http context - add debug header
+    if ($response) {
         $response->addHeader('X-Debug-Fallback', 'false');
     }
 
-    if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+    if (empty($session['id']) && empty($session['secret'])) {
         if ($response) {
             $response->addHeader('X-Debug-Fallback', 'true');
         }
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
-        $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
+        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
     }
+
+    Auth::$unique = $session['id'] ?? '';
+    Auth::$secret = $session['secret'] ?? '';
 
     $user = new Document([]);
 
-    if (APP_MODE_ADMIN === $mode) {
-        $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
-    } else {
-        if ($project->isEmpty()) {
-            $user = new Document([]);
-        } else {
-            if (!empty($store->getProperty('id', ''))) {
-                if ($project->getId() === 'console') {
-                    $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
-                } else {
-                    $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
-                }
+    if (!empty(Auth::$unique)) {
+        if ($mode === APP_MODE_ADMIN) {
+            $user = $dbForPlatform->getDocument('users', Auth::$unique);
+        } elseif (!$project->isEmpty()) {
+            if ($project->getId() === 'console') {
+                $user = $dbForPlatform->getDocument('users', Auth::$unique);
+            } else {
+                $user = $dbForProject->getDocument('users', Auth::$unique);
             }
         }
     }
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken)
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
@@ -364,7 +336,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     $dbForPlatform->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform']);
 
 App::setResource('project', function ($dbForPlatform, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
@@ -382,13 +354,13 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
 
-App::setResource('session', function (Document $user, Store $store, Token $proofForToken) {
+App::setResource('session', function (Document $user) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''), $proofForToken);
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
 
     if (!$sessionId) {
         return;
@@ -401,7 +373,7 @@ App::setResource('session', function (Document $user, Store $store, Token $proof
     }
 
     return;
-}, ['user', 'store', 'proofForToken']);
+}, ['user']);
 
 App::setResource('console', function () {
     return new Document(Config::getParam('console'));
@@ -974,37 +946,6 @@ App::setResource('apiKey', function (Request $request, Document $project): ?Key 
 
     return Key::decode($project, $key);
 }, ['request', 'project']);
-
-
-App::setResource('store', function (): Store {
-    return new Store();
-});
-
-App::setResource('proofForPassword', function (): Password {
-    $hash = new Argon2();
-    $hash
-        ->setMemoryCost(2048)
-        ->setTimeCost(4)
-        ->setThreads(3);
-
-    $password = new Password();
-    $password
-        ->setHash($hash);
-
-    return $password;
-});
-
-App::setResource('proofForToken', function (): Token {
-    $token = new Token();
-    $token->setHash(new Sha());
-    return $token;
-});
-
-App::setResource('proofForCode', function (): Code {
-    $code = new Code();
-    $code->setHash(new Sha());
-    return $code;
-});
 
 App::setResource('executor', fn () => new Executor());
 
