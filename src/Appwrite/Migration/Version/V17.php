@@ -2,8 +2,8 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
-use Utopia\Auth\Proofs\Password;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -270,7 +270,7 @@ class V17 extends Migration
                 * Set hashOptions type
                 */
                 $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
-                    'type' => $document->getAttribute('hash', (new Password())->getHash()->getName())
+                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
                 ]));
                 break;
         }

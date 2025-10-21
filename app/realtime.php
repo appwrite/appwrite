@@ -16,9 +16,6 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
-use Utopia\Auth\Hashes\Sha;
-use Utopia\Auth\Proofs\Token;
-use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -681,24 +678,15 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
                 }
 
-                $store = new Store();
+                $session = Auth::decodeSession($message['data']['session']);
+                Auth::$unique = $session['id'] ?? '';
+                Auth::$secret = $session['secret'] ?? '';
 
-                $store->decode($message['data']['session']);
-
-                $user = $database->getDocument('users', $store->getProperty('id', ''));
-
-                /**
-                 * TODO:
-                 * Moving forward, we should try to use our dependency injection container
-                 * to inject the proof for token.
-                 * This way we will have one source of truth for the proof for token.
-                 */
-                $proofForToken = new Token();
-                $proofForToken->setHash(new Sha());
+                $user = $database->getDocument('users', Auth::$unique);
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken) // Validate user has valid login token
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');

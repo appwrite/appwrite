@@ -1,6 +1,7 @@
 <?php
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
@@ -117,7 +118,7 @@ App::post('/v1/projects')
             'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
             'passwordHistory' => 0,
             'passwordDictionary' => false,
-            'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,

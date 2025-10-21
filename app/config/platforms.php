@@ -79,7 +79,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '13.2.1',
+                'version' => '13.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -418,7 +418,7 @@ return [
             [
                 'key' => 'swift',
                 'name' => 'Swift',
-                'version' => '13.2.1',
+                'version' => '13.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-swift',
                 'package' => 'https://github.com/appwrite/sdk-for-swift',
                 'enabled' => true,
