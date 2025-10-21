@@ -4,6 +4,7 @@
  * Initializes console project document.
  */
 
+use Appwrite\Auth\Auth;
 use Appwrite\Network\Platform;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
@@ -37,7 +38,7 @@ $console = [
         'mockNumbers' => [],
         'invites' => System::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
         'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
-        'duration' => TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
+        'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled',
         'invalidateSessions' => true
     ],

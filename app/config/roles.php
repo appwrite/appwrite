@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 
 $member = [
     'global',
@@ -91,7 +92,7 @@ $admins = [
 ];
 
 return [
-    USER_ROLE_GUESTS => [
+    Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
             'global',
@@ -111,23 +112,23 @@ return [
             'execution.write',
         ],
     ],
-    USER_ROLE_USERS => [
+    Auth::USER_ROLE_USERS => [
         'label' => 'Users',
         'scopes' => \array_merge($member),
     ],
-    USER_ROLE_ADMIN => [
+    Auth::USER_ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins),
     ],
-    USER_ROLE_DEVELOPER => [
+    Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins),
     ],
-    USER_ROLE_OWNER => [
+    Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    USER_ROLE_APPS => [
+    Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],
