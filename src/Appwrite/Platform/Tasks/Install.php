@@ -233,16 +233,28 @@ class Install extends Action
             $mongoInitScript = __DIR__ . '/../../../../mongo-init.js';
             $mongoEntrypoint = __DIR__ . '/../../../../mongo-entrypoint.sh';
 
-            if (file_exists($mongoInitScript)) {
-                if (!copy($mongoInitScript, $this->path . '/mongo-init.js')) {
-                    Console::warning('Failed to copy mongo-init.js');
-                }
+            if (!file_exists($mongoInitScript)) {
+                $message = 'Required MongoDB initialization file not found: mongo-init.js';
+                Console::error($message);
+                Console::exit(1);
             }
 
-            if (file_exists($mongoEntrypoint)) {
-                if (!copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh')) {
-                    Console::warning('Failed to copy mongo-entrypoint.sh');
-                }
+            if (!copy($mongoInitScript, $this->path . '/mongo-init.js')) {
+                $message = 'Failed to copy mongo-init.js - this file is required for MongoDB replica set setup';
+                Console::error($message);
+                Console::exit(1);
+            }
+
+            if (!file_exists($mongoEntrypoint)) {
+                $message = 'Required MongoDB initialization file not found: mongo-entrypoint.sh';
+                Console::error($message);
+                Console::exit(1);
+            }
+
+            if (!copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh')) {
+                $message = 'Failed to copy mongo-entrypoint.sh - this file is required for MongoDB replica set setup';
+                Console::error($message);
+                Console::exit(1);
             }
         }
 

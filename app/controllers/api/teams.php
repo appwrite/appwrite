@@ -1069,9 +1069,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->param('roles', [], function (Document $project, Database $dbForProject) {
         if ($project->getId() === 'console') {
             $roles = array_keys(Config::getParam('roles', []));
-            array_filter($roles, function ($role) {
+            $roles = array_values(array_filter($roles, function ($role) {
                 return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
-            });
+            }));
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
         return new ArrayList(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE);
