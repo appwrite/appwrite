@@ -19,6 +19,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Resource;
@@ -316,7 +317,7 @@ App::post('/v1/migrations/csv/imports')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
-        name: 'createCsvImportMigration',
+        name: 'createCSVImportMigration',
         description: '/docs/references/migrations/migration-csv-import.md',
         auth: [AuthType::ADMIN],
         responses: [
@@ -456,7 +457,7 @@ App::post('/v1/migrations/csv/exports')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
-        name: 'createCsvExportMigration',
+        name: 'createCSVExportMigration',
         description: '/docs/references/migrations/migration-csv-export.md',
         auth: [AuthType::ADMIN],
         responses: [
@@ -470,6 +471,7 @@ App::post('/v1/migrations/csv/exports')
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID where the exported CSV will be stored.')
     ->param('filename', '', new Text(255), 'The name of the file to be created for the export, excluding the .csv extension.')
     ->param('columns', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.', true)
+    ->param('queries', [], new ArrayList(new Text(0)), 'Array of query strings generated using the Query class provided by the SDK to filter documents to export. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->param('delimiter', ',', new Text(1), 'The character that separates each column value. Default is comma ",".', true)
     ->param('enclosure', '"', new Text(1), 'The character that encloses each column value. Default is double quotes \'"\'.', true)
     ->param('escape', '\\', new Text(1), 'The escape character for the enclosure character. Default is backslash "\\".', true)
@@ -486,6 +488,7 @@ App::post('/v1/migrations/csv/exports')
         string $bucketId,
         string $filename,
         array $columns,
+        array $queries,
         string $delimiter,
         string $enclosure,
         string $escape,
@@ -498,6 +501,12 @@ App::post('/v1/migrations/csv/exports')
         Event $queueForEvents,
         Migration $queueForMigrations
     ) {
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -521,6 +530,16 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
+        $validator = new Documents(
+            attributes: $collection->getAttribute('attributes', []),
+            indexes: $collection->getAttribute('indexes', []),
+            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
+        );
+
+        if (!$validator->isValid($queries)) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -537,6 +556,7 @@ App::post('/v1/migrations/csv/exports')
                 'bucketId' => $bucketId,
                 'filename' => $filename,
                 'columns' => $columns,
+                'queries' => $queries,
                 'delimiter' => $delimiter,
                 'enclosure' => $enclosure,
                 'escape' => $escape,
