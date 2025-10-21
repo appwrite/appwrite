@@ -29,7 +29,7 @@ class CompoundUIDTest extends TestCase
         $this->assertEquals($this->object->isValid('as$$5da:sdasdas'), false);
         $this->assertEquals($this->object->isValid(false), false);
         $this->assertEquals($this->object->isValid(null), false);
-        $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRestSubscribers:12345'), true);
+        $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRestSubscribers:12345'), false);
         $this->assertEquals($this->object->isValid('socialAccountForYoutubeAndRSubscriber:12345'), true);
         $this->assertEquals($this->object->isValid('socialAccount:ForYoutubeSubscribe'), true);
         $this->assertEquals($this->object->isValid('socialAccountForYoutubeSubscribe:socialAccountForYoutubeSubscribe'), true);
