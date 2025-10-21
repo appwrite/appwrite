@@ -78,7 +78,7 @@ App::post('/v1/projects')
             )
         ]
     ))
-    ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('projectId', '', fn (Database $dbForPlatform) => new ProjectId($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, 0-9, and hyphen. Can\'t start with a special char.', false, ['dbForPlatform'])
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Team unique ID.', false, ['dbForPlatform'])
     ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
