@@ -46,7 +46,7 @@ class Delete extends TransactionsDelete
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDeletes')
