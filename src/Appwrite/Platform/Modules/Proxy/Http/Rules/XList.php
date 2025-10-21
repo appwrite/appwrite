@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,7 +14,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
@@ -104,10 +104,24 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $rules = $dbForPlatform->find('rules', $queries);
+
+        // Fill response model
         foreach ($rules as $rule) {
             $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
             $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+
+            $certificateHasUpdatedAt = $certificate->getUpdatedAt() !== null;
+            $ruleHasUpdatedAt = $rule->getUpdatedAt() !== null;
+            if ($certificateHasUpdatedAt) {
+                if ($ruleHasUpdatedAt) {
+                    if (new \DateTime($certificate->getUpdatedAt()) > new \DateTime($rule->getUpdatedAt())) {
+                        $rule->setAttribute('$updatedAt', $certificate->getUpdatedAt());
+                    }
+                } else {
+                    $rule->setAttribute('$updatedAt', $certificate->getUpdatedAt());
+                }
+            }
         }
 
         $response->dynamic(new Document([

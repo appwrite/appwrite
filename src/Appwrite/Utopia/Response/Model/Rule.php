@@ -84,11 +84,16 @@ class Rule extends Model
                 'example' => 'main',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_ENUM,
-                'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
-                'default' => 'created',
-                'example' => 'verified',
-                'enum' => ['created', 'verifying', 'verified', 'unverified'],
+                'type' => self::TYPE_STRING,
+                'description' => 'Domain verification status. Possible values are "' . RULE_STATUS_VERIFICATION_FAILED . '", "' . RULE_STATUS_GENERATING_CERTIFICATE . '", "' . RULE_STATUS_SUCCESSFUL . '" and "' . RULE_STATUS_GENERATION_FAILED . '"',
+                'default' => '',
+                'example' => RULE_STATUS_SUCCESSFUL,
+            ])
+            ->addRule('verificationLogs', [
+                'type' => self::TYPE_STRING,
+                'description' => 'DNS verification logs. This contains error from last verification attempt.',
+                'default' => '',
+                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
