@@ -524,7 +524,7 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . str_ireplace("\"", "'", Permission::read(Role::any())) . '"]';
+                        $node['x-example'] = "['" . str_ireplace("'", "\"", Permission::read(Role::any())) . "']";
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['type'] = $validator->getType();

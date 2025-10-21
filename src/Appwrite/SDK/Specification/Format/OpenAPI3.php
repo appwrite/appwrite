@@ -534,7 +534,7 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = '["' . str_ireplace("\"", "'", Permission::read(Role::any())) . '"]';
+                        $node['schema']['x-example'] = "['" . str_ireplace("'", "\"", Permission::read(Role::any())) . "']";
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['schema']['type'] = $validator->getType();
