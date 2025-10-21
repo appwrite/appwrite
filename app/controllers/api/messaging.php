@@ -2697,9 +2697,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('includeTotal', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2761,7 +2762,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $response
             ->dynamic(new Document([
                 'subscribers' => $subscribers,
-                'total' => $dbForProject->count('subscribers', $queries, APP_LIMIT_COUNT),
+                'total' => $includeTotal ? $dbForProject->count('subscribers', $queries, APP_LIMIT_COUNT) : 0,
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
 
