@@ -317,7 +317,7 @@ App::post('/v1/migrations/csv/imports')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
-        name: 'createCSVImportMigration',
+        name: 'createCSVImport',
         description: '/docs/references/migrations/migration-csv-import.md',
         auth: [AuthType::ADMIN],
         responses: [
@@ -457,7 +457,7 @@ App::post('/v1/migrations/csv/exports')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
-        name: 'createCSVExportMigration',
+        name: 'createCSVExport',
         description: '/docs/references/migrations/migration-csv-export.md',
         auth: [AuthType::ADMIN],
         responses: [
