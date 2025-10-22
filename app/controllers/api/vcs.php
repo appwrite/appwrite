@@ -15,6 +15,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -135,11 +136,39 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 if (!$latestComment->isEmpty()) {
                     $latestCommentId = $latestComment->getAttribute('providerCommentId', '');
 
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+                    $retries = 0;
+                    $lockAcquired = false;
 
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    while ($retries < 9) {
+                        $retries++;
+
+                        try {
+                            $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                                '$id' => $latestCommentId
+                            ]));
+                            $lockAcquired = true;
+                            break;
+                        } catch (\Throwable $err) {
+                            if ($retries >= 9) {
+                                Console::warning("Error creating vcs comment lock for " . $latestCommentId . ": " . $err->getMessage());
+                            }
+
+                            \sleep(1);
+                        }
+                    }
+
+                    if ($lockAcquired) {
+                        // Wrap in try/finally to ensure lock file gets deleted
+                        try {
+                            $comment = new Comment();
+                            $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                            $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+
+                            $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                        } finally {
+                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                        }
+                    }
                 } else {
                     $comment = new Comment();
                     $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
@@ -177,11 +206,40 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 foreach ($latestComments as $comment) {
                     $latestCommentId = $comment->getAttribute('providerCommentId', '');
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                    $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
-                    $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                    $retries = 0;
+                    $lockAcquired = false;
+
+                    while ($retries < 9) {
+                        $retries++;
+
+                        try {
+                            $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                                '$id' => $latestCommentId
+                            ]));
+                            $lockAcquired = true;
+                            break;
+                        } catch (\Throwable $err) {
+                            if ($retries >= 9) {
+                                Console::warning("Error creating vcs comment lock for " . $latestCommentId . ": " . $err->getMessage());
+                            }
+
+                            \sleep(1);
+                        }
+                    }
+
+                    if ($lockAcquired) {
+                        // Wrap in try/finally to ensure lock file gets deleted
+                        try {
+                            $comment = new Comment();
+                            $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                            $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+
+                            $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
+                        } finally {
+                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                        }
+                    }
                 }
             }
 
@@ -271,6 +329,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
+                $previewRuleId = $ruleId;
                 Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
@@ -358,6 +417,48 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                         );
                     } catch (Duplicate $err) {
                         // Ignore, rule already exists; will be updated by builds worker
+                    }
+                }
+            }
+
+            if ($resource->getCollection() === 'sites' && !empty($latestCommentId) && !empty($previewRuleId)) {
+                $retries = 0;
+                $lockAcquired = false;
+
+                while ($retries < 9) {
+                    $retries++;
+
+                    try {
+                        $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                            '$id' => $latestCommentId
+                        ]));
+                        $lockAcquired = true;
+                        break;
+                    } catch (\Throwable $err) {
+                        if ($retries >= 9) {
+                            Console::warning("Error creating vcs comment lock for " . $latestCommentId . ": " . $err->getMessage());
+                        }
+
+                        \sleep(1);
+                    }
+                }
+
+                if ($lockAcquired) {
+                    // Wrap in try/finally to ensure lock file gets deleted
+                    try {
+                        $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
+
+                        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+                        $previewUrl = !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
+
+                        if (!empty($previewUrl)) {
+                            $comment = new Comment();
+                            $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                            $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
+                            $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
+                        }
+                    } finally {
+                        $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
                     }
                 }
             }
@@ -1137,6 +1238,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
+        $repository['defaultBranch'] =  $repository['default_branch'] ?? '';
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
@@ -1234,7 +1336,8 @@ App::post('/v1/vcs/github/events')
                 $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
                 $providerCommitHash = $parsedPayload["commitHash"] ?? '';
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
-                $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
+                $providerCommitAuthorName = $parsedPayload["headCommitAuthorName"] ?? '';
+                $providerCommitAuthorEmail = $parsedPayload["headCommitAuthorEmail"] ?? '';
                 $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
                 $providerCommitMessage = $parsedPayload["headCommitMessage"] ?? '';
                 $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
@@ -1247,9 +1350,9 @@ App::post('/v1/vcs/github/events')
                     Query::limit(100),
                 ]));
 
-                // create new deployment only on push and not when branch is created or deleted
-                if (!$providerBranchCreated && !$providerBranchDeleted) {
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
+                // create new deployment only on push (not committed by us) and not when branch is created or deleted
+                if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchCreated && !$providerBranchDeleted) {
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {

@@ -1,9 +1,24 @@
 <!doctype html>
 <html>
     <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap">
+        <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+        <style>
+            @font-face {
+                font-family: 'Inter';
+                src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+
+            @font-face {
+                font-family: 'DM Sans';
+                src: url('https://assets.appwrite.io/fonts/dm-sans/dm-sans-v16-latin-600.woff2') format('woff2');
+                font-weight: 600;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
         <style>
             @media (max-width:500px) {
                 .mobile-full-width {
@@ -116,10 +131,23 @@
             .social-icon > img {
                 margin: auto;
             }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin: 0;
+                padding: 0;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
+            }
         </style>
     </head>
 
     <body>
+        <div style="display: none; overflow: hidden; max-height: 0; max-width: 0; opacity: 0; line-height: 1px;">
+            {{preview}}
+            <div>{{previewWhitespace}}</div>
+        </div>
+
         <div class="main">
             <table>
                 <tr>
@@ -127,6 +155,7 @@
                         <img
                             height="32px"
                             src="{{logoUrl}}"
+                            alt="Appwrite logo"
                         />
                     </td>
                 </tr>
@@ -135,12 +164,12 @@
             <table style="margin-top: 32px">
                 <tr>
                     <td>
-                        <h1>{{subject}}</h1>
+                        <h1>{{heading}}</h1>
                     </td>
                 </tr>
             </table>
 
-            <table style="margin-top: 32px">
+            <table style="margin-top: 16px">
                 <tr>
                     <td>
 {{body}}

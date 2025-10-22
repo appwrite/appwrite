@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -15,6 +16,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
@@ -70,7 +72,11 @@ App::setResource('hooks', function ($register) {
 }, ['register']);
 
 App::setResource('register', fn () => $register);
-App::setResource('locale', fn () => new Locale(System::getEnv('_APP_LOCALE', 'en')));
+App::setResource('locale', function () {
+    $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+    $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+    return $locale;
+});
 
 App::setResource('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
@@ -80,15 +86,30 @@ App::setResource('localeCodes', function () {
 App::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-App::setResource('publisherRedis', function () {
-    // Stub
-});
-App::setResource('consumer', function (Group $pools) {
-    return new BrokerPool(consumer: $pools->get('consumer'));
-}, ['pools']);
-App::setResource('consumerRedis', function () {
-    // Stub
-});
+App::setResource('publisherDatabases', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherFunctions', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMigrations', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherStatsUsage', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMails', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherDeletes', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherMessaging', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
+App::setResource('publisherWebhooks', function (Publisher $publisher) {
+    return $publisher;
+}, ['publisher']);
 App::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
@@ -128,7 +149,10 @@ App::setResource('queueForCertificates', function (Publisher $publisher) {
 App::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);
-App::setResource('platforms', function (Request $request, Document $console, Document $project) {
+App::setResource('queueForStatsResources', function (Publisher $publisher) {
+    return new StatsResources($publisher);
+}, ['publisher']);
+App::setResource('platforms', function (Request $request, Document $console, Document $project, Database $dbForPlatform) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
@@ -167,11 +191,40 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
         ], Document::SET_TYPE_APPEND);
     }
 
+    $origin = \parse_url($request->getOrigin(), PHP_URL_HOST);
+
+    if (empty($origin)) {
+        $origin = \parse_url($request->getReferer(), PHP_URL_HOST);
+    }
+
+    // Safe if rule with same project ID exists
+    if (!empty($origin)) {
+        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
+        } else {
+            $rule = Authorization::skip(
+                fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', [$origin]),
+                    Query::limit(1)
+                ])
+            )[0] ?? new Document();
+        }
+
+        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
+            $project->setAttribute('platforms', [
+                '$collection' => ID::custom('platforms'),
+                'type' => Platform::TYPE_WEB,
+                'name' => $origin,
+                'hostname' => $origin,
+            ], Document::SET_TYPE_APPEND);
+        }
+    }
+
     return [
         ...$console->getAttribute('platforms', []),
         ...$project->getAttribute('platforms', []),
     ];
-}, ['request', 'console', 'project']);
+}, ['request', 'console', 'project', 'dbForPlatform']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform) {
     /** @var Appwrite\Utopia\Request $request */
@@ -222,12 +275,12 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if ($mode === APP_MODE_ADMIN) {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
-    } else {
-        if ($project->isEmpty()) {
-            $user = new Document([]);
-        } else {
+    $user = new Document([]);
+
+    if (!empty(Auth::$unique)) {
+        if ($mode === APP_MODE_ADMIN) {
+            $user = $dbForPlatform->getDocument('users', Auth::$unique);
+        } elseif (!$project->isEmpty()) {
             if ($project->getId() === 'console') {
                 $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
@@ -352,7 +405,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant((int)$project->getSequence())
+            ->setTenant((int) $project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -405,7 +458,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int)$project->getSequence())
+                    ->setTenant((int) $project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -435,7 +488,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
     return function (?Document $project = null) use ($pools, $cache, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant((int) $project->getSequence());
             return $database;
         }
 
@@ -450,7 +503,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant((int) $project->getSequence());
         }
 
         return $database;
@@ -478,7 +531,7 @@ App::setResource('redis', function () {
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
-    @$redis->pconnect($host, (int)$port);
+    @$redis->pconnect($host, (int) $port);
     if ($pass) {
         $redis->auth($pass);
     }
@@ -688,9 +741,10 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         },
     ];
 
+    // NOTE: `params` and `urls` are not used internally in the `Schema::build` function below!
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
-            return [ 'queries' => $args['queries']];
+            return ['queries' => $args['queries']];
         },
         'create' => function (string $databaseId, string $collectionId, array $args) {
             $id = $args['id'] ?? 'unique()';
@@ -836,9 +890,18 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
+
+            if (empty($teamId)) {
+                return new Document([]);
+            }
+
             $team = Authorization::skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
         }
+    }
+
+    if (empty($teamInternalId)) {
+        return new Document([]);
     }
 
     $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
@@ -930,7 +993,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
                 }
 
                 $accessedAt = $token->getAttribute('accessedAt', 0);
-                if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), - APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
+                if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
                     $token->setAttribute('accessedAt', DatabaseDateTime::now());
                     Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
                 }
@@ -972,24 +1035,6 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
         return $referrer;
     }
 
-    // Safe if rule with same project ID exists
-    if (!empty($origin)) {
-        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
-        } else {
-            $rule = Authorization::skip(
-                fn () => $dbForPlatform->find('rules', [
-                    Query::equal('domain', [$origin]),
-                    Query::limit(1)
-                ])
-            )[0] ?? new Document();
-        }
-
-        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
-            return $referrer;
-        }
-    }
-
     // Unsafe; Localhost is always safe for ease of local development
     $origin = 'localhost';
     $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
@@ -997,3 +1042,7 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
+
+App::setResource('transactionState', function (Database $dbForProject) {
+    return new TransactionState($dbForProject);
+}, ['dbForProject']);

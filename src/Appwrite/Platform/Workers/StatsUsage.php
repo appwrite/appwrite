@@ -18,24 +18,24 @@ class StatsUsage extends Action
     /**
      * In memory per project metrics calculation
      */
-    private array $stats = [];
-    private int $lastTriggeredTime = 0;
-    private int $keys = 0;
-    private const INFINITY_PERIOD = '_inf_';
-    private const BATCH_SIZE_DEVELOPMENT = 1;
-    private const BATCH_SIZE_PRODUCTION = 10_000;
+    protected array $stats = [];
+    protected int $lastTriggeredTime = 0;
+    protected int $keys = 0;
+    protected const INFINITY_PERIOD = '_inf_';
+    protected const BATCH_SIZE_DEVELOPMENT = 1;
+    protected const BATCH_SIZE_PRODUCTION = 10_000;
 
     /**
     * Stats for batch write separated per project
     * @var array
     */
-    private array $projects = [];
+    protected array $projects = [];
 
     /**
      * Array of stat documents to batch write to logsDB
      * @var array
      */
-    private array $statDocuments = [];
+    protected array $statDocuments = [];
 
     protected Registry $register;
 
@@ -101,7 +101,7 @@ class StatsUsage extends Action
         return 'stats-usage';
     }
 
-    private function getBatchSize(): int
+    protected function getBatchSize(): int
     {
         return System::getEnv('_APP_ENV', 'development') === 'development'
             ? self::BATCH_SIZE_DEVELOPMENT
@@ -195,7 +195,7 @@ class StatsUsage extends Action
     * @param  callable(): Database $getProjectDB
     * @return void
     */
-    private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
+    protected function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -424,12 +424,41 @@ class StatsUsage extends Action
             try {
                 $dbForProject = $getProjectDB($projectStats['project']);
                 Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
-                $dbForProject->createOrUpdateDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
-                Console::success('Batch successfully written to DB');
 
-                unset($this->projects[$sequence]);
+                /**
+                 * Sort by unique index key reduce locks/deadlocks
+                 */
+                usort($projectStats['stats'], function ($a, $b) {
+                    // Metric DESC
+                    $cmp = strcmp($b['metric'], $a['metric']);
+                    if ($cmp !== 0) {
+                        return $cmp;
+                    }
+
+                    unset($this->projects[$sequence]);
+                    // Period ASC
+                    $cmp = strcmp($a['period'], $b['period']);
+                    if ($cmp !== 0) {
+                        return $cmp;
+                    }
+
+                    // Time ASC, NULLs first
+                    if ($a['time'] === null) {
+                        return ($b['time'] === null) ? 0 : -1;
+                    }
+                    if ($b['time'] === null) {
+                        return 1;
+                    }
+
+                    return strcmp($a['time'], $b['time']);
+                });
+
+                $dbForProject->upsertDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
+                Console::success('Batch successfully written to DB');
             } catch (Throwable $e) {
                 Console::error('Error processing stats: ' . $e->getMessage());
+            } finally {
+                unset($this->projects[$sequence]);
             }
         }
 
@@ -468,12 +497,53 @@ class StatsUsage extends Action
 
         try {
             Console::log('Processing batch with ' . count($this->statDocuments) . ' stats');
-            $dbForLogs->createOrUpdateDocumentsWithIncrease(
+
+            /**
+             * Sort by UNIQUE KEY "_key_metric_period_time" ("_tenant","metric" DESC,"period","time")
+             * Here we sort by _tenant as well because of setTenantPerDocument
+             */
+
+            usort($this->statDocuments, function ($a, $b) {
+                // Tenant ASC
+                $cmp = $a['$tenant'] <=> $b['$tenant'];
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Metric DESC
+                $cmp = strcmp($b['metric'], $a['metric']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Period ASC
+                $cmp = strcmp($a['period'], $b['period']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                // Time ASC, NULLs first
+                if ($a['time'] === null) {
+                    return ($b['time'] === null) ? 0 : -1;
+                }
+                if ($b['time'] === null) {
+                    return 1;
+                }
+
+                return strcmp($a['time'], $b['time']);
+            });
+
+            $dbForLogs->upsertDocumentsWithIncrease(
                 'stats',
                 'value',
                 $this->statDocuments
             );
             Console::success('Usage logs pushed to Logs DB');
+
+            /**
+             * todo: Do we need to unset $this->statDocuments?
+             */
+
         } catch (Throwable $th) {
             Console::error($th->getMessage());
         }

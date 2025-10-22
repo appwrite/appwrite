@@ -39,6 +39,8 @@ trait AccountBase
         $this->assertEquals($response['body']['labels'], []);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertNotEmpty($response['body']['accessedAt']);
+        $this->assertArrayHasKey('targets', $response['body']);
+        $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
 
         /**
          * Test for FAILURE
@@ -150,6 +152,8 @@ trait AccountBase
 
     public function testEmailOTPSession(): void
     {
+        $isConsoleProject = $this->getProject()['$id'] === 'console';
+
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -159,7 +163,7 @@ trait AccountBase
             'email' => 'otpuser@appwrite.io'
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code'], );
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
@@ -170,6 +174,7 @@ trait AccountBase
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmail();
+
         $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
@@ -178,6 +183,14 @@ trait AccountBase
         $code = ($matches[0] ?? [])[0] ?? '';
 
         $this->assertNotEmpty($code);
+        $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires in 15 minutes.', $lastEmail['text']);
+
+        // Only Console project has branded logo in email.
+        if ($isConsoleProject) {
+            $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+        } else {
+            $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+        }
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
@@ -207,6 +220,8 @@ trait AccountBase
         $this->assertEquals($userId, $response['body']['$id']);
         $this->assertEquals($userId, $response['body']['$id']);
         $this->assertTrue($response['body']['emailVerification']);
+        $this->assertArrayHasKey('targets', $response['body']);
+        $this->assertEquals('otpuser@appwrite.io', $response['body']['targets'][0]['identifier']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',

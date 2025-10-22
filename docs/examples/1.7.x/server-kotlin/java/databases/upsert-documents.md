@@ -12,7 +12,7 @@ Databases databases = new Databases(client);
 databases.upsertDocuments(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
-    listOf(), // documents (optional)
+    listOf(), // documents
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
