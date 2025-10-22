@@ -874,7 +874,7 @@ class Builds extends Action
                 $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
 
                 $detector = new Rendering($resource->getAttribute('framework', ''));
-                foreach($files as $file) {
+                foreach ($files as $file) {
                     $detector->addInput($file);
                 }
                 $detector
