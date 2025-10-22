@@ -1341,6 +1341,7 @@ trait MigrationsBase
             $this->assertEquals('completed', $response['body']['status']);
             $this->assertEquals('Appwrite', $response['body']['source']);
             $this->assertEquals('CSV', $response['body']['destination']);
+            $this->assertEquals($bucketId, $response['body']['options']['bucketId']);
 
             return true;
         }, 30000, 500);

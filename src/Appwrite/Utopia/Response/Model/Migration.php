@@ -86,6 +86,12 @@ class Migration extends Model
                 'default' => [],
                 'example' => [],
             ])
+            ->addRule('options', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Migration options used during the migration process.',
+                'default' => [],
+                'example' => '{"bucketId": "exports", "notify": false}',
+            ])
         ;
     }
 
@@ -117,18 +123,16 @@ class Migration extends Model
         }
 
         foreach ($errors as $index => $error) {
-            $decoded = json_decode($error, true);
+            $decoded = \json_decode($error, true);
 
-            // frontend doesn't need too many details.
-            if (is_array($decoded)) {
-                $errors[$index] = json_encode([
+            if (\is_array($decoded)) {
+                $errors[$index] = \json_encode([
                     'code' => $decoded['code'] ?? 0,
                     'message' => $decoded['message'] ?? null,
                 ]);
             }
         }
 
-        // errors now only have code and message.
         $document->setAttribute('errors', $errors);
 
         return $document;
