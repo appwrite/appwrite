@@ -23,6 +23,7 @@ use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
@@ -642,7 +643,7 @@ App::get('/v1/avatars/screenshot')
     ->label('scope', 'avatars.read')
     ->label('cache', true)
     ->label('cache.resourceType', 'avatar/screenshot')
-    ->label('cache.resource', 'screenshot/{request.url}')
+    ->label('cache.resource', 'screenshot/{request.url}/{request.width}/{request.height}/{request.theme}/{request.userAgent}/{request.fullpage}/{request.locale}/{request.timezone}/{request.latitude}/{request.longitude}/{request.accuracy}/{request.touch}/{request.permissions}/{request.sleep}/{request.quality}/{request.output}')
     ->label('sdk', new Method(
         namespace: 'avatars',
         group: null,
@@ -661,15 +662,23 @@ App::get('/v1/avatars/screenshot')
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to capture.')
     ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Defaults to empty.', true)
     ->param('viewport', '1280x720', new Text(20), 'Browser viewport size. Pass a string like "1280x720" or "1920x1080". Defaults to "1280x720".', true)
-    ->param('scale', 2, new Range(1, 5, Range::TYPE_FLOAT), 'Device pixel ratio. Pass a number between 1 to 5. Defaults to 2.', true)
-    ->param('fullPage', false, new Boolean(true), 'Capture full page. Pass 0 for viewport only, or 1 for full page. Default value is set to 0.', true)
+    ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true)
+    ->param('userAgent', '', new Text(512), 'Custom user agent string. Defaults to browser default.', true)
+    ->param('fullpage', false, new Boolean(true), 'Capture full page scroll. Pass 0 for viewport only, or 1 for full page. Defaults to 0.', true)
+    ->param('locale', '', new Text(10), 'Browser locale (e.g., "en-US", "fr-FR"). Defaults to browser default.', true)
+    ->param('timezone', '', new WhiteList(timezone_identifiers_list()), 'IANA timezone identifier (e.g., "America/New_York", "Europe/London"). Defaults to browser default.', true)
+    ->param('latitude', 0, new Range(-90, 90, Range::TYPE_FLOAT), 'Geolocation latitude. Pass a number between -90 to 90. Defaults to 0.', true)
+    ->param('longitude', 0, new Range(-180, 180, Range::TYPE_FLOAT), 'Geolocation longitude. Pass a number between -180 to 180. Defaults to 0.', true)
+    ->param('accuracy', 0, new Range(0, 100000, Range::TYPE_FLOAT), 'Geolocation accuracy in meters. Pass a number between 0 to 100000. Defaults to 0.', true)
+    ->param('touch', false, new Boolean(true), 'Enable touch support. Pass 0 for no touch, or 1 for touch enabled. Defaults to 0.', true)
+    ->param('permissions', [], new ArrayList(new WhiteList(['geolocation', 'camera', 'microphone', 'notifications', 'midi', 'push', 'clipboard-read', 'clipboard-write', 'payment-handler', 'usb', 'bluetooth', 'accelerometer', 'gyroscope', 'magnetometer', 'ambient-light-sensor', 'background-sync', 'persistent-storage', 'screen-wake-lock', 'web-share', 'xr-spatial-tracking'])), 'Browser permissions to grant. Pass an array of permission names like ["geolocation", "camera", "microphone"]. Defaults to empty.', true)
     ->param('sleep', 0, new Range(0, 10), 'Wait time in seconds before taking the screenshot. Pass an integer between 0 to 10. Defaults to 0.', true)
-    ->param('width', 1280, new Range(1, 2000), 'Output image width. Pass an integer between 1 to 2000. Defaults to 1280.', true)
-    ->param('height', 720, new Range(1, 2000), 'Output image height. Pass an integer between 1 to 2000. Defaults to 720.', true)
+    ->param('width', 0, new Range(0, 2000), 'Output image width. Pass 0 to use original width, or an integer between 1 to 2000. Defaults to 0 (original width).', true)
+    ->param('height', 0, new Range(0, 2000), 'Output image height. Pass 0 to use original height, or an integer between 1 to 2000. Defaults to 0 (original height).', true)
     ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('response')
-    ->action(function (string $url, array $headers, string $viewport, float $scale, bool $fullPage, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
+    ->action(function (string $url, array $headers, string $viewport, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -710,34 +719,106 @@ App::get('/v1/avatars/screenshot')
         }
 
         // Create the config with headers as an object
+        // The custom browser service accepts: url, theme, headers, sleep, viewport, userAgent, fullPage, locale, timezoneId, geolocation, hasTouch
         $config = [
             'url' => $url,
-            'width' => $browserWidth,
-            'height' => $browserHeight,
-            'fullPage' => $fullPage,
+            'theme' => $theme,
+            'headers' => $headersObject,
             'sleep' => $sleep * 1000, // Convert seconds to milliseconds
-            'scale' => $scale,
-            'headers' => $headersObject
+            'viewport' => [
+                'width' => $browserWidth,
+                'height' => $browserHeight
+            ]
         ];
 
-        // Ensure the entire config is properly serialized as JSON
-        // This is a workaround to ensure headers are sent as an object
-        $configJson = json_encode($config, JSON_FORCE_OBJECT);
-        $configObject = json_decode($configJson, false); // false to keep objects as objects
+        // Add fullPage to viewport if enabled
+        if ($fullpage) {
+            $config['viewport']['fullPage'] = true;
+        }
 
-        // Convert back to array for the fetch method, but ensure headers remains an object
-        $config = [
-            'url' => $configObject->url,
-            'width' => $configObject->width,
-            'height' => $configObject->height,
-            'fullPage' => $configObject->fullPage,
-            'sleep' => $configObject->sleep,
-            'scale' => $configObject->scale,
-            'headers' => $configObject->headers // Keep as object
+        // Add optional parameters only if they have meaningful values
+        if (!empty($userAgent)) {
+            $config['userAgent'] = $userAgent;
+        }
+
+        if ($fullpage) {
+            $config['fullPage'] = true;
+        }
+
+        if (!empty($locale)) {
+            $config['locale'] = $locale;
+        }
+
+        if (!empty($timezone)) {
+            $config['timezoneId'] = $timezone;
+        }
+
+        // Add geolocation if any coordinates are provided
+        if ($latitude != 0 || $longitude != 0) {
+            $config['geolocation'] = [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'accuracy' => $accuracy
+            ];
+        }
+
+        if ($touch) {
+            $config['hasTouch'] = true;
+        }
+
+        // Add permissions if provided
+        if (!empty($permissions)) {
+            $config['permissions'] = $permissions;
+        }
+
+        // Manually handle the config to ensure headers is an object but arrays remain arrays
+        $finalConfig = [
+            'url' => $config['url'],
+            'theme' => $config['theme'],
+            'headers' => $config['headers'], // Keep as object
+            'sleep' => $config['sleep'],
+            'viewport' => $config['viewport'] // Keep as object
         ];
+
+        // Add optional parameters that were set, preserving arrays as arrays
+        if (!empty($userAgent)) {
+            $finalConfig['userAgent'] = $userAgent;
+        }
+
+        if ($fullpage) {
+            $finalConfig['fullPage'] = true;
+        }
+
+        if (!empty($locale)) {
+            $finalConfig['locale'] = $locale;
+        }
+
+        if (!empty($timezone)) {
+            $finalConfig['timezoneId'] = $timezone;
+        }
+
+        // Add geolocation if any coordinates are provided
+        if ($latitude != 0 || $longitude != 0) {
+            $finalConfig['geolocation'] = [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'accuracy' => $accuracy
+            ];
+        }
+
+        if ($touch) {
+            $finalConfig['hasTouch'] = true;
+        }
+
+        // Add permissions if provided (preserve as array)
+        if (!empty($permissions)) {
+            $finalConfig['permissions'] = $permissions; // Keep as array
+        }
+
+        $config = $finalConfig;
 
         try {
-            $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+            $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://192.168.1.43:3000/v1');
 
             $fetchResponse = $client->fetch(
                 url: $browserEndpoint . '/screenshots',
@@ -755,14 +836,16 @@ App::get('/v1/avatars/screenshot')
                 throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND, 'Screenshot not generated');
             }
 
-            // Resize the screenshot to the desired output dimensions
-            $image = new Image($screenshot);
-            $image->crop($width, $height);
-
             // Determine output format
             $outputs = Config::getParam('storage-outputs');
             if (empty($output)) {
                 $output = 'png'; // Default to PNG for screenshots
+            }
+
+            // Only resize if width and height are explicitly set (not 0)
+            $image = new Image($screenshot);
+            if ($width > 0 && $height > 0) {
+                $image->crop($width, $height);
             }
 
             $resizedScreenshot = $image->output($output, $quality);
