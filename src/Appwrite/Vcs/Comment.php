@@ -12,7 +12,7 @@ class Comment
     // TODO: Add more tips
     protected array $tips = [
         'Appwrite has crossed the 50K GitHub stars milestone with hundreds of active contributors',
-        'Discord community has grown to 24K passionate developers and counting',
+        'Our Discord community has grown to 24K developers, and counting',
         'Sites auto-generate unique domains with the pattern https://randomstring.appwrite.network',
         'Every Git commit and branch gets its own deployment URL automatically',
         'Custom domains work with both CNAME for subdomains and NS records for apex domains',
