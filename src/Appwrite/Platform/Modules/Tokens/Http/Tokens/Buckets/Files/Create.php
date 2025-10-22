@@ -79,7 +79,7 @@ class Create extends Action
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $bucketPermission =  $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
-       
+
         if ($fileSecurity) {
             $filePermission = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_UPDATE, $file->getUpdate()));
             if (!$bucketPermission && !$filePermission) {

@@ -9,7 +9,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;

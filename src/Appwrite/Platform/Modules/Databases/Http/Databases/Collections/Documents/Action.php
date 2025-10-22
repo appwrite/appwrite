@@ -7,7 +7,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends AppwriteAction
 {

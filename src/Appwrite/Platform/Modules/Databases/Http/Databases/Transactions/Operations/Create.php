@@ -165,7 +165,7 @@ class Create extends Action
                 // For individual operations, enforce permissions unless using API key/admin
                 if (!$isAPIKey && !$isPrivilegedUser) {
                     $documentSecurity = $collection->getAttribute('documentSecurity', false);
-                
+
                     $collectionValid = $dbForProject->getAuthorization()->isValid(
                         new input($permissionType, $collection->getPermissionsByType($permissionType))
                     );

@@ -16,7 +16,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;

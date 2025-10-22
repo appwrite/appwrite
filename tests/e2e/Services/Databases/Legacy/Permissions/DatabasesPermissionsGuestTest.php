@@ -17,15 +17,15 @@ class DatabasesPermissionsGuestTest extends Scope
     use SideClient;
     use DatabasesPermissionsScope;
 
-private $authorization;
+    private $authorization;
 
-public function getAuthorization(): Authorization
-{
-    if (isset($this->authorization)) {
-        return $this->authorization;
+    public function getAuthorization(): Authorization
+    {
+        if (isset($this->authorization)) {
+            return $this->authorization;
+        }
+        return new Authorization();
     }
-    return new Authorization();
-}
 
     public function createCollection(): array
     {

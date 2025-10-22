@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Swoole\Response as SwooleResponse;

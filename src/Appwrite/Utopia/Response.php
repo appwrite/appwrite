@@ -983,5 +983,5 @@ class Response extends SwooleResponse
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
-     }
+    }
 }

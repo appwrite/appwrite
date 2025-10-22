@@ -8,7 +8,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 
 class V20 extends Filter
 {

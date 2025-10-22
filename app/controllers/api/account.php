@@ -51,7 +51,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
@@ -228,7 +227,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+    $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP

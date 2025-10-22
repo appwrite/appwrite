@@ -19,7 +19,6 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;

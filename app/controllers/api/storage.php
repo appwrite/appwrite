@@ -739,7 +739,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 if (!$dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
                 }
-              
+
                 try {
                     $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
                 } catch (NotFoundException) {

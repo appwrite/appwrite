@@ -7,7 +7,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 
 /**
  * Service for managing transaction state and providing transaction-aware document operations
@@ -347,7 +346,7 @@ class TransactionState
             return [];
         }
 
-        $operations =$this->dbForProject->getAuthorization()->skip(fn () => $this->dbForProject->find('transactionLogs', [
+        $operations = $this->dbForProject->getAuthorization()->skip(fn () => $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
             Query::orderAsc(),
             Query::limit(PHP_INT_MAX)

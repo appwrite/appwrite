@@ -269,7 +269,7 @@ class Create extends Action
             }
 
             if ($permission === Database::PERMISSION_UPDATE) {
-                $validDocument= $dbForProject->getAuthorization()->isValid(new Input($permission, $document->getUpdate()));
+                $validDocument = $dbForProject->getAuthorization()->isValid(new Input($permission, $document->getUpdate()));
                 $valid = $validCollection || $validDocument;
                 if ($documentSecurity && !$valid) {
                     throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());

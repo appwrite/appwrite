@@ -239,5 +239,5 @@ class Request extends UtopiaRequest
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
-     }
+    }
 }

@@ -10,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain as Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;

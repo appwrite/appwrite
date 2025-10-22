@@ -8,7 +8,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 /**

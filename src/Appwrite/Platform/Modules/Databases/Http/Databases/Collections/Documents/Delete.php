@@ -18,7 +18,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 

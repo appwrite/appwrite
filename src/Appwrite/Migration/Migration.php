@@ -13,7 +13,6 @@ use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\PDO;
-use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
 {

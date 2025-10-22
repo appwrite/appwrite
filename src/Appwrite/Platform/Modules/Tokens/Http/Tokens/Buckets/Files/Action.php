@@ -21,7 +21,7 @@ class Action extends UtopiaAction
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()))){
+        if (!$dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 

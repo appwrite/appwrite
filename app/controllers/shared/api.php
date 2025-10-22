@@ -328,7 +328,7 @@ App::init()
         $scopes = \array_unique($scopes);
 
         $dbForPlatform->getAuthorization()->addRole($role);
-        foreach (Auth::getRoles($user,  $dbForPlatform->getAuthorization()) as $authRole) {
+        foreach (Auth::getRoles($user, $dbForPlatform->getAuthorization()) as $authRole) {
             $dbForPlatform->getAuthorization()->addRole($authRole);
         }
 

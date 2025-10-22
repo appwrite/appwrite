@@ -12,7 +12,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
