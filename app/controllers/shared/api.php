@@ -222,94 +222,39 @@ App::init()
     ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
         $route = $utopia->getRoute();
 
-        /**
-         * Handle user authentication and session validation.
-         *
-         * This function follows a series of steps to determine the appropriate user session
-         * based on cookies, headers, and JWT tokens.
-         *
-         * Process:
-         *
-         * Project & Role Validation:
-         * 1. Check if the project is empty. If so, throw an exception.
-         * 2. Get the roles configuration.
-         * 3. Determine the role for the user based on the user document.
-         * 4. Get the scopes for the role.
-         *
-         * API Key Authentication:
-         * 5. If there is an API key:
-         *    - Verify no user session exists simultaneously
-         *    - Check if key is expired
-         *    - Set role and scopes from API key
-         *    - Handle special app role case
-         *    - For standard keys, update last accessed time
-         *
-         * User Activity:
-         * 6. If the project is not the console and user is not admin:
-         *    - Update user's last activity timestamp
-         *
-         * Access Control:
-         * 7. Get the method from the route
-         * 8. Validate namespace permissions
-         * 9. Validate scope permissions
-         * 10. Check if user is blocked
-         *
-         * Security Checks:
-         * 11. Verify password status (check if reset required)
-         * 12. Validate MFA requirements:
-         *     - Check if MFA is enabled
-         *     - Verify email status
-         *     - Verify phone status
-         *     - Verify authenticator status
-         * 13. Handle Multi-Factor Authentication:
-         *     - Check remaining required factors
-         *     - Validate factor completion
-         *     - Throw exception if factors incomplete
-         */
-
-        // Step 1: Check if project is empty
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        // Step 2: Get roles configuration
         $roles = Config::getParam('roles', []);
-
-        // Step 3: Determine role for user
-        // TODO get scopes from the identity instead of the user roles config. The identity will containn the scopes the user authorized for the access token.
 
         $role = $user->isEmpty()
             ? Role::guests()->toString()
             : Role::users()->toString();
 
-        // Step 4: Get scopes for the role
         $scopes = $roles[$role]['scopes'];
 
-        // Step 5: API Key Authentication
+        // API Key authentication
         if (!empty($apiKey)) {
-            // Verify no user session exists simultaneously
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
-            // Check if key is expired
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
-            // Set role and scopes from API key
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
 
-            // Handle special app role case
-            if ($apiKey->getRole() === USER_ROLE_APPS) {
+            if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
                 // Disable authorization checks for API keys
                 Authorization::setDefaultStatus(false);
 
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
-                    'type' => ACTIVITY_TYPE_APP,
+                    'type' => Auth::ACTIVITY_TYPE_APP,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
@@ -318,7 +263,6 @@ App::init()
                 $queueForAudits->setUser($user);
             }
 
-            // For standard keys, update last accessed time
             if ($apiKey->getType() === API_KEY_STANDARD) {
                 $dbKey = $project->find(
                     key: 'secret',
@@ -388,7 +332,7 @@ App::init()
             Authorization::setRole($authRole);
         }
 
-        // Step 6: Update project and user last activity
+        // Update project last activity
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
@@ -397,6 +341,7 @@ App::init()
             }
         }
 
+        // Update user last activity
         if (!empty($user->getId())) {
             $accessedAt = $user->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
@@ -410,7 +355,6 @@ App::init()
             }
         }
 
-        // Steps 7-9: Access Control - Method, Namespace and Scope Validation
         /**
          * @var ?Method $method
          */
@@ -434,23 +378,21 @@ App::init()
             }
         }
 
-        // Step 9: Validate scope permissions
+        // Do now allow access if scope is not allowed
         $allowed = (array)$route->getLabel('scope', 'none');
         if (empty(\array_intersect($allowed, $scopes))) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
 
-        // Step 10: Check if user is blocked
+        // Do not allow access to blocked accounts
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
-        // Step 11: Verify password status
         if ($user->getAttribute('reset')) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        // Step 12: Validate MFA requirements
         $mfaEnabled = $user->getAttribute('mfa', false);
         $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
         $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
@@ -458,7 +400,6 @@ App::init()
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
-        // Step 13: Handle Multi-Factor Authentication
         if (!in_array('mfa', $route->getGroups())) {
             if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
@@ -585,7 +526,7 @@ App::init()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         }
 
@@ -825,7 +766,7 @@ App::shutdown()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**
@@ -839,7 +780,7 @@ App::shutdown()
             $user = new Document([
                 '$id' => '',
                 'status' => true,
-                'type' => ACTIVITY_TYPE_GUEST,
+                'type' => Auth::ACTIVITY_TYPE_GUEST,
                 'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
                 'name' => 'Guest',

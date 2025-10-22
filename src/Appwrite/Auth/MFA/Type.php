@@ -2,8 +2,8 @@
 
 namespace Appwrite\Auth\MFA;
 
+use Appwrite\Auth\Auth;
 use OTPHP\OTP;
-use Utopia\Auth\Proofs\Token;
 
 abstract class Type
 {
@@ -51,10 +51,9 @@ abstract class Type
     public static function generateBackupCodes(int $length = 10, int $total = 6): array
     {
         $backups = [];
-        $token = new Token($length);
 
         for ($i = 0; $i < $total; $i++) {
-            $backups[] = $token->generate();
+            $backups[] = Auth::tokenGenerator($length);
         }
 
         return $backups;

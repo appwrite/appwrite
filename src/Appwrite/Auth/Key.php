@@ -110,16 +110,16 @@ class Key
             $secret = $key;
         }
 
-        $role = USER_ROLE_APPS;
+        $role = Auth::USER_ROLE_APPS;
         $roles = Config::getParam('roles', []);
-        $scopes = $roles[USER_ROLE_APPS]['scopes'] ?? [];
+        $scopes = $roles[Auth::USER_ROLE_APPS]['scopes'] ?? [];
         $expired = false;
 
         $guestKey = new Key(
             $project->getId(),
             $type,
-            USER_ROLE_GUESTS,
-            $roles[USER_ROLE_GUESTS]['scopes'] ?? [],
+            Auth::USER_ROLE_GUESTS,
+            $roles[Auth::USER_ROLE_GUESTS]['scopes'] ?? [],
             'UNKNOWN'
         );
 
