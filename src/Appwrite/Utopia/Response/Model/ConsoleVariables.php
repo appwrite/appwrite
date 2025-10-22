@@ -22,6 +22,12 @@ class ConsoleVariables extends Model
                 'default' => '',
                 'example' => '127.0.0.1',
             ])
+            ->addRule('_APP_COMPUTE_BUILD_TIMEOUT', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum build timeout in seconds.',
+                'default' => '',
+                'example' => 900,
+            ])
             ->addRule('_APP_DOMAIN_TARGET_AAAA', [
                 'type' => self::TYPE_STRING,
                 'description' => 'AAAA target for your Appwrite custom domains.',
