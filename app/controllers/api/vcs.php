@@ -66,6 +66,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
@@ -827,7 +828,7 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
         $detector = new Packager();
-        foreach($files as $file) {
+        foreach ($files as $file) {
             $detector->addInput($file);
         }
         $detector
@@ -839,6 +840,14 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         $packager = !\is_null($detection) ? $detection->getName() : 'npm';
 
         if ($type === 'framework') {
+            $packages = '';
+            try {
+                $response = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
+                $packages = $response['content'] ?? '';
+            } catch (FileNotFound $e) {
+                // Continue detection without package.json
+            }
+
             $output = new Document([
                 'framework' => '',
                 'installCommand' => '',
@@ -847,10 +856,11 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
             ]);
 
             $detector = new Framework($packager);
-            foreach($files as $file) {
+            $detector->addInput($packages, Framework::INPUT_PACKAGES);
+            foreach ($files as $file) {
                 $detector->addInput($file, Framework::INPUT_FILE);
             }
-            
+
             // TODO: Add package contents
 
             $detector
@@ -903,8 +913,8 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
 
             foreach ($strategies as $strategy) {
                 $detector = new Runtime($strategy, $packager);
-                
-                if($strategy === Strategy::LANGUAGES) {
+
+                if ($strategy === Strategy::LANGUAGES) {
                     foreach ($languages as $language) {
                         $detector->addInput($language);
                     }
@@ -913,7 +923,7 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                         $detector->addInput($file);
                     }
                 }
-                
+
                 $detector
                     ->addOption(new Node())
                     ->addOption(new Bun())
@@ -1033,11 +1043,20 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 $packager = !\is_null($detection) ? $detection->getName() : 'npm';
 
                 if ($type === 'framework') {
+                    $packages = '';
+                    try {
+                        $response = $github->getRepositoryContent($repo['organization'], $repo['name'], 'package.json');
+                        $packages = $response['content'] ?? '';
+                    } catch (FileNotFound $e) {
+                        // Continue detection without package.json
+                    }
+
                     $frameworkDetector = new Framework($packager);
-                    foreach($files as $file) {
+                    $frameworkDetector->addInput($packages, Framework::INPUT_PACKAGES);
+                    foreach ($files as $file) {
                         $frameworkDetector->addInput($file, Framework::INPUT_FILE);
                     }
-                    
+
                     // TODO: Add package contents
 
                     $frameworkDetector
@@ -1080,12 +1099,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
                     foreach ($strategies as $strategy) {
                         $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
-                        if($strategy === Strategy::LANGUAGES) {
-                            foreach($languages as $language) {
+                        if ($strategy === Strategy::LANGUAGES) {
+                            foreach ($languages as $language) {
                                 $detector->addInput($language);
                             }
                         } else {
-                            foreach($files as $file) {
+                            foreach ($files as $file) {
                                 $detector->addInput($file);
                             }
                         }
