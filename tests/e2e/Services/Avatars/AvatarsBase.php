@@ -564,7 +564,7 @@ trait AvatarsBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -576,7 +576,7 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -597,7 +597,7 @@ trait AvatarsBase
          */
 
         // Test with string headers (should fail)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -608,7 +608,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test with numeric headers (should fail)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -619,7 +619,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test with boolean headers (should fail)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -633,7 +633,7 @@ trait AvatarsBase
         // Skipping this test as null is converted to [] by the framework before validation
 
         // Test with regular array (indexed array) - should fail
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -645,7 +645,7 @@ trait AvatarsBase
 
         // Test with mixed array (some numeric keys) - Assoc validator allows this
         // Mixed arrays are considered associative by the Assoc validator
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -656,7 +656,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Test with empty array (should pass - empty associative array)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -667,7 +667,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Test with valid headers object (should pass)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -682,7 +682,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Test with headers containing special characters (should pass)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -699,7 +699,7 @@ trait AvatarsBase
         /**
          * Test for FAILURE - Invalid URL parameter
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'invalid-url',
@@ -708,7 +708,7 @@ trait AvatarsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'ftp://example.com', // Non-HTTP/HTTPS URL
@@ -720,7 +720,7 @@ trait AvatarsBase
         /**
          * Test for FAILURE - Invalid viewport parameter
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -730,7 +730,7 @@ trait AvatarsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -743,7 +743,7 @@ trait AvatarsBase
         /**
          * Test for FAILURE - Invalid width/height parameters
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -752,7 +752,7 @@ trait AvatarsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -764,7 +764,7 @@ trait AvatarsBase
         /**
          * Test for FAILURE - Invalid sleep parameter
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -774,7 +774,7 @@ trait AvatarsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -787,7 +787,7 @@ trait AvatarsBase
         /**
          * Test for FAILURE - Invalid quality parameter
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -797,7 +797,7 @@ trait AvatarsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -810,7 +810,7 @@ trait AvatarsBase
         /**
          * Test for FAILURE - Invalid output parameter
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -824,7 +824,7 @@ trait AvatarsBase
          * Test for SUCCESS - New screenshot parameters
          */
         // Test with theme parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -837,7 +837,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with userAgent parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -850,7 +850,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with fullpage parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -863,7 +863,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with locale parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -876,7 +876,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with timezone parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -889,7 +889,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with geolocation parameters
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -904,7 +904,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with touch parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -917,7 +917,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with permissions parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -935,7 +935,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with original dimensions (width=0, height=0)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -947,7 +947,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // Test with all new parameters combined
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -980,7 +980,7 @@ trait AvatarsBase
          */
 
         // Test invalid theme parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -991,7 +991,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid userAgent parameter (too long)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1002,7 +1002,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid fullpage parameter (non-boolean)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1013,7 +1013,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid locale parameter (too long)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1024,7 +1024,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid timezone parameter
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1035,7 +1035,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid latitude parameter (too high)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1046,7 +1046,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid latitude parameter (too low)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1057,7 +1057,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid longitude parameter (too high)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1068,7 +1068,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid longitude parameter (too low)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1079,7 +1079,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid accuracy parameter (too high)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1090,7 +1090,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid accuracy parameter (negative)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1101,7 +1101,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid touch parameter (non-boolean)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1112,7 +1112,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid permissions parameter (non-array)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1123,7 +1123,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test invalid permissions parameter (numeric array)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1134,7 +1134,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Test empty permissions array (should pass)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1145,7 +1145,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Test invalid permission names (should fail)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1156,7 +1156,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test mixed valid and invalid permissions (should fail)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1167,7 +1167,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test valid permission names (should pass)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
@@ -1178,7 +1178,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Test advanced permission names (should pass)
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshot', [
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),

@@ -637,7 +637,7 @@ App::get('/v1/avatars/initials')
             ->file($image->getImageBlob());
     });
 
-App::get('/v1/avatars/screenshot')
+App::get('/v1/avatars/screenshots')
     ->desc('Get webpage screenshot')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
