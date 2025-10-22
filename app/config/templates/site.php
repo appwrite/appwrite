@@ -111,6 +111,16 @@ const TEMPLATE_FRAMEWORKS = [
         'outputDirectory' => './dist',
         'fallbackFile' => '+not-found.html',
     ],
+    'TANSTACK_START' => [
+        'key' => 'tanstack-start',
+        'name' => 'TanStack Start',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './.output',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'ssr',
+        'fallbackFile' => '',
+    ],
     'ANGULAR' => [
         'key' => 'angular',
         'name' => 'Angular',
@@ -1325,6 +1335,25 @@ return [
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
         'providerVersion' => '0.3.*',
+        'variables' => [],
+    ],
+    [
+        'key' => 'playground-for-tanstack-start',
+        'name' => 'TanStack Start playground',
+        'tagline' => 'A basic TanStack Start website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-tanstack-start-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-tanstack-start-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './tanstack-start/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.5.*',
         'variables' => [],
     ],
     [

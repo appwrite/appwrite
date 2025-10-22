@@ -29,12 +29,20 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Detector\Detection\Framework\Analog;
+use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
 use Utopia\Detector\Detection\Framework\Flutter;
+use Utopia\Detector\Detection\Framework\Lynx;
 use Utopia\Detector\Detection\Framework\NextJs;
 use Utopia\Detector\Detection\Framework\Nuxt;
+use Utopia\Detector\Detection\Framework\React;
+use Utopia\Detector\Detection\Framework\ReactNative;
 use Utopia\Detector\Detection\Framework\Remix;
+use Utopia\Detector\Detection\Framework\Svelte;
 use Utopia\Detector\Detection\Framework\SvelteKit;
+use Utopia\Detector\Detection\Framework\TanStackStart;
+use Utopia\Detector\Detection\Framework\Vue;
 use Utopia\Detector\Detection\Packager\NPM;
 use Utopia\Detector\Detection\Packager\PNPM;
 use Utopia\Detector\Detection\Packager\Yarn;
@@ -818,7 +826,10 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         $files = \array_column($files, 'name');
         $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
-        $detector = new Packager($files);
+        $detector = new Packager();
+        foreach($files as $file) {
+            $detector->addInput($file);
+        }
         $detector
             ->addOption(new Yarn())
             ->addOption(new PNPM())
@@ -835,14 +846,28 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 'outputDirectory' => '',
             ]);
 
-            $detector = new Framework($files, $packager);
+            $detector = new Framework($packager);
+            foreach($files as $file) {
+                $detector->addInput($file, Framework::INPUT_FILE);
+            }
+            
+            // TODO: Add package contents
+
             $detector
-                ->addOption(new Flutter())
-                ->addOption(new Nuxt())
+                ->addOption(new Analog())
+                ->addOption(new Angular())
                 ->addOption(new Astro())
-                ->addOption(new SvelteKit())
+                ->addOption(new Flutter())
+                ->addOption(new Lynx())
                 ->addOption(new NextJs())
-                ->addOption(new Remix());
+                ->addOption(new Nuxt())
+                ->addOption(new React())
+                ->addOption(new ReactNative())
+                ->addOption(new Remix())
+                ->addOption(new Svelte())
+                ->addOption(new SvelteKit())
+                ->addOption(new TanStackStart())
+                ->addOption(new Vue());
 
             $framework = $detector->detect();
 
@@ -877,7 +902,18 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
             ];
 
             foreach ($strategies as $strategy) {
-                $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                $detector = new Runtime($strategy, $packager);
+                
+                if($strategy === Strategy::LANGUAGES) {
+                    foreach ($languages as $language) {
+                        $detector->addInput($language);
+                    }
+                } else {
+                    foreach ($files as $file) {
+                        $detector->addInput($file);
+                    }
+                }
+                
                 $detector
                     ->addOption(new Node())
                     ->addOption(new Bun())
@@ -984,7 +1020,10 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
                 $files = \array_column($files, 'name');
 
-                $detector = new Packager($files);
+                $detector = new Packager();
+                foreach ($files as $file) {
+                    $detector->addInput($file);
+                }
                 $detector
                     ->addOption(new Yarn())
                     ->addOption(new PNPM())
@@ -994,14 +1033,28 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 $packager = !\is_null($detection) ? $detection->getName() : 'npm';
 
                 if ($type === 'framework') {
-                    $frameworkDetector = new Framework($files, $packager);
+                    $frameworkDetector = new Framework($packager);
+                    foreach($files as $file) {
+                        $frameworkDetector->addInput($file, Framework::INPUT_FILE);
+                    }
+                    
+                    // TODO: Add package contents
+
                     $frameworkDetector
-                        ->addOption(new Flutter())
-                        ->addOption(new Nuxt())
+                        ->addOption(new Analog())
+                        ->addOption(new Angular())
                         ->addOption(new Astro())
-                        ->addOption(new SvelteKit())
+                        ->addOption(new Flutter())
+                        ->addOption(new Lynx())
                         ->addOption(new NextJs())
-                        ->addOption(new Remix());
+                        ->addOption(new Nuxt())
+                        ->addOption(new React())
+                        ->addOption(new ReactNative())
+                        ->addOption(new Remix())
+                        ->addOption(new Svelte())
+                        ->addOption(new SvelteKit())
+                        ->addOption(new TanStackStart())
+                        ->addOption(new Vue());
 
                     $detectedFramework = $frameworkDetector->detect();
 
@@ -1027,6 +1080,15 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
                     foreach ($strategies as $strategy) {
                         $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                        if($strategy === Strategy::LANGUAGES) {
+                            foreach($languages as $language) {
+                                $detector->addInput($language);
+                            }
+                        } else {
+                            foreach($files as $file) {
+                                $detector->addInput($file);
+                            }
+                        }
                         $detector
                             ->addOption(new Node())
                             ->addOption(new Bun())
