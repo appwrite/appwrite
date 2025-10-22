@@ -101,7 +101,7 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        Authorization::skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
 
@@ -285,7 +285,7 @@ App::get('/v1/project/usage')
         }, $dbForProject->find('functions'));
 
         // This total is includes free and paid SMS usage
-        $authPhoneTotal = Authorization::skip(fn () => $dbForProject->sum('stats', 'value', [
+        $authPhoneTotal = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->sum('stats', 'value', [
             Query::equal('metric', [METRIC_AUTH_METHOD_PHONE]),
             Query::equal('period', ['1d']),
             Query::greaterThanEqual('time', $firstDay),
@@ -293,7 +293,7 @@ App::get('/v1/project/usage')
         ]));
 
         // This estimate is only for paid SMS usage
-        $authPhoneMetrics = Authorization::skip(fn () => $dbForProject->find('stats', [
+        $authPhoneMetrics = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('stats', [
             Query::startsWith('metric', METRIC_AUTH_METHOD_PHONE . '.'),
             Query::equal('period', ['1d']),
             Query::greaterThanEqual('time', $firstDay),

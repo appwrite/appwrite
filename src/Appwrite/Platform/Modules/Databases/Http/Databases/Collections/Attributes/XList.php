@@ -67,7 +67,7 @@ class XList extends Action
 
     public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }

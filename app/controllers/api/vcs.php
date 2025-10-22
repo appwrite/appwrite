@@ -73,12 +73,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             $projectId = $repository->getAttribute('projectId');
-            $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
             $dbForProject = $getProjectDB($project);
 
             $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
             $resourceId = $repository->getAttribute('resourceId');
-            $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            $resource = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
             $resourceInternalId = $resource->getSequence();
 
             $deploymentId = ID::unique();
@@ -127,7 +127,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $latestCommentId = '';
 
             if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
-                $latestComment = Authorization::skip(fn () => $dbForPlatform->findOne('vcsComments', [
+                $latestComment = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->findOne('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerPullRequestId', [$providerPullRequestId]),
                     Query::orderDesc('$createdAt'),
@@ -177,7 +177,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     if (!empty($latestCommentId)) {
                         $teamId = $project->getAttribute('teamId', '');
 
-                        $latestComment = Authorization::skip(fn () => $dbForPlatform->createDocument('vcsComments', new Document([
+                        $latestComment = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('vcsComments', new Document([
                             '$id' => ID::unique(),
                             '$permissions' => [
                                 Permission::read(Role::team(ID::custom($teamId))),
@@ -198,7 +198,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     }
                 }
             } elseif (!empty($providerBranch)) {
-                $latestComments = Authorization::skip(fn () => $dbForPlatform->find('vcsComments', [
+                $latestComments = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerBranch', [$providerBranch]),
                     Query::orderDesc('$createdAt'),
@@ -280,7 +280,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $commands[] = $resource->getAttribute('commands', '');
             }
 
-            $deployment = Authorization::skip(fn () => $dbForProject->createDocument('deployments', new Document([
+            $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -320,7 +320,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                 ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                 ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            Authorization::skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
 
             if ($resource->getCollection() === 'sites') {
                 $projectId = $project->getId();
@@ -330,7 +330,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
                 $previewRuleId = $ruleId;
-                Authorization::skip(
+                $dbForProject->getAuthorization()->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -363,7 +363,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
-                        Authorization::skip(
+                        $dbForProject->getAuthorization()->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
@@ -394,7 +394,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
-                        Authorization::skip(
+                        $dbForProject->getAuthorization()->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
@@ -446,7 +446,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 if ($lockAcquired) {
                     // Wrap in try/finally to ensure lock file gets deleted
                     try {
-                        $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
+                        $rule = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
 
                         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                         $previewUrl = !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
@@ -1345,7 +1345,7 @@ App::post('/v1/vcs/github/events')
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
                 //find resourceId from relevant resources table
-                $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                $repositories = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('repositories', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::limit(100),
                 ]));
@@ -1365,13 +1365,13 @@ App::post('/v1/vcs/github/events')
                     ]);
 
                     foreach ($installations as $installation) {
-                        $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                        $repositories = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('repositories', [
                             Query::equal('installationInternalId', [$installation->getSequence()]),
                             Query::limit(1000)
                         ]));
 
                         foreach ($repositories as $repository) {
-                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
+                            $dbForProject->getAuthorization()->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
                         }
 
                         $dbForPlatform->deleteDocument('installations', $installation->getId());
@@ -1403,7 +1403,7 @@ App::post('/v1/vcs/github/events')
                     $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
                     $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-                    $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                    $repositories = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('repositories', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::orderDesc('$createdAt')
                     ]));
@@ -1417,7 +1417,7 @@ App::post('/v1/vcs/github/events')
                     $external = $parsedPayload["external"] ?? true;
 
                     if ($external) {
-                        $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                        $repositories = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('repositories', [
                             Query::equal('providerRepositoryId', [$providerRepositoryId]),
                             Query::orderDesc('$createdAt')
                         ]));
@@ -1428,7 +1428,7 @@ App::post('/v1/vcs/github/events')
                             if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
                                 $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
                                 $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
-                                $repository = Authorization::skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
+                                $repository = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
                             }
                         }
                     }
@@ -1624,7 +1624,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
+        $repository = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
             Query::equal('projectInternalId', [$project->getSequence()])
         ]));
 
@@ -1641,7 +1641,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
 
         // TODO: Delete from array when PR is closed
 
-        $repository = Authorization::skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
+        $repository = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
 
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');

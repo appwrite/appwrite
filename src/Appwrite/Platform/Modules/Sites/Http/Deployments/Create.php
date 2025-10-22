@@ -274,7 +274,7 @@ class Create extends Action
                 // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                 $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
-                Authorization::skip(
+                $dbForPlatform->getAuthorization()->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -339,7 +339,7 @@ class Create extends Action
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-                Authorization::skip(
+                $dbForPlatform->getAuthorization()->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

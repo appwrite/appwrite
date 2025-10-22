@@ -35,7 +35,7 @@ use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
@@ -1013,7 +1013,7 @@ App::get('/v1/messaging/providers')
             }
 
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -2320,7 +2320,7 @@ App::get('/v1/messaging/topics')
             }
 
             $topicId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2599,25 +2599,22 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
-
-        $validator = new Authorization('subscribe');
-
-        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$dbForProject->getAuthorization()->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2650,7 +2647,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2706,7 +2703,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2729,7 +2726,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             }
 
             $subscriberId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2745,8 +2742,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
 
         $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
             return function () use ($subscriber, $dbForProject) {
-                $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+                $target = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -2882,7 +2879,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2894,8 +2891,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -2933,7 +2930,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2956,7 +2953,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -3539,7 +3536,7 @@ App::get('/v1/messaging/messages')
             }
 
             $messageId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");

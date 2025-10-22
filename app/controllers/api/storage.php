@@ -31,7 +31,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
@@ -428,18 +428,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('deviceForLocal')
     ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $validator = new Authorization(Database::PERMISSION_CREATE);
-        if (!$validator->isValid($bucket->getCreate())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if (!$dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         $allowedPermissions = [
@@ -462,7 +461,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
+        $roles = $dbForProject->getAuthorization()->getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -475,7 +474,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
+                    if (!$dbForProject->getAuthorization()->hasRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -695,11 +694,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                $validator = new Authorization(Database::PERMISSION_CREATE);
-                if (!$validator->isValid($bucket->getCreate())) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                if (!$dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
                 }
-                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
         } else {
             if ($file->isEmpty()) {
@@ -738,13 +736,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                $validator = new Authorization(Database::PERMISSION_CREATE);
-                if (!$validator->isValid($bucket->getCreate())) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                if (!$dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
                 }
-
+              
                 try {
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                    $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
                 } catch (NotFoundException) {
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
@@ -789,20 +786,19 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         $queries = Query::parseQueries($queries);
@@ -831,7 +827,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
             if ($fileSecurity && !$valid) {
                 $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
             } else {
-                $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             }
 
             if ($cursorDocument->isEmpty()) {
@@ -848,8 +844,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
                 $files = $dbForProject->find('bucket_' . $bucket->getSequence(), $queries);
                 $total = $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT);
             } else {
-                $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getSequence(), $queries));
-                $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT));
+                $files = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('bucket_' . $bucket->getSequence(), $queries));
+                $total = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT));
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -890,26 +886,25 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, string $mode) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -972,10 +967,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         /* @type Document $bucket */
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -983,17 +978,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid && !$isToken) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if ($fileSecurity && !$valid && !$isToken) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
             /* @type Document $file */
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
@@ -1115,11 +1109,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
         //Do not update transformedAt if it's a console user
-        if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+        if (!Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles())) {
             $transformedAt = $file->getAttribute('transformedAt', '');
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                 $file->setAttribute('transformedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
             }
         }
 
@@ -1164,10 +1158,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('deviceForFiles')
     ->action(function (string $bucketId, string $fileId, ?string $token, Request $request, Response $response, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
         /* @type Document $bucket */
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -1175,8 +1169,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1185,7 +1178,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
             /* @type Document $file */
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
@@ -1325,10 +1318,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('deviceForFiles')
     ->action(function (string $bucketId, string $fileId, ?string $token, Response $response, Request $request, Database $dbForProject, string $mode, Document $resourceToken, Device $deviceForFiles) {
         /* @type Document $bucket */
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -1336,8 +1329,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1346,7 +1338,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
             /* @type Document $file */
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
@@ -1479,7 +1471,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Document $project, string $mode, Device $deviceForFiles) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
@@ -1497,14 +1489,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1652,24 +1644,23 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('queueForEvents')
     ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_UPDATE);
-        $valid = $validator->isValid($bucket->getUpdate());
+        $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         // Read permission should not be required for update
-        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1683,7 +1674,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         ]);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
+        $roles = $dbForProject->getAuthorization()->getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -1696,7 +1687,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
+                    if (!$dbForProject->getAuthorization()->hasRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -1717,7 +1708,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             if ($fileSecurity && !$valid) {
                 $file = $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file);
             } else {
-                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -1766,32 +1757,32 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('deviceForFiles')
     ->inject('queueForDeletes')
     ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Device $deviceForFiles, Delete $queueForDeletes) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_DELETE);
-        $valid = $validator->isValid($bucket->getDelete());
+        $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_DELETE, $bucket->getDelete()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         // Read permission should not be required for delete
-        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         // Make sure we don't delete the file before the document permission check occurs
-        if ($fileSecurity && !$valid && !$validator->isValid($file->getDelete())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        $validFile = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_DELETE, $file->getDelete()));
+        if ($fileSecurity && !$valid && !$validFile) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         $deviceDeleted = false;
@@ -1815,7 +1806,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 if ($fileSecurity && !$valid) {
                     $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId);
                 } else {
-                    $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
+                    $deleted = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
                 }
             } catch (NotFoundException) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -1872,7 +1863,7 @@ App::get('/v1/storage/usage')
         ];
 
         $total = [];
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -1968,7 +1959,7 @@ App::get('/v1/storage/:bucketId/usage')
             str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
+        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $db = ($metric === str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED))
                     ? $dbForLogs

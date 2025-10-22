@@ -342,12 +342,12 @@ class TransactionState
      */
     private function getTransactionState(string $transactionId): array
     {
-        $transaction = Authorization::skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId));
+        $transaction = $this->dbForProject->getAuthorization()->skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId));
         if ($transaction->isEmpty() || $transaction->getAttribute('status') !== 'pending') {
             return [];
         }
 
-        $operations = Authorization::skip(fn () => $this->dbForProject->find('transactionLogs', [
+        $operations =$this->dbForProject->getAuthorization()->skip(fn () => $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
             Query::orderAsc(),
             Query::limit(PHP_INT_MAX)

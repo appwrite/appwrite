@@ -73,7 +73,7 @@ class Create extends Action
             }
         }
 
-        $transaction = Authorization::skip(fn () => $dbForProject->createDocument('transactions', new Document([
+        $transaction = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('transactions', new Document([
             '$id' => ID::unique(),
             '$permissions' => $permissions,
             'status' => 'pending',

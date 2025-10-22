@@ -916,7 +916,7 @@ class Builds extends Action
                     ->trigger();
 
                 try {
-                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                    $rule = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal('deploymentInternalId', [$deployment->getSequence()]),
@@ -930,7 +930,7 @@ class Builds extends Action
                     $client->setTimeout(\intval($resource->getAttribute('timeout', '15')));
                     $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
-                    $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+                    $bucket = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                     $configs = [
                         'screenshotLight' => [
@@ -1052,7 +1052,7 @@ class Builds extends Action
                             'metadata' => ['content_type' => $mimeType],
                         ]);
 
-                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
 
                         $deployment->setAttribute($key, $fileId);
                     }
@@ -1275,7 +1275,7 @@ class Builds extends Action
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+                $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
 
             Console::info('Deployment action finished');
@@ -1570,7 +1570,7 @@ class Builds extends Action
                         default => throw new \Exception('Invalid resource type')
                     };
 
-                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                    $rule = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal("deploymentInternalId", [$deployment->getSequence()]),

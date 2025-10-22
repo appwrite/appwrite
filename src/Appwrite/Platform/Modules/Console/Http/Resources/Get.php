@@ -124,7 +124,7 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
             }
 
-            $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+            $document = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$value]),
             ]));
 

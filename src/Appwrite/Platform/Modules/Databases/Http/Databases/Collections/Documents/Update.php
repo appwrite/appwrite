@@ -97,16 +97,16 @@ class Update extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
@@ -120,7 +120,7 @@ class Update extends Action
             // Use transaction-aware document retrieval to see changes from same transaction
             $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
-            $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            $document = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -135,7 +135,7 @@ class Update extends Action
         ]);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
+        $roles = $dbForProject->getAuthorization()->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -148,7 +148,7 @@ class Update extends Action
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
+                    if (!$dbForProject->getAuthorization()->hasRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -190,7 +190,7 @@ class Update extends Action
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $dbForProject->getAuthorization()->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
@@ -207,7 +207,7 @@ class Update extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
+                        $oldDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
@@ -245,7 +245,7 @@ class Update extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
-                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                ? $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND);

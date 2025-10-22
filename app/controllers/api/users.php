@@ -2629,7 +2629,7 @@ App::get('/v1/users/usage')
             METRIC_SESSIONS,
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $count => $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

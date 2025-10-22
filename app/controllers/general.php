@@ -65,9 +65,9 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
     // TODO: @christyjacob remove once we migrate the rules in 1.7.x
     if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-        $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($host)));
+        $rule = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('rules', md5($host)));
     } else {
-        $rule = Authorization::skip(
+        $rule = $dbForPlatform->getAuthorization()->skip(
             fn () => $dbForPlatform->find('rules', [
                 Query::equal('domain', [$host]),
                 Query::limit(1)
@@ -108,7 +108,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 
     $projectId = $rule->getAttribute('projectId');
-    $project = Authorization::skip(
+    $project = $dbForPlatform->getAuthorization()->skip(
         fn () => $dbForPlatform->getDocument('projects', $projectId)
     );
 
@@ -116,7 +116,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $project->setAttribute('accessedAt', DateTime::now());
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
         }
 
         /**
@@ -155,7 +155,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         /** @var Document $deployment */
         if (!empty($rule->getAttribute('deploymentId', ''))) {
-            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
+            $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
         } else {
             // 1.6.x DB schema compatibility
             // TODO: Make sure deploymentId is never empty, and remove this code
@@ -169,15 +169,15 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
             // Document of site or function
             $resource = $resourceType === 'function' ?
-                Authorization::skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
-                Authorization::skip(fn () => $dbForProject->getDocument('sites', $resourceId));
+                $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
+                $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('sites', $resourceId));
 
             // ID of active deployments
             // Attempts to use attribute from both schemas (1.6 and 1.7)
             $activeDeploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
 
             // Get deployment document, as intended originally
-            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
+            $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
         }
 
         if ($deployment->getAttribute('resourceType', '') === 'functions') {
@@ -196,8 +196,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         }
 
         $resource = $type === 'function' ?
-            Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
-            Authorization::skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
+            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
         $isPreview = $type === 'function' ? false : ($rule->getAttribute('trigger', '') !== 'manual');
 
@@ -239,7 +239,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
-                    $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                    $user = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $userId));
                     if (!$user->isEmpty() && $user->getAttribute('status', false)) {
                         $userExists = true;
                     }
@@ -252,7 +252,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 }
 
                 $membershipExists = false;
-                $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+                $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && isset($user)) {
                     $teamId = $project->getAttribute('teamId', '');
                     $membership = $user->find('teamId', $teamId, 'memberships');
@@ -919,7 +919,7 @@ App::init()
             } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
                 Console::warning('Skipping SSL certificates generation on ACME challenge.');
             } else {
-                Authorization::disable();
+                $dbForPlatform->getAuthorization()->disable();
 
                 $envDomain = System::getEnv('_APP_DOMAIN', '');
                 $mainDomain = null;
@@ -989,7 +989,7 @@ App::init()
                 }
                 $domains[$domain->get()] = true;
 
-                Authorization::reset(); // ensure authorization is re-enabled
+                $dbForPlatform->getAuthorization()->reset(); // ensure authorization is re-enabled
             }
             Config::setParam('domains', $domains);
         }
@@ -1174,7 +1174,8 @@ App::error()
     ->inject('log')
     ->inject('queueForStatsUsage')
     ->inject('devKey')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
+    ->inject('authorization')
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -1256,7 +1257,7 @@ App::error()
          * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
-            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            if (!Auth::isPrivilegedUser($authorization->getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
@@ -1318,7 +1319,7 @@ App::error()
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', $authorization->getRoles());
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
@@ -1580,7 +1581,7 @@ App::get('/v1/ping')
             ->setAttribute('pingCount', $pingCount)
             ->setAttribute('pingedAt', $pingedAt);
 
-        Authorization::skip(function () use ($dbForPlatform, $project) {
+        $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $project) {
             $dbForPlatform->updateDocument('projects', $project->getId(), $project);
         });
 

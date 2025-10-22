@@ -200,9 +200,9 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
     // Safe if rule with same project ID exists
     if (!empty($origin)) {
         if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
+            $rule = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
         } else {
-            $rule = Authorization::skip(
+            $rule = $dbForPlatform->getAuthorization()->skip(
                 fn () => $dbForPlatform->find('rules', [
                     Query::equal('domain', [$origin]),
                     Query::limit(1)
@@ -232,9 +232,10 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     /** @var Utopia\Database\Document $project */
     /** @var Utopia\Database\Database $dbForProject */
     /** @var Utopia\Database\Database $dbForPlatform */
+    /** @var Utopia\Database\Authorization $authorization */
     /** @var string $mode */
 
-    Authorization::setDefaultStatus(true);
+    $dbForPlatform->getAuthorization()->setDefaultStatus(true);
 
     Auth::setCookieName('a_session_' . $project->getId());
 
@@ -349,7 +350,7 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+    $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
@@ -379,7 +380,11 @@ App::setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project) {
+App::setResource('authorization', function () {
+    return new Authorization();
+}, []);
+
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Authorization $authorization) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -395,6 +400,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     $database = new Database($adapter, $cache);
 
     $database
+        ->setAuthorization($authorization)
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
@@ -415,13 +421,14 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     }
 
     return $database;
-}, ['pools', 'dbForPlatform', 'cache', 'project']);
+}, ['pools', 'dbForPlatform', 'cache', 'project', 'authorization']);
 
-App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
+App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
     $adapter = new DatabasePool($pools->get('console'));
     $database = new Database($adapter, $cache);
 
     $database
+        ->setAuthorization($authorization)
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
@@ -429,12 +436,12 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     return $database;
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'authorization']);
 
-App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
+App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
     $databases = [];
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -446,8 +453,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
             $dsn = new DSN('mysql://' . $project->getAttribute('database'));
         }
 
-        $configure = (function (Database $database) use ($project, $dsn) {
+        $configure = (function (Database $database) use ($project, $dsn, $authorization) {
             $database
+                ->setAuthorization($authorization)
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
@@ -481,12 +489,12 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         return $database;
     };
-}, ['pools', 'dbForPlatform', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache', 'authorization']);
 
-App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+App::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
 
-    return function (?Document $project = null) use ($pools, $cache, &$database) {
+    return function (?Document $project = null) use ($pools, $cache, $authorization, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant((int) $project->getSequence());
             return $database;
@@ -496,6 +504,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database = new Database($adapter, $cache);
 
         $database
+            ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
@@ -508,7 +517,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         return $database;
     };
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'authorization']);
 
 App::setResource('telemetry', fn () => new NoTelemetry());
 
@@ -713,7 +722,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
     };
 
     $attributes = function (int $limit, int $offset) use ($dbForProject) {
-        $attrs = Authorization::skip(fn () => $dbForProject->find('attributes', [
+        $attrs = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('attributes', [
             Query::limit($limit),
             Query::offset($offset),
         ]));
@@ -852,7 +861,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
     $accessedAt = $key->getAttribute('accessedAt', 0);
     if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
         $key->setAttribute('accessedAt', DatabaseDateTime::now());
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
     }
 
@@ -869,7 +878,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
 
             /** Update access time as well */
             $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $key = Authorization::skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+            $key = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
         }
     }
@@ -886,7 +895,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
-            $p = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $pid));
+            $p = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $pid));
             $teamInternalId = $p->getAttribute('teamInternalId', '');
         } elseif ($path === '/v1/projects') {
             $teamId = $request->getParam('teamId', '');
@@ -895,7 +904,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
                 return new Document([]);
             }
 
-            $team = Authorization::skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+            $team = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
         }
     }
@@ -904,7 +913,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         return new Document([]);
     }
 
-    $team = Authorization::skip(function () use ($dbForPlatform, $teamInternalId) {
+    $team = $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $teamInternalId) {
         return $dbForPlatform->findOne('teams', [
             Query::equal('$sequence', [$teamInternalId]),
         ]);
@@ -966,7 +975,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
             return new Document([]);
         }
 
-        $token = Authorization::skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
+        $token = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('resourceTokens', $tokenId));
 
         if ($token->isEmpty()) {
             return new Document([]);
@@ -995,7 +1004,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
                 $accessedAt = $token->getAttribute('accessedAt', 0);
                 if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
                     $token->setAttribute('accessedAt', DatabaseDateTime::now());
-                    Authorization::skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
+                    $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
                 }
 
                 return new Document([

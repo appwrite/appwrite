@@ -48,7 +48,7 @@ class Migrate extends Action
         callable $getProjectDB,
         Registry $register,
     ): void {
-        Authorization::disable();
+        $dbForPlatform->getAuthorization()->disable();
 
         if (!\array_key_exists($version, Migration::$versions)) {
             Console::error("No migration found for version $version.");

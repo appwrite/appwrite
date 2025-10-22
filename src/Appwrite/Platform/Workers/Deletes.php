@@ -954,14 +954,14 @@ class Deletes extends Action
         }
         Console::info("Deleting screenshots for deployment " . $deployment->getId());
 
-        $bucket = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+        $bucket = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
         if ($bucket->isEmpty()) {
             Console::error('Failed to get bucket for deployment screenshots');
             return;
         }
 
         foreach ($screenshotIds as $id) {
-            $file = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $id));
+            $file = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $id));
 
             if ($file->isEmpty()) {
                 Console::error('Failed to get deployment screenshot: ' . $id);

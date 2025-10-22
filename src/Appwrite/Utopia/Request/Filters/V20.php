@@ -139,7 +139,7 @@ class V20 extends Filter
         }
 
         try {
-            $database = Authorization::skip(fn () => $dbForProject->getDocument(
+            $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                 'databases',
                 $databaseId
             ));
@@ -151,7 +151,7 @@ class V20 extends Filter
         }
 
         try {
-            $collection = Authorization::skip(fn () => $dbForProject->getDocument(
+            $collection = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                 'database_' . $database->getSequence(),
                 $collectionId
             ));

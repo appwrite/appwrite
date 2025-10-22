@@ -101,7 +101,7 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queries = [
             Query::equal('trigger', ['manual']),
@@ -112,12 +112,12 @@ class Update extends Base
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
+        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getSequence());
 
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+            $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
         }, $queries));
 
         $queueForEvents

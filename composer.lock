@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "407c1717bfef580d733ff2bbb232ec8a",
+    "content-hash": "f27ea68014d28d445baa355466cdb7a9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3791,17 +3791,65 @@
             "time": "2020-10-24T09:49:09+00:00"
         },
         {
-            "name": "utopia-php/database",
-            "version": "3.0.2",
+            "name": "utopia-php/console",
+            "version": "0.0.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/database.git",
-                "reference": "b92554e2e7b3b00f0f0acb2b53c6a11e1349b81e"
+                "url": "https://github.com/utopia-php/console.git",
+                "reference": "f77104e4a888fa9cb3e08f32955ec09479ab7a92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b92554e2e7b3b00f0f0acb2b53c6a11e1349b81e",
-                "reference": "b92554e2e7b3b00f0f0acb2b53c6a11e1349b81e",
+                "url": "https://api.github.com/repos/utopia-php/console/zipball/f77104e4a888fa9cb3e08f32955ec09479ab7a92",
+                "reference": "f77104e4a888fa9cb3e08f32955ec09479ab7a92",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "swoole/ide-helper": "4.8.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Console helpers for logging, prompting, and executing commands",
+            "keywords": [
+                "cli",
+                "console",
+                "php",
+                "terminal",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/console/issues",
+                "source": "https://github.com/utopia-php/console/tree/0.0.1"
+            },
+            "time": "2025-10-20T14:41:36+00:00"
+        },
+        {
+            "name": "utopia-php/database",
+            "version": "dev-feat-authorization-instance",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/database.git",
+                "reference": "4088c1002bbc837fd9299987cce5d460ded210d1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4088c1002bbc837fd9299987cce5d460ded210d1",
+                "reference": "4088c1002bbc837fd9299987cce5d460ded210d1",
                 "shasum": ""
             },
             "require": {
@@ -3844,9 +3892,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/3.0.2"
+                "source": "https://github.com/utopia-php/database/tree/feat-authorization-instance"
             },
-            "time": "2025-10-20T23:58:56+00:00"
+            "time": "2025-10-20T13:53:53+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4346,16 +4394,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.2.2",
+            "version": "1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "e0b6687620dd67fe2b96eb4419e8243577b11c8f"
+                "reference": "b6985b235ab64f07a6b88569e20cf9b2df7d838c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e0b6687620dd67fe2b96eb4419e8243577b11c8f",
-                "reference": "e0b6687620dd67fe2b96eb4419e8243577b11c8f",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b6985b235ab64f07a6b88569e20cf9b2df7d838c",
+                "reference": "b6985b235ab64f07a6b88569e20cf9b2df7d838c",
                 "shasum": ""
             },
             "require": {
@@ -4363,9 +4411,9 @@
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
+                "utopia-php/console": "0.0.*",
                 "utopia-php/database": "3.*",
                 "utopia-php/dsn": "0.2.*",
-                "utopia-php/framework": "0.33.*",
                 "utopia-php/storage": "0.18.*"
             },
             "require-dev": {
@@ -4373,7 +4421,6 @@
                 "laravel/pint": "1.*",
                 "phpstan/phpstan": "1.*",
                 "phpunit/phpunit": "11.*",
-                "utopia-php/cli": "0.16.*",
                 "vlucas/phpdotenv": "5.*"
             },
             "type": "library",
@@ -4396,9 +4443,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.2.2"
+                "source": "https://github.com/utopia-php/migration/tree/1.3.1"
             },
-            "time": "2025-10-20T10:12:11+00:00"
+            "time": "2025-10-21T08:13:54+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8736,9 +8783,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-authorization-instance",
+            "alias": "3.0.2",
+            "alias_normalized": "3.0.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8762,5 +8818,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.2.0"
 }

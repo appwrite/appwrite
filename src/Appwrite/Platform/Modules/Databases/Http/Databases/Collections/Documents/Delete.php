@@ -98,16 +98,16 @@ class Delete extends Action
         TransactionState $transactionState,
         array $plan
     ): void {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
@@ -120,7 +120,7 @@ class Delete extends Action
             // Use transaction-aware document retrieval to see changes from same transaction
             $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
-            $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            $document = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -130,7 +130,7 @@ class Delete extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
-                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                ? $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND);

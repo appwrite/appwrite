@@ -297,7 +297,7 @@ abstract class Action extends AppwriteAction
             $relatedCollectionId = $relationship->getAttribute('relatedCollection');
 
             if (!isset($collectionsCache[$relatedCollectionId])) {
-                $relatedCollectionDoc = Authorization::skip(
+                $relatedCollectionDoc = $dbForProject->getAuthorization()->skip(
                     fn () => $dbForProject->getDocument(
                         'database_' . $database->getSequence(),
                         $relatedCollectionId
