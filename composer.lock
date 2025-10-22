@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d9398a28db0b870dc52955d3495ff4c2",
+    "content-hash": "407c1717bfef580d733ff2bbb232ec8a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4394,16 +4394,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-fix-array-export",
+            "version": "1.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "f45c403ae8d81058118f363226df2cf9fa70a3ba"
+                "reference": "f5c1d2cae764290766a4c2d1546c1d51de95b67f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f45c403ae8d81058118f363226df2cf9fa70a3ba",
-                "reference": "f45c403ae8d81058118f363226df2cf9fa70a3ba",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f5c1d2cae764290766a4c2d1546c1d51de95b67f",
+                "reference": "f5c1d2cae764290766a4c2d1546c1d51de95b67f",
                 "shasum": ""
             },
             "require": {
@@ -4443,9 +4443,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/fix-array-export"
+                "source": "https://github.com/utopia-php/migration/tree/1.3.2"
             },
-            "time": "2025-10-22T10:21:21+00:00"
+            "time": "2025-10-21T08:13:54+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8783,18 +8783,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-fix-array-export",
-            "alias": "1.3.1",
-            "alias_normalized": "1.3.1.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
