@@ -139,10 +139,12 @@ class Migrations extends Action
         $migrationOptions = $migration->getAttribute('options');
         $dataSource = Appwrite::SOURCE_API;
         $database = null;
+        $queries = [];
 
         if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
             $dataSource = Appwrite::SOURCE_DATABASE;
             $database = $this->dbForProject;
+            $queries = Query::parseQueries($migrationOptions['queries']);
         }
 
         $migrationSource = match ($source) {
@@ -172,7 +174,8 @@ class Migrations extends Action
                 $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
                 $credentials['apiKey'],
                 $dataSource,
-                $database
+                $database,
+                $queries,
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -210,6 +213,7 @@ class Migrations extends Action
                 $options['bucketId'],
                 $options['filename'],
                 $options['columns'],
+                $options['queries'],
                 $options['delimiter'],
                 $options['enclosure'],
                 $options['escape'],
@@ -370,14 +374,6 @@ class Migrations extends Action
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
                 );
-            }
-
-            // Debug logging for CSV exports before shutdown
-            if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                $statusCounters = $transfer->getStatusCounters();
-                Console::info('CSV export transfer completed. Status counters: ' . json_encode($statusCounters));
-                Console::info('CSV export options: ' . json_encode($migration->getAttribute('options')));
-                Console::info('CSV export errors: ' . json_encode($destination->getErrors()));
             }
 
             $destination->shutdown();
