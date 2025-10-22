@@ -861,8 +861,6 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 $detector->addInput($file, Framework::INPUT_FILE);
             }
 
-            // TODO: Add package contents
-
             $detector
                 ->addOption(new Analog())
                 ->addOption(new Angular())
@@ -1056,8 +1054,6 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     foreach ($files as $file) {
                         $frameworkDetector->addInput($file, Framework::INPUT_FILE);
                     }
-
-                    // TODO: Add package contents
 
                     $frameworkDetector
                         ->addOption(new Analog())
