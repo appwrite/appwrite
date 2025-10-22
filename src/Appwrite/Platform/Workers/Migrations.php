@@ -15,6 +15,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
@@ -484,7 +485,7 @@ class Migrations extends Action
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
         $algorithm = Compression::NONE;
-        $fileId = \md5($resourceId);
+        $fileId = ID::unique();
 
         $this->dbForProject->createDocument('bucket_' . $bucket->getSequence(), new Document([
             '$id' => $fileId,
@@ -524,7 +525,7 @@ class Migrations extends Action
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 
-        // Generate JWT
+        // Generate JWT valid for 1 hour
         $expiry = (new \DateTime())->add(new \DateInterval('PT1H'))->format('U');
         $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
         $jwt = $encoder->encode([
