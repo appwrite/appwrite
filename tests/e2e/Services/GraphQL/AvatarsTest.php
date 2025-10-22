@@ -247,6 +247,7 @@ class AvatarsTest extends Scope
                 'url' => 'https://appwrite.io',
                 'width' => 800,
                 'height' => 600,
+                'scale' => 1.5,
                 'theme' => 'dark',
                 'userAgent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 'fullpage' => true,

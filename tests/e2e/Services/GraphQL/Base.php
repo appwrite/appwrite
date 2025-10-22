@@ -1781,8 +1781,8 @@ trait Base
                     }
                 }';
             case self::GET_SCREENSHOT:
-                return 'query getScreenshot($url: String!, $width: Int, $height: Int, $theme: String, $userAgent: String, $fullpage: Boolean, $locale: String, $timezone: String, $latitude: Float, $longitude: Float, $accuracy: Float, $touch: Boolean, $permissions: [String!]) {
-                    avatarsGetScreenshot(url: $url, width: $width, height: $height, theme: $theme, userAgent: $userAgent, fullpage: $fullpage, locale: $locale, timezone: $timezone, latitude: $latitude, longitude: $longitude, accuracy: $accuracy, touch: $touch, permissions: $permissions) {
+                return 'query getScreenshot($url: String!, $width: Int, $height: Int, $scale: Float, $theme: String, $userAgent: String, $fullpage: Boolean, $locale: String, $timezone: String, $latitude: Float, $longitude: Float, $accuracy: Float, $touch: Boolean, $permissions: [String!]) {
+                    avatarsGetScreenshot(url: $url, width: $width, height: $height, scale: $scale, theme: $theme, userAgent: $userAgent, fullpage: $fullpage, locale: $locale, timezone: $timezone, latitude: $latitude, longitude: $longitude, accuracy: $accuracy, touch: $touch, permissions: $permissions) {
                         status
                     }
                 }';

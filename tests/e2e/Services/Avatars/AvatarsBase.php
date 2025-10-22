@@ -836,6 +836,19 @@ trait AvatarsBase
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
+        // Test with scale parameter
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'width' => 800,
+            'height' => 600,
+            'scale' => 2.0,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
         // Test with userAgent parameter
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -953,6 +966,7 @@ trait AvatarsBase
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
             'width' => 800,
             'height' => 600,
+            'scale' => 1.5,
             'theme' => 'dark',
             'userAgent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
             'fullpage' => true,
@@ -983,10 +997,32 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'url' => 'https://test' . time() . '.com',
             'width' => 800,
             'height' => 600,
             'theme' => 'invalid-theme',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test invalid scale parameter (too small)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://test' . time() . '.com',
+            'width' => 800,
+            'height' => 600,
+            'scale' => 0.05, // Too small (min 0.1)
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test invalid scale parameter (too large)
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://test' . time() . '.com',
+            'width' => 800,
+            'height' => 600,
+            'scale' => 5.0, // Too large (max 3.0)
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 

@@ -643,7 +643,7 @@ App::get('/v1/avatars/screenshots')
     ->label('scope', 'avatars.read')
     ->label('cache', true)
     ->label('cache.resourceType', 'avatar/screenshot')
-    ->label('cache.resource', 'screenshot/{request.url}/{request.width}/{request.height}/{request.theme}/{request.userAgent}/{request.fullpage}/{request.locale}/{request.timezone}/{request.latitude}/{request.longitude}/{request.accuracy}/{request.touch}/{request.permissions}/{request.sleep}/{request.quality}/{request.output}')
+    ->label('cache.resource', 'screenshot/{request.url}/{request.width}/{request.height}/{request.scale}/{request.theme}/{request.userAgent}/{request.fullpage}/{request.locale}/{request.timezone}/{request.latitude}/{request.longitude}/{request.accuracy}/{request.touch}/{request.permissions}/{request.sleep}/{request.quality}/{request.output}')
     ->label('sdk', new Method(
         namespace: 'avatars',
         group: null,
@@ -662,6 +662,7 @@ App::get('/v1/avatars/screenshots')
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to capture.')
     ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Defaults to empty.', true)
     ->param('viewport', '1280x720', new Text(20), 'Browser viewport size. Pass a string like "1280x720" or "1920x1080". Defaults to "1280x720".', true)
+    ->param('scale', 1, new Range(0.1, 3, Range::TYPE_FLOAT), 'Browser scale factor. Pass a number between 0.1 to 3. Defaults to 1.', true)
     ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true)
     ->param('userAgent', '', new Text(512), 'Custom user agent string. Defaults to browser default.', true)
     ->param('fullpage', false, new Boolean(true), 'Capture full page scroll. Pass 0 for viewport only, or 1 for full page. Defaults to 0.', true)
@@ -678,7 +679,7 @@ App::get('/v1/avatars/screenshots')
     ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('response')
-    ->action(function (string $url, array $headers, string $viewport, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
+    ->action(function (string $url, array $headers, string $viewport, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -719,7 +720,7 @@ App::get('/v1/avatars/screenshots')
         }
 
         // Create the config with headers as an object
-        // The custom browser service accepts: url, theme, headers, sleep, viewport, userAgent, fullPage, locale, timezoneId, geolocation, hasTouch
+        // The custom browser service accepts: url, theme, headers, sleep, viewport, userAgent, fullPage, locale, timezoneId, geolocation, hasTouch, scale
         $config = [
             'url' => $url,
             'theme' => $theme,
@@ -730,6 +731,11 @@ App::get('/v1/avatars/screenshots')
                 'height' => $browserHeight
             ]
         ];
+
+        // Add scale if not default
+        if ($scale != 1) {
+            $config['scale'] = $scale;
+        }
 
         // Add fullPage to viewport if enabled
         if ($fullpage) {
@@ -779,6 +785,11 @@ App::get('/v1/avatars/screenshots')
             'sleep' => $config['sleep'],
             'viewport' => $config['viewport'] // Keep as object
         ];
+        
+        // Add scale if not default
+        if ($scale != 1) {
+            $finalConfig['scale'] = $scale;
+        }
 
         // Add optional parameters that were set, preserving arrays as arrays
         if (!empty($userAgent)) {
