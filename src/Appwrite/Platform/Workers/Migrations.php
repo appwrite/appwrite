@@ -213,7 +213,6 @@ class Migrations extends Action
                 $options['bucketId'],
                 $options['filename'],
                 $options['columns'],
-                $options['queries'],
                 $options['delimiter'],
                 $options['enclosure'],
                 $options['escape'],
