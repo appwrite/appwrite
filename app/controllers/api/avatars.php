@@ -818,7 +818,7 @@ App::get('/v1/avatars/screenshot')
         $config = $finalConfig;
 
         try {
-            $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://192.168.1.43:3000/v1');
+            $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
 
             $fetchResponse = $client->fetch(
                 url: $browserEndpoint . '/screenshots',
