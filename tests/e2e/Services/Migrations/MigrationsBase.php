@@ -1347,21 +1347,28 @@ trait MigrationsBase
         }, 30000, 500);
 
         // Check that the file was created in the bucket
-        // File ID is MD5 of the resourceId (not the filename)
-        $fileId = \md5($databaseId . ':' . $collectionId);
-
-        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+        // Query files by filename
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'queries' => [
+                Query::equal('name', ['test-export'])->toString()
+            ]
         ]);
 
-        $this->assertEquals(200, $file['headers']['status-code']);
-        $this->assertEquals($fileId, $file['body']['$id']);
-        $this->assertEquals($bucketId, $file['body']['bucketId']);
-        $this->assertEquals('test-export', $file['body']['name']);
-        $this->assertEquals('text/csv', $file['body']['mimeType']);
-        $this->assertGreaterThan(0, $file['body']['sizeOriginal']);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(1, $files['body']['total'], 'Expected exactly one file with name "test-export"');
+
+        // Get the exported file
+        $file = $files['body']['files'][0];
+        $fileId = $file['$id'];
+
+        $this->assertEquals($bucketId, $file['bucketId']);
+        $this->assertEquals('test-export', $file['name']);
+        $this->assertEquals('text/csv', $file['mimeType']);
+        $this->assertGreaterThan(0, $file['sizeOriginal']);
 
         // Download and verify CSV content
         $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', \array_merge([
