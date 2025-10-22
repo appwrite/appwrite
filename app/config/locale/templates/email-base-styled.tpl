@@ -131,6 +131,14 @@
             .social-icon > img {
                 margin: auto;
             }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin: 0;
+                padding: 0;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
+            }
         </style>
     </head>
 
@@ -147,6 +155,7 @@
                         <img
                             height="32px"
                             src="{{logoUrl}}"
+                            alt="Appwrite logo"
                         />
                     </td>
                 </tr>
@@ -155,12 +164,12 @@
             <table style="margin-top: 32px">
                 <tr>
                     <td>
-                        <h1>{{subject}}</h1>
+                        <h1>{{heading}}</h1>
                     </td>
                 </tr>
             </table>
 
-            <table style="margin-top: 32px">
+            <table style="margin-top: 16px">
                 <tr>
                     <td>
 {{body}}

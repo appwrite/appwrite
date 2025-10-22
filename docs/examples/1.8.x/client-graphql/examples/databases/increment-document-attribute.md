@@ -5,7 +5,8 @@ mutation {
         documentId: "<DOCUMENT_ID>",
         attribute: "",
         value: 0,
-        max: 0
+        max: 0,
+        transactionId: "<TRANSACTION_ID>"
     ) {
         _id
         _sequence

@@ -12,4 +12,5 @@ Document result = await databases.updateDocument(
     documentId: '<DOCUMENT_ID>',
     data: {}, // optional
     permissions: ["read("any")"], // optional
+    transactionId: '<TRANSACTION_ID>', // optional
 );

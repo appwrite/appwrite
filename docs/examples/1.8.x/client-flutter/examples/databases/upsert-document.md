@@ -12,4 +12,5 @@ Document result = await databases.upsertDocument(
     documentId: '<DOCUMENT_ID>',
     data: {},
     permissions: ["read("any")"], // optional
+    transactionId: '<TRANSACTION_ID>', // optional
 );

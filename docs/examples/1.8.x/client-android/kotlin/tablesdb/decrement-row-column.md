@@ -15,4 +15,5 @@ val result = tablesDB.decrementRowColumn(
     column = "", 
     value = 0, // (optional)
     min = 0, // (optional)
+    transactionId = "<TRANSACTION_ID>", // (optional)
 )

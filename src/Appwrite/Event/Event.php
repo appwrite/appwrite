@@ -592,6 +592,7 @@ class Event
         $this->project = $event->getProject();
         $this->user = $event->getUser();
         $this->payload = $event->getPayload();
+        $this->sensitive = $event->sensitive;
         $this->event = $event->getEvent();
         $this->params = $event->getParams();
         $this->context = $event->context;

@@ -82,6 +82,7 @@ class Mails extends Action
         $preview = $payload['preview'] ?? '';
 
         $variables['subject'] = $subject;
+        $variables['heading'] = $variables['heading'] ?? $subject;
         $variables['year'] = date("Y");
 
         $attachment = $payload['attachment'] ?? [];

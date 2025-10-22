@@ -24,12 +24,12 @@ mutation {
         providerRepositoryName
         providerRepositoryOwner
         providerRepositoryUrl
-        providerBranch
         providerCommitHash
         providerCommitAuthorUrl
         providerCommitAuthor
         providerCommitMessage
         providerCommitUrl
+        providerBranch
         providerBranchUrl
     }
 }

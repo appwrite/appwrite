@@ -1281,7 +1281,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
-        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a FULLTEXT index, must be of type string');
+        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a fulltext index, must be of type string');
 
         $noAttributes = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -4638,12 +4638,16 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                Query::select(['library.*'])->toString(),
                 Query::equal('library.libraryName', ['Library 1'])->toString(),
             ],
         ]);
 
-        $this->assertEquals(400, $rows['headers']['status-code']);
-        $this->assertEquals('Invalid query: Cannot query nested attribute on: library', $rows['body']['message']);
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertEquals(1, $rows['body']['total']);
+        $this->assertCount(1, $rows['body']['rows']);
+        $this->assertEquals('Library 1', $rows['body']['rows'][0]['library']['libraryName']);
+        $this->assertEquals($person1['body']['$id'], $rows['body']['rows'][0]['$id']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/columns/library', array_merge([
             'content-type' => 'application/json',
