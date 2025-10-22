@@ -17,7 +17,7 @@ In order to capture the Appwrite OAuth callback url, the following activity need
     ....
     <application ...>
         ....
-        <!-- Add this inside the <application> tag, along side the existing <activity> tags -->
+        <!-- Add this inside the <application> tag, alongside the existing <activity> tags -->
         <activity android:exported="true" android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
             <intent-filter android:label="flutter_web_auth_2">
                 <action android:name="android.intent.action.VIEW" />
@@ -43,8 +43,8 @@ The Appwrite SDK uses ASWebAuthenticationSession on iOS 12+ and SFAuthentication
 ### Linux
 For **Linux** add your app <u>name</u> and <u>package name</u>, Your package name is generally the **name** in your <a href="https://github.com/appwrite/playground-for-flutter/blob/0fdbdff98384fff940ed0b1e08cf14cfe3a2be3e/pubspec.yaml#L1" target="_blank" rel="noopener">pubspec.yaml<a> file. If you cannot find the correct package name, run the application in linux, and make any request with proper exception handling, you should get the application ID needed to add in the received error message.
 
-### Mac OS
-For **Mac OS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
+### macOS
+For **macOS** add your app name and Bundle ID, You can find your Bundle Identifier in the General tab for your app's primary target in Xcode.
 
 The Appwrite SDK uses ASWebAuthenticationSession on macOS 10.15+ to allow OAuth authentication. You have to change your macOS Deployment Target in Xcode to be macOS >= 10.15 to be able to build your app for macOS.
 
@@ -88,77 +88,53 @@ For **Windows** add your app <u>name</u> and <u>package name</u>, Your package n
 
 ### Init your SDK
 
-<p>Initialize your SDK with your Appwrite server API endpoint and project ID, which can be found in your project settings page.
+<p>Initialize your SDK with your project ID, which can be found in your project settings page.
 
 ```dart
-import 'package:appwrite/appwrite.dart';
-
-void main() {
-  Client client = Client();
-
-  client
-    .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-    .setProject('5e8cf4f46b5e8') // Your project ID
-    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-  ;
-}
+Client client = Client().setProject('<YOUR_PROJECT_ID>');
 ```
 
-Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.
-
-When trying to connect to Appwrite from an emulator or a mobile device, localhost is the hostname for the device or emulator and not your local Appwrite instance. You should replace localhost with your private IP as the Appwrite endpoint's hostname. You can also use a service like [ngrok](https://ngrok.com/) to proxy the Appwrite API.
+> If using a self-hosted instance, you will also need to set your Appwrite endpoint using the `setEndpoint` method. Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.
+> When trying to connect to a local Appwrite instance from an emulator or a mobile device, localhost is the hostname for the device or emulator and not your machine. You should replace localhost with your machine's private IP as the Appwrite endpoint's hostname (e.g. 192.168.1.100). You can also use a service like [ngrok](https://ngrok.com/) to proxy the Appwrite API.
 
 ### Make Your First Request
 
 <p>Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
 ```dart
-// Register User
 Account account = Account(client);
-final user = await account
-  .create(
-    userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien"
-  );
+
+User user = await account.create(
+  userId: ID.unique(),
+  email: 'email@example.com',
+  password: 'password',
+  name: 'Walter O'Brien',
+);
 ```
 
 ### Full Example
 
 ```dart
-import 'package:appwrite/appwrite.dart';
+Client client = Client().setProject('<YOUR_PROJECT_ID>>');
 
-void main() {
-  Client client = Client();
+Account account = Account(client);
 
-
-  client
-    .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-    .setProject('5e8cf4f46b5e8') // Your project ID
-    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-    ;
-
-
-  // Register User
-  Account account = Account(client);
-
-  final user = await account
-    .create(
-      userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien"
-    );
-}
+User user = await account.create(
+  userId: ID.unique(),
+  email: 'email@example.com',
+  password: 'password',
+  name: 'Walter O'Brien'
+);
 ```
 
 ### Error Handling
 The Appwrite Flutter SDK raises `AppwriteException` object with `message`, `type`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
 
 ```dart
-Account account = Account(client);
-
 try {
-  final user = await account.create(userId: ID.unique(), email: "email@example.com", password: "password", name: "Walter O'Brien");
-  print(user.toMap());
+  User user = await account.create(...);
 } on AppwriteException catch(e) {
-  //show message to user or do other operation based on error as required
-  print(e.message);
+  // Handle the exception
 }
 ```
 
