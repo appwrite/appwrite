@@ -289,6 +289,7 @@ trait Base
     public const string GET_QRCODE = 'get_qrcode';
     public const string GET_USER_INITIALS = 'get_user_initials';
     public const string GET_SCREENSHOT = 'get_screenshot';
+    public const string GET_PHOTO = 'get_photo';
 
     // Providers
     public const string CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
@@ -1783,6 +1784,12 @@ trait Base
             case self::GET_SCREENSHOT:
                 return 'query getScreenshot($url: String!, $width: Int, $height: Int, $theme: String, $userAgent: String, $fullpage: Boolean, $locale: String, $timezone: String, $latitude: Float, $longitude: Float, $accuracy: Float, $touch: Boolean, $permissions: [String!]) {
                     avatarsGetScreenshot(url: $url, width: $width, height: $height, theme: $theme, userAgent: $userAgent, fullpage: $fullpage, locale: $locale, timezone: $timezone, latitude: $latitude, longitude: $longitude, accuracy: $accuracy, touch: $touch, permissions: $permissions) {
+                        status
+                    }
+                }';
+            case self::GET_PHOTO:
+                return 'query getPhoto($width: Int, $height: Int, $quality: Int, $output: String) {
+                    avatarsGetPhoto(width: $width, height: $height, quality: $quality, output: $output) {
                         status
                     }
                 }';
