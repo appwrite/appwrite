@@ -502,7 +502,7 @@ App::post('/v1/migrations/csv/exports')
         Migration $queueForMigrations
     ) {
         try {
-            $queries = Query::parseQueries($queries);
+            $parsedQueries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
@@ -536,7 +536,7 @@ App::post('/v1/migrations/csv/exports')
             idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
         );
 
-        if (!$validator->isValid($queries)) {
+        if (!$validator->isValid($parsedQueries)) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
         }
 
