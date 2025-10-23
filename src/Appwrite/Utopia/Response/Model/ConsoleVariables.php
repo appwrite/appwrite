@@ -105,7 +105,17 @@ class ConsoleVariables extends Model
                     'default' => '',
                     'example' => 'ns1.example.com,ns2.example.com',
                 ]
-            );
+            )
+            ->addRule(
+                '_APP_DB_ADAPTER',
+                [
+                    'type' => self::TYPE_STRING,
+                    'description' => 'Database adapter in use.',
+                    'default' => 'mariadb',
+                    'example' => 'mysql',
+                ]
+            )
+        ;
     }
 
     /**
