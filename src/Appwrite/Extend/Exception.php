@@ -55,6 +55,7 @@ class Exception extends \Exception
     public const string GENERAL_CURSOR_NOT_FOUND = 'general_cursor_not_found';
     public const string GENERAL_SERVER_ERROR = 'general_server_error';
     public const string GENERAL_PROTOCOL_UNSUPPORTED = 'general_protocol_unsupported';
+    public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';

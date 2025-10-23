@@ -41,6 +41,8 @@ COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
+COPY ./mongo-init.js /usr/src/code/mongo-init.js
+COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
