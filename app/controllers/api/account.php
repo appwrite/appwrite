@@ -205,7 +205,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         '$id' => ID::unique(),
         'userId' => $user->getId(),
         'userInternalId' => $user->getSequence(),
-        'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
         'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
         'userAgent' => $request->getUserAgent('UNKNOWN'),
         'ip' => $request->getIP(),
@@ -226,6 +225,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $latestIdentity = !empty($identities) ? $identities[0] : null;
 
         if ($latestIdentity && !$latestIdentity->isEmpty()) {
+            $sessionData['provider'] = $latestIdentity->getAttribute('provider', '');
             $sessionData['providerUid'] = $latestIdentity->getAttribute('providerUid', '');
             $sessionData['providerAccessToken'] = $latestIdentity->getAttribute('providerAccessToken', '');
             $sessionData['providerRefreshToken'] = $latestIdentity->getAttribute('providerRefreshToken', '');
