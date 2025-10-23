@@ -535,6 +535,11 @@ class Migrations extends Action
         $user = $this->dbForPlatform->findOne('users', [
             Query::equal('$sequence', [$userInternalId])
         ]);
+        
+        if (!$user || $user->isEmpty()) {
+            Console::warning("User not found for CSV export notification: $userInternalId");
+            return;
+        }
 
         // Set up locale
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
