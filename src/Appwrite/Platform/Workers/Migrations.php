@@ -7,7 +7,6 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Template\Template;
 use Exception;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -440,8 +439,7 @@ class Migrations extends Action
         Document $project,
         Document $migration,
         Mail $queueForMails
-    ): void
-    {
+    ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = $options['bucketId'] ?? null;
         $filename = $options['filename'] ?? 'export_' . \time();
@@ -597,8 +595,7 @@ class Migrations extends Action
     protected function sanitizeErrors(
         array $sourceErrors,
         array $destinationErrors,
-    ): array
-    {
+    ): array {
         $errors = [];
         foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
             $encoded = \json_decode(\json_encode($error), true);
