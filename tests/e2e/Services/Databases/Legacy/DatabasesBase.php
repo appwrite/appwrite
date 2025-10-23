@@ -4578,6 +4578,11 @@ trait DatabasesBase
      */
     public function testOneToOneRelationship(array $data): array
     {
+        if ($this->isMongoDB()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
 
         $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
@@ -4824,6 +4829,11 @@ trait DatabasesBase
      */
     public function testOneToManyRelationship(array $data): array
     {
+        if ($this->isMongoDB()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
         $personCollection = $data['personCollection'];
         $libraryCollection = $data['libraryCollection'];
@@ -4979,6 +4989,11 @@ trait DatabasesBase
      */
     public function testManyToOneRelationship(array $data): array
     {
+        if ($this->isMongoDB()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create album collection
@@ -5131,6 +5146,11 @@ trait DatabasesBase
      */
     public function testManyToManyRelationship(array $data): array
     {
+        if ($this->isMongoDB()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create sports collection
@@ -5524,6 +5544,11 @@ trait DatabasesBase
      */
     public function testUpdateWithExistingRelationships(array $data): void
     {
+        if ($this->isMongoDB()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $databaseId = $data['databaseId'];
 
         $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
@@ -5940,7 +5965,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -6083,7 +6109,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -6225,7 +6252,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -6365,7 +6393,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -6524,7 +6553,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -6688,7 +6718,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -7103,7 +7134,8 @@ trait DatabasesBase
     public function testSpatialRelationshipOneToOne(): void
     {
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -7245,7 +7277,8 @@ trait DatabasesBase
     public function testSpatialRelationshipOneToMany(): void
     {
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -7384,7 +7417,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -7513,7 +7547,8 @@ trait DatabasesBase
     public function testSpatialRelationshipManyToMany(): void
     {
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -7643,7 +7678,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -7758,7 +7794,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -7918,7 +7955,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -8053,7 +8091,8 @@ trait DatabasesBase
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',

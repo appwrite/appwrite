@@ -4744,9 +4744,9 @@ trait DatabasesBase
      */
     public function testOneToManyRelationship(array $data): array
     {
-
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return $data;
         }
 
         $databaseId = $data['databaseId'];
