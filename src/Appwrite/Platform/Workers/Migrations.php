@@ -5,8 +5,8 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
+use Appwrite\Extend\Exception;
 use Appwrite\Template\Template;
-use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -458,16 +458,27 @@ class Migrations extends Action
         $fileId = ID::unique();
 
         $sizeMB = \round($size / (1000 * 1000), 2);
-        if ($sizeMB > $plan['fileSize'] ?? PHP_INT_MAX) {
+        if ($sizeMB > $this->plan['fileSize'] ?? PHP_INT_MAX) {
             try {
                 $this->deviceForFiles->delete($path);
             } finally {
                 $message = "Export file size {$sizeMB}MB exceeds your plan limit.";
+
                 $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration->setAttribute(
                     'errors',
                     $message,
                     Document::SET_TYPE_APPEND,
                 ));
+
+                $this->sendCSVEmail(
+                    success: false,
+                    project: $project,
+                    userInternalId: $userInternalId,
+                    options: $options,
+                    queueForMails: $queueForMails,
+                    sizeMB: $sizeMB
+                );
+
                 throw new \Exception($message);
             }
         }
@@ -497,7 +508,52 @@ class Migrations extends Action
 
         Console::info("Created file document in bucket: $fileId");
 
-        // No notification required, skip email sending
+        // Generate JWT valid for 1 hour
+        $maxAge = 60 * 60;
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 0);
+        $jwt = $encoder->encode([
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'projectId' => $project->getId(),
+        ]);
+
+        // Generate download URL with JWT
+        $endpoint = System::getEnv('_APP_DOMAIN', '');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
+        $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+
+        $this->sendCSVEmail(
+            success: true,
+            project: $project,
+            userInternalId: $userInternalId,
+            options: $options,
+            queueForMails: $queueForMails,
+            downloadUrl: $downloadUrl
+        );
+    }
+
+    /**
+     * Send CSV export notification email
+     *
+     * @param bool $success Whether the export was successful
+     * @param Document $project
+     * @param string $userInternalId Internal ID of the user
+     * @param array $options Migration options
+     * @param Mail $queueForMails
+     * @param string $downloadUrl Download URL for successful exports
+     * @param float $sizeMB File size in MB for failed exports
+     * @return void
+     * @throws \Exception
+     */
+    protected function sendCSVEmail(
+        bool $success,
+        Document $project,
+        string $userInternalId,
+        array $options,
+        Mail $queueForMails,
+        string $downloadUrl = '',
+        float $sizeMB = 0.0
+    ): void {
         if (!($options['notify'] ?? false)) {
             return;
         }
@@ -514,29 +570,19 @@ class Migrations extends Action
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 
-        // Generate JWT valid for 1 hour
-        $maxAge = 60 * 60;
-        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 0);
-        $jwt = $encoder->encode([
-            'bucketId' => $bucketId,
-            'fileId' => $fileId,
-            'projectId' => $project->getId(),
-        ]);
-
-        // Generate download URL with JWT
-        $endpoint = System::getEnv('_APP_DOMAIN', '');
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
-        $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+        $emailType = $success
+            ? 'success'
+            : 'failure';
 
         // Get localized email content
-        $subject = $locale->getText('emails.csvExport.subject');
-        $preview = $locale->getText('emails.csvExport.preview');
-        $hello = $locale->getText('emails.csvExport.hello');
-        $body = $locale->getText('emails.csvExport.body');
-        $footer = $locale->getText('emails.csvExport.footer');
-        $thanks = $locale->getText('emails.csvExport.thanks');
-        $buttonText = $locale->getText('emails.csvExport.buttonText');
-        $signature = $locale->getText('emails.csvExport.signature');
+        $subject = $locale->getText("emails.csvExport.{$emailType}.subject");
+        $preview = $locale->getText("emails.csvExport.{$emailType}.preview");
+        $hello = $locale->getText("emails.csvExport.{$emailType}.hello");
+        $body = $locale->getText("emails.csvExport.{$emailType}.body");
+        $footer = $locale->getText("emails.csvExport.{$emailType}.footer");
+        $thanks = $locale->getText("emails.csvExport.{$emailType}.thanks");
+        $signature = $locale->getText("emails.csvExport.{$emailType}.signature");
+        $buttonText = $success ? $locale->getText("emails.csvExport.{$emailType}.buttonText") : '';
 
         // Build email body using inner template
         $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl')
@@ -549,7 +595,8 @@ class Migrations extends Action
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
-            ->setParam('{{redirect}}', $downloadUrl);
+            ->setParam('{{redirect}}', $downloadUrl)
+            ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
 
         $emailBody = $message->render();
 
@@ -557,8 +604,13 @@ class Migrations extends Action
             'direction' => $locale->getText('settings.direction'),
             'project' => $project->getAttribute('name'),
             'user' => $user->getAttribute('name', $user->getAttribute('email')),
-            'redirect' => $downloadUrl,
         ];
+
+        if ($success) {
+            $emailVariables['redirect'] = $downloadUrl;
+        } else {
+            $emailVariables['size'] = (string)$sizeMB;
+        }
 
         $queueForMails
             ->setSubject($subject)
@@ -570,11 +622,14 @@ class Migrations extends Action
             ->setRecipient($user->getAttribute('email'))
             ->trigger();
 
-        Console::info('CSV export notification email sent to ' . $user->getAttribute('email'));
+        Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));
     }
 
     /**
      * Sanitize a filename to make it filesystem-safe
+     *
+     * @param string $filename
+     * @return string
      */
     protected function sanitizeFilename(string $filename): string
     {
