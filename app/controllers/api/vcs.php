@@ -842,8 +842,8 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         if ($type === 'framework') {
             $packages = '';
             try {
-                $response = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
-                $packages = $response['content'] ?? '';
+                $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
+                $packages = $contentResponse['content'] ?? '';
             } catch (FileNotFound $e) {
                 // Continue detection without package.json
             }
@@ -1043,8 +1043,8 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 if ($type === 'framework') {
                     $packages = '';
                     try {
-                        $response = $github->getRepositoryContent($repo['organization'], $repo['name'], 'package.json');
-                        $packages = $response['content'] ?? '';
+                        $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], 'package.json');
+                        $packages = $contentResponse['content'] ?? '';
                     } catch (FileNotFound $e) {
                         // Continue detection without package.json
                     }
