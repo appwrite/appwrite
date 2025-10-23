@@ -240,7 +240,7 @@ class Migrations extends Action
             ->setSubscribers(['console', $project->getId()])
             ->setEvent('migrations.[migrationId].update')
             ->setParam('migrationId', $migration->getId())
-            ->setPayload($migration->getArrayCopy(), sensitive: ['options', 'credentials'])
+            ->setPayload($migration->getArrayCopy(), sensitive: ['credentials'])
             ->trigger();
 
         return $this->dbForProject->updateDocument(
