@@ -216,22 +216,14 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     // For OAuth2 tokens, retrieve and add provider tokens from identity
     if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_OAUTH2) {
-        // Find the most recently updated identity for this user with an access token
-        // This will be the identity that was just used in the OAuth2 flow
+        // Find the most recently updated identity for this user
         $identities = $dbForProject->find('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
             Query::orderDesc('$updatedAt'),
-            Query::limit(100)
+            Query::limit(1)
         ]);
 
-        // Find the first identity with a non-empty access token
-        $latestIdentity = null;
-        foreach ($identities as $identity) {
-            if (!empty($identity->getAttribute('providerAccessToken'))) {
-                $latestIdentity = $identity;
-                break;
-            }
-        }
+        $latestIdentity = !empty($identities) ? $identities[0] : null;
 
         if ($latestIdentity && !$latestIdentity->isEmpty()) {
             $sessionData['providerUid'] = $latestIdentity->getAttribute('providerUid', '');
