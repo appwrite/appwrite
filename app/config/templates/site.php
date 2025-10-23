@@ -9,6 +9,11 @@ use Utopia\System\System;
 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 $hostname = System::getEnv('_APP_DOMAIN', '');
 
+// Temporary fix until we can set _APP_DOMAIN to "localhost" instead of "traefik"
+if (System::getEnv('_APP_ENV', 'development') === 'development') {
+    $hostname = 'localhost';
+}
+
 $url = $protocol . '://' . $hostname;
 
 class UseCases
