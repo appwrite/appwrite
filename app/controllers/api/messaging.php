@@ -231,6 +231,88 @@ App::post('/v1/messaging/providers/sendgrid')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
+App::post('/v1/messaging/providers/resend')
+    ->desc('Create Resend provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createResendProvider',
+        description: '/docs/references/messaging/create-resend-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('apiKey', '', new Text(0), 'Resend API key.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+            'replyToName' => $replyToName,
+            'replyToEmail' => $replyToEmail,
+        ];
+
+        if (
+            $enabled === true
+            && !empty($fromEmail)
+            && \array_key_exists('apiKey', $credentials)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'resend',
+            'type' => MESSAGE_TYPE_EMAIL,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+            'options' => $options,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 App::post('/v1/messaging/providers/smtp')
     ->desc('Create SMTP provider')
     ->groups(['api', 'messaging'])
