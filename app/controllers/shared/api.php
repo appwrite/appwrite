@@ -398,23 +398,7 @@ App::init()
         $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
         $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
         $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-        
-        $availableFactors = 0;
-        
-        if($hasVerifiedAuthenticator) {
-            $availableFactors++;
-        }
-        
-        $usedFactors = \is_null($session) ? [] : $session->getAttribute('factors', []);
-        
-        if($hasVerifiedEmail && !\in_array(Type::EMAIL, $usedFactors)) {
-            $availableFactors++;
-        }
-        if($hasVerifiedPhone && !\in_array(Type::PHONE, $usedFactors)) {
-            $availableFactors++;
-        }
-        
-        $hasMoreFactors = $availableFactors > 0;
+        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
         if (!in_array('mfa', $route->getGroups())) {
