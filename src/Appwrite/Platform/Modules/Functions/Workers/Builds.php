@@ -467,11 +467,10 @@ class Builds extends Action
                     }
 
                     $providerCommitHash = \trim($stdout);
-                    $authorUrl = "https://github.com/$cloneOwner";
 
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
-                    $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
-                    $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
+                    $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
+                    $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
