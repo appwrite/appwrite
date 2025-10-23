@@ -21977,20 +21977,20 @@
                                 },
                                 "delimiter": {
                                     "type": "string",
-                                    "description": "The character that separates each column value. Default is comma \",\".",
+                                    "description": "The character that separates each column value. Default is comma.",
                                     "default": ",",
                                     "x-example": "<DELIMITER>"
                                 },
                                 "enclosure": {
                                     "type": "string",
-                                    "description": "The character that encloses each column value. Default is double quotes '\"'.",
+                                    "description": "The character that encloses each column value. Default is double quotes.",
                                     "default": "\"",
                                     "x-example": "<ENCLOSURE>"
                                 },
                                 "escape": {
                                     "type": "string",
-                                    "description": "The escape character for the enclosure character. Default is backslash \"\\\".",
-                                    "default": "\\",
+                                    "description": "The escape character for the enclosure character. Default is double quotes.",
+                                    "default": "\"",
                                     "x-example": "<ESCAPE>"
                                 },
                                 "header": {
@@ -57590,6 +57590,12 @@
                     "description": "A target for your Appwrite custom domains.",
                     "x-example": "127.0.0.1"
                 },
+                "_APP_COMPUTE_BUILD_TIMEOUT": {
+                    "type": "integer",
+                    "description": "Maximum build timeout in seconds.",
+                    "x-example": 900,
+                    "format": "int32"
+                },
                 "_APP_DOMAIN_TARGET_AAAA": {
                     "type": "string",
                     "description": "AAAA target for your Appwrite custom domains.",
@@ -57656,6 +57662,7 @@
             "required": [
                 "_APP_DOMAIN_TARGET_CNAME",
                 "_APP_DOMAIN_TARGET_A",
+                "_APP_COMPUTE_BUILD_TIMEOUT",
                 "_APP_DOMAIN_TARGET_AAAA",
                 "_APP_DOMAIN_TARGET_CAA",
                 "_APP_STORAGE_LIMIT",
@@ -57672,6 +57679,7 @@
             "example": {
                 "_APP_DOMAIN_TARGET_CNAME": "appwrite.io",
                 "_APP_DOMAIN_TARGET_A": "127.0.0.1",
+                "_APP_COMPUTE_BUILD_TIMEOUT": 900,
                 "_APP_DOMAIN_TARGET_AAAA": "::1",
                 "_APP_DOMAIN_TARGET_CAA": "digicert.com",
                 "_APP_STORAGE_LIMIT": "30000000",
@@ -58404,6 +58412,12 @@
                         "type": "string"
                     },
                     "x-example": []
+                },
+                "options": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Migration options used during the migration process.",
+                    "x-example": "{\"bucketId\": \"exports\", \"notify\": false}"
                 }
             },
             "required": [
@@ -58418,7 +58432,8 @@
                 "resourceId",
                 "statusCounters",
                 "resourceData",
-                "errors"
+                "errors",
+                "options"
             ],
             "example": {
                 "$id": "5e5ea5c16897e",
@@ -58434,7 +58449,8 @@
                 "resourceId": "databaseId:collectionId",
                 "statusCounters": "{\"Database\": {\"PENDING\": 0, \"SUCCESS\": 1, \"ERROR\": 0, \"SKIP\": 0, \"PROCESSING\": 0, \"WARNING\": 0}}",
                 "resourceData": "[{\"resource\":\"Database\",\"id\":\"public\",\"status\":\"SUCCESS\",\"message\":\"\"}]",
-                "errors": []
+                "errors": [],
+                "options": "{\"bucketId\": \"exports\", \"notify\": false}"
             }
         },
         "migrationReport": {
