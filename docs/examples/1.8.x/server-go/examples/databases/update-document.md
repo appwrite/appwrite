@@ -20,4 +20,5 @@ response, error := service.UpdateDocument(
     "<DOCUMENT_ID>",
     databases.WithUpdateDocumentData(map[string]interface{}{}),
     databases.WithUpdateDocumentPermissions(interface{}{"read("any")"}),
+    databases.WithUpdateDocumentTransactionId("<TRANSACTION_ID>"),
 )

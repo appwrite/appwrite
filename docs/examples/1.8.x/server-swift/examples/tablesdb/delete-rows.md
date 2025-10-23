@@ -10,6 +10,7 @@ let tablesDB = TablesDB(client)
 let rowList = try await tablesDB.deleteRows(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    queries: [] // optional
+    queries: [], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

@@ -17,6 +17,7 @@ let row = try await tablesDB.createRow(
         "age": 30,
         "isAdmin": false
     ],
-    permissions: ["read("any")"] // optional
+    permissions: ["read("any")"], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

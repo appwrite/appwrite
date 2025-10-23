@@ -244,12 +244,20 @@ class Update extends Action
 
         // Handle transaction staging
         if ($transactionId !== null) {
-            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            $now = new \DateTime();
+            $expiresAt = new \DateTime($transaction->getAttribute('expiresAt', 'now'));
+            if ($now > $expiresAt) {
+                throw new Exception(Exception::TRANSACTION_EXPIRED);
             }
 
             // Enforce max operations per transaction
@@ -284,9 +292,10 @@ class Update extends Action
             });
 
             // Return successful response without actually updating document
+            $groupId = $this->getGroupId();
             $mockDocument = new Document([
                 '$id' => $documentId,
-                '$collectionId' => $collectionId,
+                '$' . $groupId => $collectionId,
                 '$databaseId' => $databaseId,
                 ...$document->getArrayCopy(),
                 ...$data

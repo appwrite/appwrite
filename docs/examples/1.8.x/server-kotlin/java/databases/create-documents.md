@@ -13,6 +13,7 @@ databases.createDocuments(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
     listOf(), // documents
+    "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -88,6 +89,9 @@ class Increment extends Action
 
     public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan): void
     {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -100,9 +104,17 @@ class Increment extends Action
 
         // Handle transaction staging
         if ($transactionId !== null) {
-            $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
+            }
+
+            $now = new \DateTime();
+            $expiresAt = new \DateTime($transaction->getAttribute('expiresAt', 'now'));
+            if ($now > $expiresAt) {
+                throw new Exception(Exception::TRANSACTION_EXPIRED);
             }
 
             // Enforce max operations per transaction
@@ -124,7 +136,7 @@ class Increment extends Action
                 'documentId' => $documentId,
                 'action' => 'increment',
                 'data' => [
-                    'attribute' => $attribute,
+                    $this->getAttributeKey() => $attribute,
                     'value' => $value,
                     'max' => $max,
                 ],
@@ -141,9 +153,10 @@ class Increment extends Action
             });
 
             // Return successful response without actually incrementing
+            $groupId = $this->getGroupId();
             $mockDocument = new Document([
                 '$id' => $documentId,
-                '$collectionId' => $collectionId,
+                '$' . $groupId => $collectionId,
                 '$databaseId' => $databaseId,
                 $attribute => $value,
             ]);

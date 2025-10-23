@@ -11,6 +11,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
@@ -53,13 +54,28 @@ class Create extends Action
             ->param('ttl', APP_DATABASE_TXN_TTL_DEFAULT, new Range(min: APP_DATABASE_TXN_TTL_MIN, max: APP_DATABASE_TXN_TTL_MAX), 'Seconds before the transaction expires.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject): void
+    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user): void
     {
+        $permissions = [];
+        if (!empty($user->getId())) {
+            $allowedPermissions = [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ];
+
+            foreach ($allowedPermissions as $permission) {
+                $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+            }
+        }
+
         $transaction = Authorization::skip(fn () => $dbForProject->createDocument('transactions', new Document([
             '$id' => ID::unique(),
+            '$permissions' => $permissions,
             'status' => 'pending',
             'operations' => 0,
             'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),

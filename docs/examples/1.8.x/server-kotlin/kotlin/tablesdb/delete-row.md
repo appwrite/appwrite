@@ -12,5 +12,6 @@ val tablesDB = TablesDB(client)
 val response = tablesDB.deleteRow(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
-    rowId = "<ROW_ID>"
+    rowId = "<ROW_ID>",
+    transactionId = "<TRANSACTION_ID>" // optional
 )

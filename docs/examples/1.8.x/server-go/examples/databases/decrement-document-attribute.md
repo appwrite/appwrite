@@ -21,4 +21,5 @@ response, error := service.DecrementDocumentAttribute(
     "",
     databases.WithDecrementDocumentAttributeValue(0),
     databases.WithDecrementDocumentAttributeMin(0),
+    databases.WithDecrementDocumentAttributeTransactionId("<TRANSACTION_ID>"),
 )

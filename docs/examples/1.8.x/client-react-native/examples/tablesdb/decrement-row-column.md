@@ -12,7 +12,8 @@ const result = await tablesDB.decrementRowColumn({
     rowId: '<ROW_ID>',
     column: '',
     value: 0, // optional
-    min: 0 // optional
+    min: 0, // optional
+    transactionId: '<TRANSACTION_ID>' // optional
 });
 
 console.log(result);

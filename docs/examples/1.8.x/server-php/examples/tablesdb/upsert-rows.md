@@ -13,5 +13,6 @@ $tablesDB = new TablesDB($client);
 $result = $tablesDB->upsertRows(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    rows: []
+    rows: [],
+    transactionId: '<TRANSACTION_ID>' // optional
 );

@@ -2,7 +2,8 @@ mutation {
     tablesDBUpsertRows(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
-        rows: []
+        rows: [],
+        transactionId: "<TRANSACTION_ID>"
     ) {
         total
         rows {

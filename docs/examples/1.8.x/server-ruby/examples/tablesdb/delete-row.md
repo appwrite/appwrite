@@ -12,5 +12,6 @@ tables_db = TablesDB.new(client)
 result = tables_db.delete_row(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
-    row_id: '<ROW_ID>'
+    row_id: '<ROW_ID>',
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

@@ -14,5 +14,6 @@ val response = tablesDB.updateRow(
     tableId = "<TABLE_ID>",
     rowId = "<ROW_ID>",
     data = mapOf( "a" to "b" ), // optional
-    permissions = listOf("read("any")") // optional
+    permissions = listOf("read("any")"), // optional
+    transactionId = "<TRANSACTION_ID>" // optional
 )

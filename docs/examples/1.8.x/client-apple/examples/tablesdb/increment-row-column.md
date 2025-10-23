@@ -12,6 +12,7 @@ let row = try await tablesDB.incrementRowColumn(
     rowId: "<ROW_ID>",
     column: "",
     value: 0, // optional
-    max: 0 // optional
+    max: 0, // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

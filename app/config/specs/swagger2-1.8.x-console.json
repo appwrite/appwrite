@@ -5805,7 +5805,7 @@
         },
         "\/databases\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Create operations scoped to a transaction",
+                "summary": "Create operations",
                 "operationId": "databasesCreateOperations",
                 "consumes": [
                     "application\/json"
@@ -33897,7 +33897,7 @@
         },
         "\/tablesdb\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Create operations scoped to a transaction",
+                "summary": "Create operations",
                 "operationId": "tablesDBCreateOperations",
                 "consumes": [
                     "application\/json"

@@ -18,7 +18,7 @@ messaging.createPush(
     listOf(), // targets (optional)
     mapOf( "a" to "b" ), // data (optional)
     "<ACTION>", // action (optional)
-    "[ID1:ID2]", // image (optional)
+    "<ID1:ID2>", // image (optional)
     "<ICON>", // icon (optional)
     "<SOUND>", // sound (optional)
     "<COLOR>", // color (optional)

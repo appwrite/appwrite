@@ -14,4 +14,5 @@ val result = databases.upsertDocument(
     documentId = "<DOCUMENT_ID>", 
     data = mapOf( "a" to "b" ), 
     permissions = listOf("read("any")"), // (optional)
+    transactionId = "<TRANSACTION_ID>", // (optional)
 )
