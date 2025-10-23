@@ -485,11 +485,9 @@ class Migrations extends Action
     {
         $options = $migration->getAttribute('options', []);
         $bucketId = $options['bucketId'] ?? null;
-        $filename = $options['filename'] ?? 'export.csv';
+        $filename = $options['filename'] ?? 'export_' . \time();
         $userInternalId = $options['userInternalId'] ?? '';
-        $resourceId = $migration->getAttribute('resourceId');
 
-        // Save file to bucket
         $bucket = $this->dbForProject->getDocument('buckets', $bucketId);
         if ($bucket->isEmpty()) {
             throw new \Exception("Bucket not found: $bucketId");
@@ -535,19 +533,18 @@ class Migrations extends Action
         $user = $this->dbForPlatform->findOne('users', [
             Query::equal('$sequence', [$userInternalId])
         ]);
-        
-        if (!$user || $user->isEmpty()) {
+
+        if ($user->isEmpty()) {
             Console::warning("User not found for CSV export notification: $userInternalId");
             return;
         }
 
-        // Set up locale
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 
         // Generate JWT valid for 1 hour
-        $expiry = (new \DateTime())->add(new \DateInterval('PT1H'))->format('U');
-        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
+        $maxAge = 60 * 60;
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 0);
         $jwt = $encoder->encode([
             'bucketId' => $bucketId,
             'fileId' => $fileId,
@@ -570,8 +567,7 @@ class Migrations extends Action
         $signature = $locale->getText('emails.csvExport.signature');
 
         // Build email body using inner template
-        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
-        $message
+        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl')
             ->setParam('{{body}}', $body, escapeHtml: false)
             ->setParam('{{hello}}', $hello)
             ->setParam('{{footer}}', $footer)
