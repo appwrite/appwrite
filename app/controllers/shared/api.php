@@ -2,7 +2,6 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
-use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;

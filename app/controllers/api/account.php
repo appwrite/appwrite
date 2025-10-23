@@ -1948,6 +1948,17 @@ App::post('/v1/account/tokens/magic-url')
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
         if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
+
+            $mfaEnabled = $user->getAttribute('mfa', false);
+            if ($mfaEnabled) {
+                $isTotpEnabled = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
+                $isPhoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                if (!$isTotpEnabled && !$isPhoneEnabled) {
+                    throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED, 'You cannot sign-in passwordless with email, because your account has multifactor enabled, but only has email factor enabled.');
+                }
+            }
+
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
@@ -4160,20 +4171,20 @@ App::get('/v1/account/mfa/factors')
         $isRecoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
 
         $totp = TOTP::getAuthenticatorFromUser($user);
-        
+
         $isTotpEnabled = $totp !== null && $totp->getAttribute('verified', false);
         $isEmailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
         $isPhoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
-        
+
         // Disallow email or phone as 2nd factor, if it was used as 1st factor already
         // This is just for informative purposes, actual protection lies in unique check when adding a factor
-        if(!is_null($session)) {
+        if (!is_null($session)) {
             $existingFactors = $session->getAttribute('factors', []);
-         
-            if(\in_array(Type::EMAIL, $existingFactors) && $isEmailEnabled) {
+
+            if (\in_array(Type::EMAIL, $existingFactors) && $isEmailEnabled) {
                 $isEmailEnabled = false;
             }
-            if(\in_array(Type::PHONE, $existingFactors) && $isPhoneEnabled) {
+            if (\in_array(Type::PHONE, $existingFactors) && $isPhoneEnabled) {
                 $isPhoneEnabled = false;
             }
         }
