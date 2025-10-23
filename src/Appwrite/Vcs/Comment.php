@@ -16,7 +16,7 @@ class Comment
         'Sites auto-generate unique domains with the pattern https://randomstring.appwrite.network',
         'Every Git commit and branch gets its own deployment URL automatically',
         'Custom domains work with both CNAME for subdomains and NS records for apex domains',
-        'HTTPS and SSL certificates are handled automagically for all your Sites',
+        'HTTPS and SSL certificates are handled automatically for all your Sites',
         'Functions can run for up to 15 minutes before timing out',
         'Schedule functions to run as often as every minute with cron expressions',
         'Environment variables can be scoped per function or shared across your project',
