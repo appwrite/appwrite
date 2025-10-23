@@ -243,24 +243,10 @@ class Migrations extends Action
      */
     protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
-        $messages = [];
-
         $errors = $migration->getAttribute('errors', []);
-        foreach ($errors as $error) {
-            $decoded = \json_decode($error, true);
-            if (\is_array($decoded)) {
-                if (isset($decoded['trace'])) {
-                    unset($decoded['trace']);
-                }
-                $messages[] = json_encode($decoded);
-            } else {
-                $messages[] = $error;
-            }
-        }
-
-        $migration->setAttribute('errors', $messages);
-
-        /** Trigger Realtime Events */
+        $errors = $this->sanitizeErrors($errors, []);
+        $migration->setAttribute('errors', $errors);
+        
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
@@ -380,18 +366,7 @@ class Migrations extends Action
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
 
-                $errors = [];
-                foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    $encoded = \json_decode(\json_encode($error), true);
-                    if (\is_array($encoded)) {
-                        if (isset($encoded['trace'])) {
-                            unset($encoded['trace']);
-                        }
-                        $errors[] = \json_encode($encoded);
-                    } else {
-                        $errors[] = \json_encode($error);
-                    }
-                }
+                $errors = $this->sanitizeErrors($sourceErrors, $destinationErrors);
 
                 $migration->setAttribute('errors', $errors);
                 return;
@@ -419,19 +394,7 @@ class Migrations extends Action
             if ($transfer) {
                 $sourceErrors = $source->getErrors();
                 $destinationErrors = $destination->getErrors();
-
-                $errors = [];
-                foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    $encoded = \json_decode(\json_encode($error), true);
-                    if (\is_array($encoded)) {
-                        if (isset($encoded['trace'])) {
-                            unset($encoded['trace']);
-                        }
-                        $errors[] = \json_encode($encoded);
-                    } else {
-                        $errors[] = \json_encode($error);
-                    }
-                }
+                $errors = $this->sanitizeErrors($sourceErrors, $destinationErrors);
 
                 $migration->setAttribute('errors', $errors);
             }
@@ -470,6 +433,27 @@ class Migrations extends Action
                 }
             }
         }
+    }
+
+    protected function sanitizeErrors(
+        array $sourceErrors,
+        array $destinationErrors,
+    ): array
+    {
+        $errors = [];
+        foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
+            $encoded = \json_decode(\json_encode($error), true);
+            if (\is_array($encoded)) {
+                if (isset($encoded['trace'])) {
+                    unset($encoded['trace']);
+                }
+                $errors[] = \json_encode($encoded);
+            } else {
+                $errors[] = \json_encode($error);
+            }
+        }
+
+        return $error;
     }
 
     protected function handleCSVExportComplete(Document $project, Document $migration, Mail $queueForMails): void
