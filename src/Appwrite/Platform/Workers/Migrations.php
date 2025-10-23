@@ -7,6 +7,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Template\Template;
 use Exception;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -47,9 +48,9 @@ class Migrations extends Action
 
     protected Document $project;
 
+    protected array $plan;
+
     /**
-     * Cached for performance.
-     *
      * @var array<string, int>
      */
     protected array $sourceReport = [];
@@ -80,6 +81,7 @@ class Migrations extends Action
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
             ->inject('queueForMails')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -96,16 +98,18 @@ class Migrations extends Action
         Device $deviceForMigrations,
         Device $deviceForFiles,
         Mail $queueForMails,
+        array $plan,
     ): void {
         $payload = $message->getPayload() ?? [];
         $this->deviceForMigrations = $deviceForMigrations;
         $this->deviceForFiles = $deviceForFiles;
+        $this->plan = $plan;
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
-        $events    = $payload['events'] ?? [];
+        $events = $payload['events'] ?? [];
         $migration = new Document($payload['migration'] ?? []);
 
         if ($project->getId() === 'console') {
@@ -117,10 +121,7 @@ class Migrations extends Action
         $this->project = $project;
         $this->logError = $logError;
 
-        /**
-         * Handle Event execution.
-         */
-        if (! empty($events)) {
+        if (!empty($events)) {
             return;
         }
 
@@ -223,18 +224,6 @@ class Migrations extends Action
     }
 
     /**
-     * Sanitize a filename to make it filesystem-safe
-     */
-    protected function sanitizeFilename(string $filename): string
-    {
-        // Replace problematic characters with underscores
-        $sanitized = \preg_replace('/[:\/<>"|*?]/', '_', $filename);
-        $sanitized = \preg_replace('/[^\x20-\x7E]/', '_', $sanitized);
-        $sanitized = \trim($sanitized);
-        return empty($sanitized) ? 'export' : $sanitized;
-    }
-
-    /**
      * @throws Authorization
      * @throws Structure
      * @throws Conflict
@@ -246,7 +235,7 @@ class Migrations extends Action
         $errors = $migration->getAttribute('errors', []);
         $errors = $this->sanitizeErrors($errors, []);
         $migration->setAttribute('errors', $errors);
-        
+
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
@@ -435,28 +424,23 @@ class Migrations extends Action
         }
     }
 
-    protected function sanitizeErrors(
-        array $sourceErrors,
-        array $destinationErrors,
-    ): array
-    {
-        $errors = [];
-        foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-            $encoded = \json_decode(\json_encode($error), true);
-            if (\is_array($encoded)) {
-                if (isset($encoded['trace'])) {
-                    unset($encoded['trace']);
-                }
-                $errors[] = \json_encode($encoded);
-            } else {
-                $errors[] = \json_encode($error);
-            }
-        }
-
-        return $error;
-    }
-
-    protected function handleCSVExportComplete(Document $project, Document $migration, Mail $queueForMails): void
+    /**
+     * Handle actions to be performed when a CSV export migration is successfully completed
+     *
+     * @param Document $project
+     * @param Document $migration
+     * @param Mail $queueForMails
+     * @return void
+     * @throws Authorization
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws Exception
+     */
+    protected function handleCSVExportComplete(
+        Document $project,
+        Document $migration,
+        Mail $queueForMails
+    ): void
     {
         $options = $migration->getAttribute('options', []);
         $bucketId = $options['bucketId'] ?? null;
@@ -474,6 +458,21 @@ class Migrations extends Action
         $hash = $this->deviceForFiles->getFileHash($path);
         $algorithm = Compression::NONE;
         $fileId = ID::unique();
+
+        $sizeMB = \round($size / (1000 * 1000), 2);
+        if ($sizeMB > $plan['fileSize'] ?? PHP_INT_MAX) {
+            try {
+                $this->deviceForFiles->delete($path);
+            } finally {
+                $message = "Export file size {$sizeMB}MB exceeds your plan limit.";
+                $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration->setAttribute(
+                    'errors',
+                    $message,
+                    Document::SET_TYPE_APPEND,
+                ));
+                throw new \Exception($message);
+            }
+        }
 
         $this->dbForProject->createDocument('bucket_' . $bucket->getSequence(), new Document([
             '$id' => $fileId,
@@ -574,5 +573,45 @@ class Migrations extends Action
             ->trigger();
 
         Console::info('CSV export notification email sent to ' . $user->getAttribute('email'));
+    }
+
+    /**
+     * Sanitize a filename to make it filesystem-safe
+     */
+    protected function sanitizeFilename(string $filename): string
+    {
+        // Replace problematic characters with underscores
+        $sanitized = \preg_replace('/[:\/<>"|*?]/', '_', $filename);
+        $sanitized = \preg_replace('/[^\x20-\x7E]/', '_', $sanitized);
+        $sanitized = \trim($sanitized);
+        return empty($sanitized) ? 'export' : $sanitized;
+    }
+
+    /**
+     * Sanitize migration errors, removing sensitive information like stack traces
+     *
+     * @param array $sourceErrors
+     * @param array $destinationErrors
+     * @return array
+     */
+    protected function sanitizeErrors(
+        array $sourceErrors,
+        array $destinationErrors,
+    ): array
+    {
+        $errors = [];
+        foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
+            $encoded = \json_decode(\json_encode($error), true);
+            if (\is_array($encoded)) {
+                if (isset($encoded['trace'])) {
+                    unset($encoded['trace']);
+                }
+                $errors[] = \json_encode($encoded);
+            } else {
+                $errors[] = \json_encode($error);
+            }
+        }
+
+        return $errors;
     }
 }
