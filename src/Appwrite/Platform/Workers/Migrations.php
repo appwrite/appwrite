@@ -248,9 +248,13 @@ class Migrations extends Action
         $errors = $migration->getAttribute('errors', []);
         foreach ($errors as $error) {
             $decoded = \json_decode($error, true);
-            if (\is_array($decoded) && isset($decoded['trace'])) {
-                unset($decoded['trace']);
+            if (\is_array($decoded)) {
+                if (isset($decoded['trace'])) {
+                    unset($decoded['trace']);
+                }
                 $messages[] = json_encode($decoded);
+            } else {
+                $messages[] = $error;
             }
         }
 
@@ -387,7 +391,15 @@ class Migrations extends Action
 
                 $errors = [];
                 foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    $errors[] = \json_encode($error);
+                    $encoded = \json_decode(\json_encode($error), true);
+                    if (\is_array($encoded)) {
+                        if (isset($encoded['trace'])) {
+                            unset($encoded['trace']);
+                        }
+                        $errors[] = \json_encode($encoded);
+                    } else {
+                        $errors[] = \json_encode($error);
+                    }
                 }
 
                 $migration->setAttribute('errors', $errors);
@@ -419,7 +431,15 @@ class Migrations extends Action
 
                 $errors = [];
                 foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    $errors[] = \json_encode($error);
+                    $encoded = \json_decode(\json_encode($error), true);
+                    if (\is_array($encoded)) {
+                        if (isset($encoded['trace'])) {
+                            unset($encoded['trace']);
+                        }
+                        $errors[] = \json_encode($encoded);
+                    } else {
+                        $errors[] = \json_encode($error);
+                    }
                 }
 
                 $migration->setAttribute('errors', $errors);

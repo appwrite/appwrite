@@ -126,10 +126,10 @@ class Migration extends Model
             $decoded = \json_decode($error, true);
 
             if (\is_array($decoded)) {
-                $errors[$index] = \json_encode([
-                    'code' => $decoded['code'] ?? 0,
-                    'message' => $decoded['message'] ?? null,
-                ]);
+                if (isset($decoded['trace'])) {
+                    unset($decoded['trace']);
+                }
+                $errors[$index] = \json_encode($decoded);
             }
         }
 
