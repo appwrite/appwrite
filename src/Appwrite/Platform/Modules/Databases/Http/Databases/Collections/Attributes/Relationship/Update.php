@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship;
 
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -84,6 +85,10 @@ class Update extends Action
         Database       $dbForProject,
         Event          $queueForEvents
     ): void {
+        if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
+            throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
+        }
+
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,

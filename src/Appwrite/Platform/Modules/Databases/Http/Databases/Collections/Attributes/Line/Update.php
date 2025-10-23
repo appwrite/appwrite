@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Line;
 
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -74,6 +75,10 @@ class Update extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, ?string $newKey, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
+        if (!$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+            throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Spatial columns are not supported by this database.');
+        }
+
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,

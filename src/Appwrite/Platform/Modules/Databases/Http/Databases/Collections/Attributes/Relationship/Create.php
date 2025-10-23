@@ -87,6 +87,10 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
+        if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
+            throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
+        }
+
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
