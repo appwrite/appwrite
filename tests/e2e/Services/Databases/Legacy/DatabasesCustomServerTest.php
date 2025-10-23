@@ -3738,7 +3738,8 @@ class DatabasesCustomServerTest extends Scope
     public function testAttributeRenameRelationshipOneToMany()
     {
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('This test is not supported for MongoDB');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';
@@ -3856,7 +3857,8 @@ class DatabasesCustomServerTest extends Scope
     public function testAttributeRenameRelationshipOneToOne()
     {
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('This test is not supported for MongoDB');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';
@@ -3975,7 +3977,8 @@ class DatabasesCustomServerTest extends Scope
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('This test is not supported for MongoDB');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';
@@ -4098,7 +4101,8 @@ class DatabasesCustomServerTest extends Scope
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('This test is not supported for MongoDB');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';

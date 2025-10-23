@@ -230,7 +230,8 @@ class DatabasesCustomClientTest extends Scope
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -325,7 +326,8 @@ class DatabasesCustomClientTest extends Scope
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -488,7 +490,8 @@ class DatabasesCustomClientTest extends Scope
     {
 
         if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $userId = $this->getUser()['$id'];
