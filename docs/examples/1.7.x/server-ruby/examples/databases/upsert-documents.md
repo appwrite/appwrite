@@ -12,5 +12,5 @@ databases = Databases.new(client)
 result = databases.upsert_documents(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
-    documents: [] # optional
+    documents: []
 )

@@ -31,14 +31,15 @@ const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate 
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_LIMIT_DATABASE_BATCH = 100; // Default maximum batch size for database operations
+const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 4320;
-const APP_VERSION_STABLE = '1.7.4';
+const APP_CACHE_BUSTER = 4321;
+const APP_VERSION_STABLE = '1.8.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -46,12 +47,19 @@ const APP_DATABASE_ATTRIBUTE_DATETIME = 'datetime';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
+const APP_DATABASE_ATTRIBUTE_POINT = 'point';
+const APP_DATABASE_ATTRIBUTE_LINE = 'line';
+const APP_DATABASE_ATTRIBUTE_POLYGON = 'polygon';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
 const APP_DATABASE_TIMEOUT_MILLISECONDS_API = 15 * 1000; // 15 seconds
 const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
 const APP_DATABASE_TIMEOUT_MILLISECONDS_TASK = 300 * 1000; // 5 minutes
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_DATABASE_ENCRYPT_SIZE_MIN = 150;
+const APP_DATABASE_TXN_TTL_MIN = 60; // 1 minute
+const APP_DATABASE_TXN_TTL_MAX = 3600; // 1 hour
+const APP_DATABASE_TXN_TTL_DEFAULT = 300; // 5 minutes
+const APP_DATABASE_TXN_MAX_OPERATIONS = 100; // Maximum operations per transaction
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -80,6 +88,9 @@ const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
 const APP_PLATFORM_SERVER = 'server';
 const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
+const APP_VCS_GITHUB_USERNAME = 'Appwrite';
+const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
+const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -99,8 +110,11 @@ const BUILD_TYPE_RETRY = 'retry';
 
 // Deletion Types
 const DELETE_TYPE_DATABASES = 'databases';
+
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
+const DELETE_TYPE_TRANSACTION = 'transaction';
+const DELETE_TYPE_EXPIRED_TRANSACTIONS = 'expired_transactions';
 const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_SITES = 'sites';
 const DELETE_TYPE_FUNCTIONS = 'functions';
@@ -141,8 +155,10 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+const APP_FUNCTION_LOG_LENGTH_LIMIT = 1000000;
+const APP_FUNCTION_ERROR_LENGTH_LIMIT = 1000000;
 // Function headers
-const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
+const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host', 'x-appwrite-client-ip'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Message types
 const MESSAGE_TYPE_EMAIL = 'email';
@@ -255,7 +271,6 @@ const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
 
 // Resource types
-
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';
 const RESOURCE_TYPE_SITES = 'sites';
@@ -265,10 +280,15 @@ const RESOURCE_TYPE_PROVIDERS = 'providers';
 const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
+const RESOURCE_TYPE_EXECUTIONS = 'executions';
 
 // Resource types for Tokens
-
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
 const TOKENS_RESOURCE_TYPE_SITES = 'sites';
 const TOKENS_RESOURCE_TYPE_FUNCTIONS = 'functions';
 const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
+
+// Resource types for Schedules
+const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
+const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
+const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';

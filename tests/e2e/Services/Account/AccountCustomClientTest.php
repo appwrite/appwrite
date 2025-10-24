@@ -480,6 +480,29 @@ class AccountCustomClientTest extends Scope
         $password = $data['password'] ?? '';
         $session = $data['session'] ?? '';
 
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $email,
+                'password' => $password,
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            sleep(1);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $allSessions = array_map(fn ($sessionDetails) => $sessionDetails['$id'], $response['body']['sessions']);
+
         /**
          * Test for SUCCESS
          */
@@ -500,16 +523,139 @@ class AccountCustomClientTest extends Scope
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
+        $currentSessionId = $data['sessionId'] ?? '';
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        // checking the current session or not
+        $this->assertEquals($currentSessionId, $response['body']['sessions'][0]['$id']);
+        $this->assertTrue($response['body']['sessions'][0]['current']);
+
+        // checking for all non active sessions are cleared
+        foreach ($allSessions as $sessionId) {
+            if ($currentSessionId === $sessionId) {
+                $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+                ]));
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+            } else {
+                $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionId, array_merge([
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+                ]));
+
+                $this->assertEquals(404, $response['headers']['status-code']);
+            }
+        }
+
+        $newPassword = 'new-password';
+        // updating the invalidateSession to false to check sessions are not invalidated
+        $this->updateProjectinvalidateSessionsProperty(false);
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $email,
+                'password' => $newPassword,
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            sleep(1);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $allSessions = array_map(fn ($sessionDetails) => $sessionDetails['$id'], $response['body']['sessions']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'password' => $newPassword,
+            'oldPassword' => $newPassword,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        foreach ($allSessions as $sessionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionId, headers: array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            ]));
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        // setting invalidateSession to true to check the sessions are cleared or not
+        $this->updateProjectinvalidateSessionsProperty(true);
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'password' => $newPassword,
+            'oldPassword' => $newPassword,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $allSessions = array_map(fn ($sessionDetails) => $sessionDetails['$id'], $response['body']['sessions']);
+
+        foreach ($allSessions as $sessionId) {
+            if ($currentSessionId !== $sessionId) {
+                $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionId, array_merge([
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+                ]));
+
+                $this->assertEquals(404, $response['headers']['status-code']);
+            }
+        }
+
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
-            'password' => 'new-password',
+            'password' => $newPassword,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+
 
         /**
          * Test for FAILURE
@@ -778,7 +924,8 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Account Verification', $lastEmail['subject']);
+        $this->assertEquals('Account Verification for ' . $this->getProject()['name'], $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Verify your email to activate your ' . $this->getProject()['name'] . ' account.', $lastEmail['text']);
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $verification = $tokens['secret'];
@@ -1081,7 +1228,9 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Password Reset', $lastEmail['subject']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
+
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
@@ -1286,6 +1435,7 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['expire']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
+        $this->assertStringContainsStringIgnoringCase('New login detected on '. $this->getProject()['name'], $lastEmail['text']);
 
         $userId = $response['body']['userId'];
 
@@ -1385,6 +1535,77 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(412, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testCreateOidcOAuth2Token(): array
+    {
+        $provider = 'oidc';
+        $appId = '1';
+
+        // Valid well-known configuration
+        $secret = '{
+            "wellKnownEndpoint": "https://accounts.google.com/.well-known/openid-configuration",
+            "authorizationEndpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+            "tokenEndpoint": "https://oauth2.googleapis.com/token",
+            "userinfoEndpoint": "https://openidconnect.googleapis.com/v1/userinfo"
+        }';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'provider' => $provider,
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ], true, false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // Invalid well-known configuration
+        $secret = '{}';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'provider' => $provider,
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(500, $response['headers']['status-code']);
 
         return [];
     }
@@ -1698,6 +1919,26 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         return $session;
+    }
+
+    /**
+     * @depends testCreateAnonymousAccount
+     */
+    public function testCreateAnonymousAccountVerification($session): array
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(400, $response['body']['code']);
+        $this->assertEquals('user_email_not_found', $response['body']['type']);
+
+        return [];
     }
 
     /**
@@ -2545,6 +2786,7 @@ class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Sign in to '. $this->getProject()['name'] . ' with your secure link. Expires in 1 hour.', $lastEmail['text']);
         $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);

@@ -1,5 +1,19 @@
 # Change Log
 
+## 20.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 20.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 17.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Fix autocompletion not working for `Document` model even when generic is passed
+
 ## 17.1.0
 
 * Add `upsertDocument` method

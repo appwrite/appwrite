@@ -1,5 +1,14 @@
 # Change Log
 
+## 15.1.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `gif` support to `ImageFormat` enum
+* Add `dart38` and `flutter332` support to runtime models
+* Add `encrypt` support to `StringAttribute` model
+* Add `sequence` support to `Document` model
+* Add `upsertDocument` support to `Databases` service
+
 ## 15.0.0
 
 * Add `<REGION>` to doc examples due to the new multi region endpoints
