@@ -7,7 +7,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends AppwriteAction
 {
@@ -297,7 +296,7 @@ abstract class Action extends AppwriteAction
             $relatedCollectionId = $relationship->getAttribute('relatedCollection');
 
             if (!isset($collectionsCache[$relatedCollectionId])) {
-                $relatedCollectionDoc = Authorization::skip(
+                $relatedCollectionDoc = $dbForProject->getAuthorization()->skip(
                     fn () => $dbForProject->getDocument(
                         'database_' . $database->getSequence(),
                         $relatedCollectionId

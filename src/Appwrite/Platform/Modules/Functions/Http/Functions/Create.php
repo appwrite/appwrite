@@ -27,7 +27,6 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -237,7 +236,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
         }
 
-        $schedule = Authorization::skip(
+        $schedule = $dbForProject->getAuthorization()->skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
@@ -365,7 +364,7 @@ class Create extends Base
                 // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                 $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
-                $rule = Authorization::skip(
+                $rule = $dbForPlatform->getAuthorization()->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

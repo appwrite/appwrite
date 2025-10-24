@@ -15,7 +15,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -70,7 +69,7 @@ class XList extends Action
     public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject): void
     {
         /** @var Document $database */
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -110,7 +109,7 @@ class XList extends Action
             }
 
             $indexId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
+            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('indexes', [
                 Query::equal('collectionInternalId', [$collection->getSequence()]),
                 Query::equal('databaseInternalId', [$database->getSequence()]),
                 Query::equal('key', [$indexId]),

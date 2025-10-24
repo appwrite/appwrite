@@ -809,7 +809,7 @@ class Response extends SwooleResponse
             }
 
             if ($rule['sensitive']) {
-                $roles = Authorization::getRoles();
+                $roles = $this->authorization->getRoles();
                 $isPrivilegedUser = Auth::isPrivilegedUser($roles);
                 $isAppUser = Auth::isAppUser($roles);
 
@@ -976,5 +976,12 @@ class Response extends SwooleResponse
         } finally {
             self::$showSensitive = false;
         }
+    }
+
+    private Authorization $authorization;
+
+    public function setAuthorization(Authorization $authorization): void
+    {
+        $this->authorization = $authorization;
     }
 }

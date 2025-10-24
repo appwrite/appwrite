@@ -9,7 +9,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
@@ -48,7 +47,7 @@ class Migrate extends Action
         callable $getProjectDB,
         Registry $register,
     ): void {
-        Authorization::disable();
+        $dbForPlatform->getAuthorization()->disable();
 
         if (!\array_key_exists($version, Migration::$versions)) {
             Console::error("No migration found for version $version.");

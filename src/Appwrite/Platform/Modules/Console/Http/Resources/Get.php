@@ -10,7 +10,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain as Domain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -124,7 +123,7 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
             }
 
-            $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+            $document = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$value]),
             ]));
 

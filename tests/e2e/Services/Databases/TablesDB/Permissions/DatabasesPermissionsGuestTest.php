@@ -17,6 +17,17 @@ class DatabasesPermissionsGuestTest extends Scope
     use SideClient;
     use DatabasesPermissionsScope;
 
+    private $authorization;
+
+    public function getAuthorization(): Authorization
+    {
+        if (isset($this->authorization)) {
+            return $this->authorization;
+        }
+        return new Authorization();
+    }
+
+
     public function createTable(): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
@@ -111,8 +122,8 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals(201, $publicResponse['headers']['status-code']);
         $this->assertEquals(201, $privateResponse['headers']['status-code']);
 
-        $roles = Authorization::getRoles();
-        Authorization::cleanRoles();
+        $roles = $this->getAuthorization()->getRoles();
+        $this->getAuthorization()->cleanRoles();
 
         $publicRows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $publicTableId  . '/rows', [
             'content-type' => 'application/json',
@@ -134,7 +145,7 @@ class DatabasesPermissionsGuestTest extends Scope
         }
 
         foreach ($roles as $role) {
-            Authorization::setRole($role);
+            $this->getAuthorization()->addRole($role);
         }
     }
 
@@ -145,8 +156,8 @@ class DatabasesPermissionsGuestTest extends Scope
         $privateTableId = $data['privateTableId'];
         $databaseId = $data['databaseId'];
 
-        $roles = Authorization::getRoles();
-        Authorization::cleanRoles();
+        $roles = $this->getAuthorization()->getRoles();
+        $this->getAuthorization()->cleanRoles();
 
         $publicResponse = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $publicTableId . '/rows', [
             'content-type' => 'application/json',
@@ -222,7 +233,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals(401, $privateRow['headers']['status-code']);
 
         foreach ($roles as $role) {
-            Authorization::setRole($role);
+            $this->getAuthorization()->addRole($role);
         }
     }
 

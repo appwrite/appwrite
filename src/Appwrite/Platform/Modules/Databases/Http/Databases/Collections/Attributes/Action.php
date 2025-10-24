@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -310,7 +309,7 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getSpatialTypeNotSupportedException());
         }
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -371,7 +370,7 @@ abstract class Action extends UtopiaAction
                 \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
                 $attribute->getAttribute('required')
             ) {
-                $hasData = !Authorization::skip(fn () => $dbForProject
+                $hasData = !$dbForProject->getAuthorization()->skip(fn () => $dbForProject
                     ->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence()))
                     ->isEmpty();
 
@@ -474,7 +473,7 @@ abstract class Action extends UtopiaAction
 
     protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, string $type, int $size = null, string $filter = null, string|bool|int|float|array $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
     {
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
