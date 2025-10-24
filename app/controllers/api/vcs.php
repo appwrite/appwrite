@@ -1094,7 +1094,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     ];
 
                     foreach ($strategies as $strategy) {
-                        $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                        $detector = new Runtime($strategy, $packager);
                         if ($strategy === Strategy::LANGUAGES) {
                             foreach ($languages as $language) {
                                 $detector->addInput($language);
