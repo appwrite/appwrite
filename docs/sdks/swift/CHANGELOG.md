@@ -1,5 +1,13 @@
 # Change Log
 
+## 13.2.2
+
+* Fix issue: Missing AppwriteEnums dependency causing build failure
+
+## 13.2.1
+
+* Add transaction support for Databases and TablesDB
+
 ## 13.1.0
 
 * Deprecate `createVerification` method in `Account` service

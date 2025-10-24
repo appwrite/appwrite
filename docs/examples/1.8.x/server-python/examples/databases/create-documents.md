@@ -11,5 +11,6 @@ databases = Databases(client)
 result = databases.create_documents(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
-    documents = []
+    documents = [],
+    transaction_id = '<TRANSACTION_ID>' # optional
 )

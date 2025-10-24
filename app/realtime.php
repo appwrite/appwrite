@@ -606,8 +606,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $message = $th->getMessage();
 
-        // sanitize 5xx errors
-        if ($code >= 500 && !App::isDevelopment()) {
+        // sanitize 0 && 5xx errors
+        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
             $message = 'Error: Server Error';
         }
 
@@ -719,8 +719,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         $message = $th->getMessage();
 
-        // sanitize 5xx errors
-        if ($code >= 500 && !App::isDevelopment()) {
+        // sanitize 0 && 5xx errors
+        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
             $message = 'Error: Server Error';
         }
 

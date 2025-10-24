@@ -780,4 +780,437 @@ trait PermissionsBase
 
         $this->assertEquals(200, $rollback['headers']['status-code']);
     }
+
+    /**
+     * Test that one user cannot read another user's transaction
+     */
+    public function testUserCannotReadAnotherUsersTransaction(): void
+    {
+        // Create user 1 (fresh) and their transaction
+        $user1 = $this->getUser(true);
+        $user1Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+        ];
+
+        $transaction1 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(201, $transaction1['headers']['status-code']);
+        $transactionId1 = $transaction1['body']['$id'];
+
+        // Create user 2 (fresh)
+        $user2 = $this->getUser(true); // Fresh user
+        $user2Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ];
+
+        // User 2 tries to read User 1's transaction - should fail
+        $readAttempt = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers));
+
+        // This should fail with 404 Not Found (transaction doesn't exist for this user)
+        $this->assertEquals(404, $readAttempt['headers']['status-code']);
+
+        // Verify User 1 can still read their own transaction
+        $readOwn = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(200, $readOwn['headers']['status-code']);
+        $this->assertEquals($transactionId1, $readOwn['body']['$id']);
+    }
+
+    /**
+     * Test that one user cannot list another user's transactions
+     */
+    public function testUserCannotListAnotherUsersTransactions(): void
+    {
+        // Create user 1 (fresh) with transactions
+        $user1 = $this->getUser(true);
+        $user1Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+        ];
+
+        $transaction1 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(201, $transaction1['headers']['status-code']);
+
+        $transaction2 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(201, $transaction2['headers']['status-code']);
+
+        // Create user 2 (fresh) with their own transaction
+        $user2 = $this->getUser(true); // Fresh user
+        $user2Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ];
+
+        $transaction3 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers));
+
+        $this->assertEquals(201, $transaction3['headers']['status-code']);
+
+        // User 2 lists transactions - should only see their own
+        $listUser2 = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers));
+
+        $this->assertEquals(200, $listUser2['headers']['status-code']);
+        $this->assertEquals(1, $listUser2['body']['total']);
+        $this->assertEquals($transaction3['body']['$id'], $listUser2['body']['transactions'][0]['$id']);
+
+        // User 1 lists transactions - should only see their own (2 transactions)
+        $listUser1 = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(200, $listUser1['headers']['status-code']);
+        $this->assertEquals(2, $listUser1['body']['total']);
+
+        // Verify neither of user1's transactions appear in user2's list
+        $user2TransactionIds = array_column($listUser2['body']['transactions'], '$id');
+        $this->assertNotContains($transaction1['body']['$id'], $user2TransactionIds);
+        $this->assertNotContains($transaction2['body']['$id'], $user2TransactionIds);
+    }
+
+    /**
+     * Test that one user cannot update another user's transaction
+     */
+    public function testUserCannotUpdateAnotherUsersTransaction(): void
+    {
+        // Create user 1 (fresh) and their transaction
+        $user1 = $this->getUser(true);
+        $user1Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+        ];
+
+        $transaction1 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(201, $transaction1['headers']['status-code']);
+        $transactionId1 = $transaction1['body']['$id'];
+
+        // Create user 2 (fresh)
+        $user2 = $this->getUser(true); // Fresh user
+        $user2Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ];
+
+        // User 2 tries to commit User 1's transaction - should fail
+        $commitAttempt = $this->client->call(Client::METHOD_PATCH, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers), [
+            'commit' => true,
+        ]);
+
+        // This should fail with 404 Not Found
+        $this->assertEquals(404, $commitAttempt['headers']['status-code']);
+
+        // User 2 tries to rollback User 1's transaction - should also fail
+        $rollbackAttempt = $this->client->call(Client::METHOD_PATCH, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers), [
+            'rollback' => true,
+        ]);
+
+        // This should also fail with 404 Not Found
+        $this->assertEquals(404, $rollbackAttempt['headers']['status-code']);
+
+        // Verify User 1 can still commit their own transaction
+        $commitOwn = $this->client->call(Client::METHOD_PATCH, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers), [
+            'commit' => true,
+        ]);
+
+        $this->assertEquals(200, $commitOwn['headers']['status-code']);
+    }
+
+    /**
+     * Test that one user cannot delete another user's transaction
+     */
+    public function testUserCannotDeleteAnotherUsersTransaction(): void
+    {
+        // Create user 1 (fresh) and their transaction
+        $user1 = $this->getUser(true);
+        $user1Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+        ];
+
+        $transaction1 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(201, $transaction1['headers']['status-code']);
+        $transactionId1 = $transaction1['body']['$id'];
+
+        // Create user 2 (fresh)
+        $user2 = $this->getUser(true); // Fresh user
+        $user2Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ];
+
+        // User 2 tries to delete User 1's transaction - should fail
+        $deleteAttempt = $this->client->call(Client::METHOD_DELETE, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers));
+
+        // This should fail with 404 Not Found
+        $this->assertEquals(404, $deleteAttempt['headers']['status-code']);
+
+        // Verify User 1 can still access their transaction
+        $readOwn = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(200, $readOwn['headers']['status-code']);
+
+        // User 1 can delete their own transaction
+        $deleteOwn = $this->client->call(Client::METHOD_DELETE, '/tablesdb/transactions/' . $transactionId1, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(204, $deleteOwn['headers']['status-code']);
+    }
+
+    /**
+     * Test that one user cannot add operations to another user's transaction
+     */
+    public function testUserCannotAddOperationsToAnotherUsersTransaction(): void
+    {
+        // Create a collection for testing
+        $collection = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->permissionsDatabase . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => 'permTest11',
+            'name' => 'Permission Test 11',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'rowSecurity' => false,
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $this->permissionsDatabase . '/tables/' . $collection['body']['$id'] . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        sleep(2);
+
+        // Create user 1 (fresh) and their transaction
+        $user1 = $this->getUser(true);
+        $user1Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
+        ];
+
+        $transaction1 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers));
+
+        $this->assertEquals(201, $transaction1['headers']['status-code']);
+        $transactionId1 = $transaction1['body']['$id'];
+
+        // Create user 2 (fresh)
+        $user2 = $this->getUser(true); // Fresh user
+        $user2Headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ];
+
+        // User 2 tries to add operations to User 1's transaction - should fail
+        $operationAttempt = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId1 . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user2Headers), [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->permissionsDatabase,
+                'tableId' => $collection['body']['$id'],
+                'rowId' => 'maliciousDoc',
+                'data' => ['title' => 'Malicious Document'],
+            ]]
+        ]);
+
+        // This should fail with 404 Not Found
+        $this->assertEquals(404, $operationAttempt['headers']['status-code']);
+
+        // Verify User 1 can still add operations to their own transaction
+        $operationOwn = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions/' . $transactionId1 . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $user1Headers), [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->permissionsDatabase,
+                'tableId' => $collection['body']['$id'],
+                'rowId' => 'legitimateDoc',
+                'data' => ['title' => 'Legitimate Document'],
+            ]]
+        ]);
+
+        $this->assertEquals(201, $operationOwn['headers']['status-code']);
+        $this->assertEquals(1, $operationOwn['body']['operations']);
+    }
+
+    /**
+     * Test that an authenticated user can successfully list their own transactions
+     */
+    public function testAuthenticatedUserCanListTheirOwnTransactions(): void
+    {
+        // Create an authenticated user
+        $user = $this->getUser();
+        $userHeaders = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+        ];
+
+        // Create multiple transactions for this user
+        $transactionIds = [];
+        for ($i = 0; $i < 3; $i++) {
+            $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $userHeaders));
+
+            $this->assertEquals(201, $transaction['headers']['status-code']);
+            $this->assertNotEmpty($transaction['body']['$id']);
+            $transactionIds[] = $transaction['body']['$id'];
+        }
+
+        // List transactions
+        $list = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $userHeaders));
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(3, $list['body']['total']);
+        $this->assertIsArray($list['body']['transactions']);
+        $this->assertGreaterThanOrEqual(3, count($list['body']['transactions']));
+
+        // Verify all created transactions are in the list
+        $listedIds = array_column($list['body']['transactions'], '$id');
+        foreach ($transactionIds as $transactionId) {
+            $this->assertContains($transactionId, $listedIds);
+        }
+
+        // Verify transaction structure
+        foreach ($list['body']['transactions'] as $transaction) {
+            $this->assertArrayHasKey('$id', $transaction);
+            $this->assertArrayHasKey('$createdAt', $transaction);
+            $this->assertArrayHasKey('$updatedAt', $transaction);
+            $this->assertArrayHasKey('status', $transaction);
+            $this->assertArrayHasKey('operations', $transaction);
+        }
+    }
+
+    /**
+     * Test that an authenticated user can successfully delete their own transaction
+     */
+    public function testAuthenticatedUserCanDeleteTheirOwnTransaction(): void
+    {
+        // Create an authenticated user
+        $user = $this->getUser();
+        $userHeaders = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user['session'],
+        ];
+
+        // Create a transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $userHeaders));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Verify transaction exists by reading it
+        $read = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions/' . $transactionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $userHeaders));
+
+        $this->assertEquals(200, $read['headers']['status-code']);
+        $this->assertEquals($transactionId, $read['body']['$id']);
+
+        // Delete the transaction
+        $delete = $this->client->call(Client::METHOD_DELETE, '/tablesdb/transactions/' . $transactionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $userHeaders));
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        // Verify transaction is deleted by trying to read it again
+        $readAfterDelete = $this->client->call(Client::METHOD_GET, '/tablesdb/transactions/' . $transactionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $userHeaders));
+
+        $this->assertEquals(404, $readAfterDelete['headers']['status-code']);
+
+        // Create another transaction and verify it can also be deleted
+        $transaction2 = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $userHeaders));
+
+        $this->assertEquals(201, $transaction2['headers']['status-code']);
+        $transactionId2 = $transaction2['body']['$id'];
+
+        $delete2 = $this->client->call(Client::METHOD_DELETE, '/tablesdb/transactions/' . $transactionId2, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $userHeaders));
+
+        $this->assertEquals(204, $delete2['headers']['status-code']);
+    }
 }

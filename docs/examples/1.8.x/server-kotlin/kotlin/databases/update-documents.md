@@ -13,5 +13,6 @@ val response = databases.updateDocuments(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     data = mapOf( "a" to "b" ), // optional
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    transactionId = "<TRANSACTION_ID>" // optional
 )

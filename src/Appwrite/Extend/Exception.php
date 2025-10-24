@@ -164,6 +164,7 @@ class Exception extends \Exception
 
     /** Functions */
     public const string FUNCTION_NOT_FOUND = 'function_not_found';
+    public const string FUNCTION_ALREADY_EXISTS = 'function_already_exists';
     public const string FUNCTION_RUNTIME_UNSUPPORTED = 'function_runtime_unsupported';
     public const string FUNCTION_ENTRYPOINT_MISSING = 'function_entrypoint_missing';
     public const string FUNCTION_SYNCHRONOUS_TIMEOUT = 'function_synchronous_timeout';

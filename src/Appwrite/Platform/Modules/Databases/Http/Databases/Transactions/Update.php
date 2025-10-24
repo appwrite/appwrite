@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -110,7 +111,12 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot commit and rollback at the same time');
         }
 
-        $transaction = Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId));
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        $transaction = ($isAPIKey || $isPrivilegedUser)
+            ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+            : $dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty()) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND);
         }
@@ -161,8 +167,10 @@ class Update extends Action
                             }
                         }
 
-                        $totalOperations++;
-                        $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + 1;
+                        if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
+                            $totalOperations++;
+                            $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + 1;
+                        }
 
                         if ($data instanceof Document) {
                             $data = $data->getArrayCopy();
@@ -188,16 +196,24 @@ class Update extends Action
                                 $this->handleDecrementOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'bulkCreate':
-                                $this->handleBulkCreateOperation($dbForProject, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkCreateOperation($dbForProject, $collectionId, $data, $createdAt, $state);
+                                $totalOperations += $count;
+                                $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $this->handleBulkUpdateOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpdateOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $totalOperations += $count;
+                                $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpsert':
-                                $this->handleBulkUpsertOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpsertOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $totalOperations += $count;
+                                $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $this->handleBulkDeleteOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $totalOperations += $count;
+                                $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                         }
                     }
@@ -542,6 +558,28 @@ class Update extends Action
     }
 
     /**
+     * Get the attribute/column name from data, with fallback for cross-API compatibility
+     *
+     * @param array $data The operation data
+     * @return string The attribute/column name
+     */
+    private function getAttributeNameFromData(array $data): string
+    {
+        $expectedKey = $this->getAttributeKey();
+        if (isset($data[$expectedKey])) {
+            return $data[$expectedKey];
+        }
+
+        // Try the opposite key for cross-API compatibility
+        $fallbackKey = $expectedKey === 'attribute' ? 'column' : 'attribute';
+        if (isset($data[$fallbackKey])) {
+            return $data[$fallbackKey];
+        }
+
+        return '';
+    }
+
+    /**
      * Handle increment operation
      *
      * @param Database $dbForProject
@@ -563,23 +601,24 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
+        $attribute = $this->getAttributeNameFromData($data);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
             $state[$collectionId][$documentId] = $dbForProject->increaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 max: $data['max'] ?? null
             );
@@ -608,23 +647,24 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
+        $attribute = $this->getAttributeNameFromData($data);
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );
             return;
         }
 
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state) {
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $documentId, $data, &$state, $attribute) {
             $state[$collectionId][$documentId] = $dbForProject->decreaseDocumentAttribute(
                 collection: $collectionId,
                 id: $documentId,
-                attribute: $data[$this->getAttributeKey()],
+                attribute: $attribute,
                 value: $data['value'] ?? 1,
                 min: $data['min'] ?? null
             );
@@ -639,7 +679,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
-     * @return void
+     * @return int Number of documents created
      * @throws \Utopia\Database\Exception
      */
     private function handleBulkCreateOperation(
@@ -648,13 +688,14 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
-        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state) {
+    ): int {
+        $count = 0;
+        $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state, &$count) {
             $documents = \array_map(function ($doc) {
                 return $doc instanceof Document ? $doc : new Document($doc);
             }, $data);
 
-            $dbForProject->createDocuments(
+            $count = $dbForProject->createDocuments(
                 $collectionId,
                 $documents,
                 onNext: function (Document $document) use (&$state, $collectionId) {
@@ -662,6 +703,7 @@ class Update extends Action
                 }
             );
         });
+        return $count;
     }
 
     /**
@@ -673,7 +715,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
-     * @return void
+     * @return int Number of documents updated
      * @throws \Utopia\Database\Exception
      * @throws \Utopia\Database\Exception\Query
      * @throws ConflictException
@@ -685,7 +727,7 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
         $updateData = new Document($data['data']);
 
@@ -695,7 +737,7 @@ class Update extends Action
 
         // Clone the document before passing to updateDocuments to prevent mutation
         // The database layer mutates the input document, which would corrupt transaction state
-        $dbForProject->updateDocuments(
+        $count = $dbForProject->updateDocuments(
             $collectionId,
             clone $updateData,
             $queries,
@@ -733,6 +775,8 @@ class Update extends Action
                 );
             }
         }
+
+        return $count;
     }
 
     /**
@@ -744,7 +788,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
-     * @return void
+     * @return int Number of documents upserted
      * @throws ConflictException
      * @throws \Utopia\Database\Exception
      */
@@ -755,14 +799,14 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): int {
         $documents = \array_map(function ($doc) {
             return $doc instanceof Document ? $doc : new Document($doc);
         }, $data);
 
         $mergedDocuments = $transactionState->applyBulkUpsertToState($collectionId, $documents, $state);
 
-        $dbForProject->upsertDocuments(
+        $count = $dbForProject->upsertDocuments(
             $collectionId,
             $mergedDocuments,
             onNext: function (Document $upserted, ?Document $old) use (&$state, $collectionId, $createdAt) {
@@ -780,6 +824,8 @@ class Update extends Action
                 $state[$collectionId][$upserted->getId()] = $upserted;
             }
         );
+
+        return $count;
     }
 
     /**
@@ -791,7 +837,7 @@ class Update extends Action
      * @param array $data
      * @param \DateTime $createdAt
      * @param array &$state
-     * @return void
+     * @return int Number of documents deleted
      * @throws \Utopia\Database\Exception\Query
      * @throws ConflictException
      * @throws \Utopia\Database\Exception
@@ -803,10 +849,10 @@ class Update extends Action
         array $data,
         \DateTime $createdAt,
         array &$state
-    ): void {
+    ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
-        $dbForProject->deleteDocuments(
+        $count = $dbForProject->deleteDocuments(
             $collectionId,
             $queries,
             onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $createdAt) {
@@ -826,5 +872,7 @@ class Update extends Action
         );
 
         $transactionState->applyBulkDeleteToState($collectionId, $queries, $state);
+
+        return $count;
     }
 }

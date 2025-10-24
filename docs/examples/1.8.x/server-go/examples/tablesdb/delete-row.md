@@ -18,4 +18,5 @@ response, error := service.DeleteRow(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     "<ROW_ID>",
+    tablesdb.WithDeleteRowTransactionId("<TRANSACTION_ID>"),
 )

@@ -5247,7 +5247,7 @@
         },
         "\/databases\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Create operations scoped to a transaction",
+                "summary": "Create operations",
                 "operationId": "databasesCreateOperations",
                 "tags": [
                     "databases"
@@ -8389,7 +8389,7 @@
         },
         "\/tablesdb\/transactions\/{transactionId}\/operations": {
             "post": {
-                "summary": "Create operations scoped to a transaction",
+                "summary": "Create operations",
                 "operationId": "tablesDBCreateOperations",
                 "tags": [
                     "tablesDB"

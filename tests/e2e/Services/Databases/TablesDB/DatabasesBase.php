@@ -1281,7 +1281,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
-        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a FULLTEXT index, must be of type string');
+        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a fulltext index, must be of type string');
 
         $noAttributes = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',

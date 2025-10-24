@@ -18,4 +18,5 @@ response, error := service.CreateRows(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     []interface{}{},
+    tablesdb.WithCreateRowsTransactionId("<TRANSACTION_ID>"),
 )

@@ -6,5 +6,6 @@ X-Appwrite-Project: <YOUR_PROJECT_ID>
 X-Appwrite-Key: <YOUR_API_KEY>
 
 {
-  "documents": []
+  "documents": [],
+  "transactionId": "<TRANSACTION_ID>"
 }

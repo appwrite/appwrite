@@ -280,6 +280,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         continue;
                     }
 
+                    // Check if the latest commit on the target branch already has a release
+                    $latestCommitCommand = 'gh api repos/' . $repoName . '/commits/' . $releaseTarget . ' --jq ".sha" 2>/dev/null';
+                    $latestCommitSha = trim(\shell_exec($latestCommitCommand) ?? '');
+
+                    if (!empty($latestCommitSha)) {
+                        $latestReleaseTagCommand = 'gh api repos/' . $repoName . '/releases --jq ".[0] | .tag_name" 2>/dev/null';
+                        $latestReleaseTag = trim(\shell_exec($latestReleaseTagCommand) ?? '');
+
+                        if (!empty($latestReleaseTag)) {
+                            $tagCommitCommand = 'gh api repos/' . $repoName . '/git/ref/tags/' . $latestReleaseTag . ' --jq ".object.sha" 2>/dev/null';
+                            $tagCommitSha = trim(\shell_exec($tagCommitCommand) ?? '');
+
+                            if (!empty($tagCommitSha) && $latestCommitSha === $tagCommitSha) {
+                                Console::warning("Latest commit on {$releaseTarget} already has a release ({$latestReleaseTag}) for {$language['name']} SDK, skipping to avoid empty release...");
+                                continue;
+                            }
+                        }
+                    }
+
                     $previousVersion = '';
                     $tagListCommand = 'gh release list --repo "' . $repoName . '" --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
                     $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
