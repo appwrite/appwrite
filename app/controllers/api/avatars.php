@@ -726,6 +726,7 @@ App::get('/v1/avatars/screenshots')
             'theme' => $theme,
             'headers' => $headersObject,
             'sleep' => $sleep * 1000, // Convert seconds to milliseconds
+            'waitUntil' => 'load',
             'viewport' => [
                 'width' => $browserWidth,
                 'height' => $browserHeight
@@ -734,7 +735,7 @@ App::get('/v1/avatars/screenshots')
 
         // Add scale if not default
         if ($scale != 1) {
-            $config['scale'] = $scale;
+            $config['deviceScaleFactor'] = $scale;
         }
 
         // Add fullPage to viewport if enabled
@@ -788,7 +789,7 @@ App::get('/v1/avatars/screenshots')
         
         // Add scale if not default
         if ($scale != 1) {
-            $finalConfig['scale'] = $scale;
+            $finalConfig['deviceScaleFactor'] = $scale;
         }
 
         // Add optional parameters that were set, preserving arrays as arrays
@@ -847,22 +848,29 @@ App::get('/v1/avatars/screenshots')
                 throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND, 'Screenshot not generated');
             }
 
-            // Determine output format
+            // Determine if image processing is needed
+            $needsProcessing = ($width > 0 && $height > 0) || $quality !== -1 || !empty($output);
+            
+            if ($needsProcessing) {
+                // Process image with cropping, quality adjustment, or format conversion
+                $image = new Image($screenshot);
+                
+                if ($width > 0 && $height > 0) {
+                    $image->crop($width, $height);
+                }
+                
+                $output = $output ?: 'png'; // Default to PNG if not specified
+                $resizedScreenshot = $image->output($output, $quality);
+                unset($image);
+            } else {
+                // Return original screenshot without processing
+                $resizedScreenshot = $screenshot;
+                $output = 'png'; // Screenshots are typically PNG by default
+            }
+
+            // Set content type based on output format
             $outputs = Config::getParam('storage-outputs');
-            if (empty($output)) {
-                $output = 'png'; // Default to PNG for screenshots
-            }
-
-            // Only resize if width and height are explicitly set (not 0)
-            $image = new Image($screenshot);
-            if ($width > 0 && $height > 0) {
-                $image->crop($width, $height);
-            }
-
-            $resizedScreenshot = $image->output($output, $quality);
-            unset($image);
-
-            $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['png'];
+            $contentType = $outputs[$output] ?? $outputs['png'];
 
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
