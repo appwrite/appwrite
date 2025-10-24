@@ -661,7 +661,8 @@ App::get('/v1/avatars/screenshots')
     ))
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to capture.')
     ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Defaults to empty.', true)
-    ->param('viewport', '1280x720', new Text(20), 'Browser viewport size. Pass a string like "1280x720" or "1920x1080". Defaults to "1280x720".', true)
+    ->param('viewportWidth', 1280, new Range(1, 1920), 'Browser viewport width. Pass an integer between 1 to 1920. Defaults to 1280.', true)
+    ->param('viewportHeight', 720, new Range(1, 1080), 'Browser viewport height. Pass an integer between 1 to 1080. Defaults to 720.', true)
     ->param('scale', 1, new Range(0.1, 3, Range::TYPE_FLOAT), 'Browser scale factor. Pass a number between 0.1 to 3. Defaults to 1.', true)
     ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true)
     ->param('userAgent', '', new Text(512), 'Custom user agent string. Defaults to browser default.', true)
@@ -679,7 +680,7 @@ App::get('/v1/avatars/screenshots')
     ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('response')
-    ->action(function (string $url, array $headers, string $viewport, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
+    ->action(function (string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -689,19 +690,6 @@ App::get('/v1/avatars/screenshots')
 
         if (!$domain->isKnown()) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
-        }
-
-        // Parse viewport parameter
-        $viewportParts = \explode('x', $viewport);
-        if (\count($viewportParts) !== 2 || !\is_numeric($viewportParts[0]) || !\is_numeric($viewportParts[1])) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Viewport must be in format "WIDTHxHEIGHT" (e.g., "1280x720")');
-        }
-
-        $browserWidth = (int) $viewportParts[0];
-        $browserHeight = (int) $viewportParts[1];
-
-        if ($browserWidth < 1 || $browserWidth > 1920 || $browserHeight < 1 || $browserHeight > 1080) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Browser viewport must be between 1x1 and 1920x1080');
         }
 
         $client = new Client();
@@ -728,8 +716,8 @@ App::get('/v1/avatars/screenshots')
             'sleep' => $sleep * 1000, // Convert seconds to milliseconds
             'waitUntil' => 'load',
             'viewport' => [
-                'width' => $browserWidth,
-                'height' => $browserHeight
+                'width' => $viewportWidth,
+                'height' => $viewportHeight
             ]
         ];
 
@@ -786,7 +774,7 @@ App::get('/v1/avatars/screenshots')
             'sleep' => $config['sleep'],
             'viewport' => $config['viewport'] // Keep as object
         ];
-        
+
         // Add scale if not default
         if ($scale != 1) {
             $finalConfig['deviceScaleFactor'] = $scale;
@@ -849,16 +837,14 @@ App::get('/v1/avatars/screenshots')
             }
 
             // Determine if image processing is needed
-            $needsProcessing = ($width > 0 && $height > 0) || $quality !== -1 || !empty($output);
-            
+            $needsProcessing = ($width > 0 || $height > 0) || $quality !== -1 || !empty($output);
+
             if ($needsProcessing) {
                 // Process image with cropping, quality adjustment, or format conversion
                 $image = new Image($screenshot);
-                
-                if ($width > 0 && $height > 0) {
-                    $image->crop($width, $height);
-                }
-                
+
+                $image->crop($width, $height);
+
                 $output = $output ?: 'png'; // Default to PNG if not specified
                 $resizedScreenshot = $image->output($output, $quality);
                 unset($image);

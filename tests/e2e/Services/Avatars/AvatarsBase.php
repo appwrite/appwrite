@@ -696,6 +696,48 @@ trait AvatarsBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        // Test with custom viewport width and height
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'viewportWidth' => 1920,
+            'viewportHeight' => 1080,
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        // Test with minimum valid viewport dimensions
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'viewportWidth' => 1,
+            'viewportHeight' => 1,
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        // Test with maximum valid viewport dimensions
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'viewportWidth' => 1920,
+            'viewportHeight' => 1080,
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
         /**
          * Test for FAILURE - Invalid URL parameter
          */
@@ -718,13 +760,14 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
-         * Test for FAILURE - Invalid viewport parameter
+         * Test for FAILURE - Invalid viewport parameters
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
-            'viewport' => 'invalid-viewport',
+            'viewportWidth' => 0, // Too small
+            'viewportHeight' => 720,
             'width' => 800,
             'height' => 600,
         ]);
@@ -734,7 +777,30 @@ trait AvatarsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
-            'viewport' => '2000x1000', // Too large
+            'viewportWidth' => 2000, // Too large
+            'viewportHeight' => 720,
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'viewportWidth' => 1280,
+            'viewportHeight' => 0, // Too small
+            'width' => 800,
+            'height' => 600,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'url' => 'https://appwrite.io?x=' . time() . rand(1000, 9999),
+            'viewportWidth' => 1280,
+            'viewportHeight' => 2000, // Too large
             'width' => 800,
             'height' => 600,
         ]);

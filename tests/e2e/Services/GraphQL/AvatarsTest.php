@@ -247,6 +247,8 @@ class AvatarsTest extends Scope
                 'url' => 'https://appwrite.io',
                 'width' => 800,
                 'height' => 600,
+                'viewportWidth' => 1920,
+                'viewportHeight' => 1080,
                 'scale' => 1.5,
                 'theme' => 'dark',
                 'userAgent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -282,6 +284,33 @@ class AvatarsTest extends Scope
             echo "Response body: " . print_r($screenshot['body'], true) . "\n";
         }
 
+        $this->assertStringContainsString('image/', $screenshot['headers']['content-type']);
+
+        return $screenshot['body'];
+    }
+
+    public function testGetScreenshotWithViewportParameters()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::GET_SCREENSHOT);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'url' => 'https://appwrite.io',
+                'width' => 800,
+                'height' => 600,
+                'viewportWidth' => 1920,
+                'viewportHeight' => 1080,
+            ],
+        ];
+
+        $screenshot = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $screenshot['headers']['status-code']);
+        $this->assertNotEmpty($screenshot['body']);
         $this->assertStringContainsString('image/', $screenshot['headers']['content-type']);
 
         return $screenshot['body'];
