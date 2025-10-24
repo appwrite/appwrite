@@ -175,7 +175,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 } else {
@@ -246,7 +246,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 }
@@ -467,7 +467,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                             $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                         }
                     } finally {
-                        $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                        Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                     }
                 }
             }
@@ -1451,7 +1451,7 @@ App::post('/v1/vcs/github/events')
                             Authorization::skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
                         }
 
-                        $dbForPlatform->deleteDocument('installations', $installation->getId());
+                        Authorization::skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
                     }
                 }
             } elseif ($event == $github::EVENT_PULL_REQUEST) {
