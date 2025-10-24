@@ -698,6 +698,7 @@ services:
       - appwrite
     volumes:
       - appwrite-imports:/storage/imports:rw
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
