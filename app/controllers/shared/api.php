@@ -54,7 +54,12 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         };
 
         if (array_key_exists($replace, $params)) {
-            $label = \str_replace($find, $params[$replace], $label);
+            $replacement = $params[$replace];
+            // Convert to string if it's not already a string
+            if (!is_string($replacement)) {
+                $replacement = is_array($replacement) ? json_encode($replacement) : (string)$replacement;
+            }
+            $label = \str_replace($find, $replacement, $label);
         }
     }
     return $label;
@@ -831,11 +836,13 @@ App::shutdown()
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                    var_dump($resource);
                 }
 
                 $pattern = $route->getLabel('cache.resourceType', null);
                 if (!empty($pattern)) {
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                    var_dump($resourceType);
                 }
 
                 $cache = new Cache(

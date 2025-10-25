@@ -957,7 +957,7 @@ services:
 
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.2.4
+    image: appwrite/browser:0.3.1
     networks:
       - appwrite
 

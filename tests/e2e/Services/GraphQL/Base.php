@@ -288,6 +288,7 @@ trait Base
     public const string GET_FAVICON = 'get_favicon';
     public const string GET_QRCODE = 'get_qrcode';
     public const string GET_USER_INITIALS = 'get_user_initials';
+    public const string GET_SCREENSHOT = 'get_screenshot';
 
     // Providers
     public const string CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
@@ -1778,6 +1779,12 @@ trait Base
             case self::GET_USER_INITIALS:
                 return 'query getUserInitials($name: String!) {
                     avatarsGetInitials(name: $name) {
+                        status
+                    }
+                }';
+            case self::GET_SCREENSHOT:
+                return 'query getScreenshot($url: String!, $width: Int, $height: Int, $viewportWidth: Int, $viewportHeight: Int, $scale: Float, $theme: String, $userAgent: String, $fullpage: Boolean, $locale: String, $timezone: String, $latitude: Float, $longitude: Float, $accuracy: Float, $touch: Boolean, $permissions: [String!]) {
+                    avatarsGetScreenshot(url: $url, width: $width, height: $height, viewportWidth: $viewportWidth, viewportHeight: $viewportHeight, scale: $scale, theme: $theme, userAgent: $userAgent, fullpage: $fullpage, locale: $locale, timezone: $timezone, latitude: $latitude, longitude: $longitude, accuracy: $accuracy, touch: $touch, permissions: $permissions) {
                         status
                     }
                 }';
