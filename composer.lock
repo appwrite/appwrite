@@ -5318,16 +5318,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.4.10",
+            "version": "1.4.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b66910cb953d199f80fae20444febedd07bc996d"
+                "reference": "5970defc3c6e64817fe9847c0b33c87af71709c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b66910cb953d199f80fae20444febedd07bc996d",
-                "reference": "b66910cb953d199f80fae20444febedd07bc996d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5970defc3c6e64817fe9847c0b33c87af71709c5",
+                "reference": "5970defc3c6e64817fe9847c0b33c87af71709c5",
                 "shasum": ""
             },
             "require": {
@@ -5363,9 +5363,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.10"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.11"
             },
-            "time": "2025-10-24T09:04:39+00:00"
+            "time": "2025-10-24T10:03:09+00:00"
         },
         {
             "name": "doctrine/annotations",
