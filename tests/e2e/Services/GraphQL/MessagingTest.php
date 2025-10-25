@@ -26,6 +26,13 @@ class MessagingTest extends Scope
                 'fromName' => 'Sender Name',
                 'fromEmail' => 'sender-email@my-domain.com',
             ],
+            'Resend' => [
+                'providerId' => ID::unique(),
+                'name' => 'Resend1',
+                'apiKey' => 'my-apikey',
+                'fromName' => 'Sender Name',
+                'fromEmail' => 'sender-email@my-domain.com',
+            ],
             'Mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
@@ -123,45 +130,50 @@ class MessagingTest extends Scope
                 'name' => 'Sengrid2',
                 'apiKey' => 'my-apikey',
             ],
-            'Mailgun' => [
+            'Resend' => [
                 'providerId' => $providers[1]['_id'],
+                'name' => 'Resend2',
+                'apiKey' => 'my-apikey',
+            ],
+            'Mailgun' => [
+                'providerId' => $providers[2]['_id'],
                 'name' => 'Mailgun2',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
             ],
             'Twilio' => [
-                'providerId' => $providers[2]['_id'],
+                'providerId' => $providers[3]['_id'],
                 'name' => 'Twilio2',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
             ],
             'Telesign' => [
-                'providerId' => $providers[3]['_id'],
+                'providerId' => $providers[4]['_id'],
                 'name' => 'Telesign2',
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
             ],
             'Textmagic' => [
-                'providerId' => $providers[4]['_id'],
+                'providerId' => $providers[5]['_id'],
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
             ],
             'Msg91' => [
-                'providerId' => $providers[5]['_id'],
+                'providerId' => $providers[6]['_id'],
                 'name' => 'Ms91-2',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
                 'templateId' => '123456',
             ],
             'Vonage' => [
-                'providerId' => $providers[6]['_id'],
+                'providerId' => $providers[7]['_id'],
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
             'Fcm' => [
-                'providerId' => $providers[7]['_id'],
+                'providerId' => $providers[8]['_id'],
                 'name' => 'FCM2',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
@@ -171,7 +183,7 @@ class MessagingTest extends Scope
                 ]
             ],
             'Apns' => [
-                'providerId' => $providers[8]['_id'],
+                'providerId' => $providers[9]['_id'],
                 'name' => 'APNS2',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -205,7 +217,7 @@ class MessagingTest extends Scope
         ], [
             'query' => $this->getQuery('update_mailgun_provider'),
             'variables' => [
-                'providerId' => $providers[1]['_id'],
+                'providerId' => $providers[2]['_id'],
                 'name' => 'Mailgun2',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
@@ -213,7 +225,7 @@ class MessagingTest extends Scope
                 'enabled' => false,
             ]
         ]);
-        $providers[1] = $response['body']['data']['messagingUpdateMailgunProvider'];
+        $providers[2] = $response['body']['data']['messagingUpdateMailgunProvider'];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['data']['messagingUpdateMailgunProvider']['name']);
         $this->assertEquals(false, $response['body']['data']['messagingUpdateMailgunProvider']['enabled']);

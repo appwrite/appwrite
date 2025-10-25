@@ -292,6 +292,7 @@ trait Base
     // Providers
     public const string CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
     public const string CREATE_SENDGRID_PROVIDER = 'create_sendgrid_provider';
+    public const string CREATE_RESEND_PROVIDER = 'create_resend_provider';
     public const string CREATE_SMTP_PROVIDER = 'create_smtp_provider';
     public const string CREATE_TWILIO_PROVIDER = 'create_twilio_provider';
     public const string CREATE_TELESIGN_PROVIDER = 'create_telesign_provider';
@@ -304,6 +305,7 @@ trait Base
     public const string GET_PROVIDER = 'get_provider';
     public const string UPDATE_MAILGUN_PROVIDER = 'update_mailgun_provider';
     public const string UPDATE_SENDGRID_PROVIDER = 'update_sendgrid_provider';
+    public const string UPDATE_RESEND_PROVIDER = 'update_resend_provider';
     public const string UPDATE_SMTP_PROVIDER = 'update_smtp_provider';
     public const string UPDATE_TWILIO_PROVIDER = 'update_twilio_provider';
     public const string UPDATE_TELESIGN_PROVIDER = 'update_telesign_provider';
@@ -2494,6 +2496,16 @@ trait Base
                         enabled
                     }
                 }';
+            case self::CREATE_RESEND_PROVIDER:
+                return 'mutation createResendProvider($providerId: String!, $name: String!, $apiKey: String!, $fromName: String!, $fromEmail: String!, $replyToName: String, $replyToEmail: String) {
+                    messagingCreateResendProvider(providerId: $providerId, name: $name, apiKey: $apiKey, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
             case self::CREATE_SMTP_PROVIDER:
                 return 'mutation createSmtpProvider($providerId: String!, $name: String!, $host: String!, $port: Int!, $username: String!, $password: String!, $encryption: String!, $autoTLS: Boolean! $fromName: String!, $fromEmail: String!, $replyToName: String, $replyToEmail: String) {
                     messagingCreateSmtpProvider(providerId: $providerId, name: $name, host: $host, port: $port, username: $username, password: $password, encryption: $encryption, autoTLS: $autoTLS, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
@@ -2611,6 +2623,16 @@ trait Base
             case self::UPDATE_SENDGRID_PROVIDER:
                 return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!, $enabled: Boolean, $fromName: String, $fromEmail: String) {
                     messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::UPDATE_RESEND_PROVIDER:
+                return 'mutation messagingUpdateResendProvider($providerId: String!, $name: String!, $apiKey: String!, $enabled: Boolean, $fromName: String, $fromEmail: String, $replyToName: String, $replyToEmail: String) {
+                    messagingUpdateResendProvider(providerId: $providerId, name: $name, apiKey: $apiKey, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
                         name
                         provider
