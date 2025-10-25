@@ -269,4 +269,57 @@ trait LocaleBase
 
         return [];
     }
+
+    public function testFallbackLocale()
+    {
+        $en = 'A mock translation for testing purposes.';
+        $de = 'Eine Beispielübersetzung für Testzwecke.';
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'en'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'de'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($de, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'cs'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => 'non-existing'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/mock/tests/locale', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-locale' => ''
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals($en, $response['body']);
+    }
 }
