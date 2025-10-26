@@ -107,10 +107,10 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
-                '_APP_CONSOLE_EMAIL_VERIFICATION',
+                '_APP_REQUIRE_CONSOLE_VERIFICATION',
                 [
                     'type' => self::TYPE_BOOLEAN,
-                    'description' => 'Define if email verification is required to access the project on Console.',
+                    'description' => 'Define if email verification is required to access projects on Console.',
                     'default' => false,
                     'example' => true,
                 ]
