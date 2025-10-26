@@ -105,7 +105,17 @@ class ConsoleVariables extends Model
                     'default' => '',
                     'example' => 'ns1.example.com,ns2.example.com',
                 ]
-            );
+            )
+            ->addRule(
+                '_APP_CONSOLE_EMAIL_VERIFICATION',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Define if email verification is required to access the project on Console.',
+                    'default' => false,
+                    'example' => true,
+                ]
+            )
+        ;
     }
 
     /**
