@@ -2,8 +2,6 @@ using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
 using Appwrite.Services;
-using Appwrite.Permission;
-using Appwrite.Role;
 
 Client client = new Client()
     .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint

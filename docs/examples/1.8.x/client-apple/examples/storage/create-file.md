@@ -1,6 +1,4 @@
 import Appwrite
-import AppwritePermission
-import AppwriteRole
 
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
