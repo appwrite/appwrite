@@ -5,8 +5,6 @@
 <ol>
     <li>{{changedOldPhone}}</li>
     <li>{{addedNewPhone}}</li>
-    <li>{{changedDate}}</li>
-    <li>{{changedTime}}</li>
 </ol>
 
 <p>{{footer}}</p>

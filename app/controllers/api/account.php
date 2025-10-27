@@ -23,6 +23,8 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Redaction\Exceptions\Redaction;
+use Appwrite\Redaction\Redactor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -71,36 +73,6 @@ $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
 /**
- * Mask email by replacing part of the username and domain.
- * Example: john.doe@example.com → j***e@e******.com
- */
-function maskEmail(string $email): string
-{
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        return $email;
-    }
-
-    [$user, $domain] = explode('@', $email);
-    $userMasked = substr($user, 0, 1) . str_repeat('*', max(0, strlen($user) - 2)) . substr($user, -1);
-    $domainParts = explode('.', $domain);
-    $domainMasked = substr($domainParts[0], 0, 1) . str_repeat('*', max(0, strlen($domainParts[0]) - 1));
-    $tld = isset($domainParts[1]) ? '.' . $domainParts[1] : '';
-
-    return "{$userMasked}@{$domainMasked}{$tld}";
-}
-
-/**
- * Mask a phone number by hiding middle digits.
- * Example: +65 9876 5432 → +65 **** 5432
- */
-function maskPhone(string $phone): string
-{
-    // Keep country code and last 4 digits visible
-    return preg_replace('/(\+?\d{1,3})?[\s-]?(\d{2,4})\d{3,4}(\d{2,4})/', '$1 **** $3', $phone);
-}
-
-
-/**
  * @throws Exception
  */
 function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails): void {
@@ -122,11 +94,29 @@ function sendPasswordChangeEmail(Locale $locale, Document $user, Document $proje
  * @throws Exception
  */
 function sendEmailChangeEmail(Locale $locale, Document $user, Document $project, Mail $queueForMails, string $oldEmail, string $newEmail): void {
+    $emailAdapter = (new \Appwrite\Redaction\Adapters\Email())
+        ->setRedactDomain(true)
+        ->setRedactUser(true)
+        ->setRedactTLD(false);
+    $redactor = new Redactor($emailAdapter);
+
+    try {
+        $oldEmailMasked = $redactor->redact($oldEmail)->getValue();
+    } catch (Redaction $e) {
+        $oldEmailMasked = $oldEmail;
+    }
+
+    try {
+        $newEmailMasked = $redactor->redact($newEmail)->getValue();
+    } catch (Redaction $e) {
+        $newEmailMasked = $newEmail;
+    }
+
     sendSecurityEmail($locale, $user, $project, $queueForMails, 'emailChange', [
         'recipientEmail' => $oldEmail,
         'variables' => [
-            'oldEmail' => maskEmail($oldEmail),
-            'newEmail' => maskEmail($newEmail),
+            'oldEmail' => $oldEmailMasked,
+            'newEmail' => $newEmailMasked,
         ],
     ]);
 }
@@ -134,15 +124,34 @@ function sendEmailChangeEmail(Locale $locale, Document $user, Document $project,
 /**
  * @throws Exception
  */
-function sendPhoneChangeEmail(Locale $locale, Document $user, Document $project, Mail $queueForMails, string|null $oldPhone, string $newPhone): void {
+function sendPhoneChangeEmail(Locale $locale, Document $user, Document $project, Mail $queueForMails, ?string $oldPhone, string $newPhone): void {
+    $phoneAdapter = (new \Appwrite\Redaction\Adapters\Phone())
+        ->setKeepCountryCode(true)
+        ->setVisibleSuffixDigits(4);
+    $phoneRedactor = new Redactor($phoneAdapter);
+
+    $oldPhoneMasked = '';
+    if ($oldPhone !== null && $oldPhone !== '') {
+        try {
+            $oldPhoneMasked = $phoneRedactor->redact($oldPhone)->getValue();
+        } catch (Redaction $e) {
+            $oldPhoneMasked = $oldPhone;
+        }
+    }
+
+    try {
+        $newPhoneMasked = $phoneRedactor->redact($newPhone)->getValue();
+    } catch (Redaction $e) {
+        $newPhoneMasked = $newPhone;
+    }
+
     sendSecurityEmail($locale, $user, $project, $queueForMails, 'phoneChange', [
         'variables' => [
-            'oldPhone' => maskPhone($oldPhone),
-            'newPhone' => maskPhone($newPhone),
+            'oldPhone' => $oldPhoneMasked,
+            'newPhone' => $newPhoneMasked,
         ],
     ]);
 }
-
 
 /**
  * Generic email sender for account/security notifications.

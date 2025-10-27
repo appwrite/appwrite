@@ -3,8 +3,6 @@
 <p>{{body}}</p>
 
 <ol>
-    <li>{{changedDate}}</li>
-    <li>{{changedTime}}</li>
     <li>{{deviceName}}</li>
     <li>{{deviceIpAddress}}</li>
 </ol>
