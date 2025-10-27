@@ -365,6 +365,17 @@ return [
                 'filters' => ['datetime'],
             ],
             [
+                '$id' => ID::custom('emailCanonical'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 320,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('emailIsFree'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
