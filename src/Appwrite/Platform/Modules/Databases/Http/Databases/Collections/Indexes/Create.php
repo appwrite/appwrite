@@ -206,16 +206,12 @@ class Create extends Action
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $collection->getAttribute('indexes'),
-            $collection->getAttribute('indexes'),
-            $dbForProject->getAdapter()->getMaxIndexLength(),
-            $dbForProject->getAdapter()->getInternalIndexesKeys(),
-            $dbForProject->getAdapter()->getSupportForIndexArray(),
-            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForProject->getAdapter()->getSupportForVectors(),
-            $dbForProject->getAdapter()->getSupportForAttributes(),
-            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForProject->getAdapter()->getSupportForIdenticalIndexes(),
+            $maxIndexLength,
+            $internalIndexesKeys,
+            $supportForIndexArray,
+            $supportForSpatialAttributes,
+            $supportForSpatialIndexNull,
+            $supportForSpatialIndexOrder,
             $supportForAttributes,
             $supportForMultipleFulltextIndexes,
             $supportForIdenticalIndexes
@@ -259,4 +255,5 @@ class Create extends Action
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
             ->dynamic($index, $this->getResponseModel());
     }
+}
 }
