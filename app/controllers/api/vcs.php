@@ -28,12 +28,20 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Detector\Detection\Framework\Analog;
+use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
 use Utopia\Detector\Detection\Framework\Flutter;
+use Utopia\Detector\Detection\Framework\Lynx;
 use Utopia\Detector\Detection\Framework\NextJs;
 use Utopia\Detector\Detection\Framework\Nuxt;
+use Utopia\Detector\Detection\Framework\React;
+use Utopia\Detector\Detection\Framework\ReactNative;
 use Utopia\Detector\Detection\Framework\Remix;
+use Utopia\Detector\Detection\Framework\Svelte;
 use Utopia\Detector\Detection\Framework\SvelteKit;
+use Utopia\Detector\Detection\Framework\TanStackStart;
+use Utopia\Detector\Detection\Framework\Vue;
 use Utopia\Detector\Detection\Packager\NPM;
 use Utopia\Detector\Detection\Packager\PNPM;
 use Utopia\Detector\Detection\Packager\Yarn;
@@ -57,6 +65,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
@@ -165,7 +174,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 } else {
@@ -236,7 +245,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 }
@@ -457,7 +466,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                             $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                         }
                     } finally {
-                        $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                        Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                     }
                 }
             }
@@ -817,7 +826,10 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         $files = \array_column($files, 'name');
         $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
-        $detector = new Packager($files);
+        $detector = new Packager();
+        foreach ($files as $file) {
+            $detector->addInput($file);
+        }
         $detector
             ->addOption(new Yarn())
             ->addOption(new PNPM())
@@ -827,6 +839,14 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         $packager = !\is_null($detection) ? $detection->getName() : 'npm';
 
         if ($type === 'framework') {
+            $packages = '';
+            try {
+                $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/package.json');
+                $packages = $contentResponse['content'] ?? '';
+            } catch (FileNotFound $e) {
+                // Continue detection without package.json
+            }
+
             $output = new Document([
                 'framework' => '',
                 'installCommand' => '',
@@ -834,14 +854,27 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 'outputDirectory' => '',
             ]);
 
-            $detector = new Framework($files, $packager);
+            $detector = new Framework($packager);
+            $detector->addInput($packages, Framework::INPUT_PACKAGES);
+            foreach ($files as $file) {
+                $detector->addInput($file, Framework::INPUT_FILE);
+            }
+
             $detector
-                ->addOption(new Flutter())
-                ->addOption(new Nuxt())
+                ->addOption(new Analog())
+                ->addOption(new Angular())
                 ->addOption(new Astro())
-                ->addOption(new SvelteKit())
+                ->addOption(new Flutter())
+                ->addOption(new Lynx())
                 ->addOption(new NextJs())
-                ->addOption(new Remix());
+                ->addOption(new Nuxt())
+                ->addOption(new React())
+                ->addOption(new ReactNative())
+                ->addOption(new Remix())
+                ->addOption(new Svelte())
+                ->addOption(new SvelteKit())
+                ->addOption(new TanStackStart())
+                ->addOption(new Vue());
 
             $framework = $detector->detect();
 
@@ -876,7 +909,18 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
             ];
 
             foreach ($strategies as $strategy) {
-                $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                $detector = new Runtime($strategy, $packager);
+
+                if ($strategy === Strategy::LANGUAGES) {
+                    foreach ($languages as $language) {
+                        $detector->addInput($language);
+                    }
+                } else {
+                    foreach ($files as $file) {
+                        $detector->addInput($file);
+                    }
+                }
+
                 $detector
                     ->addOption(new Node())
                     ->addOption(new Bun())
@@ -983,7 +1027,10 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
                 $files = \array_column($files, 'name');
 
-                $detector = new Packager($files);
+                $detector = new Packager();
+                foreach ($files as $file) {
+                    $detector->addInput($file);
+                }
                 $detector
                     ->addOption(new Yarn())
                     ->addOption(new PNPM())
@@ -993,14 +1040,35 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 $packager = !\is_null($detection) ? $detection->getName() : 'npm';
 
                 if ($type === 'framework') {
-                    $frameworkDetector = new Framework($files, $packager);
+                    $packages = '';
+                    try {
+                        $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], 'package.json');
+                        $packages = $contentResponse['content'] ?? '';
+                    } catch (FileNotFound $e) {
+                        // Continue detection without package.json
+                    }
+
+                    $frameworkDetector = new Framework($packager);
+                    $frameworkDetector->addInput($packages, Framework::INPUT_PACKAGES);
+                    foreach ($files as $file) {
+                        $frameworkDetector->addInput($file, Framework::INPUT_FILE);
+                    }
+
                     $frameworkDetector
-                        ->addOption(new Flutter())
-                        ->addOption(new Nuxt())
+                        ->addOption(new Analog())
+                        ->addOption(new Angular())
                         ->addOption(new Astro())
-                        ->addOption(new SvelteKit())
+                        ->addOption(new Flutter())
+                        ->addOption(new Lynx())
                         ->addOption(new NextJs())
-                        ->addOption(new Remix());
+                        ->addOption(new Nuxt())
+                        ->addOption(new React())
+                        ->addOption(new ReactNative())
+                        ->addOption(new Remix())
+                        ->addOption(new Svelte())
+                        ->addOption(new SvelteKit())
+                        ->addOption(new TanStackStart())
+                        ->addOption(new Vue());
 
                     $detectedFramework = $frameworkDetector->detect();
 
@@ -1025,7 +1093,16 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                     ];
 
                     foreach ($strategies as $strategy) {
-                        $detector = new Runtime($strategy === Strategy::LANGUAGES ? $languages : $files, $strategy, $packager);
+                        $detector = new Runtime($strategy, $packager);
+                        if ($strategy === Strategy::LANGUAGES) {
+                            foreach ($languages as $language) {
+                                $detector->addInput($language);
+                            }
+                        } else {
+                            foreach ($files as $file) {
+                                $detector->addInput($file);
+                            }
+                        }
                         $detector
                             ->addOption(new Node())
                             ->addOption(new Bun())
@@ -1373,7 +1450,7 @@ App::post('/v1/vcs/github/events')
                             $dbForProject->getAuthorization()->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
                         }
 
-                        $dbForPlatform->deleteDocument('installations', $installation->getId());
+                        Authorization::skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
                     }
                 }
             } elseif ($event == $github::EVENT_PULL_REQUEST) {
