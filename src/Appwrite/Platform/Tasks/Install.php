@@ -2,11 +2,10 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
-use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Platform\Action;
@@ -151,8 +150,6 @@ class Install extends Action
 
         $input = [];
 
-        $password = new Password();
-        $token = new Token();
         foreach ($vars as $var) {
             if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
                 if ($data && $var['default'] !== null) {
@@ -161,12 +158,12 @@ class Install extends Action
                 }
 
                 if ($var['filter'] === 'token') {
-                    $input[$var['name']] = $token->generate();
+                    $input[$var['name']] = Auth::tokenGenerator();
                     continue;
                 }
 
                 if ($var['filter'] === 'password') {
-                    $input[$var['name']] = $password->generate();
+                    $input[$var['name']] = Auth::passwordGenerator();
                     continue;
                 }
             }

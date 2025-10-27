@@ -163,20 +163,19 @@ class Create extends Action
                     throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
                 }
 
-                // ensure attribute is available
-                if ($attributeStatus !== 'available') {
-                    $contextType = ucfirst($contextType);
-                    throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
-                }
+            // Ensure attribute is available
+            if ($attributeStatus !== 'available') {
+                $contextType = ucfirst($contextType);
+                throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
+            }
 
                 if (empty($lengths[$i])) {
                     $lengths[$i] = null;
                 }
 
-                if ($attributeArray === true) {
-                    $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
-                    $orders[$i] = null;
-                }
+            if ($attributeArray === true) {
+                $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
+                $orders[$i] = null;
             }
         }
 
@@ -207,12 +206,16 @@ class Create extends Action
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $collection->getAttribute('indexes'),
-            $maxIndexLength,
-            $internalIndexesKeys,
-            $supportForIndexArray,
-            $supportForSpatialAttributes,
-            $supportForSpatialIndexNull,
-            $supportForSpatialIndexOrder,
+            $collection->getAttribute('indexes'),
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
+            $dbForProject->getAdapter()->getSupportForIndexArray(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForProject->getAdapter()->getSupportForVectors(),
+            $dbForProject->getAdapter()->getSupportForAttributes(),
+            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes(),
             $supportForAttributes,
             $supportForMultipleFulltextIndexes,
             $supportForIdenticalIndexes

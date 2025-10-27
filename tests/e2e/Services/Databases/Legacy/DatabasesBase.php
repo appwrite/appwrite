@@ -1309,7 +1309,7 @@ trait DatabasesBase
 
         // MongoDB only allows one fulltext index per collection, so it returns a different error
         if ($this->isMongoDB()) {
-            $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
+        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a fulltext index, must be of type string');
         } else {
             $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
         }
@@ -1531,7 +1531,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
-        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
+        $this->assertEquals([Database::MAX_ARRAY_INDEX_LENGTH], $index['body']['lengths']);
 
         // Test case for count of lengths greater than attributes (should throw 400)
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
