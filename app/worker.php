@@ -61,7 +61,7 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register,
     $dbForPlatform = new Database($adapter, $cache);
     $dbForPlatform->setAuthorization($authorization);
     $dbForPlatform->setNamespace('_console');
-    
+
 
     return $dbForPlatform;
 }, ['cache', 'register', 'authorization']);

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d7f36b787ff2fe013d9b866c3823f6d4",
+    "content-hash": "48764fa55a13051632675cd4a0f7a6fc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3898,16 +3898,16 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.2.0",
+            "version": "0.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6"
+                "reference": "b5d6ba51352485b524589bc0ee8d07a9efafe718"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
-                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/b5d6ba51352485b524589bc0ee8d07a9efafe718",
+                "reference": "b5d6ba51352485b524589bc0ee8d07a9efafe718",
                 "shasum": ""
             },
             "require": {
@@ -3937,9 +3937,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.2.0"
+                "source": "https://github.com/utopia-php/detector/tree/0.1.5"
             },
-            "time": "2025-10-21T13:57:30+00:00"
+            "time": "2025-05-19T11:01:28+00:00"
         },
         {
             "name": "utopia-php/dns",
