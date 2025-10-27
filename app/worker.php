@@ -51,6 +51,7 @@ Server::setResource('register', fn () => $register);
 
 Server::setResource('authorization', function () {
     $authorization = new Authorization();
+    $authorization->disable();
     return  $authorization;
 }, []);
 
@@ -58,8 +59,9 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register,
     $pools = $register->get('pools');
     $adapter = new DatabasePool($pools->get('console'));
     $dbForPlatform = new Database($adapter, $cache);
-    $dbForPlatform->setNamespace('_console');
     $dbForPlatform->setAuthorization($authorization);
+    $dbForPlatform->setNamespace('_console');
+    
 
     return $dbForPlatform;
 }, ['cache', 'register', 'authorization']);
@@ -91,18 +93,16 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
-
+    $database->setAuthorization($authorization);
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
-            ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setTenant((int)$project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
-            ->setAuthorization($authorization)
             ->setSharedTables(false)
             ->setTenant(null)
             ->setNamespace('_' . $project->getSequence());
@@ -130,18 +130,16 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
 
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
-
+            $database->setAuthorization($authorization);
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
-                    ->setAuthorization($authorization)
                     ->setSharedTables(true)
                     ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
-                    ->setAuthorization($authorization)
                     ->setSharedTables(false)
                     ->setTenant(null)
                     ->setNamespace('_' . $project->getSequence());
@@ -151,7 +149,9 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         }
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
+        $adapter->setAuthorization($authorization);
         $database = new Database($adapter, $cache);
+        $database->setAuthorization($authorization);
 
         $databases[$dsn->getHost()] = $database;
 
@@ -159,13 +159,11 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
-                ->setAuthorization($authorization)
                 ->setSharedTables(true)
                 ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
-                ->setAuthorization($authorization)
                 ->setSharedTables(false)
                 ->setTenant(null)
                 ->setNamespace('_' . $project->getSequence());
