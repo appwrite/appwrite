@@ -29733,6 +29733,7 @@
                                             "vue",
                                             "sveltekit",
                                             "astro",
+                                            "tanstack-start",
                                             "remix",
                                             "lynx",
                                             "flutter",
@@ -30379,6 +30380,7 @@
                                             "vue",
                                             "sveltekit",
                                             "astro",
+                                            "tanstack-start",
                                             "remix",
                                             "lynx",
                                             "flutter",
@@ -53962,13 +53964,14 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.",
+                        "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, `failed`, or `scheduled`.",
                         "x-example": "processing",
                         "enum": [
                             "waiting",
                             "processing",
                             "completed",
-                            "failed"
+                            "failed",
+                            "scheduled"
                         ]
                     },
                     "requestMethod": {
