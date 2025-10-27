@@ -2,6 +2,8 @@
 
 use Appwrite\Client;
 use Appwrite\Services\TablesDB;
+use Appwrite\Permission;
+use Appwrite\Role;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -14,7 +16,7 @@ $result = $tablesDB->updateTable(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // optional
+    permissions: [Permission::read(Role::any())], // optional
     rowSecurity: false, // optional
     enabled: false // optional
 );

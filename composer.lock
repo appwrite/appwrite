@@ -3898,16 +3898,16 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.1.5",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "b5d6ba51352485b524589bc0ee8d07a9efafe718"
+                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/b5d6ba51352485b524589bc0ee8d07a9efafe718",
-                "reference": "b5d6ba51352485b524589bc0ee8d07a9efafe718",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
+                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
                 "shasum": ""
             },
             "require": {
@@ -3937,9 +3937,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.1.5"
+                "source": "https://github.com/utopia-php/detector/tree/0.2.0"
             },
-            "time": "2025-05-19T11:01:28+00:00"
+            "time": "2025-10-21T13:57:30+00:00"
         },
         {
             "name": "utopia-php/dns",
@@ -4344,16 +4344,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.19.0",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "0b866d54e70c792a3c4f5ca9c12a6d358a31f4b8"
+                "reference": "6c5be4588d97e3732a1907ecb13cd8a098eade96"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/0b866d54e70c792a3c4f5ca9c12a6d358a31f4b8",
-                "reference": "0b866d54e70c792a3c4f5ca9c12a6d358a31f4b8",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/6c5be4588d97e3732a1907ecb13cd8a098eade96",
+                "reference": "6c5be4588d97e3732a1907ecb13cd8a098eade96",
                 "shasum": ""
             },
             "require": {
@@ -4389,9 +4389,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.19.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.20.0"
             },
-            "time": "2025-10-14T11:46:49+00:00"
+            "time": "2025-10-22T04:27:37+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -5095,16 +5095,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.11.0",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "0e665eaa7d906168525bf6aac50b6bcc3e4fe528"
+                "reference": "28457cf347972c4ec95d3ca77776a4921364a665"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/0e665eaa7d906168525bf6aac50b6bcc3e4fe528",
-                "reference": "0e665eaa7d906168525bf6aac50b6bcc3e4fe528",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/28457cf347972c4ec95d3ca77776a4921364a665",
+                "reference": "28457cf347972c4ec95d3ca77776a4921364a665",
                 "shasum": ""
             },
             "require": {
@@ -5138,9 +5138,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.11.0"
+                "source": "https://github.com/utopia-php/vcs/tree/0.12.0"
             },
-            "time": "2025-07-23T13:54:58+00:00"
+            "time": "2025-10-22T12:58:29+00:00"
         },
         {
             "name": "utopia-php/websocket",
