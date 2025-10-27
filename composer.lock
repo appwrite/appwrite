@@ -5267,17 +5267,13 @@
         {
             "name": "appwrite/sdk-generator",
             "version": "1.4.14",
-            "version": "1.4.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
                 "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f"
-                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b9405ccaeac5619c76558a82b7bfeb440b665b9f",
-                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f",
                 "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b9405ccaeac5619c76558a82b7bfeb440b665b9f",
                 "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f",
                 "shasum": ""
@@ -5316,9 +5312,7 @@
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/1.4.14"
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.14"
             },
-            "time": "2025-10-27T11:17:01+00:00"
             "time": "2025-10-27T11:17:01+00:00"
         },
         {
@@ -6024,17 +6018,13 @@
         {
             "name": "phpbench/phpbench",
             "version": "1.4.2",
-            "version": "1.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpbench/phpbench.git",
                 "reference": "bb61ae6c54b3d58642be154eb09f4e73c3511018"
-                "reference": "bb61ae6c54b3d58642be154eb09f4e73c3511018"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpbench/phpbench/zipball/bb61ae6c54b3d58642be154eb09f4e73c3511018",
-                "reference": "bb61ae6c54b3d58642be154eb09f4e73c3511018",
                 "url": "https://api.github.com/repos/phpbench/phpbench/zipball/bb61ae6c54b3d58642be154eb09f4e73c3511018",
                 "reference": "bb61ae6c54b3d58642be154eb09f4e73c3511018",
                 "shasum": ""
@@ -6063,7 +6053,6 @@
                 "ergebnis/composer-normalize": "^2.39",
                 "friendsofphp/php-cs-fixer": "^3.0",
                 "jangregor/phpstan-prophecy": "^1.0",
-                "phpspec/prophecy": "^1.22",
                 "phpspec/prophecy": "^1.22",
                 "phpstan/extension-installer": "^1.1",
                 "phpstan/phpstan": "^1.0",
@@ -6115,7 +6104,6 @@
             "support": {
                 "issues": "https://github.com/phpbench/phpbench/issues",
                 "source": "https://github.com/phpbench/phpbench/tree/1.4.2"
-                "source": "https://github.com/phpbench/phpbench/tree/1.4.2"
             },
             "funding": [
                 {
@@ -6123,7 +6111,6 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-26T14:21:59+00:00"
             "time": "2025-10-26T14:21:59+00:00"
         },
         {
@@ -8826,6 +8813,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
     "plugin-api-version": "2.6.0"
 }
