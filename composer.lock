@@ -4003,12 +4003,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "65e43d1a55b5ce1844461cdb27cc8c6b2c8eff04"
+                "reference": "e0b1452609e8f3465bb73cb3eb0a61520b35ae5d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/65e43d1a55b5ce1844461cdb27cc8c6b2c8eff04",
-                "reference": "65e43d1a55b5ce1844461cdb27cc8c6b2c8eff04",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/e0b1452609e8f3465bb73cb3eb0a61520b35ae5d",
+                "reference": "e0b1452609e8f3465bb73cb3eb0a61520b35ae5d",
                 "shasum": ""
             },
             "require": {
@@ -4057,7 +4057,7 @@
                 "issues": "https://github.com/utopia-php/domains/issues",
                 "source": "https://github.com/utopia-php/domains/tree/update-opensrs-adapter-authcode"
             },
-            "time": "2025-10-27T08:22:10+00:00"
+            "time": "2025-10-27T11:48:32+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -5318,16 +5318,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.4.12",
+            "version": "1.4.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "efda55836d19b8d5f36ac0df33c83b48af0aa8fd"
+                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/efda55836d19b8d5f36ac0df33c83b48af0aa8fd",
-                "reference": "efda55836d19b8d5f36ac0df33c83b48af0aa8fd",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b9405ccaeac5619c76558a82b7bfeb440b665b9f",
+                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f",
                 "shasum": ""
             },
             "require": {
@@ -5363,9 +5363,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.12"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.14"
             },
-            "time": "2025-10-25T05:39:48+00:00"
+            "time": "2025-10-27T11:17:01+00:00"
         },
         {
             "name": "doctrine/annotations",
