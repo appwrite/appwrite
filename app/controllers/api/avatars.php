@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -641,6 +642,7 @@ App::get('/v1/avatars/screenshots')
     ->desc('Get webpage screenshot')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
+    ->label('usage.metric', METRIC_AVATARS_SCREENSHOTS_GENERATED)
     ->label('cache', true)
     ->label('cache.resourceType', 'avatar/screenshot')
     ->label('cache.resource', 'screenshot/{request.url}/{request.width}/{request.height}/{request.scale}/{request.theme}/{request.userAgent}/{request.fullpage}/{request.locale}/{request.timezone}/{request.latitude}/{request.longitude}/{request.accuracy}/{request.touch}/{request.permissions}/{request.sleep}/{request.quality}/{request.output}')
@@ -680,7 +682,8 @@ App::get('/v1/avatars/screenshots')
     ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('response')
-    ->action(function (string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
+    ->inject('queueForStatsUsage')
+    ->action(function (string $url, array $headers, int $viewportWidth, int $viewportHeight, float $scale, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response, StatsUsage $queueForStatsUsage) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -858,10 +861,13 @@ App::get('/v1/avatars/screenshots')
             $outputs = Config::getParam('storage-outputs');
             $contentType = $outputs[$output] ?? $outputs['png'];
 
+            $queueForStatsUsage->addMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED, 1);
+
             $response
                 ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
                 ->setContentType($contentType)
                 ->file($resizedScreenshot);
+
 
         } catch (\Throwable $th) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot generation failed: ' . $th->getMessage());

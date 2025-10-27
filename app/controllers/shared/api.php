@@ -585,6 +585,10 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
+                $usageMetric = $route->getLabel('usage.metric', null);
+                if ($usageMetric === METRIC_AVATARS_SCREENSHOTS_GENERATED) {
+                    $queueForStatsUsage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
+                }
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
