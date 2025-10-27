@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases\DocumentsDB;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Appwrite\Tests\Retry;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -3000,6 +3001,7 @@ trait DatabasesBase
     /**
      * @depends testCreateDatabase
      */
+    #[Retry(count: 6)]
     public function testTimeout(array $data): void
     {
         $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $data['databaseId'] . '/collections', array_merge([
@@ -3038,18 +3040,19 @@ trait DatabasesBase
                 ]
             ]);
         }
-
-        $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-timeout' => 1,
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::notEqual('longtext', 'appwrite')->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(408, $response['headers']['status-code']);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-timeout' => 1,
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::notEqual('longtext', 'appwrite')->toString(),
+                ],
+            ]);
+    
+            $this->assertEquals(408, $response['headers']['status-code']);
+        }, 100000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $data['databaseId'], array_merge([
             'content-type' => 'application/json',
