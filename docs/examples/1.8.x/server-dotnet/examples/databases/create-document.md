@@ -1,6 +1,8 @@
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
+using Appwrite.Permission;
+using Appwrite.Role;
 
 Client client = new Client()
     .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -20,6 +22,6 @@ Document result = await databases.CreateDocument(
         age = 30,
         isAdmin = false
     },
-    permissions: ["read("any")"], // optional
+    permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     transactionId: "<TRANSACTION_ID>" // optional
 );

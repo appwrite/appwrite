@@ -1,4 +1,6 @@
 import Appwrite
+import AppwritePermission
+import AppwriteRole
 
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -11,7 +13,7 @@ let collection = try await databases.updateCollection(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     name: "<NAME>",
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     documentSecurity: false, // optional
     enabled: false // optional
 )

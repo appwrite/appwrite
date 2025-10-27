@@ -1,4 +1,6 @@
 import Appwrite
+import AppwritePermission
+import AppwriteRole
 
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -10,6 +12,6 @@ let file = try await storage.createFile(
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     file: InputFile.fromPath("file.png"),
-    permissions: ["read("any")"] // optional
+    permissions: [Permission.read(Role.any())] // optional
 )
 

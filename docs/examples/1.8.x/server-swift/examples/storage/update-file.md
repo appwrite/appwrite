@@ -1,4 +1,6 @@
 import Appwrite
+import AppwritePermission
+import AppwriteRole
 
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -11,6 +13,6 @@ let file = try await storage.updateFile(
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     name: "<NAME>", // optional
-    permissions: ["read("any")"] // optional
+    permissions: [Permission.read(Role.any())] // optional
 )
 

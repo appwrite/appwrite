@@ -1,6 +1,8 @@
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
+using Appwrite.Permission;
+using Appwrite.Role;
 
 Client client = new Client()
     .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,6 +16,6 @@ Row result = await tablesDB.UpdateRow(
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
     data: [object], // optional
-    permissions: ["read("any")"], // optional
+    permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     transactionId: "<TRANSACTION_ID>" // optional
 );

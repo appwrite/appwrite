@@ -1,4 +1,6 @@
 import Appwrite
+import AppwritePermission
+import AppwriteRole
 
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -17,7 +19,7 @@ let row = try await tablesDB.createRow(
         "age": 30,
         "isAdmin": false
     ],
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     transactionId: "<TRANSACTION_ID>" // optional
 )
 
