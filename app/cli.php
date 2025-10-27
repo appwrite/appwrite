@@ -185,7 +185,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
         $database->setAuthorization($authorization);
-        
+
         $database
             ->setSharedTables(true)
             ->setNamespace('logsV1')
