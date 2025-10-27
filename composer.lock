@@ -3898,16 +3898,16 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6"
+                "reference": "89f96e864220de13800cf398a1f1686a85401eaa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
-                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/89f96e864220de13800cf398a1f1686a85401eaa",
+                "reference": "89f96e864220de13800cf398a1f1686a85401eaa",
                 "shasum": ""
             },
             "require": {
@@ -3937,9 +3937,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.2.0"
+                "source": "https://github.com/utopia-php/detector/tree/0.2.1"
             },
-            "time": "2025-10-21T13:57:30+00:00"
+            "time": "2025-10-27T13:38:33+00:00"
         },
         {
             "name": "utopia-php/dns",
@@ -8832,7 +8832,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8856,5 +8856,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
