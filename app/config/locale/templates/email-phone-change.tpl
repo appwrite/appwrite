@@ -3,9 +3,10 @@
 <p>{{body}}</p>
 
 <ol>
-    <li><strong>Old Phone:</strong> {{oldPhone}}</li>
-    <li><strong>New Phone:</strong> {{newPhone}}</li>
-    <li><strong>Date:</strong> {{date}}</li>
+    <li>{{changedOldPhone}}</li>
+    <li>{{addedNewPhone}}</li>
+    <li>{{changedDate}}</li>
+    <li>{{changedTime}}</li>
 </ol>
 
 <p>{{footer}}</p>

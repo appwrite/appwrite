@@ -3,9 +3,10 @@
 <p>{{body}}</p>
 
 <ol>
-    <li><strong>Old Email:</strong> {{oldEmail}}</li>
-    <li><strong>New Email:</strong> {{newEmail}}</li>
-    <li><strong>Date:</strong> {{date}}</li>
+    <li>{{changedOldEmail}}</li>
+    <li>{{addedNewEmail}}</li>
+    <li>{{changedDate}}</li>
+    <li>{{changedTime}}</li>
 </ol>
 
 <p>{{footer}}</p>

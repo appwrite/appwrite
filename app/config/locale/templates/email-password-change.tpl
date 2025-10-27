@@ -3,10 +3,10 @@
 <p>{{body}}</p>
 
 <ol>
-    <li><strong>Date:</strong> {{date}}</li>
-    <li><strong>Time:</strong> {{time}}</li>
-    <li><strong>Device:</strong> {{device}}</li>
-    <li><strong>IP Address:</strong> {{ipAddress}}</li>
+    <li>{{changedDate}}</li>
+    <li>{{changedTime}}</li>
+    <li>{{deviceName}}</li>
+    <li>{{deviceIpAddress}}</li>
 </ol>
 
 <p>{{footer}}</p>

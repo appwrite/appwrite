@@ -603,7 +603,7 @@ services:
     entrypoint: worker-mails
     <<: *x-logging
     container_name: appwrite-worker-mails
-    image: appwrite-dev
+    image: appwrite/appwrite:1.8
     networks:
       - appwrite
     volumes:
@@ -1150,6 +1150,7 @@ networks:
     name: runtimes
 
 volumes:
+  # Persistent data volumes
   appwrite-mariadb:
   appwrite-redis:
   appwrite-cache:

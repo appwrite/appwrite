@@ -90,7 +90,7 @@ function maskEmail(string $email): string
 }
 
 /**
- * Mask phone number by hiding middle digits.
+ * Mask a phone number by hiding middle digits.
  * Example: +65 9876 5432 → +65 **** 5432
  */
 function maskPhone(string $phone): string
@@ -114,7 +114,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
  */
 function sendPasswordChangeEmail(Locale $locale, Document $user, Document $project, Mail $queueForMails, ?string $ip = null, ?string $device = null): void {
     sendSecurityEmail($locale, $user, $project, $queueForMails, 'passwordChange', [
-        'variables' => array_filter(['ipAddress' => $ip, 'device' => $device]),
+        'variables' => array_filter(['ip' => $ip, 'device' => $device]),
     ]);
 }
 
@@ -208,13 +208,19 @@ function sendSecurityEmail(
 
     // Shared strings
     $params = [
-        '{{hello}}'     => $locale->getText("$baseKey.hello"),
+        '{{hello}}'     => $locale->getText("emails.generic.hello"),
+        '{{changedDate}}'    => $locale->getText("emails.generic.changedDate"),
+        '{{changedTime}}'    => $locale->getText("emails.generic.changedTime"),
+        '{{deviceName}}'    => $locale->getText("emails.generic.deviceName"),
+        '{{deviceIpAddress}}'    => $locale->getText("emails.generic.deviceIpAddress"),
+        '{{thanks}}'    => $locale->getText("emails.generic.thanks"),
+        '{{signature}}' => $locale->getText("emails.generic.signature"),
         '{{body}}'      => $locale->getText("$baseKey.body"),
         '{{footer}}'    => $locale->getText("$baseKey.footer"),
-        '{{device}}'    => $locale->getText("$baseKey.device"),
-        '{{ipAddress}}'    => $locale->getText("$baseKey.ipAddress"),
-        '{{thanks}}'    => $locale->getText("emails.sessionAlert.thanks"),
-        '{{signature}}' => $locale->getText("emails.sessionAlert.signature"),
+        '{{addedNewEmail}}'      => $locale->getText("$baseKey.addedNewEmail"),
+        '{{changedOldEmail}}'    => $locale->getText("$baseKey.changedOldEmail"),
+        '{{addedNewPhone}}'    => $locale->getText("$baseKey.addedNewPhone"),
+        '{{changedOldPhone}}'    => $locale->getText("$baseKey.changedOldPhone"),
     ];
 
     // Session-alert specific labels (only if your template uses them)
@@ -282,7 +288,7 @@ function sendSecurityEmail(
         'year'      => $now->format('Y'),      // previously had 'YYYY'
         'time'      => $now->format('H:i:s'),
         'user'      => $user->getAttribute('name'),
-        'project'   => $project->getAttribute('name'),
+        'project'   => $project->getAttribute('project'),
     ];
 
     // Session/device info if provided
@@ -298,8 +304,8 @@ function sendSecurityEmail(
             $session->setAttribute('clientName', $clientName);
         }
 
-        $emailVariables['device']    = $session->getAttribute('clientName');
-        $emailVariables['ipAddress'] = $session->getAttribute('ip');
+        $emailVariables['device']    = $session->getAttribute('device')?$session->getAttribute('device'):'UNKNOWN';
+        $emailVariables['ip'] = $session->getAttribute('ip');
         $emailVariables['country']   = $locale->getText(
             'countries.' . $session->getAttribute('countryCode'),
             $locale->getText('locale.country.unknown')
@@ -3104,7 +3110,8 @@ App::patch('/v1/account/password')
     ->inject('hooks')
     ->inject('locale')
     ->inject('queueForMails')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Locale $locale, Mail $queueForMails) {
+    ->inject('request')
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Locale $locale, Mail $queueForMails, Request $request) {
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
@@ -3153,7 +3160,10 @@ App::patch('/v1/account/password')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        sendPasswordChangeEmail($locale, $user, $project, $queueForMails);
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+
+        sendPasswordChangeEmail($locale, $user, $project, $queueForMails, $request->getIP(),
+            $detector->getDevice()&&$detector->getDevice()['deviceName']?$detector->getDevice()['deviceName']:'UNKNOWN');
 
         $queueForEvents->setParam('userId', $user->getId());
 
