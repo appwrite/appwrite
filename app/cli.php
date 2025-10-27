@@ -59,6 +59,7 @@ CLI::setResource('pools', function (Registry $register) {
 
 CLI::setResource('authorization', function () {
     $authorization = new Authorization();
+    $authorization->disable();
     return  $authorization;
 }, []);
 
@@ -133,13 +134,11 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
-                    ->setAuthorization($authorization)
                     ->setSharedTables(true)
                     ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
-                    ->setAuthorization($authorization)
                     ->setSharedTables(false)
                     ->setTenant(null)
                     ->setNamespace('_' . $project->getSequence());
@@ -150,18 +149,17 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
+        $database->setAuthorization($authorization);
         $databases[$dsn->getHost()] = $database;
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
-                ->setAuthorization($authorization)
                 ->setSharedTables(true)
                 ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
-                ->setAuthorization($authorization)
                 ->setSharedTables(false)
                 ->setTenant(null)
                 ->setNamespace('_' . $project->getSequence());
@@ -186,9 +184,9 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
 
         $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
-
+        $database->setAuthorization($authorization);
+        
         $database
-            ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)

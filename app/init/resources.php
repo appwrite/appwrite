@@ -424,9 +424,10 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
 }, ['pools', 'dbForPlatform', 'cache', 'project', 'authorization']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
+ 
     $adapter = new DatabasePool($pools->get('console'));
     $database = new Database($adapter, $cache);
-
+    
     $database
         ->setAuthorization($authorization)
         ->setNamespace('_console')
@@ -484,6 +485,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
+        $database->setAuthorization($authorization);
         $databases[$dsn->getHost()] = $database;
         $configure($database);
 

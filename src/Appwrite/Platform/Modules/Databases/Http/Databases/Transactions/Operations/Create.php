@@ -172,9 +172,12 @@ class Create extends Action
                     $documentValid = false;
                     if ($document !== null && !$document->isEmpty() && $documentSecurity) {
                         if ($permissionType === Database::PERMISSION_UPDATE) {
-                            $documentValid = $validator->isValid($document->getUpdate());
+                            $documentValid = $dbForProject->getAuthorization()->isValid(
+                                new input(Database::PERMISSION_UPDATE, $document->getUpdate()));
                         } elseif ($permissionType === Database::PERMISSION_DELETE) {
-                            $documentValid = $validator->isValid($document->getDelete());
+                            $documentValid = $dbForProject->getAuthorization()->isValid(
+                                new input(Database::PERMISSION_DELETE, $document->getDelete())
+                            );
                         }
                     }
 
