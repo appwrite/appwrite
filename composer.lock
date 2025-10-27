@@ -3844,12 +3844,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "4088c1002bbc837fd9299987cce5d460ded210d1"
+                "reference": "22123ad30782be131ecad4e9298b843d8daf387b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/4088c1002bbc837fd9299987cce5d460ded210d1",
-                "reference": "4088c1002bbc837fd9299987cce5d460ded210d1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/22123ad30782be131ecad4e9298b843d8daf387b",
+                "reference": "22123ad30782be131ecad4e9298b843d8daf387b",
                 "shasum": ""
             },
             "require": {
@@ -3894,7 +3894,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-authorization-instance"
             },
-            "time": "2025-10-20T13:53:53+00:00"
+            "time": "2025-10-27T08:34:29+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5318,16 +5318,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.4.7",
+            "version": "1.4.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "a61c8be551e10f4970bf46f75a54e4b0385c550d"
+                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a61c8be551e10f4970bf46f75a54e4b0385c550d",
-                "reference": "a61c8be551e10f4970bf46f75a54e4b0385c550d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b9405ccaeac5619c76558a82b7bfeb440b665b9f",
+                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f",
                 "shasum": ""
             },
             "require": {
@@ -5363,9 +5363,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.7"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.14"
             },
-            "time": "2025-10-22T06:03:44+00:00"
+            "time": "2025-10-27T11:17:01+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -6069,16 +6069,16 @@
         },
         {
             "name": "phpbench/phpbench",
-            "version": "1.4.1",
+            "version": "1.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpbench/phpbench.git",
-                "reference": "78cd98a9aa34e0f8f80ca01972a8b88d2c30194b"
+                "reference": "bb61ae6c54b3d58642be154eb09f4e73c3511018"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpbench/phpbench/zipball/78cd98a9aa34e0f8f80ca01972a8b88d2c30194b",
-                "reference": "78cd98a9aa34e0f8f80ca01972a8b88d2c30194b",
+                "url": "https://api.github.com/repos/phpbench/phpbench/zipball/bb61ae6c54b3d58642be154eb09f4e73c3511018",
+                "reference": "bb61ae6c54b3d58642be154eb09f4e73c3511018",
                 "shasum": ""
             },
             "require": {
@@ -6105,7 +6105,7 @@
                 "ergebnis/composer-normalize": "^2.39",
                 "friendsofphp/php-cs-fixer": "^3.0",
                 "jangregor/phpstan-prophecy": "^1.0",
-                "phpspec/prophecy": "dev-master",
+                "phpspec/prophecy": "^1.22",
                 "phpstan/extension-installer": "^1.1",
                 "phpstan/phpstan": "^1.0",
                 "phpstan/phpstan-phpunit": "^1.0",
@@ -6155,7 +6155,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpbench/phpbench/issues",
-                "source": "https://github.com/phpbench/phpbench/tree/1.4.1"
+                "source": "https://github.com/phpbench/phpbench/tree/1.4.2"
             },
             "funding": [
                 {
@@ -6163,7 +6163,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-03-12T08:01:40+00:00"
+            "time": "2025-10-26T14:21:59+00:00"
         },
         {
             "name": "phpstan/phpstan",
