@@ -79,7 +79,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '13.2.2',
+                'version' => '13.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -226,7 +226,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '10.2.1',
+                'version' => '10.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
