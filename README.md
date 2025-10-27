@@ -251,3 +251,8 @@ Join our growing community around the world! Check out our official [Blog](https
 ## License
 
 This repository is available under the [BSD 3-Clause License](./LICENSE).
+
+## 💡 Contribution Note
+
+This README was improved as part of Hacktoberfest 2025 by G S L B Mounika.  
+Small updates and corrections enhance open-source documentation clarity for new contributors. 🚀
