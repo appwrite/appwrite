@@ -20,7 +20,7 @@ class AuthTest extends TestCase
         if (isset($this->authorization)) {
             return $this->authorization;
         }
-        
+
         $this->authorization = new Authorization();
         return  $this->authorization;
     }

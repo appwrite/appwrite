@@ -457,8 +457,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $database = getProjectDB($project);
 
                         $user = $database->getDocument('users', $userId);
-
-                        $roles = $consoleDatabase->getAuthorization()->getRoles($user);
+                        $roles = Auth::getRoles($user, $database->getAuthorization());
                         $channels = $realtime->connections[$connection]['channels'];
 
                         $realtime->unsubscribe($connection);

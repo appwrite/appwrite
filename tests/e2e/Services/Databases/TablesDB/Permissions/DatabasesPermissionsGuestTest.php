@@ -24,9 +24,9 @@ class DatabasesPermissionsGuestTest extends Scope
         if (isset($this->authorization)) {
             return $this->authorization;
         }
-        
+
         $this->authorization = new Authorization();
-        return $this->authorization; 
+        return $this->authorization;
     }
 
 
