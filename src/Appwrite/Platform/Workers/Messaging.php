@@ -16,6 +16,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
+use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
@@ -506,6 +507,7 @@ class Messaging extends Action
                 $credentials['isEuRegion'] ?? false
             ),
             'sendgrid' => new Sendgrid($apiKey),
+            'resend' => new Resend($apiKey),
             default => null
         };
     }

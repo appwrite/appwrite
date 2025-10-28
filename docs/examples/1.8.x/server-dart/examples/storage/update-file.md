@@ -1,4 +1,6 @@
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,5 +13,5 @@ File result = await storage.updateFile(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     name: '<NAME>', // (optional)
-    permissions: ["read("any")"], // (optional)
+    permissions: [Permission.read(Role.any())], // (optional)
 );

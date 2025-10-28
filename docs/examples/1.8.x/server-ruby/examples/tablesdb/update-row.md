@@ -1,6 +1,8 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -14,6 +16,6 @@ result = tables_db.update_row(
     table_id: '<TABLE_ID>',
     row_id: '<ROW_ID>',
     data: {}, # optional
-    permissions: ["read("any")"], # optional
+    permissions: [Permission.read(Role.any())], # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
