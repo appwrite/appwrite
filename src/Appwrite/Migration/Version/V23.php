@@ -136,6 +136,16 @@ class V23 extends Migration
                     break;
             }
         }
+
+        try {
+            $this->createAttributeFromCollection(
+                $this->dbForPlatform,
+                'buckets',
+                'transformations',
+            );
+        } catch (Throwable $th) {
+            Console::warning("'transformations' from 'buckets': {$th->getMessage()}");
+        }
     }
 
     /**

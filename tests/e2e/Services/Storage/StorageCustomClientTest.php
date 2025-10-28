@@ -1386,4 +1386,65 @@ class StorageCustomClientTest extends Scope
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
+
+    public function testCreateBucketTransformationsDisabled(): void
+    {
+        // Create a bucket with default settings
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Transformations Disabled',
+            'permissions' => [
+                Permission::read(Role::any())
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        // Create a file in the bucket
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        // Try to get the file preview
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'] . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+        $this->assertEquals(200, $preview['headers']['status-code']);
+
+        // Update the bucket to disable transformations
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucket['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Test Bucket Transformations Disabled',
+            'transformations' => false,
+        ]);
+
+        // Try to get the file preview again
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'] . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+        $this->assertEquals(403, $preview['headers']['status-code']);
+        $this->assertStringContainsString('Image transformations are disabled for the requested bucket.', $preview['body']['message']);
+
+        // Delete the bucket
+        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+    }
 }
