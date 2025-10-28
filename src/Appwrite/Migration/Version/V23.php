@@ -132,6 +132,14 @@ class V23 extends Migration
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
+                case 'buckets':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'transformations');
+                    } catch (Throwable $th) {
+                        Console::warning("'transformations' from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
                 default:
                     break;
             }
@@ -145,16 +153,6 @@ class V23 extends Migration
             );
         } catch (Throwable $th) {
             Console::warning("(platform) 'transformations' from 'buckets': {$th->getMessage()}");
-        }
-
-        try {
-            $this->createAttributeFromCollection(
-                $this->dbForProject,
-                'buckets',
-                'transformations',
-            );
-        } catch (Throwable $th) {
-            Console::warning("'transformations' from 'buckets': {$th->getMessage()}");
         }
     }
 
