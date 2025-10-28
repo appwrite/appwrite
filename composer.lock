@@ -3840,16 +3840,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "3.0.3",
+            "version": "3.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7a4d6739746925e2b26c5a8f30bece97cb5b6b87"
+                "reference": "a83997d5555d6cd873b829a2459292211c6ab13f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7a4d6739746925e2b26c5a8f30bece97cb5b6b87",
-                "reference": "7a4d6739746925e2b26c5a8f30bece97cb5b6b87",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a83997d5555d6cd873b829a2459292211c6ab13f",
+                "reference": "a83997d5555d6cd873b829a2459292211c6ab13f",
                 "shasum": ""
             },
             "require": {
@@ -3858,9 +3858,9 @@
                 "ext-pdo": "*",
                 "php": ">=8.1",
                 "utopia-php/cache": "0.13.*",
+                "utopia-php/framework": "0.33.*",
                 "utopia-php/mongo": "0.11.*",
-                "utopia-php/pools": "0.8.*",
-                "utopia-php/validators": "0.0.*"
+                "utopia-php/pools": "0.8.*"
             },
             "require-dev": {
                 "fakerphp/faker": "1.23.*",
@@ -3892,9 +3892,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/3.0.3"
+                "source": "https://github.com/utopia-php/database/tree/3.0.4"
             },
-            "time": "2025-10-28T04:56:37+00:00"
+            "time": "2025-10-28T08:21:21+00:00"
         },
         {
             "name": "utopia-php/detector",
