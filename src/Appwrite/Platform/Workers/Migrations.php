@@ -231,10 +231,6 @@ class Migrations extends Action
      */
     protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
-        $errors = $migration->getAttribute('errors', []);
-        $errors = $this->sanitizeErrors($errors, []);
-        $migration->setAttribute('errors', $errors);
-
         $queueForRealtime
             ->setProject($project)
             ->setSubscribers(['console', $project->getId()])
@@ -353,10 +349,7 @@ class Migrations extends Action
             if (!empty($sourceErrors) || ! empty($destinationErrors)) {
                 $migration->setAttribute('status', 'failed');
                 $migration->setAttribute('stage', 'finished');
-
-                $errors = $this->sanitizeErrors($sourceErrors, $destinationErrors);
-
-                $migration->setAttribute('errors', $errors);
+                $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
                 return;
             }
 
@@ -382,9 +375,7 @@ class Migrations extends Action
             if ($transfer) {
                 $sourceErrors = $source->getErrors();
                 $destinationErrors = $destination->getErrors();
-                $errors = $this->sanitizeErrors($sourceErrors, $destinationErrors);
-
-                $migration->setAttribute('errors', $errors);
+                $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
             }
         } finally {
             $this->updateMigrationDocument($migration, $project, $queueForRealtime);
@@ -462,11 +453,12 @@ class Migrations extends Action
             try {
                 $this->deviceForFiles->delete($path);
             } finally {
-                $message = "Export file size {$sizeMB}MB exceeds your plan limit.";
-
                 $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration->setAttribute(
                     'errors',
-                    $message,
+                    [
+                        'code' => 0,
+                        'message' => "Export file size {$sizeMB}MB exceeds your plan limit.",
+                    ],
                     Document::SET_TYPE_APPEND,
                 ));
 
