@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -19,6 +20,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
@@ -337,7 +339,7 @@ App::post('/v1/migrations/csv/imports')
     ->inject('deviceForMigrations')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, bool $internalFile, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Device $deviceForFiles, Device $deviceForImports, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (string $bucketId, string $fileId, string $resourceId, bool $internalFile, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project, Device $deviceForFiles, Device $deviceForMigrations, Event $queueForEvents, Migration $queueForMigrations) {
         $isAPIKey = Auth::isAppUser($dbForPlatform->getAuthorization()->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($dbForPlatform->getAuthorization()->getRoles());
         if ($internalFile && !$isPrivilegedUser) {
@@ -497,7 +499,7 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
@@ -510,12 +512,12 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
