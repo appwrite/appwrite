@@ -4934,7 +4934,7 @@
                 "x-appwrite": {
                     "method": "listTransactions",
                     "group": "transactions",
-                    "weight": 378,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-transactions.md",
@@ -4999,7 +4999,7 @@
                 "x-appwrite": {
                     "method": "createTransaction",
                     "group": "transactions",
-                    "weight": 374,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-transaction.md",
@@ -5067,7 +5067,7 @@
                 "x-appwrite": {
                     "method": "getTransaction",
                     "group": "transactions",
-                    "weight": 375,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-transaction.md",
@@ -5129,7 +5129,7 @@
                 "x-appwrite": {
                     "method": "updateTransaction",
                     "group": "transactions",
-                    "weight": 376,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-transaction.md",
@@ -5205,7 +5205,7 @@
                 "x-appwrite": {
                     "method": "deleteTransaction",
                     "group": "transactions",
-                    "weight": 377,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-transaction.md",
@@ -5269,7 +5269,7 @@
                 "x-appwrite": {
                     "method": "createOperations",
                     "group": "transactions",
-                    "weight": 379,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-operations.md",
@@ -5352,7 +5352,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 337,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-documents.md",
@@ -5451,7 +5451,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 329,
+                    "weight": 330,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-document.md",
@@ -5607,7 +5607,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 330,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-document.md",
@@ -5716,7 +5716,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 333,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-document.md",
@@ -5870,7 +5870,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 331,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-document.md",
@@ -5978,7 +5978,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 335,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-document.md",
@@ -6082,7 +6082,7 @@
                 "x-appwrite": {
                     "method": "decrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 340,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/decrement-document-attribute.md",
@@ -6206,7 +6206,7 @@
                 "x-appwrite": {
                     "method": "incrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 339,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/increment-document-attribute.md",
@@ -6330,7 +6330,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 470,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -6405,7 +6405,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 468,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -6521,7 +6521,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 469,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -7115,7 +7115,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 298,
+                    "weight": 299,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -7198,7 +7198,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 302,
+                    "weight": 303,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -8076,7 +8076,7 @@
                 "x-appwrite": {
                     "method": "listTransactions",
                     "group": "transactions",
-                    "weight": 443,
+                    "weight": 444,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-transactions.md",
@@ -8144,7 +8144,7 @@
                 "x-appwrite": {
                     "method": "createTransaction",
                     "group": "transactions",
-                    "weight": 439,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-transaction.md",
@@ -8215,7 +8215,7 @@
                 "x-appwrite": {
                     "method": "getTransaction",
                     "group": "transactions",
-                    "weight": 440,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-transaction.md",
@@ -8280,7 +8280,7 @@
                 "x-appwrite": {
                     "method": "updateTransaction",
                     "group": "transactions",
-                    "weight": 441,
+                    "weight": 442,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-transaction.md",
@@ -8359,7 +8359,7 @@
                 "x-appwrite": {
                     "method": "deleteTransaction",
                     "group": "transactions",
-                    "weight": 442,
+                    "weight": 443,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-transaction.md",
@@ -8426,7 +8426,7 @@
                 "x-appwrite": {
                     "method": "createOperations",
                     "group": "transactions",
-                    "weight": 444,
+                    "weight": 445,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-operations.md",
@@ -8512,7 +8512,7 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 435,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-rows.md",
@@ -8610,7 +8610,7 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 427,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-row.md",
@@ -8761,7 +8761,7 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 428,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-row.md",
@@ -8869,7 +8869,7 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 431,
+                    "weight": 432,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-row.md",
@@ -9014,7 +9014,7 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 429,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-row.md",
@@ -9121,7 +9121,7 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 433,
+                    "weight": 434,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-row.md",
@@ -9224,7 +9224,7 @@
                 "x-appwrite": {
                     "method": "decrementRowColumn",
                     "group": "rows",
-                    "weight": 438,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/decrement-row-column.md",
@@ -9347,7 +9347,7 @@
                 "x-appwrite": {
                     "method": "incrementRowColumn",
                     "group": "rows",
-                    "weight": 437,
+                    "weight": 438,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/increment-row-column.md",
@@ -12514,13 +12514,14 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.",
+                        "description": "The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, `failed`, or `scheduled`.",
                         "x-example": "processing",
                         "enum": [
                             "waiting",
                             "processing",
                             "completed",
-                            "failed"
+                            "failed",
+                            "scheduled"
                         ]
                     },
                     "requestMethod": {
