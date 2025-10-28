@@ -1,0 +1,1 @@
+Export documents to a CSV file from your Appwrite database. This endpoint allows you to export documents to a CSV file stored in an Appwrite Storage bucket.

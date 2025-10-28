@@ -2,6 +2,8 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Storage;
+use Appwrite\Permission;
+use Appwrite\Role;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -13,7 +15,7 @@ $storage = new Storage($client);
 $result = $storage->updateBucket(
     bucketId: '<BUCKET_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // optional
+    permissions: [Permission::read(Role::any())], // optional
     fileSecurity: false, // optional
     enabled: false, // optional
     maximumFileSize: 1, // optional
