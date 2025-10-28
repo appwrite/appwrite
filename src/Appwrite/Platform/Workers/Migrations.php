@@ -453,12 +453,11 @@ class Migrations extends Action
             try {
                 $this->deviceForFiles->delete($path);
             } finally {
+                $message = "Export file size {$sizeMB}MB exceeds your plan limit.";
+
                 $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration->setAttribute(
                     'errors',
-                    [
-                        'code' => 0,
-                        'message' => "Export file size {$sizeMB}MB exceeds your plan limit.",
-                    ],
+                    json_encode(['code' => 0, 'message' => $message]),
                     Document::SET_TYPE_APPEND,
                 ));
 
