@@ -23,7 +23,7 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```python
 users = Users(client)
 
-result = users.create('[USER_ID]', 'email@example.com', 'password')
+result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
 ```
 
 ### Full Example
@@ -43,7 +43,7 @@ client = Client()
 
 users = Users(client)
 
-result = users.create(ID.unique(), 'email@example.com', 'password')
+result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
 ```
 
 ### Error Handling
@@ -52,7 +52,7 @@ The Appwrite Python SDK raises `AppwriteException` object with `message`, `code`
 ```python
 users = Users(client)
 try:
-  result = users.create(ID.unique(), 'email@example.com', 'password')
+  result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
 except AppwriteException as e:
   print(e.message)
 ```

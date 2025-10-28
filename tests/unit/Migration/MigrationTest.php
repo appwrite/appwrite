@@ -41,98 +41,11 @@ abstract class MigrationTest extends TestCase
         foreach (Migration::$versions as $class) {
             $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\' . $class));
         }
+
         // Test if current version exists
         // Only test official releases - skip if latest is release candidate
         if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
-    }
-
-    public function testHasDifference(): void
-    {
-        $this->assertFalse(Migration::hasDifference([], []));
-        $this->assertFalse(Migration::hasDifference([
-            'bool' => true,
-            'string' => 'abc',
-            'int' => 123,
-            'array' => ['a', 'b', 'c'],
-            'assoc' => [
-                'a' => true,
-                'b' => 'abc',
-                'c' => 123,
-                'd' => ['a', 'b', 'c']
-            ]
-        ], [
-            'bool' => true,
-            'string' => 'abc',
-            'int' => 123,
-            'array' => ['a', 'b', 'c'],
-            'assoc' => [
-                'a' => true,
-                'b' => 'abc',
-                'c' => 123,
-                'd' => ['a', 'b', 'c']
-            ]
-        ]));
-        $this->assertFalse(Migration::hasDifference([
-            'bool' => true,
-            'string' => 'abc',
-            'int' => 123,
-            'array' => ['a', 'b', 'c'],
-            'assoc' => [
-                'a' => true,
-                'b' => 'abc',
-                'c' => 123,
-                'd' => ['a', 'b', 'c']
-            ]
-        ], [
-            'string' => 'abc',
-            'assoc' => [
-                'a' => true,
-                'b' => 'abc',
-                'c' => 123,
-                'd' => ['a', 'b', 'c']
-            ],
-            'int' => 123,
-            'array' => ['a', 'b', 'c'],
-            'bool' => true,
-
-        ]));
-        $this->assertTrue(Migration::hasDifference([
-            'a' => true
-        ], [
-            'b' => true
-        ]));
-        $this->assertTrue(Migration::hasDifference([
-            'a' => 'true'
-        ], [
-            'a' => true
-        ]));
-        $this->assertTrue(Migration::hasDifference([
-            'a' => true
-        ], [
-            'a' => false
-        ]));
-        $this->assertTrue(Migration::hasDifference([
-            'nested' => [
-                'a' => true
-            ]
-        ], [
-            'nested' => []
-        ]));
-        $this->assertTrue(Migration::hasDifference([
-            'assoc' => [
-                'bool' => true,
-                'string' => 'abc',
-                'int' => 123,
-                'array' => ['a', 'b', 'c']
-            ]
-        ], [
-            'nested' => [
-                'a' => true,
-                'int' => '123',
-                'array' => ['a', 'b', 'c']
-            ]
-        ]));
     }
 }

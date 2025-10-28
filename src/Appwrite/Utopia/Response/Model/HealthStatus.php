@@ -10,6 +10,12 @@ class HealthStatus extends Model
     public function __construct()
     {
         $this
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the service.',
+                'default' => '',
+                'example' => 'database',
+            ])
             ->addRule('ping', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Duration in milliseconds how long the health check took.',
@@ -17,10 +23,11 @@ class HealthStatus extends Model
                 'example' => 128,
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Service status. Possible values can are: `pass`, `fail`',
+                'type' => self::TYPE_ENUM,
+                'description' => 'Service status. Possible values are: `pass`, `fail`',
                 'default' => '',
                 'example' => 'pass',
+                'enum' => ['pass', 'fail'],
             ])
         ;
     }

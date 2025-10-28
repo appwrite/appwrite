@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Team extends Model
 {
@@ -40,7 +41,31 @@ class Team extends Model
                 'default' => 0,
                 'example' => 7,
             ])
+            ->addRule('prefs', [
+                'type' => Response::MODEL_PREFERENCES,
+                'description' => 'Team preferences as a key-value object',
+                'default' => new \stdClass(),
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
+            ])
         ;
+    }
+
+    /**
+     * Process Document before returning it to the client
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        $prefs = $document->getAttribute('prefs');
+        if ($prefs instanceof Document) {
+            $prefs = $prefs->getArrayCopy();
+        }
+
+        if (is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('prefs', new \stdClass());
+        }
+        return $document;
     }
 
     /**

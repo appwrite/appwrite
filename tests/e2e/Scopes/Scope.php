@@ -2,32 +2,39 @@
 
 namespace Tests\E2E\Scopes;
 
+use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
-use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\ID;
+use Tests\E2E\Client;
+use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 abstract class Scope extends TestCase
 {
     use Retryable;
+    use Async;
 
-    /**
-     * @var Client
-     */
-    protected $client = null;
+    public const REQUEST_TYPE_WEBHOOK = 'webhook';
+    public const REQUEST_TYPE_SMS = 'sms';
 
-    /**
-     * @var string
-     */
-    protected $endpoint = 'http://localhost/v1';
+    protected ?Client $client = null;
+    protected string $endpoint = 'http://localhost/v1';
 
     protected function setUp(): void
     {
         $this->client = new Client();
+        $this->client->setEndpoint($this->endpoint);
 
-        $this->client
-            ->setEndpoint($this->endpoint)
-        ;
+        $format = System::getEnv('_APP_E2E_RESPONSE_FORMAT');
+        if (!empty($format)) {
+            if (
+                !\preg_match('/^\d+\.\d+\.\d+$/', $format) ||
+                !\version_compare($format, APP_VERSION_STABLE, '<=')
+            ) {
+                throw new \Exception('E2E response format must be ' . APP_VERSION_STABLE . ' or lower.');
+            }
+            $this->client->setResponseFormat($format);
+        }
     }
 
     protected function tearDown(): void
@@ -35,33 +42,107 @@ abstract class Scope extends TestCase
         $this->client = null;
     }
 
-    protected function getLastEmail(): array
+    protected function getLastEmail(int $limit = 1): array
     {
         sleep(3);
 
         $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
         if ($emails && is_array($emails)) {
-            return end($emails);
+            if ($limit === 1) {
+                return end($emails);
+            } else {
+                return array_slice($emails, -1 * $limit);
+            }
         }
 
         return [];
     }
 
+    protected function extractQueryParamsFromEmailLink(string $html): array
+    {
+        foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
+            $linkStart = strpos($html, $prefix);
+            if ($linkStart !== false) {
+                $hrefStart = strrpos(substr($html, 0, $linkStart), 'href="');
+                if ($hrefStart === false) {
+                    continue;
+                }
+
+                $hrefStart += 6;
+                $hrefEnd = strpos($html, '"', $hrefStart);
+                if ($hrefEnd === false || $hrefStart >= $hrefEnd) {
+                    continue;
+                }
+
+                $link = substr($html, $hrefStart, $hrefEnd - $hrefStart);
+                $link = strtok($link, '#'); // Remove `#title`
+                $queryStart = strpos($link, '?');
+                if ($queryStart === false) {
+                    continue;
+                }
+
+                $queryString = substr($link, $queryStart + 1);
+                parse_str(html_entity_decode($queryString), $queryParams);
+                return $queryParams;
+            }
+        }
+
+        return [];
+    }
+
+    protected function assertLastRequest(callable $probe, string $type, $timeoutMs = 20_000, $waitMs = 500): array
+    {
+        $hostname = match ($type) {
+            'webhook' => 'request-catcher-webhook',
+            'sms' => 'request-catcher-sms',
+            default => throw new \Exception('Invalid request catcher type.'),
+        };
+
+        $this->assertEventually(function () use (&$request, $probe, $hostname) {
+            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
+            $request['data'] = json_decode($request['data'], true);
+
+            call_user_func($probe, $request);
+        }, $timeoutMs, $waitMs);
+
+        return $request;
+    }
+
+    protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
+    {
+        $expected = new \Imagick($expectedImagePath);
+        $actual = new \Imagick();
+        $actual->readImageBlob($actualImageBlob);
+
+        foreach ([$expected, $actual] as $image) {
+            $image->setImageFormat('PNG');
+            $image->stripImage();
+            $image->setOption('png:exclude-chunks', 'date,time,iCCP,sRGB,gAMA,cHRM');
+        }
+
+        $this->assertSame($expected->getImageSignature(), $actual->getImageSignature());
+    }
+
+    /**
+     * @deprecated Use assertLastRequest instead. Used only historically in webhook tests
+     */
     protected function getLastRequest(): array
     {
+        $hostname = 'request-catcher-webhook';
+
         sleep(2);
 
-        $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
-        $resquest['data'] = json_decode($resquest['data'], true);
+        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
+        $request['data'] = json_decode($request['data'], true);
 
-        return $resquest;
+        return $request;
     }
 
     /**
      * @return array
      */
-    abstract public function getHeaders(): array;
+    abstract public function getHeaders(bool $devKey = true): array;
 
     /**
      * @return array
@@ -108,7 +189,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
+        $session = $session['cookies']['a_session_console'];
 
         self::$root = [
             '$id' => ID::custom($root['body']['$id']),
@@ -128,9 +209,9 @@ abstract class Scope extends TestCase
     /**
      * @return array
      */
-    public function getUser(): array
+    public function getUser(bool $fresh = false): array
     {
-        if (isset(self::$user[$this->getProject()['$id']])) {
+        if (!$fresh && isset(self::$user[$this->getProject()['$id']])) {
             return self::$user[$this->getProject()['$id']];
         }
 
@@ -160,13 +241,14 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => ID::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
-            'session' => $session,
+            'session' => $token,
+            'sessionId' => $session['body']['$id'],
         ];
 
         return self::$user[$this->getProject()['$id']];

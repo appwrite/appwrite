@@ -1,3 +1,201 @@
+# Change Log
+
+## 20.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 20.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 19.1.0
+
+* Add `orderRandom` query support
+
+## 19.0.0
+
+* Rename `CreditCard` enum value `unionChinaPay` to `unionPay`
+* Add time between query support
+* Add spatial query support
+
+## 18.0.0
+
+* Support for Appwrite 1.8
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
+* Deprecated `updateMagicURLSession`
+* Deprecated `updatePhoneSession`
+* Deprecated Databases service
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
+
+## 17.1.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `gif` support to `ImageFormat` enum
+* Add `sequence` support to `Document` model
+
+## 17.0.2
+
+* Add `gif` support to `ImageFormat` enum
+* Fix `convertTo()` method in `Document` and `Preferences` models to correctly accept `Map<String, dynamic>`
+
+## 17.0.1
+
+* Fix `devKeys` support by conditionally including credentials during requests
+
+## 17.0.0
+
+* Update `flutter_web_auth_2` dependency to version 4.1.0
+* Update `auth.html` example in README.md to align with `flutter_web_auth_2` documentation
+* Breaking changes:
+  * Minimum iOS version supported is now 17.4 due to the updated requirements of `flutter_web_auth_2` version 4.1.0
+
+## 16.1.0
+
+* Add `setDevKey` method to Client service
+* Add `upsertDocument` method to Databases service
+
+## 16.0.0
+
+* Remove `Gif` from ImageFormat enum
+* Remove `search` param from `listExecutions` method
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Update default `quality` for `getFilePreview` from 0 to -1
+
+## 15.0.2
+
+* Avoid setting empty `User-Agent` header and only encode it when present.
+* Update doc examples to use new multi-region endpoint: `https://<REGION>.cloud.appwrite.io/v1`.
+
+## 15.0.1
+
+* Removed `Content-Type` header from GET and HEAD requests.
+* Add validation for setting endpoint in `setEndpoint` and `setEndPointRealtime` methods.
+* Include Figma in list of available OAuth providers.
+
+## 15.0.0
+
+* Encode `User-Agent` header to fix invalid HTTP header field value error.
+* Breaking changes:
+  * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
+
+## 14.0.0
+
+* Fixed realtime pong response.
+* Fixed issues with `chunkedUpload` method.
+
+## 13.0.0
+
+* Fixed realtime reconnection issues
+* Support for Appwrite 1.6
+* Update dependencies
+* Added `scheduledAt` attribute to `Execution` response model
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
+## 12.0.4
+
+* Fixed concurrent modification error when closing realtime socket
+
+## 12.0.3
+
+* Upgrade dependencies
+
+## 12.0.2
+
+* Fixed realtime multiple subscription issues
+
+## 12.0.1
+
+* Fixed parameters using enum types
+
+## 12.0.0
+
+* Added enum support
+* Added SSR support
+* Added messaging service support
+* Added contains query support
+* Added or query support
+
+## 11.0.1
+
+* Fix between queries
+
+## 11.0.0
+
+* Parameter `url` is now optional in the `createMembership` endpoint
+
+## 10.0.1
+
+* Added a new `label` function to the `Role` helper class
+* Update internal variable names to prevent name collision
+* Fix: content range header inconsistency in chunked uploads [#648](https://github.com/appwrite/sdk-generator/pull/648)
+
+## 10.0.0
+
+* Support for Appwrite 1.4.0
+* New endpoints for fetching user identities
+* New endpoints for listing locale codes
+* Updated documentation
+* Breaking changes:
+  * The `createFunction` method has a new signature.
+  * The `createExecution` method has a new signature.
+  * The `updateFunction` method has a new signature.
+  * The `createDeployment` method no longer requires an entrypoint.
+  * The `updateFile` method now includes the ability to update the file name.
+  * The `updateMembershipRoles` method has been renamed to `updateMembership`.
+
+## 9.0.1
+
+* Added documentation comments
+* Added unit tests
+* Upgraded dependencies
+
+## 9.0.0
+
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
+* Added update attribute support
+* Added team prefs support
+* Changed function create/update `execute` parameter to optional
+* Changed team `update` to `updateName`
+* Changed `Account` service to use the `User` model instead of `Account`
+
+## 8.3.0
+
+* Fix: back navigation bringing back web browser after OAuth session creation
+* Update: Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+
+## 8.2.2
+
+* Fix: notify callback when websocket closes [#604](https://github.com/appwrite/sdk-generator/pull/604)
+
+## 8.2.1
+
+* Fix OAuth on web
+* Improve helper classes
+
+## 8.2.0
+
+* Support for GraphQL
+
 ## 8.1.0
 
 * Role helper update
@@ -25,7 +223,7 @@
     4.  `greaterEqual` renamed to `greaterThanEqual`
 * `User` response model is now renamed to `Account`
 
-**Full Changelog for Appwrite 1.0.0 can be found here**: 
+**Full Changelog for Appwrite 1.0.0 can be found here**:
 https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 7.0.0
@@ -78,7 +276,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 3.0.0
 - Support for Appwrite 0.12
-- **BREAKING** Updated database service to adapt 0.12 API 
+- **BREAKING** Updated database service to adapt 0.12 API
 - **BREAKING** Custom ID support while creating resources
 - [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
 
@@ -151,12 +349,12 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 - Upgraded to Null-safety, minimum Dart SDK required 2.12.0
 - Upgraded all underlying dependencies to null safe version
 - BREAKING Renamed parameter inviteId to membershipId on teams.updateMembershipStatus, teams.deleteMembership
-- [Anonymous login](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateAnonymousSession)
-- [JWT Support](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateJWT)
+- [Anonymous login](https://appwrite.io/docs/references/cloud/client-flutter/account?sdk=flutter#createAnonymousSession)
+- [JWT Support](https://appwrite.io/docs/references/cloud/client-flutter/account?sdk=flutter#createJWT)
 - Fallback Cookies for Flutter Web if 3rd party cookies are blocked
 - Custom User Agent Support
-- [Update membership roles](https://appwrite.io/docs/client/teams?sdk=flutter#teamsUpdateMembershipRoles)
-- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
+- [Update membership roles](https://appwrite.io/docs/references/cloud/client-flutter/teams?sdk=flutter#updateMembershipRoles)
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth
 
 ## 0.5.0-dev.1
 

@@ -1,0 +1,1 @@
+Delete a webhook by its unique ID. Once deleted, the webhook will no longer receive project events. 

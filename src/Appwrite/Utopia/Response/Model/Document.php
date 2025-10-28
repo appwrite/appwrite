@@ -36,17 +36,26 @@ class Document extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$sequence', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Document automatically incrementing ID.',
+                'default' => 0,
+                'example' => 1,
+                'readOnly' => true,
+            ])
             ->addRule('$collectionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
+                'readOnly' => true,
             ])
             ->addRule('$databaseId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Database ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
+                'readOnly' => true,
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
@@ -62,7 +71,7 @@ class Document extends Any
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document permissions. [Learn more about permissions](/docs/permissions).',
+                'description' => 'Document permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true,
@@ -71,9 +80,36 @@ class Document extends Any
 
     public function filter(DatabaseDocument $document): DatabaseDocument
     {
-        $document->removeAttribute('$internalId');
-        $document->removeAttribute('$collection'); // $collection is the internal collection ID
+        $document->removeAttribute('$collection');
+        $document->removeAttribute('$tenant');
+
+        if (!$document->isEmpty()) {
+            $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
+        }
+
+        foreach ($document->getAttributes() as $attribute) {
+            if (\is_array($attribute)) {
+                foreach ($attribute as $subAttribute) {
+                    if ($subAttribute instanceof DatabaseDocument) {
+                        $this->filter($subAttribute);
+                    }
+                }
+            } elseif ($attribute instanceof DatabaseDocument) {
+                $this->filter($attribute);
+            }
+        }
 
         return $document;
+    }
+
+    public function getSampleData(): array
+    {
+        return [
+            'username' => 'john.doe',
+            'email' => 'john.doe@example.com',
+            'fullName' => 'John Doe',
+            'age' => 30,
+            'isAdmin' => false,
+        ];
     }
 }

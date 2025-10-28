@@ -1,3 +1,187 @@
+# Change Log
+
+## 19.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 19.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 18.1.0
+
+* Add `orderRandom` query support
+
+## 18.0.0
+
+* Rename `CreditCard` enum value `unionChinaPay` to `unionPay`
+* Add time between query support
+* Add spatial attribute support
+* Add spatial index support
+* Add spatial query support
+
+## 17.0.0
+
+* Support for Appwrite 1.8
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
+* Deprecated `updateMagicURLSession`
+* Deprecated `updatePhoneSession`
+* Deprecated Databases service
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
+  
+
+## 16.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `encrypt` support to string attribute model
+* Add `sequence` support to `Document` model
+
+## 16.1.0
+
+* Add `gif` support to `ImageFormat` enum
+* Add support for `dart38` and `flutter332` runtimes
+* Add `upsertDocument()` method to Databases service
+* Fix `convertTo()` method in `Document` and `Preferences` models to correctly accept `Map<String, dynamic>`
+* Fix `upsertDocuments()` method to have `documents` attribute as required parameter
+
+## 16.0.0
+
+* Add `<REGION>` to doc examples due to the new multi region endpoints
+* Add doc examples and methods for bulk api transactions: `createDocuments`, `deleteDocuments` etc.
+* Add doc examples, class and methods for new `Sites` service
+* Add doc examples, class and methods for new `Tokens` service
+* Add enums for `BuildRuntime `, `Adapter`, `Framework`, `DeploymentDownloadType` and `VCSDeploymentType`
+* Add `token` param to `getFilePreview` and `getFileView` for File tokens usage
+* Add `queries` and `search` params to `listMemberships` method
+* Update enum for `runtimes` with Pythonml312, Dart219, Flutter327 and Flutter329
+* Remove `search` param from `listExecutions` method
+
+## 14.0.0
+
+* Breaking changes:
+  * Changed the typing of `AppwriteException`'s response parameter from a `dynamic` object to an optional string (`?String`).
+
+## 13.0.0
+
+* Fixed realtime pong response.
+* Fixed issues with `chunkedUpload` method.
+* Fixed type mismatch bug where `List<dynamic>` was incorrectly causing runtime type errors.
+* Updated return type of `updateMfaChallenge()` from raw data to properly typed `models.Session` object.
+
+## 12.0.0
+
+* Support for Appwrite 1.6
+* Added `key` attribute to `Runtime` response model.
+* Added `buildSize` attribute to `Deployments` response model.
+* Added `scheduledAt` attribute to `Executions` response model.
+* Added `scopes` attribute to `Functions` response model.
+* Added `specifications` attribute to `Functions` response model.
+* Added new response model for `Specifications`.
+* Added new response model for `Builds`.
+* Added `createJWT()` : Enables creating a JWT using the `userId`.
+* Added `listSpecifications()`: Enables listing available runtime specifications.
+* Added `deleteExecution()` : Enables deleting executions.
+* Added `updateDeploymentBuild()`: Enables cancelling a deployment.
+* Added `scheduledAt` parameter to `createExecution()`: Enables creating a delayed execution
+* Breaking changes:
+  * Removed `otp` parameter from `deleteMFAAuthenticator`.
+  * Added `scopes` parameter for create/update function.
+  * Renamed `templateBranch` to `templateVersion`  in `createFunction()`.
+  * Renamed `downloadDeployment()` to `getDeploymentDownload()`
+
+You can find the new syntax for breaking changes in the [Appwrite API references](https://appwrite.io/docs/references). Select version `1.6.x`.
+
+**Please note: This version is compatible with Appwrite 1.6 and later only. If you do not update your Appwrite SDK, old SDKs will not break your app. Appwrite APIs are backwards compatible.**
+
+## 11.0.3
+
+* Minor bugfixes
+
+## 11.0.2
+
+* Fixed MSG91 missing template ID
+
+## 11.0.1
+
+* Fixed parameters using enum types
+
+## 11.0.0
+
+* Added enum support
+* Added SSR support
+* Added messaging service support
+* Added contains query support
+* Added or query support
+
+## 10.1.0
+
+* Add new queue health endpoints
+* Fix between queries
+
+## 10.0.0
+
+* Parameter `url` is now optional in the `createMembership` endpoint
+* Parameter `runtime` is now optional in the `update` endpoint of the `Functions` class
+
+## 9.0.1
+
+* Added a new `label` function to the `Role` helper class
+* Update internal variable names to prevent name collision
+* Fix: content range header inconsistency in chunked uploads [#648](https://github.com/appwrite/sdk-generator/pull/648)
+
+## 9.0.0
+
+* Support for Appwrite 1.4.0
+* New endpoints for fetching user identities
+* New endpoints for listing locale codes
+* New endpoint for downloading a function deployment
+* Updated documentation
+* Breaking changes:
+  * The `createFunction` method has a new signature.
+  * The `createExecution` method has a new signature.
+  * The `updateFunction` method has a new signature.
+  * The `createDeployment` method no longer requires an entrypoint.
+  * The `updateFile` method now includes the ability to update the file name.
+  * The `updateMembershipRoles` method has been renamed to `updateMembership`.
+
+## 8.0.1
+
+* Added documentation comments
+* Added unit tests
+* Upgraded dependencies
+
+## 8.0.0
+
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
+* Added update attribute support
+* Added team prefs support
+* Changed function create/update `execute` parameter to optional
+* Changed team `update` to `updateName`
+* Changed `Account` service to use the `User` model instead of `Account`
+
+## 7.3.0
+
+* Improve helper classes
+* Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+
+## 7.2.0
+
+* Support for GraphQL
+
 ## 7.1.0
 
 * Role helper update
@@ -88,7 +272,7 @@
 
 ## 3.0.0
 - Support for Appwrite 0.12
-- **BREAKING** Updated database service to adapt 0.12 API 
+- **BREAKING** Updated database service to adapt 0.12 API
 - **BREAKING** Custom ID support while creating resources
 - [View all the changes](https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0120)
 
@@ -114,7 +298,7 @@
 - Breaking - changed param name from `env` to `runtime` in the **Functions** API
 - Image Crop Gravity support in image preview service
 - New endpoint in Account getSession to get session by ID
-- New endpoint in the Users API to update user verification status 
+- New endpoint in the Users API to update user verification status
 - Fix - issues with User-Agent when app name consisted of non-ASCII characters
 
 ## 0.6.2
@@ -132,8 +316,8 @@
 - BREAKING Renamed users.deleteUser to users.delete
 - BREAKING Renamed parameter inviteId to membershipId on teams.updateMembershipStatus, teams.deleteMembership
 - JWT Support client.setJWT('JWT_GENERATED_IN_CLIENT')
-- [Update membership roles](https://appwrite.io/docs/client/teams?sdk=dart#teamsUpdateMembershipRoles)
-- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
+- [Update membership roles](https://appwrite.io/docs/references/cloud/server-dart/teams?sdk=dart#updateMembershipRoles)
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth
 
 ## 0.5.0-dev.1
 

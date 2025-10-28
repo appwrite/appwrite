@@ -1,0 +1,121 @@
+name: Benchmark
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: true
+env:
+  IMAGE: appwrite-dev
+  CACHE_KEY: 'appwrite-dev-${{ github.event.pull_request.head.sha }}'
+'on':
+  - pull_request
+jobs:
+  setup:
+    name: Setup & Build Appwrite Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Appwrite
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: '${{ env.IMAGE }}'
+          load: true
+          cache-from: type=gha
+          cache-to: 'type=gha,mode=max'
+          outputs: 'type=docker,dest=/tmp/${{ env.IMAGE }}.tar'
+          build-args: |
+            DEBUG=false
+            TESTING=true
+            VERSION=dev
+      - name: Cache Docker Image
+        uses: actions/cache@v4
+        with:
+          key: '${{ env.CACHE_KEY }}'
+          path: '/tmp/${{ env.IMAGE }}.tar'
+  benchmarking:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    needs: setup
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Load Cache
+        uses: actions/cache@v4
+        with:
+          key: '${{ env.CACHE_KEY }}'
+          path: '/tmp/${{ env.IMAGE }}.tar'
+          fail-on-cache-miss: true
+      - name: Load and Start Appwrite
+        run: |
+          sed -i 's/traefik/localhost/g' .env
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+      - name: Install Oha
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+          sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
+          sudo apt update
+          sudo apt install oha
+          oha --version
+      - name: Benchmark PR
+        run: 'oha -z 180s http://localhost/v1/health/version --output-format json > benchmark.json'
+      - name: Cleaning
+        run: docker compose down -v
+      - name: Installing latest version
+        run: |
+          rm docker-compose.yml
+          rm .env
+          curl https://appwrite.io/install/compose -o docker-compose.yml
+          curl https://appwrite.io/install/env -o .env
+          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
+          docker compose up -d
+          sleep 10
+      - name: Benchmark Latest
+        run: oha -z 180s http://localhost/v1/health/version --output-format json > benchmark-latest.json
+      - name: Prepare comment
+        run: |
+          echo '## :sparkles: Benchmark results' > benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- Requests with 200 status code: $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- P99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "## :zap:  Benchmark Comparison" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "| Metric | This PR | Latest version | "  >> benchmark.txt
+          echo "| --- | --- | --- | "  >> benchmark.txt
+          echo "| RPS | $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
+      - name: Save results
+        uses: actions/upload-artifact@v4
+        if: '${{ !cancelled() }}'
+        with:
+          name: benchmark.json
+          path: benchmark.json
+          retention-days: 7
+      - name: Find Comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: '${{ github.event.pull_request.number }}'
+          comment-author: 'github-actions[bot]'
+          body-includes: Benchmark results
+      - name: Comment on PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: '${{ steps.fc.outputs.comment-id }}'
+          issue-number: '${{ github.event.pull_request.number }}'
+          body-path: benchmark.txt
+          edit-mode: replace

@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   traefik:
     image: traefik:2.2
@@ -27,7 +25,7 @@ services:
     networks:
       - gateway
       - appwrite
-  
+
   appwrite:
     container_name: appwrite
     build:
@@ -36,8 +34,8 @@ services:
         - TESTING=true
         - VERSION=dev
     restart: unless-stopped
-    ports: 
-      - 9501:80
+    ports:
+      - "9501:80"
     networks:
       - appwrite
     labels:
@@ -54,22 +52,22 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./debug:/tmp
     depends_on:
       - mariadb
       - redis
-      # - clamav
-      - influxdb
     environment:
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_ENV
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
+      - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_TARGET
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -79,20 +77,17 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
       - _APP_STORAGE_ANTIVIRUS=disabled
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_HOST
 
-  appwrite-worker-usage:
-    entrypoint: worker-usage
-    container_name: appwrite-worker-usage
+  appwrite-worker-stats-usage:
+    entrypoint: worker-stats-usage
+    container_name: appwrite-worker-stats-usage
     build:
       context: .
     restart: unless-stopped
@@ -100,13 +95,10 @@ services:
       - appwrite
     depends_on:
       - redis
-      - telegraf
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -182,7 +174,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
     environment:
@@ -207,7 +199,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
@@ -245,10 +237,9 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_CPUS
+      - _APP_COMPUTE_MEMORY
       - _APP_EXECUTOR_HOST
 
   appwrite-worker-mails:
@@ -269,7 +260,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
-  
+
   appwrite-worker-builds:
     entrypoint: worker-builds
     container_name: appwrite-worker-builds
@@ -277,7 +268,7 @@ services:
       context: .
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -294,7 +285,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -329,6 +319,7 @@ services:
       - MYSQL_DATABASE=appwrite
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
+      - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
 
   maildev:
@@ -359,80 +350,6 @@ services:
     volumes:
       - appwrite-redis:/data:rw
 
-  # clamav:
-  #   image: appwrite/clamav:1.2.0
-  #   container_name: appwrite-clamav
-  #   restart: unless-stopped
-  #   networks:
-  #     - appwrite
-  #   volumes:
-  #     - appwrite-uploads:/storage/uploads
-
-  influxdb:
-    image: influxdb:1.6
-    container_name: appwrite-influxdb
-    restart: unless-stopped
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-influxdb:/var/lib/influxdb:rw
-
-  telegraf:
-    image: appwrite/telegraf:1.1.0
-    container_name: appwrite-telegraf
-    restart: unless-stopped
-    networks:
-      - appwrite
-
-  # redis-commander:
-  #   image: rediscommander/redis-commander:latest
-  #   restart: unless-stopped
-  #   networks:
-  #   - appwrite
-  #   environment:
-  #   - REDIS_HOSTS=redis
-  #   ports:
-  #   - "8081:8081"
-
-  # resque:
-  #   image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
-  #   restart: unless-stopped
-  #   networks:
-  #     - appwrite
-  #   ports:
-  #     - "5678:5678"
-  #   environment:
-  #     - RESQUE_WEB_HOST=redis
-  #     - RESQUE_WEB_PORT=6379
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
-
-  # chronograf:
-  #   image: chronograf:1.5
-  #   container_name: appwrite-chronograf
-  #   restart: unless-stopped
-  #   networks:
-  #   - appwrite
-  #   volumes:
-  #   - appwrite-chronograf:/var/lib/chronograf
-  #   ports:
-  #   - "8888:8888"
-  #   environment:
-  #   - INFLUXDB_URL=http://influxdb:8086
-  #   - KAPACITOR_URL=http://kapacitor:9092
-  #   - AUTH_DURATION=48h
-  #   - TOKEN_SECRET=duperduper5674829!jwt
-  #   - GH_CLIENT_ID=d86f7145a41eacfc52cc
-  #   - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
-  #   - GH_ORGS=appwrite
-
-  # webgrind:
-  #   image: 'jokkedk/webgrind:latest'
-  #   volumes:
-  #     - './debug:/tmp'
-  #   ports:
-  #     - '3001:80'
-
 networks:
   gateway:
   appwrite:
@@ -444,6 +361,4 @@ volumes:
   appwrite-uploads:
   appwrite-certificates:
   appwrite-functions:
-  appwrite-influxdb:
-  appwrite-chronograf:
   appwrite-config:

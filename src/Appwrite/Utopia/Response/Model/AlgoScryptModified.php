@@ -10,6 +10,12 @@ class AlgoScryptModified extends Model
     public function __construct()
     {
         $this
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Algo type.',
+                'default' => 'scryptMod',
+                'example' => 'scryptMod',
+            ])
             ->addRule('salt', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Salt used to compute hash.',

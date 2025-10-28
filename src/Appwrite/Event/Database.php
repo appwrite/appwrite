@@ -2,19 +2,29 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
+use Utopia\DSN\DSN;
+use Utopia\Queue\Publisher;
 
 class Database extends Event
 {
     protected string $type = '';
     protected ?Document $database = null;
-    protected ?Document $collection = null;
-    protected ?Document $document = null;
 
-    public function __construct()
+    // tables api
+    protected ?Document $row = null;
+    protected ?Document $table = null;
+
+    // collections api
+    protected ?Document $document = null;
+    protected ?Document $collection = null;
+
+
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
+        parent::__construct($publisher);
+
+        $this->setClass(Event::DATABASE_CLASS_NAME);
     }
 
     /**
@@ -49,6 +59,61 @@ class Database extends Event
     {
         $this->database = $database;
         return $this;
+    }
+
+    /**
+     * Returns set database for this event.
+     *
+     * @return null|Document
+     */
+    public function getDatabase(): ?Document
+    {
+        return $this->database;
+    }
+
+    /**
+     * Set the table for this database event.
+     *
+     * @param Document $table
+     * @return self
+     */
+    public function setTable(Document $table): self
+    {
+        $this->table = $table;
+
+        return $this;
+    }
+
+    /**
+     * Returns set table for this event.
+     *
+     * @return null|Document
+     */
+    public function getTable(): ?Document
+    {
+        return $this->table;
+    }
+
+    /**
+     * Set the row for this database event.
+     *
+     * @param Document $row
+     * @return self
+     */
+    public function setRow(Document $row): self
+    {
+        $this->row = $row;
+
+        return $this;
+    }
+
+    /**
+     * Returns set row for this database event.
+     * @return null|Document
+     */
+    public function getRow(): ?Document
+    {
+        return $this->row;
     }
 
     /**
@@ -96,22 +161,39 @@ class Database extends Event
         return $this->document;
     }
 
-    /**
-     * Executes the event and send it to the database worker.
-     *
-     * @return string|bool
-     * @throws \InvalidArgumentException
-     */
-    public function trigger(): string|bool
+    public function setProject(Document $project): self
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $database = $project->getAttribute('database');
+        if (!empty($database)) {
+            try {
+                $dsn = new DSN($database);
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN("mysql://$database");
+            }
+            $this->queue = $dsn->getHost();
+        }
+
+        return parent::setProject($project);
+    }
+
+    /**
+     * Prepare the payload for the event
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'type' => $this->type,
+            'table' => $this->table,
+            'row' => $this->row,
             'collection' => $this->collection,
             'document' => $this->document,
             'database' => $this->database,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 }

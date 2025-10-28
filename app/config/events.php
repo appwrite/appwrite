@@ -44,6 +44,28 @@ return [
                 '$description' => 'This event triggers when a verification token for a user is validated.'
             ],
         ],
+        'targets' => [
+            '$model' => Response::MODEL_TARGET,
+            '$resource' => true,
+            '$description' => 'This event triggers on any user\'s target event.',
+            'create' => [
+                '$description' => 'This event triggers when a user\'s target is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a user\'s target is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a user\'s target is deleted.',
+            ],
+        ],
+        'tokens' => [
+            '$model' => Response::MODEL_TOKEN,
+            '$resource' => true,
+            '$description' => 'This event triggers on any user\'s token event.',
+            'create' => [
+                '$description' => 'This event triggers when a user\'s token is created.',
+            ],
+        ],
         'create' => [
             '$description' => 'This event triggers when a user is created.'
         ],
@@ -73,6 +95,65 @@ return [
         '$model' => Response::MODEL_DATABASE,
         '$resource' => true,
         '$description' => 'This event triggers on any database event.',
+        'tables' => [
+            '$model' => Response::MODEL_TABLE,
+            '$resource' => true,
+            '$description' => 'This event triggers on any table event.',
+            'rows' => [
+                '$model' => Response::MODEL_ROW,
+                '$resource' => true,
+                '$description' => 'This event triggers on any rows event.',
+                'create' => [
+                    '$description' => 'This event triggers when a row is created.',
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when a row is updated.'
+                ],
+                'upsert' => [
+                    '$description' => 'This event triggers when a document is upserted.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a row is deleted.'
+                ],
+            ],
+            'indexes' => [
+                '$model' => Response::MODEL_COLUMN_INDEX,
+                '$resource' => true,
+                '$description' => 'This event triggers on any indexes event.',
+                'create' => [
+                    '$description' => 'This event triggers when an index is created.',
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when an index is updated.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when an index is deleted.'
+                ]
+            ],
+            'columns' => [
+                '$model' => Response::MODEL_COLUMN,
+                '$resource' => true,
+                '$description' => 'This event triggers on any columns event.',
+                'create' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when an column is deleted.'
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
+            ],
+            'create' => [
+                '$description' => 'This event triggers when a table is created.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a table is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a table is deleted.',
+            ],
+        ],
         'collections' => [
             '$model' => Response::MODEL_COLLECTION,
             '$resource' => true,
@@ -84,11 +165,14 @@ return [
                 'create' => [
                     '$description' => 'This event triggers when a document is created.',
                 ],
-                'delete' => [
-                    '$description' => 'This event triggers when a document is deleted.'
-                ],
                 'update' => [
                     '$description' => 'This event triggers when a document is updated.'
+                ],
+                'upsert' => [
+                    '$description' => 'This event triggers when a document is upserted.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a document is deleted.'
                 ],
             ],
             'indexes' => [
@@ -100,7 +184,10 @@ return [
                 ],
                 'delete' => [
                     '$description' => 'This event triggers when an index is deleted.'
-                ]
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
             ],
             'attributes' => [
                 '$model' => Response::MODEL_ATTRIBUTE,
@@ -109,6 +196,9 @@ return [
                 'create' => [
                     '$description' => 'This event triggers when an attribute is created.',
                 ],
+                'update' => [
+                    '$description' => 'This event triggers when a column is created.',
+                ],
                 'delete' => [
                     '$description' => 'This event triggers when an attribute is deleted.'
                 ]
@@ -116,22 +206,22 @@ return [
             'create' => [
                 '$description' => 'This event triggers when a collection is created.'
             ],
+            'update' => [
+                '$description' => 'This event triggers when a collection is updated.',
+            ],
             'delete' => [
                 '$description' => 'This event triggers when a collection is deleted.',
             ],
-            'update' => [
-                '$description' => 'This event triggers when a collection is updated.',
-            ]
         ],
         'create' => [
             '$description' => 'This event triggers when a database is created.'
         ],
+        'update' => [
+            '$description' => 'This event triggers when a database is updated.',
+        ],
         'delete' => [
             '$description' => 'This event triggers when a database is deleted.',
         ],
-        'update' => [
-            '$description' => 'This event triggers when a database is updated.',
-        ]
     ],
     'buckets' => [
         '$model' => Response::MODEL_BUCKET,
@@ -183,13 +273,44 @@ return [
             ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a bucket is created.'
+            '$description' => 'This event triggers when a team is created.'
         ],
         'delete' => [
-            '$description' => 'This event triggers when a bucket is deleted.',
+            '$description' => 'This event triggers when a team is deleted.',
         ],
         'update' => [
-            '$description' => 'This event triggers when a bucket is updated.',
+            '$description' => 'This event triggers when a team is updated.',
+            'prefs' => [
+                '$description' => 'This event triggers when a team\'s preferences are updated.',
+            ],
+        ]
+    ],
+    'sites' => [
+        '$model' => Response::MODEL_SITE,
+        '$resource' => true,
+        '$description' => 'This event triggers on any sites event.',
+        'deployments' => [
+            '$model' => Response::MODEL_DEPLOYMENT,
+            '$resource' => true,
+            '$description' => 'This event triggers on any deployments event.',
+            'create' => [
+                '$description' => 'This event triggers when a deployment is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a deployment is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a deployment is updated.'
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a site is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a site is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a site is updated.',
         ]
     ],
     'functions' => [
@@ -232,6 +353,70 @@ return [
         ],
         'update' => [
             '$description' => 'This event triggers when a function is updated.',
+        ]
+    ],
+    'messages' => [
+        '$model' => Response::MODEL_MESSAGE,
+        '$resource' => true,
+        '$description' => 'This event triggers on any messaging event.',
+        'create' => [
+            '$description' => 'This event triggers when a message is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a message is updated.',
+        ],
+    ],
+    'topics' => [
+        '$model' => Response::MODEL_TOPIC,
+        '$resource' => true,
+        '$description' => 'This event triggers on any topic event.',
+        'create' => [
+            '$description' => 'This event triggers when a topic is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a topic is updated.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a topic is deleted.'
+        ],
+        'subscribers' => [
+            '$model' => Response::MODEL_SUBSCRIBER,
+            '$resource' => true,
+            '$description' => 'This event triggers on any subscriber event.',
+            'create' => [
+                '$description' => 'This event triggers when a subscriber is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a subscriber is deleted.'
+            ],
+        ],
+    ],
+    'providers' => [
+        '$model' => Response::MODEL_PROVIDER,
+        '$resource' => true,
+        '$description' => 'This event triggers on any provider event.',
+        'create' => [
+            '$description' => 'This event triggers when a provider is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a provider is updated.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a provider is deleted.'
+        ],
+    ],
+    'rules' => [
+        '$model' => Response::MODEL_PROXY_RULE,
+        '$resource' => true,
+        '$description' => 'This event triggers on any proxy rule event.',
+        'create' => [
+            '$description' => 'This event triggers when a proxy rule is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a proxy rule is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a proxy rule is updated.',
         ]
     ]
 ];

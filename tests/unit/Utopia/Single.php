@@ -28,6 +28,11 @@ class Single extends Model
                 'type' => self::TYPE_STRING,
                 'default' => 'default',
                 'required' => true
+            ])
+            ->addRule('array', [
+                'type' => self::TYPE_STRING,
+                'required' => false,
+                'array' => true,
             ]);
     }
 

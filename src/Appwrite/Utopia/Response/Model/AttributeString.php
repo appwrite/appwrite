@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeString extends Attribute
 {
@@ -24,6 +23,13 @@ class AttributeString extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 'default',
+            ])
+            ->addRule('encrypt', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines whether this attribute is encrypted or not.',
+                'default' => false,
+                'required' => false,
+                'example' => false,
             ])
         ;
     }

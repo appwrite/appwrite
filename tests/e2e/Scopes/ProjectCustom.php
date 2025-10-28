@@ -3,7 +3,9 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
-use Utopia\Database\ID;
+use Utopia\Database\DateTime;
+use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 trait ProjectCustom
 {
@@ -42,17 +44,11 @@ trait ProjectCustom
             'x-appwrite-project' => 'console',
         ], [
             'projectId' => ID::unique(),
+            'region' => System::getEnv('_APP_REGION', 'default'),
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',
-            'logo' => '',
             'url' => 'https://appwrite.io',
-            'legalName' => '',
-            'legalCountry' => '',
-            'legalState' => '',
-            'legalCity' => '',
-            'legalAddress' => '',
-            'legalTaxId' => '',
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
@@ -74,25 +70,65 @@ trait ProjectCustom
                 'databases.write',
                 'collections.read',
                 'collections.write',
+                'tables.read',
+                'tables.write',
                 'documents.read',
                 'documents.write',
+                'rows.read',
+                'rows.write',
                 'files.read',
                 'files.write',
                 'buckets.read',
                 'buckets.write',
+                'sites.read',
+                'sites.write',
                 'functions.read',
                 'functions.write',
+                'sites.read',
+                'sites.write',
                 'execution.read',
                 'execution.write',
+                'log.read',
+                'log.write',
                 'locale.read',
                 'avatars.read',
                 'health.read',
+                'rules.read',
+                'rules.write',
+                'sessions.write',
+                'targets.read',
+                'targets.write',
+                'providers.read',
+                'providers.write',
+                'messages.read',
+                'messages.write',
+                'topics.write',
+                'topics.read',
+                'subscribers.write',
+                'subscribers.read',
+                'migrations.write',
+                'migrations.read',
+                'tokens.read',
+                'tokens.write',
             ],
         ]);
 
         $this->assertEquals(201, $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
+
+        $devKey = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/dev-keys', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'name' => 'Key Test',
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
+        ]);
+        $this->assertEquals(201, $devKey['headers']['status-code']);
+        $this->assertNotEmpty($devKey['body']);
+        $this->assertNotEmpty($devKey['body']['secret']);
 
         $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
             'origin' => 'http://localhost',
@@ -103,27 +139,42 @@ trait ProjectCustom
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',
-                'functions.*',
+                // 'functions.*', TODO @christyjacob4 : enable test once we allow functions.* events
                 'buckets.*',
                 'teams.*',
                 'users.*'
             ],
-            'url' => 'http://request-catcher:5000/webhook',
+            'url' => 'http://request-catcher-webhook:5000/',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => '',
         ]);
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']);
 
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['body']['$id'] . '/smtp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'enabled' => true,
+            'senderEmail' => 'mailer@appwrite.io',
+            'senderName' => 'Mailer',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => '',
+            'password' => '',
+        ]);
+
         $project = [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
+            'devKey' => $devKey['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
         ];
+
         if ($fresh) {
             return $project;
         }
@@ -152,5 +203,18 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']['secret']);
 
         return $key['body']['secret'];
+    }
+    public function updateProjectinvalidateSessionsProperty(bool $value)
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . self::$project['$id'] . '/auth/session-invalidation', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]), [
+            'enabled' => $value,
+        ]);
+
+        return $response['headers']['status-code'];
     }
 }

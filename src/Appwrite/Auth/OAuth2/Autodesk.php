@@ -88,7 +88,7 @@ class Autodesk extends OAuth2
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'code' => $code,
+                'code' => $refreshToken,
                 'redirect_uri' => $this->callback,
             ])
         );

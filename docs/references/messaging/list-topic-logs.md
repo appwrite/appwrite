@@ -1,0 +1,1 @@
+Get the topic activity logs listed by its unique ID.

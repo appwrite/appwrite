@@ -40,10 +40,11 @@ class Platform extends Model
                 'example' => 'My Web App',
             ])
             ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Platform type. Possible values are: web, flutter-ios, flutter-android, ios, android, and unity.',
+                'type' => self::TYPE_ENUM,
+                'description' => 'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.',
                 'default' => '',
-                'example' => 'My Web App',
+                'example' => 'web',
+                'enum' => ['web', 'flutter-web', 'flutter-ios', 'flutter-android', 'flutter-linux', 'flutter-macos', 'flutter-windows', 'apple-ios', 'apple-macos', 'apple-watchos', 'apple-tvos', 'android', 'unity', 'react-native-ios', 'react-native-android'],
             ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
@@ -60,7 +61,7 @@ class Platform extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Web app hostname. Empty string for other platforms.',
                 'default' => '',
-                'example' => true,
+                'example' => 'app.example.com',
             ])
             ->addRule('httpUser', [
                 'type' => self::TYPE_STRING,

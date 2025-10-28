@@ -7,8 +7,11 @@ class Executions extends Base
     public const ALLOWED_ATTRIBUTES = [
         'trigger',
         'status',
-        'statusCode',
-        'duration'
+        'responseStatusCode',
+        'duration',
+        'requestMethod',
+        'requestPath',
+        'deploymentId'
     ];
 
     /**

@@ -1,0 +1,1 @@
+Initialize an MFA challenge of the specified factor. The factor must be available on the account.

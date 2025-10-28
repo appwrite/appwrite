@@ -2,85 +2,112 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Auth\Auth;
+use Appwrite\SDK\Method;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
 
 class Request extends UtopiaRequest
 {
     /**
-     * @var Filter
+     * @var array<Filter>
      */
-    private static $filter = null;
+    private array $filters = [];
+    private static ?Route $route = null;
 
-    /**
-     * @var Route
-     */
-    private static $route = null;
-
-    /**
-     * Request constructor.
-     */
     public function __construct(SwooleRequest $request)
     {
         parent::__construct($request);
     }
 
     /**
-     * Get Params
-     *
-     * Get all params of current method
-     *
-     * @return array
+     * @inheritdoc
      */
     public function getParams(): array
     {
-        $requestParameters = [];
+        $parameters = parent::getParams();
 
-        switch ($this->getMethod()) {
-            case self::METHOD_GET:
-                $requestParameters = (!empty($this->swoole->get)) ? $this->swoole->get : [];
-                break;
-            case self::METHOD_POST:
-            case self::METHOD_PUT:
-            case self::METHOD_PATCH:
-            case self::METHOD_DELETE:
-                $requestParameters = $this->generateInput();
-                break;
-            default:
-                $requestParameters = (!empty($this->swoole->get)) ? $this->swoole->get : [];
+        if (!$this->hasFilters() || !self::hasRoute()) {
+            return $parameters;
         }
 
-        if (self::hasFilter() && self::hasRoute()) {
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . self::getRoute()->getLabel('sdk.method', 'unknown');
-            $requestParameters = self::getFilter()->parse($requestParameters, $endpointIdentifier);
+        $methods = self::getRoute()->getLabel('sdk', null);
+
+        if (empty($methods)) {
+            return $parameters;
         }
 
-        return $requestParameters;
+        if (!\is_array($methods)) {
+            $id = $methods->getNamespace() . '.' . $methods->getMethodName();
+            foreach ($this->getFilters() as $filter) {
+                $parameters = $filter->parse($parameters, $id);
+            }
+            return $parameters;
+        }
+
+        $matched = null;
+        foreach ($methods as $method) {
+            /** @var Method|null $method */
+            if ($method === null) {
+                continue;
+            }
+
+            // Find the method that matches the parameters passed
+            $methodParamNames = \array_map(fn ($param) => $param->getName(), $method->getParameters());
+            $invalidParams = \array_diff(\array_keys($parameters), $methodParamNames);
+
+            // No params defined, or all params are valid
+            if (empty($methodParamNames) || empty($invalidParams)) {
+                $matched = $method;
+                break;
+            }
+        }
+
+        $id = $matched !== null
+            ? $matched->getNamespace() . '.' . $matched->getMethodName()
+            : 'unknown.unknown';
+
+        // Apply filters
+        foreach ($this->getFilters() as $filter) {
+            $parameters = $filter->parse($parameters, $id);
+        }
+
+        return $parameters;
     }
 
-
     /**
-     * Function to set a response filter
+     * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param $filter the response filter to set
+     * @param Filter $filter the response filter to set
      *
      * @return void
      */
-    public static function setFilter(?Filter $filter)
+    public function addFilter(Filter $filter): void
     {
-        self::$filter = $filter;
+        $this->filters[] = $filter;
     }
 
     /**
      * Return the currently set filter
      *
-     * @return Filter
+     * @return array<Filter>
      */
-    public static function getFilter(): ?Filter
+    public function getFilters(): array
     {
-        return self::$filter;
+        return $this->filters;
+    }
+
+    /**
+     * Reset filters
+     *
+     * @return void
+     */
+    public function resetFilters(): void
+    {
+        $this->filters = [];
     }
 
     /**
@@ -88,27 +115,27 @@ class Request extends UtopiaRequest
      *
      * @return bool
      */
-    public static function hasFilter(): bool
+    public function hasFilters(): bool
     {
-        return self::$filter != null;
+        return !empty($this->filters);
     }
 
     /**
      * Function to set a request route
      *
-     * @param Route $route the request route to set
+     * @param Route|null $route the request route to set
      *
      * @return void
      */
-    public static function setRoute(?Route $route)
+    public static function setRoute(?Route $route): void
     {
         self::$route = $route;
     }
 
     /**
-     * Return the currently get route
+     * Return the current route
      *
-     * @return Route
+     * @return Route|null
      */
     public static function getRoute(): ?Route
     {
@@ -122,6 +149,88 @@ class Request extends UtopiaRequest
      */
     public static function hasRoute(): bool
     {
-        return self::$route != null;
+        return self::$route !== null;
+    }
+
+    /**
+     * Get headers
+     *
+     * Method for getting all HTTP header parameters, including cookies.
+     *
+     * @return array<string,mixed>
+     */
+    public function getHeaders(): array
+    {
+        try {
+            $headers = $this->generateHeaders();
+        } catch (\Throwable) {
+            $headers = [];
+        }
+
+        if (empty($this->swoole->cookie)) {
+            return $headers;
+        }
+
+        $cookieHeaders = [];
+        foreach ($this->swoole->cookie as $key => $value) {
+            $cookieHeaders[] = "{$key}={$value}";
+        }
+
+        if (!empty($cookieHeaders)) {
+            $headers['cookie'] = \implode('; ', $cookieHeaders);
+        }
+
+        return $headers;
+    }
+
+    /**
+     * Get header
+     *
+     * Method for querying HTTP header parameters. If $key is not found $default value will be returned.
+     *
+     * @param  string  $key
+     * @param  string  $default
+     * @return string
+     */
+    public function getHeader(string $key, string $default = ''): string
+    {
+        $headers = $this->getHeaders();
+        return $headers[$key] ?? $default;
+    }
+
+    /**
+    * Get User Agent
+    *
+    * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
+    *
+    * @param  string  $default
+    * @return string
+    */
+    public function getUserAgent(string $default = ''): string
+    {
+        $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
+        if (!empty($forwardedUserAgent)) {
+            $roles = Authorization::getRoles();
+            $isAppUser = Auth::isAppUser($roles);
+
+            if ($isAppUser) {
+                return $forwardedUserAgent;
+            }
+        }
+
+        return UtopiaRequest::getUserAgent($default);
+    }
+
+    /**
+     * Creates a unique stable cache identifier for this GET request.
+     * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
+     *
+     * @return string
+     */
+    public function cacheIdentifier(): string
+    {
+        $params = $this->getParams();
+        ksort($params);
+        return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }
 }

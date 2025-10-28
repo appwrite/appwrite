@@ -20,10 +20,9 @@ class Slack extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'identity.avatar',
-        'identity.basic',
-        'identity.email',
-        'identity.team'
+        'openid',
+        'email',
+        'profile'
     ];
 
     /**
@@ -35,14 +34,15 @@ class Slack extends OAuth2
     }
 
     /**
+     * @link https://api.slack.com/authentication/oauth-v2
+     *
      * @return string
      */
     public function getLoginURL(): string
     {
-        // https://api.slack.com/docs/oauth#step_1_-_sending_users_to_authorize_and_or_install
-        return 'https://slack.com/oauth/authorize?' . \http_build_query([
+        return 'https://slack.com/oauth/v2/authorize?' . \http_build_query([
             'client_id' => $this->appID,
-            'scope' => \implode(' ', $this->getScopes()),
+            'user_scope' => \implode(' ', $this->getScopes()),
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state)
         ]);
@@ -56,16 +56,15 @@ class Slack extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            // https://api.slack.com/docs/oauth#step_3_-_exchanging_a_verification_code_for_an_access_token
             $this->tokens = \json_decode($this->request(
                 'GET',
-                'https://slack.com/api/oauth.access?' . \http_build_query([
+                'https://slack.com/api/oauth.v2.access?' . \http_build_query([
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     'code' => $code,
                     'redirect_uri' => $this->callback
                 ])
-            ), true);
+            ), true)['authed_user'] ?? [];
         }
 
         return $this->tokens;
@@ -80,13 +79,13 @@ class Slack extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'GET',
-            'https://slack.com/api/oauth.access?' . \http_build_query([
+            'https://slack.com/api/oauth.v2.access?' . \http_build_query([
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'refresh_token' => $refreshToken,
                 'grant_type' => 'refresh_token'
             ])
-        ), true);
+        ), true)['authed_user'] ?? [];
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
@@ -161,9 +160,9 @@ class Slack extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                'https://slack.com/api/users.identity?token=' . \urlencode($accessToken)
+                'https://slack.com/api/users.identity',
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
-
             $this->user = \json_decode($user, true);
         }
 

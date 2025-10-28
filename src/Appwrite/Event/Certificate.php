@@ -2,17 +2,22 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Publisher;
 
 class Certificate extends Event
 {
     protected bool $skipRenewCheck = false;
     protected ?Document $domain = null;
+    protected ?string $validationDomain = null;
 
-    public function __construct()
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME);
+        parent::__construct($publisher);
+
+        $this
+            ->setQueue(Event::CERTIFICATES_QUEUE_NAME)
+            ->setClass(Event::CERTIFICATES_CLASS_NAME);
     }
 
     /**
@@ -51,6 +56,30 @@ class Certificate extends Event
         return $this;
     }
 
+
+    /**
+     * Set override for main domain used for validation
+     *
+     * @param string|null $validationDomain
+     * @return self
+     */
+    public function setValidationDomain(?string $validationDomain): self
+    {
+        $this->validationDomain = $validationDomain;
+
+        return $this;
+    }
+
+    /**
+     * Get validation domain
+     *
+     * @return string|null
+     */
+    public function getValidationDomain(): ?string
+    {
+        return $this->validationDomain;
+    }
+
     /**
      * Return if the certificate needs be validated.
      *
@@ -61,18 +90,19 @@ class Certificate extends Event
         return $this->skipRenewCheck;
     }
 
+
     /**
-     * Executes the event and sends it to the certificates worker.
+     * Prepare the payload for the event
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @return array
      */
-    public function trigger(): string|bool
+    protected function preparePayload(): array
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        return [
             'project' => $this->project,
             'domain' => $this->domain,
-            'skipRenewCheck' => $this->skipRenewCheck
-        ]);
+            'skipRenewCheck' => $this->skipRenewCheck,
+            'validationDomain' => $this->validationDomain
+        ];
     }
 }

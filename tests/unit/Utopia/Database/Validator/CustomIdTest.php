@@ -7,10 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class CustomIdTest extends TestCase
 {
-    /**
-     * @var Key
-     */
-    protected $object = null;
+    protected ?CustomId $object = null;
 
     public function setUp(): void
     {

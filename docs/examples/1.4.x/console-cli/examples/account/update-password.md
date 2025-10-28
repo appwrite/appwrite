@@ -1,0 +1,3 @@
+appwrite account updatePassword \
+        --password '' \
+

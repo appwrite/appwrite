@@ -2,12 +2,11 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\Queries\Base;
-
 class Projects extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'name'
+        'name',
+        'teamId'
     ];
 
     /**

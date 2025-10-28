@@ -4,24 +4,17 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
-use Exception;
-use PDO;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\System\System;
 
 class V15 extends Migration
 {
-    /**
-     * @var \PDO $pdo
-     */
-    private $pdo;
-
     /**
      * @var array<string>
      */
@@ -39,7 +32,7 @@ class V15 extends Migration
             ['email', 'anonymous'],
             \array_map(
                 fn ($value) => "oauth-" . $value,
-                \array_keys(Config::getParam('providers', []))
+                \array_keys(Config::getParam('oAuthProviders', []))
             )
         );
 
@@ -102,7 +95,7 @@ class V15 extends Migration
         $this->migrateStatsMetric('storage.files.delete', 'files.$all.requests.delete');
 
         foreach ($this->documentsIterator('buckets') as $bucket) {
-            $bucketTable = "bucket_{$bucket->getInternalId()}";
+            $bucketTable = "bucket_{$bucket->getSequence()}";
 
             $this->createPermissionsColumn($bucketTable);
             $this->migrateDateTimeAttribute($bucketTable, '_createdAt');
@@ -121,7 +114,7 @@ class V15 extends Migration
                 $bucket->setAttribute('compression', 'none');
             }
 
-            $this->projectDB->updateDocument('buckets', $bucket->getId(), $bucket);
+            $this->dbForProject->updateDocument('buckets', $bucket->getId(), $bucket);
 
             /**
              * Migrating stats for every Bucket.
@@ -141,13 +134,13 @@ class V15 extends Migration
                     table: $bucketTable,
                     addCreatePermission: false
                 );
-                $this->projectDB->updateDocument($bucketTable, $file->getId(), $file);
+                $this->dbForProject->updateDocument($bucketTable, $file->getId(), $file);
             }
             $this->removeWritePermissions($bucketTable);
         }
 
         try {
-            $this->projectDB->deleteAttribute('buckets', 'permission');
+            $this->dbForProject->deleteAttribute('buckets', 'permission');
         } catch (\Throwable $th) {
             Console::warning("'permissions' from buckets: {$th->getMessage()}");
         }
@@ -185,7 +178,7 @@ class V15 extends Migration
          * Migrate every Database.
          */
         foreach ($this->documentsIterator('databases') as $database) {
-            $databaseTable = "database_{$database->getInternalId()}";
+            $databaseTable = "database_{$database->getSequence()}";
             $this->createPermissionsColumn($databaseTable);
             $this->migrateDateTimeAttribute($databaseTable, '_createdAt');
             $this->migrateDateTimeAttribute($databaseTable, '_updatedAt');
@@ -195,10 +188,10 @@ class V15 extends Migration
                 addCreatePermission: false
             );
 
-            $this->projectDB->updateDocument('databases', $database->getId(), $database);
+            $this->dbForProject->updateDocument('databases', $database->getId(), $database);
 
             try {
-                $this->createAttributeFromCollection($this->projectDB, $databaseTable, 'documentSecurity', 'collections');
+                $this->createAttributeFromCollection($this->dbForProject, $databaseTable, 'documentSecurity', 'collections');
             } catch (\Throwable $th) {
                 Console::warning("'documentSecurity' from {$databaseTable}: {$th->getMessage()}");
             }
@@ -223,7 +216,7 @@ class V15 extends Migration
              */
             Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
             foreach ($this->documentsIterator($databaseTable) as $collection) {
-                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
+                $collectionTable = "{$databaseTable}_collection_{$collection->getSequence()}";
                 $this->createPermissionsColumn($collectionTable);
                 $this->migrateDateTimeAttribute($collectionTable, '_createdAt');
                 $this->migrateDateTimeAttribute($collectionTable, '_updatedAt');
@@ -238,7 +231,7 @@ class V15 extends Migration
                     $collection->setAttribute('documentSecurity', $collection->getAttribute('permissions') === 'document');
                 }
 
-                $this->projectDB->updateDocument($databaseTable, $collection->getId(), $collection);
+                $this->dbForProject->updateDocument($databaseTable, $collection->getId(), $collection);
 
                 /**
                  * Migrating stats for single Collections.
@@ -277,14 +270,14 @@ class V15 extends Migration
                         addCreatePermission: false
                     );
 
-                    $this->projectDB->updateDocument($collectionTable, $document->getId(), $document);
+                    $this->dbForProject->updateDocument($collectionTable, $document->getId(), $document);
                 }
                 $this->removeWritePermissions($collectionTable);
             }
             $this->removeWritePermissions($databaseTable);
 
             try {
-                $this->projectDB->deleteAttribute("database_{$database->getInternalId()}", 'permission');
+                $this->dbForProject->deleteAttribute("database_{$database->getSequence()}", 'permission');
             } catch (\Throwable $th) {
                 Console::warning("'permission' from {$databaseTable}: {$th->getMessage()}");
             }
@@ -300,7 +293,7 @@ class V15 extends Migration
     protected function removeWritePermissions(string $table): void
     {
         try {
-            $this->pdo->prepare("DELETE FROM `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _type = 'write'")->execute();
+            $this->pdo->prepare("DELETE FROM `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}_perms` WHERE _type = 'write'")->execute();
         } catch (\Throwable $th) {
             Console::warning("Remove 'write' permissions from {$table}: {$th->getMessage()}");
         }
@@ -316,7 +309,7 @@ class V15 extends Migration
      */
     protected function getSQLColumnTypes(string $table): array
     {
-        $query = $this->pdo->prepare("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '_{$this->project->getInternalId()}_{$table}' AND table_schema = '{$this->projectDB->getDefaultDatabase()}'");
+        $query = $this->pdo->prepare("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '_{$this->project->getSequence()}_{$table}' AND table_schema = '{$this->dbForProject->getDatabase()}'");
         $query->execute();
 
         return array_reduce($query->fetchAll(), function (array $carry, array $item) {
@@ -338,8 +331,8 @@ class V15 extends Migration
 
         if ($columns[$attribute] === 'int') {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} VARCHAR(64)")->execute();
-                $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` SET {$attribute} = IF({$attribute} = 0, NULL, FROM_UNIXTIME({$attribute}))")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` MODIFY {$attribute} VARCHAR(64)")->execute();
+                $this->pdo->prepare("UPDATE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` SET {$attribute} = IF({$attribute} = 0, NULL, FROM_UNIXTIME({$attribute}))")->execute();
                 $columns[$attribute] = 'varchar';
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
@@ -348,7 +341,7 @@ class V15 extends Migration
 
         if ($columns[$attribute] === 'varchar') {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} DATETIME(3)")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` MODIFY {$attribute} DATETIME(3)")->execute();
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
             }
@@ -362,11 +355,11 @@ class V15 extends Migration
                 /**
                  * Add datetime filter.
                  */
-                $this->projectDB->updateAttributeFilters($table, ID::custom($attribute), ['datetime']);
+                $this->dbForProject->updateAttributeFilters($table, ID::custom($attribute), ['datetime']);
                 /**
                  * Change data type to DateTime.
                  */
-                $this->projectDB->updateAttribute(
+                $this->dbForProject->updateAttribute(
                     collection: $table,
                     id: $attribute,
                     type: Database::VAR_DATETIME,
@@ -377,7 +370,7 @@ class V15 extends Migration
             }
         }
 
-        $this->projectDB->deleteCachedCollection($table);
+        $this->dbForProject->purgeCachedCollection($table);
     }
 
     /**
@@ -394,7 +387,7 @@ class V15 extends Migration
 
         if (!array_key_exists('_permissions', $columns)) {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` ADD `_permissions` MEDIUMTEXT DEFAULT NULL")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}` ADD `_permissions` MEDIUMTEXT DEFAULT NULL")->execute();
             } catch (\Throwable $th) {
                 Console::warning("Add '_permissions' column to '{$table}': {$th->getMessage()}");
             }
@@ -415,7 +408,7 @@ class V15 extends Migration
     {
         $table ??= $document->getCollection();
 
-        $query = $this->pdo->prepare("SELECT * FROM `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _document = '{$document->getId()}'");
+        $query = $this->pdo->prepare("SELECT * FROM `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_{$table}_perms` WHERE _document = '{$document->getId()}'");
         $query->execute();
         $results = $query->fetchAll();
         $permissions = [];
@@ -473,7 +466,7 @@ class V15 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            $this->dbForProject->setNamespace("_{$this->project->getSequence()}");
 
             switch ($id) {
                 case '_metadata':
@@ -484,7 +477,7 @@ class V15 extends Migration
                     $this->createCollection('cache');
                     Console::log('Created new Collection "variables" collection');
                     $this->createCollection('variables');
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
 
                 case 'abuse':
@@ -516,7 +509,7 @@ class V15 extends Migration
                         /**
                          * Create 'compression' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'compression');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'compression');
                     } catch (\Throwable $th) {
                         Console::warning("'compression' from {$id}: {$th->getMessage()}");
                     }
@@ -525,7 +518,7 @@ class V15 extends Migration
                         /**
                          * Create 'fileSecurity' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'fileSecurity');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'fileSecurity');
                     } catch (\Throwable $th) {
                         Console::warning("'fileSecurity' from {$id}: {$th->getMessage()}");
                     }
@@ -534,7 +527,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_enabled' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_enabled');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_enabled');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_enabled' from {$id}: {$th->getMessage()}");
                     }
@@ -543,7 +536,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_name' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_name');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_name');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_name' from {$id}: {$th->getMessage()}");
                     }
@@ -552,7 +545,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_fileSecurity' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_fileSecurity');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_fileSecurity');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_fileSecurity' from {$id}: {$th->getMessage()}");
                     }
@@ -561,7 +554,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_maximumFileSize' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_maximumFileSize');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_maximumFileSize');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_maximumFileSize' from {$id}: {$th->getMessage()}");
                     }
@@ -570,7 +563,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_encryption' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_encryption');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_encryption');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_encryption' from {$id}: {$th->getMessage()}");
                     }
@@ -579,7 +572,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_antivirus' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_antivirus');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_antivirus');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_antivirus' from {$id}: {$th->getMessage()}");
                     }
@@ -618,7 +611,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_entrypoint' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_entrypoint');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_entrypoint');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_entrypoint' from {$id}: {$th->getMessage()}");
                     }
@@ -627,7 +620,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_size' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_size');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_size');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_size' from {$id}: {$th->getMessage()}");
                     }
@@ -636,7 +629,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_buildId' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_buildId');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_buildId');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_buildId' from {$id}: {$th->getMessage()}");
                     }
@@ -645,7 +638,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_activate' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_activate');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_activate');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_activate' from {$id}: {$th->getMessage()}");
                     }
@@ -669,7 +662,7 @@ class V15 extends Migration
                         /**
                          * Create 'stdout' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'stdout');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'stdout');
                     } catch (\Throwable $th) {
                         Console::warning("'stdout' from {$id}: {$th->getMessage()}");
                     }
@@ -678,7 +671,7 @@ class V15 extends Migration
                         /**
                          * Rename 'time' to 'duration'
                          */
-                        $this->projectDB->renameAttribute($id, 'time', 'duration');
+                        $this->dbForProject->renameAttribute($id, 'time', 'duration');
                     } catch (\Throwable $th) {
                         Console::warning("'duration' from {$id}: {$th->getMessage()}");
                     }
@@ -687,7 +680,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_trigger' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_trigger');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_trigger');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_trigger' from {$id}: {$th->getMessage()}");
                     }
@@ -696,7 +689,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_status' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_status');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_status');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_status' from {$id}: {$th->getMessage()}");
                     }
@@ -705,7 +698,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_statusCode' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_statusCode');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_statusCode');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_statusCode' from {$id}: {$th->getMessage()}");
                     }
@@ -714,7 +707,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_duration' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_duration');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_duration');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_duration' from {$id}: {$th->getMessage()}");
                     }
@@ -753,21 +746,21 @@ class V15 extends Migration
                                     Permission::delete(Role::any()),
                                 ],
                                 'functionId' => $function->getId(),
-                                'functionInternalId' => $function->getInternalId(),
+                                'functionInternalId' => $function->getSequence(),
                                 'key' => (string) $key,
                                 'value' => (string) $value,
                                 'search' => implode(' ', [$variableId, $key, $function->getId()])
                             ]);
-                            $this->projectDB->createDocument('variables', $variable);
+                            $this->dbForProject->createDocument('variables', $variable);
                         }
-                        $this->projectDB->deleteAttribute('functions', 'vars');
-                        $this->createAttributeFromCollection($this->projectDB, 'functions', 'vars');
+                        $this->dbForProject->deleteAttribute('functions', 'vars');
+                        $this->createAttributeFromCollection($this->dbForProject, 'functions', 'vars');
                     }
                     try {
                         /**
                          * Create 'scheduleUpdatedAt' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleUpdatedAt');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'scheduleUpdatedAt');
                     } catch (\Throwable $th) {
                         Console::warning("'scheduleUpdatedAt' from {$id}: {$th->getMessage()}");
                     }
@@ -775,8 +768,8 @@ class V15 extends Migration
                         /**
                          * Create 'enabled' attribute
                          */
-                        @$this->projectDB->deleteAttribute($id, 'status');
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
+                        @$this->dbForProject->deleteAttribute($id, 'status');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'enabled');
                     } catch (\Throwable $th) {
                         Console::warning("'enabled' from {$id}: {$th->getMessage()}");
                     }
@@ -784,7 +777,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_name' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_name');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_name');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_name' from {$id}: {$th->getMessage()}");
                     }
@@ -793,7 +786,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_enabled' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_enabled');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_enabled');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_enabled' from {$id}: {$th->getMessage()}");
                     }
@@ -802,7 +795,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_runtime' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_runtime');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_runtime');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_runtime' from {$id}: {$th->getMessage()}");
                     }
@@ -811,7 +804,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_deployment' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_deployment');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_deployment');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_deployment' from {$id}: {$th->getMessage()}");
                     }
@@ -820,7 +813,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_schedule' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_schedule');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_schedule');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_schedule' from {$id}: {$th->getMessage()}");
                     }
@@ -829,7 +822,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_scheduleNext' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_scheduleNext');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_scheduleNext');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_scheduleNext' from {$id}: {$th->getMessage()}");
                     }
@@ -838,7 +831,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_schedulePrevious' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_schedulePrevious');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_schedulePrevious');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_schedulePrevious' from {$id}: {$th->getMessage()}");
                     }
@@ -847,7 +840,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_timeout' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_timeout');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_timeout');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_timeout' from {$id}: {$th->getMessage()}");
                     }
@@ -870,7 +863,7 @@ class V15 extends Migration
                         /**
                          * Update 'expire' default value
                          */
-                        $this->projectDB->updateAttributeDefault('keys', 'expire', null);
+                        $this->dbForProject->updateAttributeDefault('keys', 'expire', null);
                     } catch (\Throwable $th) {
                         Console::warning("'expire' from {$id}: {$th->getMessage()}");
                     }
@@ -878,7 +871,7 @@ class V15 extends Migration
                         /**
                          * Create 'accessedAt' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'accessedAt');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'accessedAt');
                     } catch (\Throwable $th) {
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
@@ -887,7 +880,7 @@ class V15 extends Migration
                         /**
                          * Create 'sdks' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'sdks');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'sdks');
                     } catch (\Throwable $th) {
                         Console::warning("'sdks' from {$id}: {$th->getMessage()}");
                     }
@@ -896,7 +889,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_accessedAt' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_accessedAt');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_accessedAt' from {$id}: {$th->getMessage()}");
                     }
@@ -914,7 +907,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_userId' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_userId');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_userId');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_userId' from {$id}: {$th->getMessage()}");
                     }
@@ -923,7 +916,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_teamId' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_teamId');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_teamId');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_teamId' from {$id}: {$th->getMessage()}");
                     }
@@ -932,7 +925,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_invited' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_invited');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_invited');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_invited' from {$id}: {$th->getMessage()}");
                     }
@@ -941,7 +934,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_joined' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_joined');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_joined');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_joined' from {$id}: {$th->getMessage()}");
                     }
@@ -950,7 +943,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_confirm' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_confirm');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_confirm');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_confirm' from {$id}: {$th->getMessage()}");
                     }
@@ -973,7 +966,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_name' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_name');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_name');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_name' from {$id}: {$th->getMessage()}");
                     }
@@ -1007,8 +1000,8 @@ class V15 extends Migration
                         /**
                          * Re-Create '_key_metric' index
                          */
-                        @$this->projectDB->deleteIndex($id, '_key_metric');
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_period_time');
+                        @$this->dbForProject->deleteIndex($id, '_key_metric');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_period_time');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_period_time' from {$id}: {$th->getMessage()}");
                     }
@@ -1017,8 +1010,8 @@ class V15 extends Migration
                         /**
                          * Re-Create '_key_metric_period' index
                          */
-                        @$this->projectDB->deleteIndex($id, '_key_metric_period');
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_metric_period_time');
+                        @$this->dbForProject->deleteIndex($id, '_key_metric_period');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_metric_period_time');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
                     }
@@ -1034,7 +1027,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_name' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_name');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_name');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_name' from {$id}: {$th->getMessage()}");
                     }
@@ -1043,7 +1036,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_total' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_total');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_total');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_total' from {$id}: {$th->getMessage()}");
                     }
@@ -1069,7 +1062,7 @@ class V15 extends Migration
                         /**
                          * Create 'hash' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'hash');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'hash');
                     } catch (\Throwable $th) {
                         Console::warning("'hash' from {$id}: {$th->getMessage()}");
                     }
@@ -1078,7 +1071,7 @@ class V15 extends Migration
                         /**
                          * Create 'hashOptions' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'hashOptions');
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'hashOptions');
                     } catch (\Throwable $th) {
                         Console::warning("'hashOptions' from {$id}: {$th->getMessage()}");
                     }
@@ -1131,14 +1124,14 @@ class V15 extends Migration
                          */
                         $this->populatePermissionsAttribute($user, addCreatePermission: false);
 
-                        $this->projectDB->updateDocument('users', $user->getId(), $user);
+                        $this->dbForProject->updateDocument('users', $user->getId(), $user);
                     }
 
                     try {
                         /**
                          * Add datetime filter to password.
                          */
-                        $this->projectDB->updateAttributeFilters($id, 'password', ['encrypt']);
+                        $this->dbForProject->updateAttributeFilters($id, 'password', ['encrypt']);
                     } catch (\Throwable $th) {
                         Console::warning("Add 'encrypt' filter to 'password' from {$id}: {$th->getMessage()}");
                     }
@@ -1147,7 +1140,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_name' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_name');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_name');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_name' from {$id}: {$th->getMessage()}");
                     }
@@ -1156,7 +1149,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_status' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_status');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_status');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_status' from {$id}: {$th->getMessage()}");
                     }
@@ -1165,7 +1158,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_passwordUpdate' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_passwordUpdate');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_passwordUpdate');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_passwordUpdate' from {$id}: {$th->getMessage()}");
                     }
@@ -1174,7 +1167,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_registration' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_registration');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_registration');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_registration' from {$id}: {$th->getMessage()}");
                     }
@@ -1183,7 +1176,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_emailVerification' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_emailVerification');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_emailVerification');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_emailVerification' from {$id}: {$th->getMessage()}");
                     }
@@ -1192,7 +1185,7 @@ class V15 extends Migration
                         /**
                          * Create '_key_phoneVerification' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_phoneVerification');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_phoneVerification');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_phoneVerification' from {$id}: {$th->getMessage()}");
                     }
@@ -1241,7 +1234,7 @@ class V15 extends Migration
                  * skipping migration for 'cache' and 'variables'.
                  * 'users' already migrated.
                  */
-                return null;
+                return;
 
             case '_metadata':
                 /**
@@ -1477,9 +1470,9 @@ class V15 extends Migration
             $from = $this->pdo->quote($from);
             $to = $this->pdo->quote($to);
 
-            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
+            $this->pdo->prepare("UPDATE `{$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
         } catch (\Throwable $th) {
-            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
+            Console::warning("Migrating steps from {$this->dbForProject->getDatabase()}`.`_{$this->project->getSequence()}_stats:" . $th->getMessage());
         }
     }
 
@@ -1491,7 +1484,7 @@ class V15 extends Migration
      */
     protected function encryptFilter(string $value): string
     {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 

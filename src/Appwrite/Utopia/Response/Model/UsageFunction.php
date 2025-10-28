@@ -16,60 +16,153 @@ class UsageFunction extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('executionsTotal', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for number of function executions.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true
+            ->addRule('deploymentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of function deployments.',
+                'default' => 0,
+                'example' => 0,
             ])
-            ->addRule('executionsFailure', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function execution failures.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true
-            ])
-            ->addRule('executionsSuccess', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function execution successes.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true
-            ])
-            ->addRule('executionsTime', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function execution duration.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true
+            ->addRule('deploymentsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of function deployments storage.',
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('buildsTotal', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for number of function builds.',
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of function builds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsSuccessTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of successful function builds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsFailedTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of failed function builds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'total aggregated sum of function builds storage.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsTimeTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of function builds compute time.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsTimeAverage', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Average builds compute time.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('buildsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of function builds mbSeconds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('executionsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total  aggregated number of function executions.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('executionsTimeTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of function  executions compute time.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('executionsMbSecondsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of function executions mbSeconds.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('deployments', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function deployments per period.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
-            ->addRule('buildsFailure', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function build failures.',
+            ->addRule('deploymentsStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of  function deployments storage per period.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
-            ->addRule('buildsSuccess', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function build successes.',
+            ->addRule('builds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function builds per period.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated sum of function builds storage per period.',
+                'default' => [],
+                'example' => [],
                 'array' => true
             ])
             ->addRule('buildsTime', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function build duration.',
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated sum of function builds compute time per period.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsMbSeconds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function builds mbSeconds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executions', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function executions per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executionsTime', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function executions compute time per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executionsMbSeconds', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of function mbSeconds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsSuccess', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of successful builds per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buildsFailed', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of failed builds per period.',
+                'default' => [],
+                'example' => [],
                 'array' => true
             ])
         ;

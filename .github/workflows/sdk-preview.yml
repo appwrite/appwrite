@@ -1,0 +1,54 @@
+name: "SDK Preview"
+
+on:
+  pull_request:
+    paths:
+      - 'app/config/specs/*-latest-console.json'
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        description: "Platform to build"
+        options:
+          - client
+          - server
+
+jobs:
+  setup:
+    name: Setup & Build SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set SDK type
+        id: set-sdk
+        run: |
+          PLATFORM="${{ github.event.inputs.platform }}"
+          if [ -z "$PLATFORM" ]; then
+            PLATFORM="console"
+          fi
+          if [ "$PLATFORM" = "server" ]; then
+            echo "sdk_type=nodejs" >> $GITHUB_OUTPUT
+          else
+            echo "sdk_type=web" >> $GITHUB_OUTPUT
+          fi
+          echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
+        
+      - name: Load and Start Appwrite
+        run: |
+          docker compose build
+          docker compose up -d
+          docker compose exec appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
+          sudo chown -R $USER:$USER ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
+          
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build and Publish SDK
+        working-directory: ./app/sdks/console-web
+        run: |
+            npm install
+            npm run build
+            npx pkg-pr-new publish --comment=update

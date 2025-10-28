@@ -3,8 +3,9 @@
 namespace Appwrite\Event;
 
 use InvalidArgumentException;
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 
 class Event
 {
@@ -23,6 +24,12 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
+    public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
+    public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
+
+    public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
+    public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
@@ -35,24 +42,48 @@ class Event
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
+    public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
+    public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
     protected array $params = [];
+    protected array $sensitive = [];
     protected array $payload = [];
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected ?string $userId = null;
+    protected bool $paused = false;
+
+    /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
+    protected bool $critical = true;
 
     /**
-     * @param string $queue
-     * @param string $class
+     * @param Publisher $publisher
      * @return void
      */
-    public function __construct(string $queue, string $class)
+    public function __construct(protected Publisher $publisher)
     {
-        $this->queue = $queue;
-        $this->class = $class;
+    }
+
+    /**
+     * Set paused state for this event.
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
+    }
+
+    /**
+     * Get paused state for this event.
+     */
+    public function getPaused(): bool
+    {
+        return $this->paused;
     }
 
     /**
@@ -109,16 +140,15 @@ class Event
     public function setProject(Document $project): self
     {
         $this->project = $project;
-
         return $this;
     }
 
     /**
      * Get project for this event.
      *
-     * @return Document
+     * @return ?Document
      */
-    public function getProject(): Document
+    public function getProject(): ?Document
     {
         return $this->project;
     }
@@ -137,24 +167,49 @@ class Event
     }
 
     /**
-     * Get project for this event.
+     * Set user ID for this event.
      *
-     * @return Document
+     * @return self
      */
-    public function getUser(): Document
+    public function setUserId(string $userId): self
+    {
+        $this->userId = $userId;
+
+        return $this;
+    }
+
+    /**
+     * Get user responsible for triggering this event.
+     *
+     * @return ?Document
+     */
+    public function getUser(): ?Document
     {
         return $this->user;
+    }
+
+    /**
+     * Get user responsible for triggering this event.
+     */
+    public function getUserId(): ?string
+    {
+        return $this->userId;
     }
 
     /**
      * Set payload for this event.
      *
      * @param array $payload
+     * @param array $sensitive
      * @return self
      */
-    public function setPayload(array $payload): self
+    public function setPayload(array $payload, array $sensitive = []): self
     {
         $this->payload = $payload;
+
+        foreach ($sensitive as $key) {
+            $this->sensitive[$key] = true;
+        }
 
         return $this;
     }
@@ -253,6 +308,27 @@ class Event
     }
 
     /**
+     * Get trimmed values for sensitive/large payload fields.
+     * Override this method in child classes to add more fields to trim.
+     *
+     * @return array
+     */
+    protected function trimPayload(): array
+    {
+        $trimmed = [];
+
+        if ($this->project) {
+            $trimmed['project'] = new Document([
+                '$id' => $this->project->getId(),
+                '$sequence' => $this->project->getSequence(),
+                'database' => $this->project->getAttribute('database')
+            ]);
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * Execute Event.
      *
      * @return string|bool
@@ -260,13 +336,42 @@ class Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+
+        if ($this->paused) {
+            return false;
+        }
+
+        /** The getter is required since events like Databases need to override the queue name depending on the project */
+        $queue = new Queue($this->getQueue());
+
+        // Merge the base payload with any trimmed values
+        $payload = array_merge($this->preparePayload(), $this->trimPayload());
+
+        try {
+            return $this->publisher->enqueue($queue, $payload);
+        } catch (\Throwable $th) {
+            if ($this->critical) {
+                throw $th;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Prepare payload for queue. Can be overridden by child classes to customize payload.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
+            'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
-        ]);
+        ];
     }
 
     /**
@@ -277,6 +382,9 @@ class Event
     public function reset(): self
     {
         $this->params = [];
+        $this->sensitive = [];
+        $this->event = '';
+        $this->payload = [];
 
         return $this;
     }
@@ -336,8 +444,6 @@ class Event
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
-
-
 
         return [
             'type' => $type,
@@ -439,9 +545,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -449,7 +555,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }
@@ -465,6 +571,84 @@ class Event
         /**
          * Force a non-assoc array.
          */
-        return \array_values($events);
+        $eventValues = \array_values($events);
+
+        /**
+         * Return a combined list of table, collection events.
+         */
+        return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
+    }
+
+    /**
+     * Generate a function event from a base event
+     *
+     * @param Event $event
+     *
+     * @return self
+     *
+     */
+    public function from(Event $event): self
+    {
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->sensitive = $event->sensitive;
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        $this->context = $event->context;
+        return $this;
+    }
+
+    /**
+     * Adds `table` events for `collection` events.
+     *
+     * Example:
+     *
+     * `databases.*.collections.*.documents.*.update` →\
+     * `[databases.*.collections.*.documents.*.update, databases.*.tables.*.rows.*.update]`
+     */
+    private static function mirrorCollectionEvents(string $pattern, string $firstEvent, array $events): array
+    {
+        $tableEventMap = [
+            'documents'    => 'rows',
+            'collections'  => 'tables',
+            'attributes'   => 'columns',
+        ];
+
+        if (
+            str_contains($pattern, 'databases.') &&
+            str_contains($firstEvent, 'collections')
+        ) {
+            $pairedEvents = [];
+
+            foreach ($events as $event) {
+                $pairedEvents[] = $event;
+
+                if (str_contains($event, 'collections')) {
+                    $tableSideEvent = str_replace(
+                        array_keys($tableEventMap),
+                        array_values($tableEventMap),
+                        $event
+                    );
+                    $pairedEvents[] = $tableSideEvent;
+                }
+            }
+
+            $events = $pairedEvents;
+        }
+
+        return $events;
+    }
+
+    /**
+     * Returns the size of the queue.
+     *
+     * @param bool $failed Whether to include failed events in the count.
+     * @return int The size of the queue.
+     */
+    public function getSize(bool $failed = false): int
+    {
+        $queue = new Queue($this->getQueue());
+        return $this->publisher->getQueueSize($queue, $failed);
     }
 }

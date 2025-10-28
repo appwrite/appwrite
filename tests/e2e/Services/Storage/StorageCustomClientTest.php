@@ -2,21 +2,15 @@
 
 namespace Tests\E2E\Services\Storage;
 
-use Appwrite\Auth\Auth;
 use CURLFile;
-use Exception;
-use PharIo\Manifest\Author;
-use SebastianBergmann\RecursionContext\InvalidArgumentException;
-use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\DateTime;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class StorageCustomClientTest extends Scope
 {
@@ -25,8 +19,107 @@ class StorageCustomClientTest extends Scope
     use SideClient;
     use StoragePermissionsScope;
 
+    public function testCachedFilePreview(): void
+    {
+        /**
+        Create a bucket with File Level Security with no permissions.
+        Add a file with no permissions.
+        Login as UserA from SDK
+        Call File Preview from SDK all good userA can't see preview.
+        Add read permission to UserA, all good userA can now see preview.
+        Remove read permission for UserA.
+        Call File Preview from SDK and now userA can't see the preview.
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'permissions' => [],
+        ]);
+
+        $bucketId = $bucket['body']['$id'];
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucketId);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
+        ]);
+
+        $fileId = $file['body']['$id'];
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($fileId);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
+        $this->assertEquals('permissions.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'permissions.png',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'permissions.png',
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $file['headers']['status-code']);
+        $this->assertEmpty($file['body']);
+    }
+
     public function testBucketAnyPermissions(): void
     {
+
         /**
          * Test for SUCCESS
          */
@@ -60,7 +153,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -146,7 +239,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -271,7 +364,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -449,7 +542,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -611,7 +704,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file1['body']['$id'];
         $this->assertEquals($file1['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file1['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file1['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
@@ -700,7 +793,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file1['body']['$id'];
         $this->assertEquals($file1['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file1['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file1['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
@@ -789,7 +882,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file1['body']['$id'];
         $this->assertEquals($file1['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file1['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file1['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
@@ -928,7 +1021,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -1163,7 +1256,7 @@ class StorageCustomClientTest extends Scope
         $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);

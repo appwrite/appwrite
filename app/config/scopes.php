@@ -1,6 +1,9 @@
 <?php
 
 return [ // List of publicly visible scopes
+    'sessions.write' => [
+        'description' => 'Access to create, update, and delete user sessions',
+    ],
     'users.read' => [
         'description' => 'Access to read your project\'s users',
     ],
@@ -25,11 +28,23 @@ return [ // List of publicly visible scopes
     'collections.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collections',
     ],
+    'tables.read' => [
+        'description' => 'Access to read your project\'s database tables',
+    ],
+    'tables.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database tables',
+    ],
     'attributes.read' => [
         'description' => 'Access to read your project\'s database collection\'s attributes',
     ],
     'attributes.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collection\'s attributes',
+    ],
+    'columns.read' => [
+        'description' => 'Access to read your project\'s database table\'s columns',
+    ],
+    'columns.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database table\'s columns',
     ],
     'indexes.read' => [
         'description' => 'Access to read your project\'s database collection\'s indexes',
@@ -42,6 +57,12 @@ return [ // List of publicly visible scopes
     ],
     'documents.write' => [
         'description' => 'Access to create, update, and delete your project\'s database documents',
+    ],
+    'rows.read'  => [
+        'description' => 'Access to read your project\'s database rows',
+    ],
+    'rows.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database rows',
     ],
     'files.read' => [
         'description' => 'Access to read your project\'s storage files and preview images',
@@ -61,6 +82,18 @@ return [ // List of publicly visible scopes
     'functions.write' => [
         'description' => 'Access to create, update, and delete your project\'s functions and code deployments',
     ],
+    'sites.read' => [
+        'description' => 'Access to read your project\'s sites and deployments',
+    ],
+    'sites.write' => [
+        'description' => 'Access to create, update, and delete your project\'s sites and deployments',
+    ],
+    'log.read' => [
+        'description' => 'Access to read your site\'s logs',
+    ],
+    'log.write' => [
+        'description' => 'Access to update, and delete your site\'s logs',
+    ],
     'execution.read' => [
         'description' => 'Access to read your project\'s execution logs',
     ],
@@ -75,5 +108,62 @@ return [ // List of publicly visible scopes
     ],
     'health.read' => [
         'description' => 'Access to read your project\'s health status',
+    ],
+    'providers.read' => [
+        'description' => 'Access to read your project\'s providers',
+    ],
+    'providers.write' => [
+        'description' => 'Access to create, update, and delete your project\'s providers',
+    ],
+    'messages.read' => [
+        'description' => 'Access to read your project\'s messages',
+    ],
+    'messages.write' => [
+        'description' => 'Access to create, update, and delete your project\'s messages',
+    ],
+    'topics.read' => [
+        'description' => 'Access to read your project\'s topics',
+    ],
+    'topics.write' => [
+        'description' => 'Access to create, update, and delete your project\'s topics',
+    ],
+    'subscribers.read' => [
+        'description' => 'Access to read your project\'s subscribers',
+    ],
+    'subscribers.write' => [
+        'description' => 'Access to create, update, and delete your project\'s subscribers',
+    ],
+    'targets.read' => [
+        'description' => 'Access to read your project\'s targets',
+    ],
+    'targets.write' => [
+        'description' => 'Access to create, update, and delete your project\'s targets',
+    ],
+    'rules.read' => [
+        'description' => 'Access to read your project\'s proxy rules',
+    ],
+    'rules.write' => [
+        'description' => 'Access to create, update, and delete your project\'s proxy rules',
+    ],
+    'migrations.read' => [
+        'description' => 'Access to read your project\'s migrations',
+    ],
+    'migrations.write' => [
+        'description' => 'Access to create, update, and delete your project\'s migrations.',
+    ],
+    'vcs.read' => [
+        'description' => 'Access to read your project\'s VCS repositories',
+    ],
+    'vcs.write' => [
+        'description' => 'Access to create, update, and delete your project\'s VCS repositories',
+    ],
+    'assistant.read' => [
+        'description' => 'Access to read the Assistant service',
+    ],
+    'tokens.read' => [
+        'description' => 'Access to read your project\'s tokens',
+    ],
+    'tokens.write' => [
+        'description' => 'Access to create, update, and delete your project\'s tokens',
     ],
 ];

@@ -8,11 +8,14 @@ class Functions extends Base
         'name',
         'enabled',
         'runtime',
-        'deployment',
+        'deploymentId',
         'schedule',
         'scheduleNext',
         'schedulePrevious',
-        'timeout'
+        'timeout',
+        'entrypoint',
+        'commands',
+        'installationId'
     ];
 
     /**

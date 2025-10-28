@@ -23,10 +23,17 @@ class Attribute extends Model
                 'example' => 'string',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
                 'default' => '',
                 'example' => 'available',
+                'enum' => ['available', 'processing', 'deleting', 'stuck', 'failed'],
+            ])
+            ->addRule('error', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Error message. Displays error generated on failure of creating or deleting an attribute.',
+                'default' => '',
+                'example' => 'string',
             ])
             ->addRule('required', [
                 'type' => self::TYPE_BOOLEAN,
@@ -41,7 +48,18 @@ class Attribute extends Model
                 'required' => false,
                 'example' => false,
             ])
-        ;
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Attribute creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Attribute update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ]);
     }
 
     public array $conditions = [];

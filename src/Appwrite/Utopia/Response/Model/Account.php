@@ -13,6 +13,7 @@ class Account extends User
         $this
             ->removeRule('password')
             ->removeRule('hash')
+            ->removeRule('mfaRecoveryCodes')
             ->removeRule('hashOptions');
     }
 

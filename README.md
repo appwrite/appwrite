@@ -14,7 +14,6 @@
     <br />
 </p>
 
-
 <!-- [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite) -->
 
 [![We're Hiring label](https://img.shields.io/static/v1?label=We're&message=Hiring&color=blue&style=flat-square)](https://appwrite.io/company/careers)
@@ -28,8 +27,6 @@
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
 English | [简体中文](README-CN.md)
-
-[**Appwrite 1.0 has been released! Learn what's new!**](https://appwrite.io/1.0)
 
 Appwrite is an end-to-end platform for building Web, Mobile, Native, or Backend apps, packaged as a set of Docker microservices. It includes both a backend server, and a fully integrated hosting solution for deploying static and server-side rendered frontends. Appwrite abstracts the complexity and repetitiveness required to build modern apps from scratch, and allows you to build secure, full-stack applications faster.
 
@@ -120,7 +117,7 @@ If you are upgrading your Appwrite server from an older version, you should use 
 
 ## One-Click Setups
 
-In addition to running Appwrite locally, you can launch Appwrite using a pre-configured setup. This allows you to start running Appwrite quickly without installing Docker on your local machine.
+In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to start running Appwrite quickly without installing Docker on your local machine.
 
 Choose from one of the providers below:
 
@@ -233,13 +230,13 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ![Appwrite Architecture showing how Appwrite is built, including the services and tools it uses](docs/specs/overview.drawio.svg)
 
-Appwrite uses a microservices architecture designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, with GraphQL coming soon) to allow you to interact with your resources by leveraging existing knowledge and protocols of your choice.
+Appwrite uses a microservices architecture designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, with GraphQL coming soon) to allow you to interact with your resources by leveraging existing knowledge and protocols of your choice.n
 
 The Appwrite API layer was designed to be extremely fast. It does this by leveraging in-memory caching and delegating heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
 
 ## Contributing
 
-All code contributions - including those of people having commit access - must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
+All code contributions, including those of people having commit access, must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
 
 We truly :heart: pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
@@ -249,7 +246,7 @@ For security issues, kindly email us at [security@appwrite.io](mailto:security@a
 
 ## Follow Us
 
-Join our growing community around the world! See our official [Blog](https://medium.com/appwrite-io). Follow us on [X](https://twitter.com/appwrite), [LinkedIn](https://www.linkedin.com/company/appwrite/), [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://appwrite.io/discord) for more help, ideas, and discussions.
+Join our growing community around the world! Check out our official [Blog](https://appwrite.io/blog). Follow us on [X](https://twitter.com/appwrite), [LinkedIn](https://www.linkedin.com/company/appwrite/), [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://appwrite.io/discord) for more help, ideas, and discussions.
 
 ## License
 

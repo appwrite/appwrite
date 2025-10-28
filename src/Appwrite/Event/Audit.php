@@ -2,7 +2,7 @@
 
 namespace Appwrite\Event;
 
-use Resque;
+use Utopia\Queue\Publisher;
 
 class Audit extends Event
 {
@@ -10,10 +10,17 @@ class Audit extends Event
     protected string $mode = '';
     protected string $userAgent = '';
     protected string $ip = '';
+    protected string $hostname = '';
 
-    public function __construct()
+    protected bool $critical = false;
+
+    public function __construct(protected Publisher $publisher)
     {
-        parent::__construct(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
+        parent::__construct($publisher);
+
+        $this
+            ->setQueue(Event::AUDITS_QUEUE_NAME)
+            ->setClass(Event::AUDITS_CLASS_NAME);
     }
 
     /**
@@ -109,14 +116,37 @@ class Audit extends Event
     }
 
     /**
-     * Executes the event and sends it to the audit worker.
+     * Set the hostname.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @param string $hostname
+     *
+     * @return self
      */
-    public function trigger(): string|bool
+    public function setHostname(string $hostname): self
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $this->hostname = $hostname;
+
+        return $this;
+    }
+
+    /**
+     * Get the hostname.
+     *
+     * @return string
+     */
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
+    /**
+     * Prepare payload for queue.
+     *
+     * @return array
+     */
+    protected function preparePayload(): array
+    {
+        return [
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
@@ -125,6 +155,7 @@ class Audit extends Event
             'ip' => $this->ip,
             'userAgent' => $this->userAgent,
             'event' => $this->event,
-        ]);
+            'hostname' => $this->hostname
+        ];
     }
 }

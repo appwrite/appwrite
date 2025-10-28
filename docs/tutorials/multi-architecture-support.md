@@ -6,8 +6,6 @@ A list of Appwrite CPU architecture support status. We use this list to track th
 |---|---|---|---|---|---|---|---|
 | appwrite/appwrite | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |
 | appwrite/mariadb | 🟢 | 🟢 | 🔴 | 🔴 | 🔴 | 🟢 | 🔴 |
-| appwrite/influxdb | 🟢 | 🟢 | 🟢 | 🟢 | 🔴 | 🔴 | 🔴 |
-| appwrite/telegraf | 🟢 | 🟢 | 🟢 | 🟢 | 🔴 | 🔴 | 🔴 |
 | appwrite/clamav | 🟢 | 🟢 | 🟢 | 🟢 | 🔴 | 🟢 | 🟢 |
 | traefik | 🟢 | 🔴 | 🟢 | 🔴 | 🟢 | 🔴 | 🔴 |
 | redis | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 |

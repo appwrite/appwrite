@@ -28,14 +28,6 @@ class Compose
     }
 
     /**
-     * @return string
-     */
-    public function getVersion(): string
-    {
-        return (isset($this->compose['version'])) ? $this->compose['version'] : '';
-    }
-
-    /**
      * @return Service[]
      */
     public function getServices(): array

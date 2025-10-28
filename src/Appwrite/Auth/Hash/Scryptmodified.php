@@ -60,7 +60,8 @@ class Scryptmodified extends Hash
         $saltBytes = \base64_decode($options['salt']);
         $saltSeparatorBytes = \base64_decode($options['saltSeparator']);
 
-        $derivedKey = \scrypt(\utf8_encode($password), $saltBytes . $saltSeparatorBytes, 16384, 8, 1, 64);
+        $password = mb_convert_encoding($password, 'UTF-8');
+        $derivedKey = \scrypt($password, $saltBytes . $saltSeparatorBytes, 16384, 8, 1, 64);
         $derivedKey = \hex2bin($derivedKey);
 
         return $derivedKey;

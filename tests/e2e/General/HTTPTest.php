@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\General;
 
-use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
@@ -12,6 +11,12 @@ class HTTPTest extends Scope
 {
     use ProjectNone;
     use SideNone;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->client->setEndpoint('http://traefik');
+    }
 
     public function testOptions()
     {
@@ -26,47 +31,11 @@ class HTTPTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
         $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies', $response['headers']['access-control-allow-headers']);
-        $this->assertEquals('X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
+        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent', $response['headers']['access-control-allow-headers']);
+        $this->assertEquals('X-Appwrite-Session, X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
         $this->assertEmpty($response['body']);
-    }
-
-    public function testError()
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/error', \array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-        ]), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals('Not Found', $response['body']['message']);
-        $this->assertEquals(Exception::GENERAL_ROUTE_NOT_FOUND, $response['body']['type']);
-        $this->assertEquals(404, $response['body']['code']);
-        $this->assertEquals('dev', $response['body']['version']);
-    }
-
-    public function testManifest()
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', \array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-        ]), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('Appwrite', $response['body']['name']);
-        $this->assertEquals('Appwrite', $response['body']['short_name']);
-        $this->assertEquals('.', $response['body']['start_url']);
-        $this->assertEquals('.', $response['body']['start_url']);
-        $this->assertEquals('https://appwrite.io/', $response['body']['url']);
-        $this->assertEquals('standalone', $response['body']['display']);
     }
 
     public function testHumans()
@@ -76,7 +45,7 @@ class HTTPTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/humans.txt', \array_merge([
             'origin' => 'http://localhost',
-        ]), []);
+        ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('# humanstxt.org/', $response['body']);
@@ -89,9 +58,9 @@ class HTTPTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/robots.txt', \array_merge([
             'origin' => 'http://localhost',
-        ]), []);
+        ]));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code'], "Simple GET /robots.txt HTTP request failed: " . \json_encode($response));
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
     }
 
@@ -106,18 +75,19 @@ class HTTPTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg', \array_merge([
             'origin' => 'http://localhost',
-        ]), []);
+        ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
         // 'Unknown path', but validation passed
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd', \array_merge([
             'origin' => 'http://localhost',
-        ]), []);
+        ]));
 
+        // Check for too many path segments
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Cleanup
@@ -161,9 +131,9 @@ class HTTPTest extends Scope
                 'content-type' => 'application/json',
             ], json_decode(file_get_contents($directory . $file), true));
 
-            $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEmpty($response['body']['schemaValidationMessages']);
+            // looks like recent change in the validator
+            $this->assertEmpty($response['body']['schemaValidationMessages'], 'Schema validation failed for ' . $file . ': ' . json_encode($response['body']['schemaValidationMessages'], JSON_PRETTY_PRINT));
         }
     }
 
@@ -183,10 +153,79 @@ class HTTPTest extends Scope
         $this->assertIsString($body['client-flutter']);
         $this->assertIsString($body['console-web']);
         $this->assertIsString($body['server-nodejs']);
-        $this->assertIsString($body['server-deno']);
         $this->assertIsString($body['server-php']);
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);
         $this->assertIsString($body['console-cli']);
+    }
+
+    public function testDefaultOAuth2()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/success', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/auth/oauth2/failure', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    public function testCors()
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://localhost',
+        ]);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://appwrite.io',
+        ]);
+
+        $this->assertEquals('http://appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'https://appwrite.io',
+        ]);
+
+        $this->assertEquals('https://appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://cloud.appwrite.io',
+        ]);
+
+        $this->assertEquals('http://cloud.appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://google.com',
+        ]);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+    }
+
+    public function testConsoleRedirect()
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $endpoint = '/invite?membershipId=123&userId=asdf';
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+
+        $this->assertEquals('/console' . $endpoint, $response['headers']['location']);
     }
 }
