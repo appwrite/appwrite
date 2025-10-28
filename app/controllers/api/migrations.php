@@ -563,12 +563,10 @@ App::get('/v1/migrations/appwrite/report')
     ->param('projectID', '', new Text(512), "Source's Project ID")
     ->param('key', '', new Text(512), "Source's API Key")
     ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('user')
-    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
+    ->inject('getDatabasesDB')
+    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response, callable $getDatabasesDB) {
 
-        $appwrite = new Appwrite($projectID, $endpoint, $key);
+        $appwrite = new Appwrite($projectID, $endpoint, $key, $getDatabasesDB);
 
         try {
             $report = $appwrite->report($resources);

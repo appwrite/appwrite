@@ -163,22 +163,22 @@ class Create extends Action
                     throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
                 }
 
-            // Ensure attribute is available
-            if ($attributeStatus !== 'available') {
-                $contextType = ucfirst($contextType);
-                throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
-            }
+                // Ensure attribute is available
+                if ($attributeStatus !== 'available') {
+                    $contextType = ucfirst($contextType);
+                    throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
+                }
 
                 if (empty($lengths[$i])) {
                     $lengths[$i] = null;
                 }
 
-            if ($attributeArray === true) {
-                $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
-                $orders[$i] = null;
+                if ($attributeArray === true) {
+                    $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
+                    $orders[$i] = null;
+                }
             }
         }
-
         $index = new Document([
             '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
@@ -193,28 +193,19 @@ class Create extends Action
             'orders' => $orders,
         ]);
 
-        $maxIndexLength = $dbForDatabases->getAdapter()->getMaxIndexLength();
-        $internalIndexesKeys = $dbForDatabases->getAdapter()->getInternalIndexesKeys();
-        $supportForIndexArray = $dbForDatabases->getAdapter()->getSupportForIndexArray();
-        $supportForSpatialAttributes = $dbForDatabases->getAdapter()->getSupportForSpatialAttributes();
-        $supportForSpatialIndexNull = $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull();
-        $supportForSpatialIndexOrder = $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder();
-        $supportForAttributes = $dbForDatabases->getAdapter()->getSupportForAttributes();
-        $supportForMultipleFulltextIndexes = $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes();
-        $supportForIdenticalIndexes = $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes();
-
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $collection->getAttribute('indexes'),
-            $maxIndexLength,
-            $internalIndexesKeys,
-            $supportForIndexArray,
-            $supportForSpatialAttributes,
-            $supportForSpatialIndexNull,
-            $supportForSpatialIndexOrder,
-            $supportForAttributes,
-            $supportForMultipleFulltextIndexes,
-            $supportForIdenticalIndexes
+            $dbForDatabases->getAdapter()->getMaxIndexLength(),
+            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
+            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
+            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForDatabases->getAdapter()->getSupportForVectors(),
+            $dbForDatabases->getAdapter()->getSupportForAttributes(),
+            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForObject()
         );
 
         if (!$validator->isValid($index)) {
@@ -255,5 +246,4 @@ class Create extends Action
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
             ->dynamic($index, $this->getResponseModel());
     }
-}
 }

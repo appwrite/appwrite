@@ -1309,11 +1309,10 @@ trait DatabasesBase
 
         // MongoDB only allows one fulltext index per collection, so it returns a different error
         if ($this->isMongoDB()) {
-        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a fulltext index, must be of type string');
+            $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
         } else {
             $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
         }
-
         $noAttributes = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1502,17 +1501,7 @@ trait DatabasesBase
         $this->assertEquals([128, 200], $index['body']['lengths']);
 
         // Test case for lengths array overriding
-        // set a length for an array attribute, it should get overridden with Database::ARRAY_INDEX_LENGTH
-        if ($this->isMongoDB()) {
-            // MongoDB doesn't support identical indexes, so delete the existing one first
-            $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/indexes/index-actors", [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]);
-            sleep(2);
-        }
-
+        // set a length for an array attribute, it should get overriden with Database::ARRAY_INDEX_LENGTH
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

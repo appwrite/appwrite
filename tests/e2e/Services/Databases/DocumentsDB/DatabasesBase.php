@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Databases\DocumentsDB;
 
 use Appwrite\Extend\Exception;
-use Tests\E2E\Client;
 use Appwrite\Tests\Retry;
+use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -456,7 +456,7 @@ trait DatabasesBase
         $this->assertEquals([128, 200], $index['body']['lengths']);
 
         // Test case for lengths array overriding
-        // set a length for an array attribute, it should get overriden with Database::ARRAY_INDEX_LENGTH
+        // set a length for an array attribute, it should get overriden with Database::MAX_ARRAY_INDEX_LENGTH
         $create = $this->client->call(Client::METHOD_POST, "/documentsdb/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -465,7 +465,7 @@ trait DatabasesBase
             'key' => 'lengthOverrideTestIndex',
             'type' => 'key',
             'attributes' => ['actors-new'],
-            'lengths' => [Database::ARRAY_INDEX_LENGTH]
+            'lengths' => [Database::MAX_ARRAY_INDEX_LENGTH]
         ]);
         $this->assertEquals(202, $create['headers']['status-code']);
 
@@ -474,7 +474,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
-        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
+        $this->assertEquals([Database::MAX_ARRAY_INDEX_LENGTH], $index['body']['lengths']);
 
         // Test case for count of lengths greater than attributes (should throw 400)
         $create = $this->client->call(Client::METHOD_POST, "/documentsdb/{$databaseId}/collections/{$collectionId}/indexes", [
@@ -3050,7 +3050,7 @@ trait DatabasesBase
                     Query::notEqual('longtext', 'appwrite')->toString(),
                 ],
             ]);
-    
+
             $this->assertEquals(408, $response['headers']['status-code']);
         }, 100000, 500);
 

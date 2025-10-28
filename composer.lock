@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f99c98a17e1d3608bf1c26f76bca972",
+    "content-hash": "47ceb116e4bcf4f621bdc3e198d30c4c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3786,6 +3786,54 @@
             "time": "2020-10-24T09:49:09+00:00"
         },
         {
+            "name": "utopia-php/console",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/console.git",
+                "reference": "f77104e4a888fa9cb3e08f32955ec09479ab7a92"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/console/zipball/f77104e4a888fa9cb3e08f32955ec09479ab7a92",
+                "reference": "f77104e4a888fa9cb3e08f32955ec09479ab7a92",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "swoole/ide-helper": "4.8.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Console helpers for logging, prompting, and executing commands",
+            "keywords": [
+                "cli",
+                "console",
+                "php",
+                "terminal",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/console/issues",
+                "source": "https://github.com/utopia-php/console/tree/0.0.1"
+            },
+            "time": "2025-10-20T14:41:36+00:00"
+        },
+        {
             "name": "utopia-php/database",
             "version": "dev-var_object",
             "source": {
@@ -3845,16 +3893,16 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6"
+                "reference": "89f96e864220de13800cf398a1f1686a85401eaa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
-                "reference": "795ed56169af833fd6a4ea58a6c747e05ccc7ba6",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/89f96e864220de13800cf398a1f1686a85401eaa",
+                "reference": "89f96e864220de13800cf398a1f1686a85401eaa",
                 "shasum": ""
             },
             "require": {
@@ -3884,9 +3932,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.2.0"
+                "source": "https://github.com/utopia-php/detector/tree/0.2.1"
             },
-            "time": "2025-10-21T13:57:30+00:00"
+            "time": "2025-10-27T13:38:33+00:00"
         },
         {
             "name": "utopia-php/dns",
@@ -4342,16 +4390,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.2.1",
+            "version": "dev-feat-documents-db",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "d0f9978aff8be3c160df50fcbb1ae35ffea7476b"
+                "reference": "c4a6fe9a575dee566c80c954f7f133275032583d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/d0f9978aff8be3c160df50fcbb1ae35ffea7476b",
-                "reference": "d0f9978aff8be3c160df50fcbb1ae35ffea7476b",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c4a6fe9a575dee566c80c954f7f133275032583d",
+                "reference": "c4a6fe9a575dee566c80c954f7f133275032583d",
                 "shasum": ""
             },
             "require": {
@@ -4359,9 +4407,9 @@
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
-                "utopia-php/database": "1.*",
+                "utopia-php/console": "0.0.*",
+                "utopia-php/database": "dev-var_object as 1.4.5",
                 "utopia-php/dsn": "0.2.*",
-                "utopia-php/framework": "0.33.*",
                 "utopia-php/storage": "0.18.*"
             },
             "require-dev": {
@@ -4369,7 +4417,6 @@
                 "laravel/pint": "1.*",
                 "phpstan/phpstan": "1.*",
                 "phpunit/phpunit": "11.*",
-                "utopia-php/cli": "0.16.*",
                 "vlucas/phpdotenv": "5.*"
             },
             "type": "library",
@@ -4392,9 +4439,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.2.1"
+                "source": "https://github.com/utopia-php/migration/tree/feat-documents-db"
             },
-            "time": "2025-10-13T01:55:03+00:00"
+            "time": "2025-10-27T10:19:57+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5266,16 +5313,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.4.14",
+            "version": "1.4.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f"
+                "reference": "b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b9405ccaeac5619c76558a82b7bfeb440b665b9f",
-                "reference": "b9405ccaeac5619c76558a82b7bfeb440b665b9f",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda",
+                "reference": "b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda",
                 "shasum": ""
             },
             "require": {
@@ -5311,9 +5358,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.14"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.15"
             },
-            "time": "2025-10-27T11:17:01+00:00"
+            "time": "2025-10-28T04:52:59+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8784,11 +8831,18 @@
             "version": "dev-var_object",
             "alias": "1.4.5",
             "alias_normalized": "1.4.5.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-documents-db",
+            "alias": "1.1.1",
+            "alias_normalized": "1.1.1.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/database": 20
+        "utopia-php/database": 20,
+        "utopia-php/migration": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
