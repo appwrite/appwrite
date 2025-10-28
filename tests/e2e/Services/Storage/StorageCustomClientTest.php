@@ -1440,11 +1440,11 @@ class StorageCustomClientTest extends Scope
         $this->assertStringContainsString('Image transformations are disabled for the requested bucket.', $preview['body']['message']);
 
         // Delete the bucket
-        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], [
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
-        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 }

@@ -154,10 +154,10 @@ class StorageConsoleClientTest extends Scope
         $this->assertEquals(200, $preview['headers']['status-code']); // Returns 200 since image transformations are not counted for console requests
 
         // Delete the bucket
-        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 }
