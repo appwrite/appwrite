@@ -135,7 +135,6 @@ class V23 extends Migration
                 case 'buckets':
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'transformations');
-                        $this->createAttributeFromCollection($this->dbForPlatform, $id, 'transformations');
                     } catch (Throwable $th) {
                         Console::warning("'transformations' from {$id}: {$th->getMessage()}");
                     }
