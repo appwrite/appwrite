@@ -991,7 +991,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if ($file->isEmpty()) {
@@ -1171,7 +1171,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid && !$isToken) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if ($fileSecurity && !$valid && !$isToken) {
@@ -1182,7 +1182,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if ($file->isEmpty()) {
@@ -1331,7 +1331,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid && !$isToken) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if ($fileSecurity && !$valid && !$isToken) {
@@ -1342,7 +1342,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if ($file->isEmpty()) {
@@ -1478,7 +1478,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
         try {
             $decoded = $decoder->decode($jwt);
         } catch (JWTException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         if (
@@ -1486,7 +1486,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             $decoded['bucketId'] !== $bucketId ||
             $decoded['fileId'] !== $fileId
         ) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
@@ -1769,7 +1769,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $valid = $dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_DELETE, $bucket->getDelete()));
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
         }
 
         // Read permission should not be required for delete
