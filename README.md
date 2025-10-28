@@ -26,7 +26,7 @@ English | [简体中文](README-CN.md)
 
 [**Appwrite 1.0 has been released! Learn what's new!**](https://appwrite.io/1.0)
 
-Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
+Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
 Using Appwrite, you can seamlessly integrate your app with user authentication and multiple sign-in methods. You can also find database and storage persistence, cloud functions, localization, image manipulation, file management, Cloud services, and [more services](https://appwrite.io/docs).
 
