@@ -5,7 +5,6 @@ namespace Appwrite\Utopia\Request\Filters;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
-use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
