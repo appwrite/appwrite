@@ -39,7 +39,19 @@ Using Appwrite, you can seamlessly integrate your app with user authentication a
 
 ![Appwrite](public/images/github.png)
 
-	@@ -40,16 +56,17 @@ Table of Contents:
+Find out more at: [https://appwrite.io](https://appwrite.io)
+
+Table of Contents:
+
+- [Installation](#installation)
+  - [Unix](#unix)
+  - [Windows](#windows)
+    - [CMD](#cmd)
+    - [PowerShell](#powershell)
+  - [Upgrade from an Older Version](#upgrade-from-an-older-version)
+- [Getting Started](#getting-started)
+  - [Services](#services)
+  - [SDKs](#sdks)
     - [Client](#client)
     - [Server](#server)
     - [Community](#community)
