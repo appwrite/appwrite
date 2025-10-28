@@ -144,6 +144,16 @@ class V23 extends Migration
                 'transformations',
             );
         } catch (Throwable $th) {
+            Console::warning("(platform) 'transformations' from 'buckets': {$th->getMessage()}");
+        }
+
+        try {
+            $this->createAttributeFromCollection(
+                $this->dbForProject,
+                'buckets',
+                'transformations',
+            );
+        } catch (Throwable $th) {
             Console::warning("'transformations' from 'buckets': {$th->getMessage()}");
         }
     }
