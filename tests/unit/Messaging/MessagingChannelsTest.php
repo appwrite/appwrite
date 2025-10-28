@@ -35,6 +35,7 @@ class MessagingChannelsTest extends TestCase
         'functions.1',
     ];
 
+    
     private $authorization;
 
     public function getAuthorization(): Authorization
@@ -42,7 +43,9 @@ class MessagingChannelsTest extends TestCase
         if (isset($this->authorization)) {
             return $this->authorization;
         }
-        return new Authorization();
+        
+        $this->authorization = new Authorization();
+        return $this->authorization; 
     }
 
     public function setUp(): void

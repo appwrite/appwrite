@@ -20,14 +20,16 @@ class AuthTest extends TestCase
         if (isset($this->authorization)) {
             return $this->authorization;
         }
-        return new Authorization();
+        
+        $this->authorization = new Authorization();
+        return  $this->authorization;
     }
 
 
     /**
      * Reset Roles
      */
-    public function tearDown(): void
+    public function setUp(): void
     {
         $this->getAuthorization()->cleanRoles();
         $this->getAuthorization()->addRole(Role::any()->toString());
