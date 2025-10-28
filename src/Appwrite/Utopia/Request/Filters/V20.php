@@ -146,8 +146,8 @@ class V20 extends Filter
             if ($database->isEmpty()) {
                 return [];
             }
-        } catch (NotFound) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        } catch (\Throwable) {
+            return [];
         }
 
         try {
@@ -158,8 +158,8 @@ class V20 extends Filter
             if ($collection->isEmpty()) {
                 return [];
             }
-        } catch (NotFound) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        } catch (\Throwable) {
+            return [];
         }
 
         $attributes = $collection->getAttribute('attributes', []);
