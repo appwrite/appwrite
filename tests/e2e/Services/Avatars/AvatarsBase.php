@@ -575,6 +575,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(100000, strlen($response['body']));
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/screenshots', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -591,7 +592,6 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
-        $this->assertGreaterThan(10000, strlen($response['body']));
 
         /**
          * Test for FAILURE - Invalid headers parameter types
