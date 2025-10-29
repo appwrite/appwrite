@@ -591,6 +591,7 @@ trait AvatarsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(10000, strlen($response['body']));
 
         /**
          * Test for FAILURE - Invalid headers parameter types
