@@ -15,6 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -63,13 +64,14 @@ class XList extends Action
             ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
         /** @var Document $database */
-        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -109,7 +111,7 @@ class XList extends Action
             }
 
             $indexId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('indexes', [
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->find('indexes', [
                 Query::equal('collectionInternalId', [$collection->getSequence()]),
                 Query::equal('databaseInternalId', [$database->getSequence()]),
                 Query::equal('key', [$indexId]),

@@ -13,6 +13,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -58,10 +59,11 @@ class Get extends Action
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $range, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -80,7 +82,7 @@ class Get extends Action
             str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES)
         ];
 
-        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -60,6 +61,7 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -69,7 +71,8 @@ class Delete extends Base
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -107,7 +110,7 @@ class Delete extends Base
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
 
-                $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         }
 

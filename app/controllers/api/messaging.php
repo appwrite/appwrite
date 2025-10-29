@@ -35,6 +35,7 @@ use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
@@ -1068,8 +1069,9 @@ App::get('/v1/messaging/providers')
     ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -1095,7 +1097,7 @@ App::get('/v1/messaging/providers')
             }
 
             $providerId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -2473,8 +2475,9 @@ App::get('/v1/messaging/topics')
     ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2500,7 +2503,7 @@ App::get('/v1/messaging/topics')
             }
 
             $topicId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2775,26 +2778,27 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->param('targetId', '', new UID(), 'Target ID. The target ID to link to the specified Topic ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
-        if (!$dbForProject->getAuthorization()->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
+        if (!$authorization->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        $target = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2827,7 +2831,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2871,8 +2875,9 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2883,7 +2888,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2906,7 +2911,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             }
 
             $subscriberId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2920,10 +2925,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
-            return function () use ($subscriber, $dbForProject) {
-                $target = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
+            return function () use ($subscriber, $dbForProject, $authorization) {
+                $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -3057,9 +3062,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
-        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Authorization $authorization, Response $response) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3071,8 +3077,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -3108,9 +3114,10 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
-        $topic = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3133,7 +3140,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        $dbForProject->getAuthorization()->skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -3689,8 +3696,9 @@ App::get('/v1/messaging/messages')
     ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3716,7 +3724,7 @@ App::get('/v1/messaging/messages')
             }
 
             $messageId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");

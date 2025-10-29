@@ -149,7 +149,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
-        $database->setAuthorization($authorization);
+
         $databases[$dsn->getHost()] = $database;
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -166,6 +166,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
         }
 
         $database
+            ->setAuthorization($authorization)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 

@@ -26,6 +26,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
@@ -93,6 +94,7 @@ class Create extends Base
             ->inject('queueForFunctions')
             ->inject('geodb')
             ->inject('executor')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -114,7 +116,8 @@ class Create extends Base
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
         Reader $geodb,
-        Executor $executor
+        Executor $executor,
+        Authorization $authorization
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -152,10 +155,10 @@ class Create extends Base
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $function = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -171,7 +174,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', '')));
+        $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -185,8 +188,8 @@ class Create extends Base
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        if (!$dbForProject->getAuthorization()->isValid(new Input('execute', $function->getAttribute('execute')))) { // Check if user has write access to execute function
-            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
+        if (!$authorization->isValid(new Input('execute', $function->getAttribute('execute')))) { // Check if user has write access to execute function
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $jwt = ''; // initialize
@@ -284,7 +287,7 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -325,7 +328,7 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
-                $execution = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
 
             return $response
@@ -478,7 +481,7 @@ class Create extends Base
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
 
-            $execution = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();

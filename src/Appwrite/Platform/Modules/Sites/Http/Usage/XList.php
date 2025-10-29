@@ -11,6 +11,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\WhiteList;
@@ -51,10 +52,11 @@ class XList extends Base
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $range, Response $response, Database $dbForProject)
+    public function action(string $range, Response $response, Database $dbForProject, Authorization $authorization)
     {
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -77,7 +79,7 @@ class XList extends Base
             METRIC_SITES_OUTBOUND,
         ];
 
-        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

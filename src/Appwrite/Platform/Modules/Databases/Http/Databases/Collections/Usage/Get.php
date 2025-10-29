@@ -14,6 +14,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\WhiteList;
@@ -62,10 +63,11 @@ class Get extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
@@ -82,7 +84,7 @@ class Get extends Action
             str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
-        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

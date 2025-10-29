@@ -18,6 +18,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -71,12 +72,13 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization): void
     {
-        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);

@@ -22,6 +22,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -103,6 +104,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -133,7 +135,8 @@ class Update extends Base
         Build $queueForBuilds,
         Database $dbForPlatform,
         GitHub $github,
-        Executor $executor
+        Executor $executor,
+        Authorization $authorization
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -281,7 +284,7 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());
 

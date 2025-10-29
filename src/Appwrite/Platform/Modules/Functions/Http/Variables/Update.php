@@ -16,6 +16,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\Database\Validator\Authorization;
 
 class Update extends Base
 {
@@ -60,6 +61,7 @@ class Update extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -71,7 +73,8 @@ class Update extends Base
         ?bool $secret,
         Response $response,
         Database $dbForProject,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -108,7 +111,7 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     }

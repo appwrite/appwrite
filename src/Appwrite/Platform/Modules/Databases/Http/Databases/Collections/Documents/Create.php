@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -131,9 +132,10 @@ class Create extends Action
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -177,19 +179,19 @@ class Create extends Action
             $documents = [$data];
         }
 
-        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization()->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization()->getRoles());
 
         if ($isBulk && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
         }
 
-        $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = $authorization()->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
         }
@@ -246,8 +248,8 @@ class Create extends Action
                             $permission->getIdentifier(),
                             $permission->getDimension()
                         ))->toString();
-                        if (!$dbForProject->getAuthorization()->hasRole($role)) {
-                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $dbForProject->getAuthorization()->getRoles()) . ')');
+                        if (!$authorization()->hasRole($role)) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $authorization()->getRoles()) . ')');
                         }
                     }
                 }
@@ -263,20 +265,20 @@ class Create extends Action
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
 
-            $validCollection = $dbForProject->getAuthorization()->isValid(
+            $validCollection = $authorization()->isValid(
                 new Input($permission, $collection->getPermissionsByType($permission))
             );
             if (($permission === Database::PERMISSION_UPDATE && !$documentSecurity) || !$validCollection) {
-                throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
+                throw new Exception(Exception::USER_UNAUTHORIZED, $authorization()->getDescription());
             }
 
             if ($permission === Database::PERMISSION_UPDATE) {
-                $validDocument = $dbForProject->getAuthorization()->isValid(
+                $validDocument = $authorization()->isValid(
                     new Input($permission, $document->getUpdate())
                 );
                 $valid = $validCollection || $validDocument;
                 if ($documentSecurity && !$valid) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
+                    throw new Exception(Exception::USER_UNAUTHORIZED, $authorization()->getDescription());
                 }
             }
 
@@ -301,7 +303,7 @@ class Create extends Action
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = $dbForProject->getAuthorization()->skip(
+                $relatedCollection = $authorization()->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
@@ -317,7 +319,7 @@ class Create extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $current = $dbForProject->getAuthorization()->skip(
+                        $current = $authorization()->skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
 
@@ -372,7 +374,7 @@ class Create extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
-                ? $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                ? $authorization()->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND);

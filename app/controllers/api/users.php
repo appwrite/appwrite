@@ -43,6 +43,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
@@ -2617,8 +2618,9 @@ App::get('/v1/users/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('register')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $authorization) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -2628,7 +2630,7 @@ App::get('/v1/users/usage')
             METRIC_SESSIONS,
         ];
 
-        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $count => $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

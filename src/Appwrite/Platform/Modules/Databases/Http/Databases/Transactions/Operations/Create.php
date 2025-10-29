@@ -17,6 +17,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -63,21 +64,22 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('transactionState')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan): void
+    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization): void
     {
         if (empty($operations)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
         }
 
-        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         // API keys and admins can read any transaction, regular users need permissions
         $transaction = ($isAPIKey || $isPrivilegedUser)
-            ? $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+            ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty()) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND);
@@ -113,13 +115,13 @@ class Create extends Action
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            $database = $databases[$operation['databaseId']] ??= $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('databases', $operation['databaseId']));
+            $database = $databases[$operation['databaseId']] ??= $authorization->skip(fn () => $dbForProject->getDocument('databases', $operation['databaseId']));
             if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
                 throw new Exception(Exception::DATABASE_NOT_FOUND);
             }
 
             $collection = $collections[$operation[$this->getGroupId()]] ??=
-                $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $operation[$this->getGroupId()]));
+                $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $operation[$this->getGroupId()]));
 
             if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -166,17 +168,17 @@ class Create extends Action
                 if (!$isAPIKey && !$isPrivilegedUser) {
                     $documentSecurity = $collection->getAttribute('documentSecurity', false);
 
-                    $collectionValid = $dbForProject->getAuthorization()->isValid(
+                    $collectionValid = $authorization->isValid(
                         new Input($permissionType, $collection->getPermissionsByType($permissionType))
                     );
                     $documentValid = false;
                     if ($document !== null && !$document->isEmpty() && $documentSecurity) {
                         if ($permissionType === Database::PERMISSION_UPDATE) {
-                            $documentValid = $dbForProject->getAuthorization()->isValid(
+                            $documentValid = $authorization->isValid(
                                 new Input(Database::PERMISSION_UPDATE, $document->getUpdate())
                             );
                         } elseif ($permissionType === Database::PERMISSION_DELETE) {
-                            $documentValid = $dbForProject->getAuthorization()->isValid(
+                            $documentValid = $authorization->isValid(
                                 new Input(Database::PERMISSION_DELETE, $document->getDelete())
                             );
                         }
@@ -195,7 +197,7 @@ class Create extends Action
                     // Users can only set permissions for roles they have
                     if (isset($operation['data']['$permissions'])) {
                         $permissions = $operation['data']['$permissions'];
-                        $roles = $dbForProject->getAuthorization()->getRoles();
+                        $roles = $authorization->getRoles();
                         foreach (Database::PERMISSIONS as $type) {
                             foreach ($permissions as $permission) {
                                 $permission = Permission::parse($permission);
@@ -207,7 +209,7 @@ class Create extends Action
                                     $permission->getIdentifier(),
                                     $permission->getDimension()
                                 ))->toString();
-                                if (!$dbForProject->getAuthorization()->hasRole($role)) {
+                                if (!$authorization->hasRole($role)) {
                                     throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                                 }
                             }
@@ -236,7 +238,7 @@ class Create extends Action
             }
         }
 
-        $transaction = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
+        $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $existing, $operations) {
             $dbForProject->createDocuments('transactionLogs', $staged);
             return $dbForProject->increaseDocumentAttribute(
                 'transactions',
