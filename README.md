@@ -9,7 +9,7 @@
     <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite banner, with logo and text saying "Build Like a Team of Hundreds"></a>
     <br />
     <br />
-    <b>Appwrite is an all-in-one development platform for Web, Mobile, and Flutter applications. Use built-in backend infrastructure and web hosting, all from a single place. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
+    <b>Appwrite is an all-in-one development platform for Web, Mobile, and Flutter applications. Use built-in backend infrastructure and web hosting, all from a single location. Built with the open source community and optimized for developer experience, all designed in the coding languages you love.</b>
     <br />
     <br />
 </p>
@@ -28,9 +28,9 @@
 
 English | [简体中文](README-CN.md)
 
-Appwrite is an end-to-end platform for building Web, Mobile, Native, or Backend apps, packaged as a set of Docker microservices. It includes both a backend server and a fully integrated hosting solution for deploying static and server-side rendered frontends. Appwrite abstracts the complexity and repetitiveness required to build modern apps from scratch and allows you to build secure, full-stack applications faster.
+Appwrite is an end-to-end platform for building Web, Mobile, Native, or Backend apps, packaged as a set of Docker microservices. It includes both a backend server, and a fully integrated hosting solution for deploying static and server-side rendered frontends. Appwrite abstracts the complexity and repetitiveness required to build modern apps from scratch, and allows you to build secure, full-stack applications faster.
 
-Using Appwrite, you can easily integrate your app with user authentication and multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, Cloud Functions, messaging, and [more services](https://appwrite.io/docs).
+Using Appwrite, you can seamlessly integrate your app with user authentication and multiple sign-in methods. Appwrite is also designed for database and storage persistence, cloud functions, localization, image manipulation, file management, Cloud services, and [more services](https://appwrite.io/docs).
 
 <p align="center">
     <br />
@@ -71,7 +71,7 @@ The easiest way to get started with Appwrite is by [signing up for Appwrite Clou
 
 ## Self-Hosting
 
-Appwrite is designed to run in a containerized environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool, such as [Kubernetes](https://kubernetes.io/docs/home/), [Docker Swarm](https://docs.docker.com/engine/swarm/), or [Rancher](https://rancher.com/docs/).
+Appwrite backend server is designed to run in a container environment. Running your server is as straight-forward as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose, or on any other container orchestration tool, such as [Kubernetes](https://kubernetes.io/docs/home/), [Docker Swarm](https://docs.docker.com/engine/swarm/), or [Rancher](https://rancher.com/docs/).
 
 Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
@@ -107,17 +107,17 @@ docker run -it --rm `
     appwrite/appwrite:1.8.0
 ```
 
-Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
+Once the Docker installation has completed, go to http://localhost to access the Appwrite console. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
 
 For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/self-hosting).
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding migration, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
 ## One-Click Setups
 
-In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running quickly with Appwrite without installing Docker on your local machine.
+In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to start running Appwrite quickly without installing Docker on your local machine.
 
 Choose from one of the providers below:
 
@@ -152,7 +152,7 @@ Choose from one of the providers below:
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Getting started with Appwrite is just like creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 | Platform              | Technology                                                                         |
 | --------------------- | ---------------------------------------------------------------------------------- |
@@ -197,7 +197,7 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 
 ### SDKs
 
-Below is a list of currently supported platforms and languages. If you would like to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
+Below is a list of currently supported platforms and languages. If you would like to help add support to your platform of choice, head over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
 #### Client
 
@@ -228,11 +228,11 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ## Architecture
 
-![Appwrite Architecture showing how Appwrite is built and the services and tools it uses](docs/specs/overview.drawio.svg)
+![Appwrite Architecture showing how Appwrite is built, including the services and tools it uses](docs/specs/overview.drawio.svg)
 
-Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
+Appwrite uses a microservices architecture designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, with GraphQL coming soon) to allow you to interact with your resources by leveraging existing knowledge and protocols of your choice.n
 
-The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
+The Appwrite API layer was designed to be extremely fast. It does this by leveraging in-memory caching and delegating heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
 
 ## Contributing
 
