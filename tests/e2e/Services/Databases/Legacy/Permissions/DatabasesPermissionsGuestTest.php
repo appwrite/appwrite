@@ -24,7 +24,10 @@ class DatabasesPermissionsGuestTest extends Scope
         if (isset($this->authorization)) {
             return $this->authorization;
         }
-        return new Authorization();
+
+        $this->authorization = new Authorization();
+
+        return $this->authorization;
     }
 
     public function createCollection(): array

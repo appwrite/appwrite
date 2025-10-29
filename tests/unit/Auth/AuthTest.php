@@ -22,6 +22,7 @@ class AuthTest extends TestCase
         }
 
         $this->authorization = new Authorization();
+
         return  $this->authorization;
     }
 

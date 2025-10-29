@@ -457,7 +457,6 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
         $request->setAuthorization($authorization);
         $response->setAuthorization($authorization);
-
         $authorization->cleanRoles();
         $authorization->addRole(Role::any()->toString());
 
@@ -501,7 +500,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('roles', $authorization->getRoles());
+            $log->addExtra('roles', isset($authorization) ? $authorization->getRoles() : []);
 
             $sdk = $route->getLabel("sdk", false);
 

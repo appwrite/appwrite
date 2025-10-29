@@ -1995,7 +1995,7 @@ App::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $tokenSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_MAGIC_URL);
@@ -2590,7 +2590,7 @@ App::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [

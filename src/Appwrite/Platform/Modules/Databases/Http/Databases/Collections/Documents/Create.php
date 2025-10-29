@@ -263,13 +263,17 @@ class Create extends Action
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
 
-            $validCollection = $dbForProject->getAuthorization()->isValid(new Input($permission, $collection->getPermissionsByType($permission)));
+            $validCollection = $dbForProject->getAuthorization()->isValid(
+                new Input($permission, $collection->getPermissionsByType($permission))
+            );
             if (($permission === Database::PERMISSION_UPDATE && !$documentSecurity) || !$validCollection) {
                 throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
             }
 
             if ($permission === Database::PERMISSION_UPDATE) {
-                $validDocument = $dbForProject->getAuthorization()->isValid(new Input($permission, $document->getUpdate()));
+                $validDocument = $dbForProject->getAuthorization()->isValid(
+                    new Input($permission, $document->getUpdate())
+                );
                 $valid = $validCollection || $validDocument;
                 if ($documentSecurity && !$valid) {
                     throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
