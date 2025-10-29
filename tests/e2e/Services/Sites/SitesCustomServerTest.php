@@ -634,7 +634,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
             'framework' => 'other',
-            'name' => 'Test Site',
+            'name' => 'Test List Sites',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
@@ -642,7 +642,7 @@ class SitesCustomServerTest extends Scope
         ]);
 
         $sites = $this->listSites([
-            'siteId' => $siteId,
+            'search' => 'Test List Sites',
         ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
