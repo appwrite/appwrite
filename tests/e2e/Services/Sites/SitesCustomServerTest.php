@@ -641,7 +641,9 @@ class SitesCustomServerTest extends Scope
             'siteId' => ID::unique()
         ]);
 
-        $sites = $this->listSites();
+        $sites = $this->listSites([
+            'siteId' => $siteId,
+        ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
