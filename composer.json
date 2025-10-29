@@ -57,7 +57,6 @@
         "utopia-php/database": "dev-var_object as 1.4.5",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "0.9.*",
-        "utopia-php/emails": "0.6.*",
         "utopia-php/dns": "0.3.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",

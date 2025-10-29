@@ -15,9 +15,9 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\DSN\DSN;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
@@ -89,10 +89,9 @@ class Migrations extends Action
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('getDatabasesDB')
+            ->inject('getProjectDB')
             ->inject('logError')
             ->inject('queueForRealtime')
-            ->inject('deviceForImports')
-            ->inject('getProjectDB')
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
             ->inject('queueForMails')
@@ -103,10 +102,21 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForProject, Database $dbForPlatform, callable $getDatabasesDB, callable $logError, Realtime $queueForRealtime, Device $deviceForImports, callable $getProjectDB): void
-    {
+    public function action(
+        Message $message,
+        Document $project,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        callable $getDatabasesDB,
+        callable $getProjectDB,
+        callable $logError,
+        Realtime $queueForRealtime,
+        Device $deviceForMigrations,
+        Device $deviceForFiles,
+        Mail $queueForMails,
+        array $plan,
+    ): void {
         $payload = $message->getPayload() ?? [];
-        $this->deviceForImports = $deviceForImports;
         $this->getDatabasesDB = $getDatabasesDB;
         $this->getProjectDB = $getProjectDB;
 
@@ -153,13 +163,8 @@ class Migrations extends Action
         }
         $getDatabasesDB = fn (Document $database): Database =>
                 $this->getDatabasesDBForProject($database);
-        $dataSource = Appwrite::SOURCE_API;
-        $database = null;
         $queries = [];
-
         if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
-            $dataSource = Appwrite::SOURCE_DATABASE;
-            $database = $this->dbForProject;
             $queries = Query::parseQueries($migrationOptions['queries']);
         }
 
@@ -192,9 +197,7 @@ class Migrations extends Action
                 $getDatabasesDB,
                 SourceAppwrite::SOURCE_DATABASE,
                 $projectDB,
-                $dataSource,
-                $database,
-                $queries,
+                $queries
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -497,7 +500,7 @@ class Migrations extends Action
         } catch (\InvalidArgumentException) {
             $dsn = $dbScheme.'://' . $dsn;
         }
-        return $dsn
+        return $dsn;
     }
     /**
      * Handle actions to be performed when a CSV export migration is successfully completed
