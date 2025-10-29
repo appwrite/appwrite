@@ -31,6 +31,7 @@ class Migrate extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -47,8 +48,9 @@ class Migrate extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Registry $register,
+        Authorization $authorization
     ): void {
-        Authorization::disable();
+        $authorization->disable();
 
         if (!\array_key_exists($version, Migration::$versions)) {
             Console::error("No migration found for version $version.");

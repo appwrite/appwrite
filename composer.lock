@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "66e5a72649d7f816ba8ec979faca4cd8",
+    "content-hash": "6a0ff41b0f382016b899d52307df5983",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3547,21 +3547,21 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "1.0.2",
+            "version": "dev-feat-auth-single-instance",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "8c17065c2473d4ca799f65585ca74eb53e1be211"
+                "reference": "b74a6f8213b444e0af6ce0714ec85ea2859b3508"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/8c17065c2473d4ca799f65585ca74eb53e1be211",
-                "reference": "8c17065c2473d4ca799f65585ca74eb53e1be211",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/b74a6f8213b444e0af6ce0714ec85ea2859b3508",
+                "reference": "b74a6f8213b444e0af6ce0714ec85ea2859b3508",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "*"
+                "utopia-php/database": "dev-feat-authorization-instance as 3.0.2"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -3588,9 +3588,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/1.0.2"
+                "source": "https://github.com/utopia-php/audit/tree/feat-auth-single-instance"
             },
-            "time": "2025-10-20T07:14:26+00:00"
+            "time": "2025-10-27T13:39:14+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -3840,16 +3840,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "3.0.4",
+            "version": "dev-feat-authorization-instance",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a83997d5555d6cd873b829a2459292211c6ab13f"
+                "reference": "22123ad30782be131ecad4e9298b843d8daf387b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a83997d5555d6cd873b829a2459292211c6ab13f",
-                "reference": "a83997d5555d6cd873b829a2459292211c6ab13f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/22123ad30782be131ecad4e9298b843d8daf387b",
+                "reference": "22123ad30782be131ecad4e9298b843d8daf387b",
                 "shasum": ""
             },
             "require": {
@@ -3892,9 +3892,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/3.0.4"
+                "source": "https://github.com/utopia-php/database/tree/feat-authorization-instance"
             },
-            "time": "2025-10-28T08:21:21+00:00"
+            "time": "2025-10-27T08:34:29+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8890,9 +8890,25 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/audit",
+            "version": "dev-feat-auth-single-instance",
+            "alias": "1.1.0",
+            "alias_normalized": "1.1.0.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-authorization-instance",
+            "alias": "3.0.2",
+            "alias_normalized": "3.0.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/audit": 20,
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

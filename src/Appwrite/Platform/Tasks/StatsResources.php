@@ -45,10 +45,11 @@ class StatsResources extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForStatsResources')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queue): void
+    public function action(Database $dbForPlatform, callable $logError, EventStatsResources $queue, Authorization $authorization): void
     {
         $this->logError = $logError;
         $this->dbForPlatform = $dbForPlatform;
@@ -61,9 +62,9 @@ class StatsResources extends Action
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
 
-        Console::loop(function () use ($queue) {
-            Authorization::disable();
-            Authorization::setDefaultStatus(false);
+        Console::loop(function () use ($queue, $dbForPlatform, $authorization) {
+            $authorization->disable();
+            $authorization->setDefaultStatus(false);
 
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
             /**

@@ -25,7 +25,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
@@ -318,9 +317,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
             }
 
-            if (Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
+            if ($dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
                 Console::info("    └── Creating screenshots bucket...");
-                Authorization::skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
+                $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('screenshots'),
                     '$collection' => ID::custom('buckets'),
                     'name' => 'Screenshots',
@@ -335,7 +334,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'search' => 'buckets Screenshots',
                 ])));
 
-                $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+                $bucket = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                 Console::info("    └── Creating files collection for screenshots bucket...");
                 $files = $collections['buckets']['files'] ?? [];
@@ -363,7 +362,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
+                $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
             }
         });
 
@@ -454,8 +453,12 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
     App::setResource('pools', fn () => $pools);
 
     try {
-        Authorization::cleanRoles();
-        Authorization::setRole(Role::any()->toString());
+        $authorization = $app->getResource('authorization');
+
+        $request->setAuthorization($authorization);
+        $response->setAuthorization($authorization);
+        $authorization->cleanRoles();
+        $authorization->addRole(Role::any()->toString());
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
@@ -497,7 +500,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', isset($authorization) ? $authorization->getRoles() : []);
 
             $sdk = $route->getLabel("sdk", false);
 
@@ -573,7 +576,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 }
                 $results = [];
                 try {
-                    $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
+                    $results = $dbForPlatform->getAuthorization()->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
                     Console::error($th->getMessage());
                 }

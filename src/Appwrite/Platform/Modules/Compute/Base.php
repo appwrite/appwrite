@@ -13,7 +13,6 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -238,7 +237,7 @@ class Base extends Action
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $dbForProject->getAuthorization()->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -264,7 +263,7 @@ class Base extends Action
             $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                Authorization::skip(
+                $dbForProject->getAuthorization()->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -301,7 +300,7 @@ class Base extends Action
             $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                Authorization::skip(
+                $dbForProject->getAuthorization()->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
