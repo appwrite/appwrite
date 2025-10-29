@@ -1,5 +1,9 @@
 # Change Log
 
+## 20.2.2
+
+* Widen `device_info_plus` and `package_info_plus` dependencies to allow for newer versions for Android 15+ support
+
 ## 20.2.1
 
 * Add transaction support for Databases and TablesDB

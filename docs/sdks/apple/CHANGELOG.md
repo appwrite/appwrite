@@ -1,5 +1,9 @@
 # Change Log
 
+## 13.3.1
+
+* Fix `onOpen` callback not being called when the websocket connection is established
+
 ## 13.3.0
 
 * Add `onOpen`, `onClose` and `onError` callbacks to `Realtime` service

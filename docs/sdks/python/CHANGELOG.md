@@ -1,5 +1,10 @@
 # Change Log
 
+## 13.4.2
+
+* Fix adding `Optional[]` to optional parameters
+* Fix passing of `None` to nullable parameters
+
 ## 13.4.1
 
 * Add transaction support for Databases and TablesDB

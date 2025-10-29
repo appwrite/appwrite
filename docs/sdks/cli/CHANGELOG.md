@@ -1,5 +1,12 @@
 # Change Log
 
+## 10.2.4
+
+* Fix syncing of tables deleted locally during `push tables` command
+* Fix added push command support for cli spatial types
+* Fix attribute changing during push
+* Replace pkg with @yao-pkg/pkg in dependencies
+
 ## 10.2.3
 
 * Fix `init tables` command not working
