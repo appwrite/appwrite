@@ -219,7 +219,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.0.2
+    image: appwrite/console:7.4.11
     restart: unless-stopped
     networks:
       - appwrite
@@ -698,6 +698,7 @@ services:
       - appwrite
     volumes:
       - appwrite-imports:/storage/imports:rw
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
@@ -966,7 +967,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.11.0
+    image: openruntimes/executor:0.11.4
     restart: unless-stopped
     networks:
       - appwrite

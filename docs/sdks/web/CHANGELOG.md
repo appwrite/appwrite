@@ -1,5 +1,13 @@
 # Change Log
 
+## 21.3.0
+
+* Add new `Realtime` service with methods for subscribing to channels and receiving messages
+* Fix `client.setSession` not working when using realtime
+* Deprecate `client.subscribe` method in favor of `Realtime` service
+
+> Note: Deprecated methods are still available for backwards compatibility, but might be removed in future versions.
+
 ## 21.2.1
 
 * Add transaction support for Databases and TablesDB
