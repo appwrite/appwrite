@@ -1068,6 +1068,7 @@ App::get('/v1/messaging/providers')
     ))
     ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
@@ -1107,7 +1108,7 @@ App::get('/v1/messaging/providers')
         }
         try {
             $providers = $dbForProject->find('providers', $queries);
-            $total = $dbForProject->count('providers', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('providers', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -1137,11 +1138,12 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1209,7 +1211,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2474,6 +2476,7 @@ App::get('/v1/messaging/topics')
     ))
     ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
@@ -2513,7 +2516,7 @@ App::get('/v1/messaging/topics')
         }
         try {
             $topics = $dbForProject->find('topics', $queries);
-            $total = $dbForProject->count('topics', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('topics', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -2543,11 +2546,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2616,7 +2620,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2874,6 +2878,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
@@ -2939,7 +2944,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $response
             ->dynamic(new Document([
                 'subscribers' => $subscribers,
-                'total' => $dbForProject->count('subscribers', $queries, APP_LIMIT_COUNT),
+                'total' => $includeTotal ? $dbForProject->count('subscribers', $queries, APP_LIMIT_COUNT) : 0,
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
 
@@ -2963,11 +2968,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ))
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -3036,7 +3042,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3695,6 +3701,7 @@ App::get('/v1/messaging/messages')
     ))
     ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
@@ -3734,7 +3741,7 @@ App::get('/v1/messaging/messages')
         }
         try {
             $messages = $dbForProject->find('messages', $queries);
-            $total = $dbForProject->count('messages', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('messages', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -3764,11 +3771,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3837,7 +3845,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3862,9 +3870,10 @@ App::get('/v1/messaging/messages/:messageId/targets')
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject) {
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3914,7 +3923,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
         }
         try {
             $targets = $dbForProject->find('targets', $queries);
-            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('targets', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
