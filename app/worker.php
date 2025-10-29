@@ -59,8 +59,10 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register,
     $pools = $register->get('pools');
     $adapter = new DatabasePool($pools->get('console'));
     $dbForPlatform = new Database($adapter, $cache);
-    $dbForPlatform->setAuthorization($authorization);
-    $dbForPlatform->setNamespace('_console');
+
+    $dbForPlatform
+    ->setAuthorization($authorization)
+    ->setNamespace('_console');
 
 
     return $dbForPlatform;
@@ -93,7 +95,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
-    $database->setAuthorization($authorization);
+
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
     if (\in_array($dsn->getHost(), $sharedTables)) {
@@ -108,7 +110,9 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
             ->setNamespace('_' . $project->getSequence());
     }
 
-    $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+    $database
+        ->setAuthorization($authorization)
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
     return $database;
 }, ['cache', 'register', 'message', 'project', 'dbForPlatform', 'authorization']);
@@ -149,9 +153,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         }
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $adapter->setAuthorization($authorization);
         $database = new Database($adapter, $cache);
-        $database->setAuthorization($authorization);
 
         $databases[$dsn->getHost()] = $database;
 
@@ -169,7 +171,9 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
                 ->setNamespace('_' . $project->getSequence());
         }
 
-        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+        $database
+            ->setAuthorization($authorization)
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
         return $database;
     };

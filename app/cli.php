@@ -185,9 +185,9 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
 
         $adapter = new DatabasePool($pools->get('logs'));
         $database = new Database($adapter, $cache);
-        $database->setAuthorization($authorization);
 
         $database
+            ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
