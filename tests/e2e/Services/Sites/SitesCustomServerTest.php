@@ -647,7 +647,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test Site');
+        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
 
         // Test pagination limit
         $sites = $this->listSites([
@@ -691,7 +691,7 @@ class SitesCustomServerTest extends Scope
 
         // Test search name
         $sites = $this->listSites([
-            'search' => 'Test'
+            'search' => 'Test List Sites'
         ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
@@ -714,21 +714,23 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
             'framework' => 'other',
-            'name' => 'Test Site 2',
+            'name' => 'Test List Sites 2',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
 
-        $sites = $this->listSites();
+        $sites = $this->listSites([
+            'search' => 'Test List Sites',
+        ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertEquals($sites['body']['total'], 2);
         $this->assertIsArray($sites['body']['sites']);
         $this->assertCount(2, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test Site');
-        $this->assertEquals($sites['body']['sites'][1]['name'], 'Test Site 2');
+        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
+        $this->assertEquals($sites['body']['sites'][1]['name'], 'Test List Sites 2');
 
         $sites1 = $this->listSites([
             'queries' => [
@@ -738,7 +740,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($sites1['headers']['status-code'], 200);
         $this->assertCount(1, $sites1['body']['sites']);
-        $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test Site 2');
+        $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test List Sites 2');
 
         $sites2 = $this->listSites([
             'queries' => [
@@ -748,7 +750,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($sites2['headers']['status-code'], 200);
         $this->assertCount(1, $sites2['body']['sites']);
-        $this->assertEquals($sites2['body']['sites'][0]['name'], 'Test Site');
+        $this->assertEquals($sites2['body']['sites'][0]['name'], 'Test List Sites');
 
         /**
          * Test for FAILURE
