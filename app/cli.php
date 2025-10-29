@@ -60,7 +60,7 @@ CLI::setResource('pools', function (Registry $register) {
 CLI::setResource('authorization', function () {
     $authorization = new Authorization();
     $authorization->disable();
-    return  $authorization;
+    return $authorization;
 }, []);
 
 CLI::setResource('dbForPlatform', function ($pools, $cache, $authorization) {
