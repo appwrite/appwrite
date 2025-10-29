@@ -17,6 +17,7 @@ on:
     types: [created, edited]
 
 permissions:
+  contents: read
   issues: write
   pull-requests: write
   discussions: write
