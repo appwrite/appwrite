@@ -645,14 +645,14 @@ trait MessagingBase
         }
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $subscribersWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $subscribersWithIncludeTotalFalse['headers']['status-code']);

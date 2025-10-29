@@ -323,13 +323,13 @@ trait TeamsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $teamsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $teamsWithIncludeTotalFalse['headers']['status-code']);

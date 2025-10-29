@@ -962,14 +962,14 @@ trait DatabasesBase
         $this->assertEquals(12, $attributes['body']['total']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $attributesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $attributesWithIncludeTotalFalse['headers']['status-code']);

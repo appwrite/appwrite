@@ -56,13 +56,13 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test2['body']['$id'], $databases['body']['databases'][1]['$id']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $databasesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $databasesWithIncludeTotalFalse['headers']['status-code']);

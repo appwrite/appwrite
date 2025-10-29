@@ -799,13 +799,13 @@ trait UsersBase
         $this->assertGreaterThan(0, $users['body']['total']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $usersWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $usersWithIncludeTotalFalse['headers']['status-code']);

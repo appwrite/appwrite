@@ -391,7 +391,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
 
         /**
-         * Test for includeTotal=false
+         * Test for total=false
          */
         $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
@@ -399,7 +399,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $logsWithIncludeTotalFalse['headers']['status-code']);

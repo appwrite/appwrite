@@ -377,13 +377,13 @@ class FunctionsCustomClientTest extends Scope
         $this->assertIsArray($templates['body']['templates']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $templatesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $templatesWithIncludeTotalFalse['headers']['status-code']);

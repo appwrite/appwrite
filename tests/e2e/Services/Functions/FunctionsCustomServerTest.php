@@ -419,9 +419,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(1, $deployments['body']['total']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
-        $deploymentsWithIncludeTotalFalse = $this->listDeployments($functionId, ['includeTotal' => false]);
+        $deploymentsWithIncludeTotalFalse = $this->listDeployments($functionId, ['total' => false]);
 
         $this->assertEquals(200, $deploymentsWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($deploymentsWithIncludeTotalFalse['body']);
@@ -1017,9 +1017,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($data['deploymentId'], $executions['body']['executions'][0]['deploymentId']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
-        $executionsWithIncludeTotalFalse = $this->listExecutions($data['functionId'], ['includeTotal' => false]);
+        $executionsWithIncludeTotalFalse = $this->listExecutions($data['functionId'], ['total' => false]);
 
         $this->assertEquals(200, $executionsWithIncludeTotalFalse['headers']['status-code']);
         $this->assertIsArray($executionsWithIncludeTotalFalse['body']);

@@ -56,13 +56,13 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test2['body']['$id'], $databases['body']['databases'][1]['$id']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $databasesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $databasesWithIncludeTotalFalse['headers']['status-code']);
@@ -413,13 +413,13 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $collectionsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $collectionsWithIncludeTotalFalse['headers']['status-code']);
@@ -4583,13 +4583,13 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(10, $documents['body']['total']);
 
         /**
-         * Test for SUCCESS with includeTotal=false
+         * Test for SUCCESS with total=false
          */
         $documentsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'includeTotal' => false
+            'total' => false
         ]);
 
         $this->assertEquals(200, $documentsWithIncludeTotalFalse['headers']['status-code']);

@@ -1234,7 +1234,7 @@ App::get('/v1/projects/:projectId/webhooks')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('includeTotal', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
@@ -1532,7 +1532,7 @@ App::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('includeTotal', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
@@ -1836,7 +1836,7 @@ App::get('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('includeTotal', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
