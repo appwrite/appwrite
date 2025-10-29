@@ -389,6 +389,26 @@ class AccountCustomClientTest extends Scope
         $this->assertIsNumeric($responseLimitOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
+
+        /**
+         * Test for total=false
+         */
+        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $logsWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($logsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($logsWithIncludeTotalFalse['body']['logs']);
+        $this->assertIsInt($logsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $logsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($logsWithIncludeTotalFalse['body']['logs']));
+
         /**
          * Test for FAILURE
          */
