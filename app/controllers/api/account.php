@@ -5257,11 +5257,11 @@ App::get('/v1/account/identities')
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
-        $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        $total = $includeTotal ? $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT) : 0;
 
         $response->dynamic(new Document([
             'identities' => $results,
-            'total' => $includeTotal ? $total : 0,
+            'total' => $total,
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
