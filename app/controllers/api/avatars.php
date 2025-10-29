@@ -23,6 +23,8 @@ use Utopia\Fetch\Client;
 use Utopia\Image\Image;
 use Utopia\Logger\Logger;
 use Utopia\System\System;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
@@ -633,6 +635,343 @@ App::get('/v1/avatars/initials')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->setContentType('image/png')
             ->file($image->getImageBlob());
+    });
+
+App::get('/v1/avatars/screenshots')
+    ->desc('Get webpage screenshot')
+    ->groups(['api', 'avatars'])
+    ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resourceType', 'avatar/screenshot')
+    ->label('cache.resource', 'screenshot/{request.url}/{request.width}/{request.height}/{request.theme}/{request.userAgent}/{request.fullpage}/{request.locale}/{request.timezone}/{request.latitude}/{request.longitude}/{request.accuracy}/{request.touch}/{request.permissions}/{request.sleep}/{request.quality}/{request.output}')
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        group: null,
+        name: 'getScreenshot',
+        description: '/docs/references/avatars/get-screenshot.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
+    ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to capture.')
+    ->param('headers', [], new Assoc(), 'HTTP headers to send with the browser request. Defaults to empty.', true)
+    ->param('viewport', '1280x720', new Text(20), 'Browser viewport size. Pass a string like "1280x720" or "1920x1080". Defaults to "1280x720".', true)
+    ->param('theme', 'light', new WhiteList(['light', 'dark']), 'Browser theme. Pass "light" or "dark". Defaults to "light".', true)
+    ->param('userAgent', '', new Text(512), 'Custom user agent string. Defaults to browser default.', true)
+    ->param('fullpage', false, new Boolean(true), 'Capture full page scroll. Pass 0 for viewport only, or 1 for full page. Defaults to 0.', true)
+    ->param('locale', '', new Text(10), 'Browser locale (e.g., "en-US", "fr-FR"). Defaults to browser default.', true)
+    ->param('timezone', '', new WhiteList(timezone_identifiers_list()), 'IANA timezone identifier (e.g., "America/New_York", "Europe/London"). Defaults to browser default.', true)
+    ->param('latitude', 0, new Range(-90, 90, Range::TYPE_FLOAT), 'Geolocation latitude. Pass a number between -90 to 90. Defaults to 0.', true)
+    ->param('longitude', 0, new Range(-180, 180, Range::TYPE_FLOAT), 'Geolocation longitude. Pass a number between -180 to 180. Defaults to 0.', true)
+    ->param('accuracy', 0, new Range(0, 100000, Range::TYPE_FLOAT), 'Geolocation accuracy in meters. Pass a number between 0 to 100000. Defaults to 0.', true)
+    ->param('touch', false, new Boolean(true), 'Enable touch support. Pass 0 for no touch, or 1 for touch enabled. Defaults to 0.', true)
+    ->param('permissions', [], new ArrayList(new WhiteList(['geolocation', 'camera', 'microphone', 'notifications', 'midi', 'push', 'clipboard-read', 'clipboard-write', 'payment-handler', 'usb', 'bluetooth', 'accelerometer', 'gyroscope', 'magnetometer', 'ambient-light-sensor', 'background-sync', 'persistent-storage', 'screen-wake-lock', 'web-share', 'xr-spatial-tracking'])), 'Browser permissions to grant. Pass an array of permission names like ["geolocation", "camera", "microphone"]. Defaults to empty.', true)
+    ->param('sleep', 0, new Range(0, 10), 'Wait time in seconds before taking the screenshot. Pass an integer between 0 to 10. Defaults to 0.', true)
+    ->param('width', 0, new Range(0, 2000), 'Output image width. Pass 0 to use original width, or an integer between 1 to 2000. Defaults to 0 (original width).', true)
+    ->param('height', 0, new Range(0, 2000), 'Output image height. Pass 0 to use original height, or an integer between 1 to 2000. Defaults to 0 (original height).', true)
+    ->param('quality', -1, new Range(-1, 100), 'Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
+    ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->inject('response')
+    ->action(function (string $url, array $headers, string $viewport, string $theme, string $userAgent, bool $fullpage, string $locale, string $timezone, float $latitude, float $longitude, float $accuracy, bool $touch, array $permissions, int $sleep, int $width, int $height, int $quality, string $output, Response $response) {
+
+        if (!\extension_loaded('imagick')) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
+        }
+
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        // Parse viewport parameter
+        $viewportParts = \explode('x', $viewport);
+        if (\count($viewportParts) !== 2 || !\is_numeric($viewportParts[0]) || !\is_numeric($viewportParts[1])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Viewport must be in format "WIDTHxHEIGHT" (e.g., "1280x720")');
+        }
+
+        $browserWidth = (int) $viewportParts[0];
+        $browserHeight = (int) $viewportParts[1];
+
+        if ($browserWidth < 1 || $browserWidth > 1920 || $browserHeight < 1 || $browserHeight > 1080) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Browser viewport must be between 1x1 and 1920x1080');
+        }
+
+        $client = new Client();
+        $client->setTimeout(30);
+        $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
+
+        // Convert indexed array to empty array (should not happen due to Assoc validator)
+        if (is_array($headers) && count($headers) > 0 && array_keys($headers) === range(0, count($headers) - 1)) {
+            $headers = [];
+        }
+
+        // Create a new object to ensure proper JSON serialization
+        $headersObject = new \stdClass();
+        foreach ($headers as $key => $value) {
+            $headersObject->$key = $value;
+        }
+
+        // Create the config with headers as an object
+        // The custom browser service accepts: url, theme, headers, sleep, viewport, userAgent, fullPage, locale, timezoneId, geolocation, hasTouch
+        $config = [
+            'url' => $url,
+            'theme' => $theme,
+            'headers' => $headersObject,
+            'sleep' => $sleep * 1000, // Convert seconds to milliseconds
+            'viewport' => [
+                'width' => $browserWidth,
+                'height' => $browserHeight
+            ]
+        ];
+
+        // Add fullPage to viewport if enabled
+        if ($fullpage) {
+            $config['viewport']['fullPage'] = true;
+        }
+
+        // Add optional parameters only if they have meaningful values
+        if (!empty($userAgent)) {
+            $config['userAgent'] = $userAgent;
+        }
+
+        if ($fullpage) {
+            $config['fullPage'] = true;
+        }
+
+        if (!empty($locale)) {
+            $config['locale'] = $locale;
+        }
+
+        if (!empty($timezone)) {
+            $config['timezoneId'] = $timezone;
+        }
+
+        // Add geolocation if any coordinates are provided
+        if ($latitude != 0 || $longitude != 0) {
+            $config['geolocation'] = [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'accuracy' => $accuracy
+            ];
+        }
+
+        if ($touch) {
+            $config['hasTouch'] = true;
+        }
+
+        // Add permissions if provided
+        if (!empty($permissions)) {
+            $config['permissions'] = $permissions;
+        }
+
+        // Manually handle the config to ensure headers is an object but arrays remain arrays
+        $finalConfig = [
+            'url' => $config['url'],
+            'theme' => $config['theme'],
+            'headers' => $config['headers'], // Keep as object
+            'sleep' => $config['sleep'],
+            'viewport' => $config['viewport'] // Keep as object
+        ];
+
+        // Add optional parameters that were set, preserving arrays as arrays
+        if (!empty($userAgent)) {
+            $finalConfig['userAgent'] = $userAgent;
+        }
+
+        if ($fullpage) {
+            $finalConfig['fullPage'] = true;
+        }
+
+        if (!empty($locale)) {
+            $finalConfig['locale'] = $locale;
+        }
+
+        if (!empty($timezone)) {
+            $finalConfig['timezoneId'] = $timezone;
+        }
+
+        // Add geolocation if any coordinates are provided
+        if ($latitude != 0 || $longitude != 0) {
+            $finalConfig['geolocation'] = [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'accuracy' => $accuracy
+            ];
+        }
+
+        if ($touch) {
+            $finalConfig['hasTouch'] = true;
+        }
+
+        // Add permissions if provided (preserve as array)
+        if (!empty($permissions)) {
+            $finalConfig['permissions'] = $permissions; // Keep as array
+        }
+
+        $config = $finalConfig;
+
+        try {
+            $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+
+            $fetchResponse = $client->fetch(
+                url: $browserEndpoint . '/screenshots',
+                method: 'POST',
+                body: $config
+            );
+
+            if ($fetchResponse->getStatusCode() >= 400) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot service failed: ' . $fetchResponse->getBody());
+            }
+
+            $screenshot = $fetchResponse->getBody();
+
+            if (empty($screenshot)) {
+                throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND, 'Screenshot not generated');
+            }
+
+            // Determine output format
+            $outputs = Config::getParam('storage-outputs');
+            if (empty($output)) {
+                $output = 'png'; // Default to PNG for screenshots
+            }
+
+            // Only resize if width and height are explicitly set (not 0)
+            $image = new Image($screenshot);
+            if ($width > 0 && $height > 0) {
+                $image->crop($width, $height);
+            }
+
+            $resizedScreenshot = $image->output($output, $quality);
+            unset($image);
+
+            $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['png'];
+
+            $response
+                ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+                ->setContentType($contentType)
+                ->file($resizedScreenshot);
+
+        } catch (\Throwable $th) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Screenshot generation failed: ' . $th->getMessage());
+        }
+    });
+
+App::get('/v1/avatars/photos')
+    ->desc('Get user photo from Gravatar')
+    ->groups(['api', 'avatars'])
+    ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resourceType', 'avatar/photo')
+    ->label('cache.resource', 'photo/{request.userId}/{request.width}/{request.height}/{request.quality}/{request.output}')
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        group: null,
+        name: 'getPhoto',
+        description: '/docs/references/avatars/get-photo.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
+    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('quality', -1, new Range(-1, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
+    ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->inject('response')
+    ->inject('user')
+    ->action(function (int $width, int $height, int $quality, string $output, Response $response, Document $user) {
+
+        if (!\extension_loaded('imagick')) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
+        }
+
+        $email = $user->getAttribute('email', '');
+        if (empty($email)) {
+            throw new Exception(Exception::USER_NOT_FOUND, 'User email not found');
+        }
+
+        // Use the larger of width/height for Gravatar size parameter
+        $gravatarSize = \max($width, $height);
+        $gravatarSize = \max($gravatarSize, 80); // Minimum size for Gravatar
+
+        // Generate Gravatar URL
+        $emailHash = \md5(\strtolower(\trim($email)));
+        $gravatarUrl = 'https://www.gravatar.com/avatar/' . $emailHash . '?s=' . $gravatarSize . '&d=404';
+
+        $domain = new Domain(\parse_url($gravatarUrl, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($gravatarUrl);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $imageData = null;
+        $isGravatarImage = false;
+
+        if ($res->getStatusCode() === 200) {
+            try {
+                $imageData = $res->getBody();
+                $isGravatarImage = true;
+            } catch (\Throwable $exception) {
+                // Fall through to fallback image
+            }
+        }
+
+        // If no Gravatar image found, use a fallback image
+        if (!$isGravatarImage || empty($imageData)) {
+            $fileLogos = Config::getParam('storage-logos');
+            $fallbackPath = $fileLogos['default_image'];
+            
+            if (!\is_readable($fallbackPath)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Fallback image not readable');
+            }
+            
+            $imageData = \file_get_contents($fallbackPath);
+        }
+
+        try {
+            $image = new Image($imageData);
+        } catch (\Throwable $exception) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
+        }
+
+        $image->crop((int) $width, (int) $height);
+        
+        // Determine output format - replicate storage preview logic
+        $outputs = Config::getParam('storage-outputs');
+        if (empty($output)) {
+            $output = 'png'; // Default to PNG
+        }
+        
+        $data = $image->output($output, $quality);
+        unset($image);
+
+        $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['png'];
+
+        $response
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->setContentType($contentType)
+            ->file($data);
     });
 
 App::get('/v1/cards/cloud')
