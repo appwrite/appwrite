@@ -47,6 +47,7 @@ Table of Contents:
 
 - [Installation \& Setup](#installation--setup)
 - [Self-Hosting](#self-hosting)
+- [Ubuntu Prerequisites](#ubuntu-prerequisites)
   - [Unix](#unix)
   - [Windows](#windows)
     - [CMD](#cmd)
