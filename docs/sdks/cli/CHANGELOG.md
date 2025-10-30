@@ -1,7 +1,9 @@
 # Change Log
 
-## 10.2.4
+## 10.3.0
 
+* Add `create-csv-export` and `create-csv-import` commands to create a CSV export and import of a collection/table
+* Add `create-resend-provider` and `update-resend-provider` commands to create and update a Resend Email provider
 * Fix syncing of tables deleted locally during `push tables` command
 * Fix added push command support for cli spatial types
 * Fix attribute changing during push

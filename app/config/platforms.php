@@ -226,7 +226,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '10.2.4',
+                'version' => '10.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -300,7 +300,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '13.4.2',
+                'version' => '13.5.0',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,

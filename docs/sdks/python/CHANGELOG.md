@@ -1,7 +1,9 @@
 # Change Log
 
-## 13.4.2
+## 13.5.0
 
+* Add `create_resend_provider` and `update_resend_provider` methods to `Messaging` service
+* Improve deprecation warnings
 * Fix adding `Optional[]` to optional parameters
 * Fix passing of `None` to nullable parameters
 
