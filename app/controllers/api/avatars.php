@@ -730,11 +730,6 @@ App::get('/v1/avatars/screenshots')
             $config['deviceScaleFactor'] = $scale;
         }
 
-        // Add fullPage to viewport if enabled
-        if ($fullpage) {
-            $config['viewport']['fullPage'] = true;
-        }
-
         // Add optional parameters only if they have meaningful values
         if (!empty($userAgent)) {
             $config['userAgent'] = $userAgent;
