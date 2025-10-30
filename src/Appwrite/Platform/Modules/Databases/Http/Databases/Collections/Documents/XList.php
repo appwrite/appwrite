@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class XList extends Action
@@ -68,6 +69,8 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID to read uncommitted changes within the transaction.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -77,7 +80,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -132,16 +135,16 @@ class XList extends Action
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
                 $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
-                $total = $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries);
+                $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
             } elseif (! empty($selectQueries)) {
                 // has selects, allow relationship on documents
                 $documents = $dbForDatabases->find($collectionTableId, $queries);
-                $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
                 $documents = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
-                $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
             }
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';

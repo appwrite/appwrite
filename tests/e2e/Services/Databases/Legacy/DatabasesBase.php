@@ -986,6 +986,24 @@ trait DatabasesBase
         $this->assertEquals(200, $attributes['headers']['status-code']);
         $this->assertEquals(12, $attributes['body']['total']);
 
+        /**
+         * Test for SUCCESS with total=false
+         */
+        $attributesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $attributesWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($attributesWithIncludeTotalFalse['body']);
+        $this->assertIsArray($attributesWithIncludeTotalFalse['body']['attributes']);
+        $this->assertIsInt($attributesWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $attributesWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($attributesWithIncludeTotalFalse['body']['attributes']));
+
         $attributes = $attributes['body']['attributes'];
         $this->assertIsArray($attributes);
         $this->assertCount(12, $attributes);
