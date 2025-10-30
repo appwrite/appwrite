@@ -1,5 +1,4 @@
 {
-
     "name": "appwrite/server-ce",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",
@@ -108,5 +107,23 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/migration"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/emails"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/validators"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/database"
+        }
+    ]
 }
