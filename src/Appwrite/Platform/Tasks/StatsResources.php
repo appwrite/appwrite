@@ -59,27 +59,39 @@ class StatsResources extends Action
 
         Console::success('Stats resources: started');
 
-        $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
+        $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '');
+        if (empty($interval)) {
+            Console::log('Stats resources: interval not set, running once');
+            $this->enqueueResources($queue);
+            Console::log("Stats resources: exited");
+            return;
+        }
 
+        Console::log("Stats resources: interval $interval seconds");
         Console::loop(function () use ($queue) {
-            Authorization::disable();
-            Authorization::setDefaultStatus(false);
-
-            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
-            /**
-             * For each project that were accessed in last 24 hours
-             */
-            $this->foreachDocument($this->dbForPlatform, 'projects', [
-                Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
-                Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
-            ], function ($project) use ($queue) {
-                $queue
-                    ->setProject($project)
-                    ->trigger();
-                Console::success('project: ' . $project->getId() . '(' . $project->getSequence() . ')' . ' queued');
-            });
+            $this->enqueueResources($queue);
         }, $interval);
 
         Console::log("Stats resources: exited");
+    }
+
+    private function enqueueResources(EventStatsResources $queue)
+    {
+        Authorization::disable();
+        Authorization::setDefaultStatus(false);
+
+        $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
+        /**
+         * For each project that were accessed in last 24 hours
+         */
+        $this->foreachDocument($this->dbForPlatform, 'projects', [
+            Query::greaterThanEqual('accessedAt', DateTime::format($last24Hours)),
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')])
+        ], function ($project) use ($queue) {
+            $queue
+                ->setProject($project)
+                ->trigger();
+            Console::success('project: ' . $project->getId() . '(' . $project->getSequence() . ')' . ' queued');
+        });
     }
 }
