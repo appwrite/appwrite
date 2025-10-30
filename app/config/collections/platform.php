@@ -79,6 +79,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('documentsDatabase'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('logo'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

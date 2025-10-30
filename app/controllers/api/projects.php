@@ -51,6 +51,65 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
+function getDatabaseDSN(string $databasetype, $region): string
+{
+    $databases = [];
+    $databaseKeys = [];
+    /**
+     * @var string|null $databaseOverride
+    */
+    $databaseOverride = '';
+    $dbScheme = '';
+    switch ($databasetype) {
+        case 'documentsDatabase':
+            $databases = Config::getParam('pools-documentsdb', []);
+            $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
+            $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
+            $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+            break;
+        default:
+            // legacy/tablesdb
+            $databases = Config::getParam('pools-database', []);
+            $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
+            $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
+            $dbScheme = System::getEnv('_APP_DB_HOST', 'mysql');
+            break;
+    }
+
+    if ($region !== 'default') {
+        $keys = explode(',', $databaseKeys);
+        $databases = array_filter($keys, function ($value) use ($region) {
+            return str_contains($value, $region);
+        });
+    }
+
+    $index = \array_search($databaseOverride, $databases);
+    if ($index !== false) {
+        $dsn = $databases[$index];
+    } else {
+        $dsn = $databases[array_rand($databases)];
+    }
+
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    if (\in_array($dsn, $sharedTables)) {
+        $schema = 'appwrite';
+        $database = 'appwrite';
+        $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+        $dsn = $schema . '://' . $dsn . '?database=' . $database;
+
+        if (!empty($namespace)) {
+            $dsn .= '&namespace=' . $namespace;
+        }
+    }
+    try {
+        // for validation
+        new DSN($dsn);
+    } catch (\InvalidArgumentException) {
+        $dsn = $dbScheme.'://' . $dsn;
+    }
+    return $dsn;
+}
+
 App::init()
     ->groups(['projects'])
     ->inject('project')
@@ -138,37 +197,7 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $databases = Config::getParam('pools-database', []);
-
-        if ($region !== 'default') {
-            $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-            $keys = explode(',', $databaseKeys);
-            $databases = array_filter($keys, function ($value) use ($region) {
-                return str_contains($value, $region);
-            });
-        }
-
-        $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
-        $index = \array_search($databaseOverride, $databases);
-        if ($index !== false) {
-            $dsn = $databases[$index];
-        } else {
-            $dsn = $databases[array_rand($databases)];
-        }
-
-        // TODO: Temporary until all projects are using shared tables.
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn, $sharedTables)) {
-            $schema = 'appwrite';
-            $database = 'appwrite';
-            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . $dsn . '?database=' . $database;
-
-            if (!empty($namespace)) {
-                $dsn .= '&namespace=' . $namespace;
-            }
-        }
+        $dsn = getDatabaseDSN('databases', $region);
 
         try {
             $project = $dbForPlatform->createDocument('projects', new Document([
@@ -203,6 +232,7 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
+                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region)
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);

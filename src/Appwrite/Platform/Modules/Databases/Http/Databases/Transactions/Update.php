@@ -66,6 +66,7 @@ class Update extends Action
             ->param('transactionId', '', new UID(), 'Transaction ID.')
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -102,7 +103,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      * @throws StructureException
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
+    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -137,22 +138,7 @@ class Update extends Action
             $databaseOperations = [];
 
             try {
-                // transactions scoped to db wise
-                // taking a sample record to connect and start transactions
-                $operation = Authorization::skip(fn () => $dbForProject->findOne('transactionLogs', [
-                    Query::equal('transactionInternalId', [$transaction->getSequence()])
-                ]));
-
-                if ($operation->isEmpty()) {
-                    // for transaction logs processing
-                    $dbForDatabases = $dbForProject;
-                } else {
-                    $databaseInternalId = $operation['databaseInternalId'];
-                    $databaseDoc = Authorization::skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$databaseInternalId])
-                    ]));
-                    $dbForDatabases = $getDatabasesDB($databaseDoc);
-                }
+                $dbForDatabases = $getDatabasesDB(new Document(['database' => $this->getDatabaseDSN($project)]));
                 $dbForDatabases->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, $dbForDatabases) {
                     Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
@@ -418,6 +404,15 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    private function getDatabaseDSN(Document $project)
+    {
+        var_dump($this->getDatabaseType());
+        return match ($this->getDatabaseType()) {
+            DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
+            default => $project->getAttribute('database'),
+        };
     }
 
     /**

@@ -17,7 +17,6 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
@@ -449,58 +448,10 @@ class Migrations extends Action
 
     protected function getDatabaseDSN(string $databaseType): string
     {
-        $databases = [];
-        $databaseKeys = [];
-        /**
-         * @var string|null $databaseOverride
-        */
-        $databaseOverride = '';
-        $dbScheme = '';
-        $region = $this->project->getAttribute('region');
-        switch ($databaseType) {
-            case 'documentsdb':
-                $databases = Config::getParam('pools-documentsdb', []);
-                $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
-                $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
-                break;
-            default:
-                // legacy/tablesdb case where projects having the location of the database
-                return $this->project->getAttribute('database');
-        }
-
-        if ($region !== 'default') {
-            $keys = explode(',', $databaseKeys);
-            $databases = array_filter($keys, function ($value) use ($region) {
-                return str_contains($value, $region);
-            });
-        }
-
-        $index = \array_search($databaseOverride, $databases);
-        if ($index !== false) {
-            $dsn = $databases[$index];
-        } else {
-            $dsn = $databases[array_rand($databases)];
-        }
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        if (\in_array($dsn, $sharedTables)) {
-            $schema = 'appwrite';
-            $database = 'appwrite';
-            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . $dsn . '?database=' . $database;
-
-            if (!empty($namespace)) {
-                $dsn .= '&namespace=' . $namespace;
-            }
-        }
-        try {
-            // for validation
-            new DSN($dsn);
-        } catch (\InvalidArgumentException) {
-            $dsn = $dbScheme.'://' . $dsn;
-        }
-        return $dsn;
+        return match ($databaseType) {
+            'documentsdb' => $this->project->getAttribute('documentsDatabase'),
+            default => $this->project->getAttribute('database'),
+        };
     }
     /**
      * Handle actions to be performed when a CSV export migration is successfully completed

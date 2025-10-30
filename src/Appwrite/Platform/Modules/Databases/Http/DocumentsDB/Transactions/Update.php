@@ -50,6 +50,7 @@ class Update extends TransactionsUpdate
             ->param('transactionId', '', new UID(), 'Transaction ID.')
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

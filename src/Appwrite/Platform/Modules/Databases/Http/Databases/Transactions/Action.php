@@ -10,11 +10,25 @@ abstract class Action extends UtopiaAction
      * The current API context (either 'table' or 'collection').
      */
     private ?string $context = COLLECTIONS;
+    private ?string $databaseType = DOCUMENTSDB;
+
+    protected function getDatabaseType(): string
+    {
+        return $this->databaseType;
+    }
 
     public function setHttpPath(string $path): UtopiaAction
     {
-        if (\str_contains($path, '/tablesdb')) {
-            $this->context = TABLES;
+        switch (true) {
+            case str_contains($path, '/tablesdb'):
+                $this->context = TABLES;
+                $this->databaseType = TABLESDB;
+                break;
+
+            case str_contains($path, '/documentsdb'):
+                $this->context = COLLECTIONS;
+                $this->databaseType = DOCUMENTSDB;
+                break;
         }
         return parent::setHttpPath($path);
     }
