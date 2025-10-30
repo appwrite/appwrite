@@ -112,6 +112,8 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $data = $this->parseOperators($data, $collection);
+
         // Read permission should not be required for update
         /** @var Document $document */
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
