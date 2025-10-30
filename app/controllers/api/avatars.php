@@ -730,7 +730,7 @@ App::get('/v1/avatars/screenshots')
             $config['deviceScaleFactor'] = $scale;
         }
 
-        // Add optional parameters only if they have meaningful values
+        // Add optional parameters that were set, preserving arrays as arrays
         if (!empty($userAgent)) {
             $config['userAgent'] = $userAgent;
         }
@@ -760,61 +760,10 @@ App::get('/v1/avatars/screenshots')
             $config['hasTouch'] = true;
         }
 
-        // Add permissions if provided
-        if (!empty($permissions)) {
-            $config['permissions'] = $permissions;
-        }
-
-        // Manually handle the config to ensure headers is an object but arrays remain arrays
-        $finalConfig = [
-            'url' => $config['url'],
-            'theme' => $config['theme'],
-            'headers' => $config['headers'], // Keep as object
-            'sleep' => $config['sleep'],
-            'viewport' => $config['viewport'] // Keep as object
-        ];
-
-        // Add scale if not default
-        if ($scale != 1) {
-            $finalConfig['deviceScaleFactor'] = $scale;
-        }
-
-        // Add optional parameters that were set, preserving arrays as arrays
-        if (!empty($userAgent)) {
-            $finalConfig['userAgent'] = $userAgent;
-        }
-
-        if ($fullpage) {
-            $finalConfig['fullPage'] = true;
-        }
-
-        if (!empty($locale)) {
-            $finalConfig['locale'] = $locale;
-        }
-
-        if (!empty($timezone)) {
-            $finalConfig['timezoneId'] = $timezone;
-        }
-
-        // Add geolocation if any coordinates are provided
-        if ($latitude != 0 || $longitude != 0) {
-            $finalConfig['geolocation'] = [
-                'latitude' => $latitude,
-                'longitude' => $longitude,
-                'accuracy' => $accuracy
-            ];
-        }
-
-        if ($touch) {
-            $finalConfig['hasTouch'] = true;
-        }
-
         // Add permissions if provided (preserve as array)
         if (!empty($permissions)) {
-            $finalConfig['permissions'] = $permissions; // Keep as array
+            $config['permissions'] = $permissions; // Keep as array
         }
-
-        $config = $finalConfig;
 
         try {
             $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
