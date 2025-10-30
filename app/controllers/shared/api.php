@@ -840,13 +840,11 @@ App::shutdown()
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-                    var_dump($resource);
                 }
 
                 $pattern = $route->getLabel('cache.resourceType', null);
                 if (!empty($pattern)) {
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-                    var_dump($resourceType);
                 }
 
                 $cache = new Cache(
