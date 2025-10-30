@@ -57,7 +57,15 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
             $replacement = $params[$replace];
             // Convert to string if it's not already a string
             if (!is_string($replacement)) {
-                $replacement = is_array($replacement) ? json_encode($replacement) : (string)$replacement;
+                if (is_array($replacement)) {
+                    $replacement = json_encode($replacement);
+                } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
+                    $replacement = (string)$replacement;
+                } elseif (is_scalar($replacement)) {
+                    $replacement = (string)$replacement;
+                } else {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
+                }
             }
             $label = \str_replace($find, $replacement, $label);
         }
