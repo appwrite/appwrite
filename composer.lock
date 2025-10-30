@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "47ceb116e4bcf4f621bdc3e198d30c4c",
+    "content-hash": "7b51994d7c4a92e761235dff86b068e3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5248,16 +5248,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "1.12.0",
+            "version": "1.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "541057574806f942c94662b817a50f63f7345360"
+                "reference": "9be6926d8b485f55b9229203f962b51ed377ba68"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/541057574806f942c94662b817a50f63f7345360",
-                "reference": "541057574806f942c94662b817a50f63f7345360",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/9be6926d8b485f55b9229203f962b51ed377ba68",
+                "reference": "9be6926d8b485f55b9229203f962b51ed377ba68",
                 "shasum": ""
             },
             "require": {
@@ -5300,9 +5300,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/1.12.0"
+                "source": "https://github.com/webmozarts/assert/tree/1.12.1"
             },
-            "time": "2025-10-20T12:43:39+00:00"
+            "time": "2025-10-29T15:56:20+00:00"
         },
         {
             "name": "webonyx/graphql-php",
@@ -5373,16 +5373,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.4.15",
+            "version": "1.4.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda"
+                "reference": "08f839443f678208eb56a6c5a7456dd632adfc9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda",
-                "reference": "b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/08f839443f678208eb56a6c5a7456dd632adfc9a",
+                "reference": "08f839443f678208eb56a6c5a7456dd632adfc9a",
                 "shasum": ""
             },
             "require": {
@@ -5418,9 +5418,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.15"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.16"
             },
-            "time": "2025-10-28T04:52:59+00:00"
+            "time": "2025-10-29T08:39:55+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8927,5 +8927,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
