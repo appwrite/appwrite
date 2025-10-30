@@ -3071,7 +3071,6 @@ App::patch('/v1/account/email')
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-            ->setAttribute('emailVerification', false)
             ->setAttribute('emailCanonical', $emailCanonical->getCanonical())
             ->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported())
             ->setAttribute('emailIsCorporate', $emailCanonical->isCorporate())
