@@ -45,7 +45,7 @@ Find out more at: [https://appwrite.io](https://appwrite.io).
 
 Table of Contents:
 
-- [Installation \& Setup](#installation--setup)
+- [Installation & Setup](#installation--setup)
 - [Self-Hosting](#self-hosting)
 - [Ubuntu Prerequisites](#ubuntu-prerequisites)
   - [Unix](#unix)
@@ -76,7 +76,7 @@ Appwrite is designed to run in a containerized environment. Running your server 
 
 Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
-#### Ubuntu Prerequisites
+### Ubuntu Prerequisites
 
 For Ubuntu users, follow these steps to install Docker before running Appwrite:
 ```bash
