@@ -870,6 +870,111 @@ trait StorageBase
     }
 
     /**
+     * @depends testCreateBucketFile
+     */
+    public function testUploadWebpImage(): array
+    {
+        /**
+         * Test for SUCCESS - Upload and view webp image
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Webp',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ['webp'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        // Upload webp file
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.webp'), 'image/webp', 'logo.webp'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertEquals('logo.webp', $file['body']['name']);
+        $this->assertEquals('image/webp', $file['body']['mimeType']);
+
+        $fileId = $file['body']['$id'];
+
+        // View webp file
+        $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $view['headers']['status-code']);
+        $this->assertEquals('image/webp', $view['headers']['content-type']);
+        $this->assertNotEmpty($view['body']);
+
+        return ['bucketId' => $bucketId, 'fileId' => $fileId];
+    }
+
+    /**
+     * @depends testCreateBucketFile
+     */
+    public function testPreviewNonWebpAsWebp(array $data): array
+    {
+        $bucketId = $data['bucketId'];
+
+        // Upload a PNG image
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+
+        $fileId = $file['body']['$id'];
+
+        // Preview PNG as webp
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 300,
+            'output' => 'webp',
+        ]);
+
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/webp', $preview['headers']['content-type']);
+        $this->assertNotEmpty($preview['body']);
+
+        return $data;
+    }
+
+    /**
      * @depends testUpdateBucketFile
      */
     public function testDeleteBucketFile(array $data): array
