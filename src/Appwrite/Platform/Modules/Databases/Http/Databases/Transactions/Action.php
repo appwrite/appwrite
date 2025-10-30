@@ -10,7 +10,7 @@ abstract class Action extends UtopiaAction
      * The current API context (either 'table' or 'collection').
      */
     private ?string $context = COLLECTIONS;
-    private ?string $databaseType = DOCUMENTSDB;
+    private ?string $databaseType = TABLESDB;
 
     protected function getDatabaseType(): string
     {

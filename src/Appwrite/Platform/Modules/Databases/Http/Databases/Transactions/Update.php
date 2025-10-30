@@ -408,7 +408,6 @@ class Update extends Action
 
     private function getDatabaseDSN(Document $project)
     {
-        var_dump($this->getDatabaseType());
         return match ($this->getDatabaseType()) {
             DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
             default => $project->getAttribute('database'),

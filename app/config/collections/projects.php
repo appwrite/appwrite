@@ -69,17 +69,7 @@ return [
                 'signed' => true,
                 'array' => false,
                 'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('databases'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 65535,
-                'signed' => true,
-                'required' => false,
-                'array' => true,
-                'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
