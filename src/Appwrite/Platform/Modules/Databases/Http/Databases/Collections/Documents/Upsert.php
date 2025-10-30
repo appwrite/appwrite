@@ -76,9 +76,9 @@ class Upsert extends Action
                     ),
                 ),
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('documentId', '', new CustomId(), 'Document ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
             ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
@@ -86,14 +86,17 @@ class Upsert extends Action
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('transactionState')
+            ->inject('plan')
             ->inject('transactionState')
             ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -118,6 +121,7 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
@@ -128,13 +132,15 @@ class Upsert extends Action
 
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
         // If no permission, upsert permission from the old document if present (update scenario) else add default permission (create scenario)
         if (\is_null($permissions)) {
             if ($transactionId !== null) {
                 // Use transaction-aware document retrieval to see changes from same transaction
-                $oldDocument = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+                $oldDocument = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
             } else {
-                $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+                $oldDocument = Authorization::skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
             }
             if ($oldDocument->isEmpty()) {
                 if (!empty($user->getId())) {
@@ -176,7 +182,7 @@ class Upsert extends Action
         $newDocument = new Document($data);
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $dbForDatabases, $database, &$operations) {
             $operations++;
 
             $relationships = \array_filter(
@@ -217,7 +223,7 @@ class Upsert extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
+                        $oldDocument = Authorization::skip(fn () => $dbForDatabases->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
@@ -316,8 +322,8 @@ class Upsert extends Action
 
         $upserted = [];
         try {
-            $dbForProject->withPreserveDates(function () use (&$upserted, $dbForProject, $database, $collection, $newDocument) {
-                return $dbForProject->upsertDocuments(
+            $dbForDatabases->withPreserveDates(function () use (&$upserted, $dbForDatabases, $database, $collection, $newDocument) {
+                return $dbForDatabases->upsertDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     [$newDocument],
                     onNext: function (Document $document) use (&$upserted) {
@@ -340,9 +346,9 @@ class Upsert extends Action
         if (empty($upserted[0])) {
             if ($transactionId !== null) {
                 // For transactions, get the document with transaction changes applied
-                $upserted[0] = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+                $upserted[0] = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
             } else {
-                $upserted[0] = $dbForProject->getDocument($collectionTableId, $documentId);
+                $upserted[0] = $dbForDatabases->getDocument($collectionTableId, $documentId);
             }
         }
 

@@ -22,3 +22,6 @@ const INDEX = 'index';
 const DOCUMENTS = 'document';
 const ATTRIBUTES = 'attribute';
 const COLLECTIONS = 'collection';
+
+const TABLESDB = 'tablesdb';
+const DOCUMENTSDB = 'documentsdb';

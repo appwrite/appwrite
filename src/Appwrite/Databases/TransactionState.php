@@ -20,16 +20,22 @@ use Utopia\Database\Validator\Authorization;
 class TransactionState
 {
     private Database $dbForProject;
+    /**
+     * @var callable(Document $database): Database
+    */
+    private mixed $getDatabasesDB;
 
-    public function __construct(Database $dbForProject)
+    public function __construct(Database $dbForProject, callable $getDatabasesDB)
     {
         $this->dbForProject = $dbForProject;
+        $this->getDatabasesDB = $getDatabasesDB;
     }
 
 
     /**
      * Get a document with transaction-aware logic
      *
+     * @param Document $database Target database document
      * @param string $collectionId Collection ID
      * @param string $documentId Document ID
      * @param string|null $transactionId Optional transaction ID
@@ -40,13 +46,15 @@ class TransactionState
      * @throws Timeout
      */
     public function getDocument(
+        Document $database,
         string $collectionId,
         string $documentId,
         ?string $transactionId = null,
         array $queries = []
     ): Document {
+        $databasesDB = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return $this->dbForProject->getDocument($collectionId, $documentId, $queries);
+            return $databasesDB->getDocument($collectionId, $documentId, $queries);
         }
 
         $state = $this->getTransactionState($transactionId);
@@ -64,7 +72,7 @@ class TransactionState
 
             if ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
                 // Merge with committed version
-                $committedDoc = $this->dbForProject->getDocument($collectionId, $documentId, $queries);
+                $committedDoc = $databasesDB->getDocument($collectionId, $documentId, $queries);
                 if (!$committedDoc->isEmpty()) {
                     foreach ($docState['document']->getAttributes() as $key => $value) {
                         if ($key !== '$id') {
@@ -78,13 +86,13 @@ class TransactionState
                 }
             }
         }
-
-        return $this->dbForProject->getDocument($collectionId, $documentId, $queries);
+        return $databasesDB->getDocument($collectionId, $documentId, $queries);
     }
 
     /**
      * List documents with transaction-aware logic
      *
+     * @param Document $database Target database document
      * @param string $collectionId Collection ID
      * @param string|null $transactionId Optional transaction ID
      * @param array $queries Optional query filters
@@ -94,17 +102,19 @@ class TransactionState
      * @throws Timeout
      */
     public function listDocuments(
+        Document $database,
         string $collectionId,
         ?string $transactionId = null,
         array $queries = []
     ): array {
+        $databasesDB = ($this->getDatabasesDB)($database);
         // If no transaction, use normal database retrieval
         if ($transactionId === null) {
-            return $this->dbForProject->find($collectionId, $queries);
+            return $databasesDB->find($collectionId, $queries);
         }
 
         $state = $this->getTransactionState($transactionId);
-        $committedDocs = $this->dbForProject->find($collectionId, $queries);
+        $committedDocs = $databasesDB->find($collectionId, $queries);
         $documentMap = [];
 
         // Build map of committed documents
@@ -145,6 +155,7 @@ class TransactionState
     /**
      * Count documents with transaction-aware logic
      *
+     * @param Document $database Target database document
      * @param string $collectionId Collection ID
      * @param string|null $transactionId Optional transaction ID
      * @param array $queries Optional query filters
@@ -154,23 +165,23 @@ class TransactionState
      * @throws Timeout
      */
     public function countDocuments(
+        Document $database,
         string $collectionId,
         ?string $transactionId = null,
         array $queries = []
     ): int {
+        $databasesDB = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return $this->dbForProject->count($collectionId, $queries, APP_LIMIT_COUNT);
+            return $databasesDB->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
         $state = $this->getTransactionState($transactionId);
-
-        $baseCount = $this->dbForProject->count($collectionId, $queries, APP_LIMIT_COUNT);
+        $baseCount = $databasesDB->count($collectionId, $queries, APP_LIMIT_COUNT);
 
         if (!isset($state[$collectionId])) {
             return $baseCount;
         }
-
-        $committedDocs = $this->dbForProject->find($collectionId, $queries);
+        $committedDocs = $databasesDB->find($collectionId, $queries);
         $committedDocIds = [];
         foreach ($committedDocs as $doc) {
             $committedDocIds[$doc->getId()] = true;
@@ -212,17 +223,19 @@ class TransactionState
     /**
      * Check if a document exists with transaction-aware logic
      *
+     * @param Document $database Target database document
      * @param string $collectionId Collection ID
      * @param string $documentId Document ID
      * @param string|null $transactionId Optional transaction ID
      * @return bool True if document exists
      */
     public function documentExists(
+        Document $database,
         string $collectionId,
         string $documentId,
         ?string $transactionId = null
     ): bool {
-        $doc = $this->getDocument($collectionId, $documentId, $transactionId);
+        $doc = $this->getDocument($database, $collectionId, $documentId, $transactionId);
         return !$doc->isEmpty();
     }
 
