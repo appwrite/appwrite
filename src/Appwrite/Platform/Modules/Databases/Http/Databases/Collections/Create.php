@@ -112,7 +112,9 @@ class Create extends Action
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-
+        /**
+         * @var Database $dbForDatabases
+         */
         $dbForDatabases = $getDatabasesDB($database);
         try {
             $dbForDatabases->createCollection(

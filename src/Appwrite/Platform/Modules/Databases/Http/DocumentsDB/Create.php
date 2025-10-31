@@ -52,6 +52,7 @@ class Create extends DatabaseCreate
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
