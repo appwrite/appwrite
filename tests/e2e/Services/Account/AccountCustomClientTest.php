@@ -1368,10 +1368,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
-    public function testSessionAlert($data): void
+    public function testSessionAlert(): void
     {
         $email = uniqid() . 'session-alert@appwrite.io';
         $password = 'password123';
@@ -1437,6 +1434,7 @@ class AccountCustomClientTest extends Scope
         $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
         $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
         $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+        $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
         // Verify no alert sent in OTP login
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
