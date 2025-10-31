@@ -1,5 +1,10 @@
 # Change Log
 
+## 20.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
 ## 20.2.2
 
 * Widen `device_info_plus` and `package_info_plus` dependencies to allow for newer versions for Android 15+ support
