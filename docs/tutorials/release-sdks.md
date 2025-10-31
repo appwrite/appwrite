@@ -55,15 +55,17 @@ services:
 
 This mounts your SSH keys from the host machine, allowing the container to authenticate with GitHub.
 
-### Updating specs
+### Updating Specs
 
-SDK generator script heavily relies on specs. So whenever you are adding a new endpoint, updating parameters or making any sort of API changes, you need to update the specs. You can do this by running the following command:
+The SDK generator script heavily relies on API specification files (specs). Whenever you are adding a new endpoint, updating parameters, or making any API changes, you need to update the specs.
+
+Generate specs for the latest version:
 
 ```bash
 docker compose exec appwrite specs
 ```
 
-Make sure to also run it for the current Appwrite version.
+Also generate specs for the current stable Appwrite version:
 
 ```bash
 docker compose exec appwrite specs --version=1.8.x
@@ -71,61 +73,75 @@ docker compose exec appwrite specs --version=1.8.x
 
 ### Running the SDK Release Script
 
-Before running the SDK release script you need to make sure to update 2 things for the respective SDKs you plan to release:
+Before running the SDK release script, ensure you update the following for each SDK you plan to release:
 
-1. Update the changelog in the respective SDK's `CHANGELOG.md` file.
-2. Bump the version (patch, minor or major) in the `platforms.php` file.
+1. **Update the changelog** - Add release notes to the SDK's `CHANGELOG.md` file (located in `docs/sdks/<sdk-name>/CHANGELOG.md`)
+2. **Bump the version** - Update the version number (patch, minor, or major) in `app/config/platforms.php`
 
-Once you have done that, you can run the SDK release script using the following command:
+Once you have completed these updates, run the SDK release script:
 
 ```bash
 docker compose exec appwrite sdks
 ```
 
-The script will:
-1. Prompt you to select the platform (client, server, console, or `*` for all)
-2. Ask which SDK(s) to generate (or `*` for all)
-3. Request the Appwrite version for which to generate the SDKs (For example: 1.8.x)
-4. Guide you through git push options and PR creation
+The script will prompt you for:
+1. **Platform** - Select client, server, console, or `*` for all platforms
+2. **SDK(s)** - Choose specific SDK(s) or `*` for all
+3. **Appwrite version** - Specify the version (e.g., `1.8.x`)
+4. **Git options** - Configure push settings and PR creation
 
-If you are releasing multiple SDKs that belong to different platforms, you can pass in the array of SDKs manually like this:
+#### Releasing Multiple SDKs
+
+If you are releasing multiple SDKs across different platforms, you can specify them directly:
 
 ```bash
 docker compose exec appwrite sdks --sdks=dart,flutter,cli,python
 ```
 
-Once you have run the SDK release script, you will get a summary of the PRs made like this:
+#### Pull Request Summary
+
+After the script completes, you'll receive a summary of created pull requests:
 
 ```text
 Pull Request Summary
-Dart: https://github.com/appwrite/dart-sdk/pull/123
-Flutter: https://github.com/appwrite/flutter-sdk/pull/123
+Dart: https://github.com/appwrite/sdk-for-dart/pull/123
+Flutter: https://github.com/appwrite/sdk-for-flutter/pull/124
+CLI: https://github.com/appwrite/sdk-for-cli/pull/125
 ```
 
-### Releasing the SDKs
+### Creating GitHub Releases
 
-If you are a maintainer at Appwrite, you can release the SDKs automatically by using the script. Before that make sure the PRs are reviewed and merged by a Lead at Appwrite.
+> **Note:** This section is for Appwrite maintainers only.
+
+After the PRs have been reviewed and merged by an Appwrite Lead, you can create GitHub releases automatically.
+
+#### Dry Run
+
+First, perform a dry run to preview the releases:
 
 ```bash
 docker compose exec appwrite sdks --release=yes
 ```
 
-This will give a DRY RUN for how the releases will look like:
+This will display what releases would be created:
 
 ```text
 [DRY RUN] Would create release for Dart SDK:
-  Repository: appwrite/dart-sdk
-  Version: 1.8.0
-  Title: 1.8.0
+  Repository: appwrite/sdk-for-dart
+  Version: 13.0.0
+  Title: 13.0.0
   Target Branch: main
-  Previous Version: 1.7.0
+  Previous Version: 12.0.2
   Release Notes:
   ## What's Changed
-  - Add new endpoint /users/:userId/logs
-  - Add new endpoint /users/:userId/logs
+  - Added support for new Users API endpoints
+  - Fixed authentication token handling
+  - Updated dependencies
 ```
 
-After everything looks good, you can release the SDKs by running the following command:
+#### Execute Release
+
+After verifying the dry run output, create the actual releases:
 
 ```bash
 docker compose exec appwrite sdks --release=yes --commit=yes
