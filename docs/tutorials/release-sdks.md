@@ -147,21 +147,40 @@ After verifying the dry run output, create the actual releases:
 docker compose exec appwrite sdks --release=yes --commit=yes
 ```
 
-### Release Configuration Reference
+## Reference
 
-SDK configurations are defined in:
-- **Platform and SDK definitions**: `app/config/collections/platform.php`
-- **SDK generation logic**: `src/Appwrite/Platform/Tasks/SDKs.php`
+### Configuration Files
 
-These files contain the SDK metadata, Git repository URLs, versions, and other configuration needed for the release process.
+SDK configurations are defined in the following files:
+
+- **`app/config/platforms.php`** - Platform and SDK definitions, including metadata, Git repository URLs, versions, and enabled/disabled status
+- **`src/Appwrite/Platform/Tasks/SDKs.php`** - SDK generation and release logic
+- **`docs/sdks/<sdk-name>/CHANGELOG.md`** - Changelog files for each SDK
 
 ## Troubleshooting
 
-If you encounter authentication issues:
-- Verify your GitHub token has the correct permissions (repo access, workflow permissions)
-- Ensure your SSH keys are properly configured in `~/.ssh/`
-- Check that the Git email in the Dockerfile matches your GitHub account
+### Authentication Issues
 
-If everything went well, you should see the SDKs being generated and pushed to their respective repositories.
+If you encounter authentication problems:
+- **GitHub token** - Verify your token has the correct permissions (repo access, workflow permissions)
+- **SSH keys** - Ensure your SSH keys are properly configured in `~/.ssh/` and added to your GitHub account
+- **Git configuration** - Check that the Git email in the Dockerfile matches your GitHub account
 
-Congrats! You have successfully released Appwrite SDKs. 🎉
+### Common Issues
+
+- **"Release already exists"** - The script automatically skips releases that already exist for the specified version
+- **"No changes detected"** - Ensure you've updated the specs and that there are actual API changes to generate
+- **Permission denied** - Verify that your GitHub token and SSH keys have write access to the SDK repositories
+
+## Summary
+
+Congrats! You've successfully learned how to release Appwrite SDKs. Remember to:
+
+1. Update SDK generator and run `composer update`
+2. Configure Docker secrets (GitHub token and SSH keys)
+3. Update specs for both latest and stable versions
+4. Update changelogs and bump versions in `platforms.php`
+5. Run the SDK script and create PRs
+6. (Maintainers only) Create GitHub releases after PR approval
+
+Happy releasing! 🎉
