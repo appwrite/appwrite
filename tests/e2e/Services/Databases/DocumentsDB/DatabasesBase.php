@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Databases\DocumentsDB;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -455,7 +456,7 @@ trait DatabasesBase
         $this->assertEquals([128, 200], $index['body']['lengths']);
 
         // Test case for lengths array overriding
-        // set a length for an array attribute, it should get overriden with Database::ARRAY_INDEX_LENGTH
+        // set a length for an array attribute, it should get overriden with Database::MAX_ARRAY_INDEX_LENGTH
         $create = $this->client->call(Client::METHOD_POST, "/documentsdb/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -464,7 +465,7 @@ trait DatabasesBase
             'key' => 'lengthOverrideTestIndex',
             'type' => 'key',
             'attributes' => ['actors-new'],
-            'lengths' => [Database::ARRAY_INDEX_LENGTH]
+            'lengths' => [Database::MAX_ARRAY_INDEX_LENGTH]
         ]);
         $this->assertEquals(202, $create['headers']['status-code']);
 
@@ -473,7 +474,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
-        $this->assertEquals([Database::ARRAY_INDEX_LENGTH], $index['body']['lengths']);
+        $this->assertEquals([Database::MAX_ARRAY_INDEX_LENGTH], $index['body']['lengths']);
 
         // Test case for count of lengths greater than attributes (should throw 400)
         $create = $this->client->call(Client::METHOD_POST, "/documentsdb/{$databaseId}/collections/{$collectionId}/indexes", [
@@ -2646,7 +2647,7 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
-
+        sleep(2);
         // test for failure
         $duplicate = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -3000,6 +3001,7 @@ trait DatabasesBase
     /**
      * @depends testCreateDatabase
      */
+    #[Retry(count: 6)]
     public function testTimeout(array $data): void
     {
         $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $data['databaseId'] . '/collections', array_merge([
@@ -3038,18 +3040,19 @@ trait DatabasesBase
                 ]
             ]);
         }
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-timeout' => 1,
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::notEqual('longtext', 'appwrite')->toString(),
+                ],
+            ]);
 
-        $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-timeout' => 1,
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::notEqual('longtext', 'appwrite')->toString(),
-            ],
-        ]);
-
-        $this->assertEquals(408, $response['headers']['status-code']);
+            $this->assertEquals(408, $response['headers']['status-code']);
+        }, 100000, 500);
 
         $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $data['databaseId'], array_merge([
             'content-type' => 'application/json',

@@ -275,20 +275,16 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Auth::$unique = $session['id'] ?? '';
     Auth::$secret = $session['secret'] ?? '';
 
-    if ($mode === APP_MODE_ADMIN) {
-        $user = $dbForPlatform->getDocument('users', Auth::$unique);
-    } else {
-        if ($project->isEmpty()) {
-            $user = new Document([]);
-        } else {
+    $user = new Document([]);
+
+    if (!empty(Auth::$unique)) {
+        if ($mode === APP_MODE_ADMIN) {
+            $user = $dbForPlatform->getDocument('users', Auth::$unique);
+        } elseif (!$project->isEmpty()) {
             if ($project->getId() === 'console') {
                 $user = $dbForPlatform->getDocument('users', Auth::$unique);
             } else {
-
-                // var_dump(['Authorization users start::$status' =>  Authorization::$status]);
                 $user = $dbForProject->getDocument('users', Auth::$unique);
-                //var_dump(['Authorization users end::$status' =>  Authorization::$status]);
-
             }
         }
     }
@@ -678,7 +674,7 @@ App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
 App::setResource('deviceForSites', function ($project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
-App::setResource('deviceForImports', function ($project, Telemetry $telemetry) {
+App::setResource('deviceForMigrations', function ($project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
@@ -1168,6 +1164,6 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
 
-App::setResource('transactionState', function (Database $dbForProject) {
-    return new TransactionState($dbForProject);
-}, ['dbForProject']);
+App::setResource('transactionState', function (Database $dbForProject, callable $getDatabasesDB) {
+    return new TransactionState($dbForProject, $getDatabasesDB);
+}, ['dbForProject', 'getDatabasesDB']);

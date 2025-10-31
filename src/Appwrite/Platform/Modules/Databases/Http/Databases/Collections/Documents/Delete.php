@@ -123,7 +123,7 @@ class Delete extends Action
 
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+            $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
         } else {
             $document = Authorization::skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
         }

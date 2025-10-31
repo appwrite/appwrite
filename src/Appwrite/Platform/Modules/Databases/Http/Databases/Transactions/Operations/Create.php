@@ -146,7 +146,7 @@ class Create extends Action
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
                 $isDependant = isset($dependants[$collectionKey][$documentId]);
 
-                $document = $transactionState->getDocument($collectionKey, $documentId, $transactionId);
+                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId);
                 if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND);
                 }

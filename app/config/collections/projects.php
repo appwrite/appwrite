@@ -69,7 +69,7 @@ return [
                 'signed' => true,
                 'array' => false,
                 'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [

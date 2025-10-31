@@ -104,9 +104,9 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
-        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => System::getEnv('_APP_DB_PORT', '3306'),
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
@@ -258,7 +258,7 @@ $register->set('pools', function () {
                         ]);
                     });
                 },
-                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $key) {
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
                     try {
                         $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
                         @$mongo->connect();
@@ -346,7 +346,7 @@ $register->set('db', function () {
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
     $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
-    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
     $dsn = '';
 
     switch ($dbAdapter) {

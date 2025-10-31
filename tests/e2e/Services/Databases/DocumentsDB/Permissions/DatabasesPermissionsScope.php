@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\DocumentsDB;
+namespace Tests\E2E\Services\Databases\DocumentsDB\Permissions;
 
 use Tests\E2E\Client;
 

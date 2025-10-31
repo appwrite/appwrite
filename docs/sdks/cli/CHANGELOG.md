@@ -1,5 +1,16 @@
 # Change Log
 
+## 10.2.3
+
+* Fix `init tables` command not working
+* Improve tablesDB resource syncing during `push tables` command
+
+## 10.2.2
+
+* Fix `logout` command showing duplicate sessions
+* Fix `logout` command showing a blank email even when logged out
+* Add syncing of `tablesDB` resource during `push tables` command
+
 ## 10.2.1
 
 * Add transaction support for Databases and TablesDB
