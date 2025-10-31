@@ -987,12 +987,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
+        
+        Console::info("File security: " . ($fileSecurity ? "true" : "false"));
+        Console::info("File valid: " . ($valid ? "true" : "false"));
+        Console::info("File token: " . ($isToken ? "true" : "false"));
+
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } else {
-            Console::info("File security: " . ($fileSecurity ? "true" : "false"));
-            Console::info("File valid: " . ($valid ? "true" : "false"));
-            Console::info("File token: " . ($isToken ? "true" : "false"));
         }
 
         if ($fileSecurity && !$valid && !$isToken) {
