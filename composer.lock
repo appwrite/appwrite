@@ -4108,16 +4108,16 @@
         },
         {
             "name": "utopia-php/emails",
-            "version": "0.6.2",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/emails.git",
-                "reference": "9c4c40cf7c03c2e9e21364566f9b192d03ea93c9"
+                "reference": "0de8896f369b6aa1f14df338645048f95a8439e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/emails/zipball/9c4c40cf7c03c2e9e21364566f9b192d03ea93c9",
-                "reference": "9c4c40cf7c03c2e9e21364566f9b192d03ea93c9",
+                "url": "https://api.github.com/repos/utopia-php/emails/zipball/0de8896f369b6aa1f14df338645048f95a8439e3",
+                "reference": "0de8896f369b6aa1f14df338645048f95a8439e3",
                 "shasum": ""
             },
             "require": {
@@ -4125,7 +4125,7 @@
                 "utopia-php/cli": "^0.15",
                 "utopia-php/domains": "^0.9",
                 "utopia-php/fetch": "^0.4",
-                "utopia-php/validators": "^0.0.2"
+                "utopia-php/validators": "^0.0.1"
             },
             "require-dev": {
                 "laravel/pint": "1.25.*",
@@ -4162,9 +4162,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/emails/issues",
-                "source": "https://github.com/utopia-php/emails/tree/0.6.2"
+                "source": "https://github.com/utopia-php/emails/tree/0.6.1"
             },
-            "time": "2025-10-28T16:08:17+00:00"
+            "time": "2025-10-28T07:29:58+00:00"
         },
         {
             "name": "utopia-php/fetch",
@@ -5109,16 +5109,16 @@
         },
         {
             "name": "utopia-php/validators",
-            "version": "0.0.2",
+            "version": "0.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/validators.git",
-                "reference": "894210695c5d35fa248fb65f7fe7237b6ff4fb0b"
+                "reference": "69d1afa5df2f052535764520609e91b491708db2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/894210695c5d35fa248fb65f7fe7237b6ff4fb0b",
-                "reference": "894210695c5d35fa248fb65f7fe7237b6ff4fb0b",
+                "url": "https://api.github.com/repos/utopia-php/validators/zipball/69d1afa5df2f052535764520609e91b491708db2",
+                "reference": "69d1afa5df2f052535764520609e91b491708db2",
                 "shasum": ""
             },
             "require": {
@@ -5149,9 +5149,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/0.0.2"
+                "source": "https://github.com/utopia-php/validators/tree/0.0.1"
             },
-            "time": "2025-10-20T21:52:28+00:00"
+            "time": "2025-10-20T15:08:50+00:00"
         },
         {
             "name": "utopia-php/vcs",
@@ -5253,16 +5253,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "1.12.0",
+            "version": "1.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "541057574806f942c94662b817a50f63f7345360"
+                "reference": "9be6926d8b485f55b9229203f962b51ed377ba68"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/541057574806f942c94662b817a50f63f7345360",
-                "reference": "541057574806f942c94662b817a50f63f7345360",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/9be6926d8b485f55b9229203f962b51ed377ba68",
+                "reference": "9be6926d8b485f55b9229203f962b51ed377ba68",
                 "shasum": ""
             },
             "require": {
@@ -5305,9 +5305,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/1.12.0"
+                "source": "https://github.com/webmozarts/assert/tree/1.12.1"
             },
-            "time": "2025-10-20T12:43:39+00:00"
+            "time": "2025-10-29T15:56:20+00:00"
         },
         {
             "name": "webonyx/graphql-php",
@@ -5378,16 +5378,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.4.15",
+            "version": "1.4.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda"
+                "reference": "08f839443f678208eb56a6c5a7456dd632adfc9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda",
-                "reference": "b4a2fd9e92903c2e156f17fc5dafe102e6cfdfda",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/08f839443f678208eb56a6c5a7456dd632adfc9a",
+                "reference": "08f839443f678208eb56a6c5a7456dd632adfc9a",
                 "shasum": ""
             },
             "require": {
@@ -5423,9 +5423,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.15"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.16"
             },
-            "time": "2025-10-28T04:52:59+00:00"
+            "time": "2025-10-29T08:39:55+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8892,7 +8892,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8916,5 +8916,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
