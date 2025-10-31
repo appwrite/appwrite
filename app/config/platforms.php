@@ -60,7 +60,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '20.2.1',
+                'version' => '20.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -79,7 +79,7 @@ return [
             [
                 'key' => 'apple',
                 'name' => 'Apple',
-                'version' => '13.3.0',
+                'version' => '13.3.1',
                 'url' => 'https://github.com/appwrite/sdk-for-apple',
                 'package' => 'https://github.com/appwrite/sdk-for-apple',
                 'enabled' => true,
@@ -226,7 +226,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '10.2.3',
+                'version' => '11.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -300,7 +300,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '13.4.1',
+                'version' => '13.5.0',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
