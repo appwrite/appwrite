@@ -16,6 +16,8 @@ use Appwrite\Platform\Modules\Databases\Http\VectorDB\Update as UpdateVectorData
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Usage\Get as GetVectorDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Usage\XList as ListVectorDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\XList as ListVectorDatabases;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Embedding\Create as CreateEmbeddingDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Embedding\Update as UpdateEmbeddingDocument;
 use Utopia\Platform\Service;
 
 class VectorDB extends Base
@@ -25,7 +27,7 @@ class VectorDB extends Base
         $this->registerDatabaseActions($service);
         $this->registerCollectionActions($service);
         // $this->registerIndexActions($service);
-        // $this->registerRowActions($service);
+        $this->registerDocumentActions($service);
         // $this->registerTransactionActions($service);
     }
 
@@ -49,5 +51,10 @@ class VectorDB extends Base
         $service->addAction(ListCollections::getName(), new ListCollections());
         $service->addAction(ListCollectionLogs::getName(), new ListCollectionLogs());
         $service->addAction(GetCollectionUsage::getName(), new GetCollectionUsage());
+    }
+
+    private function registerDocumentActions(Service $service):void{
+        $service->addAction(CreateEmbeddingDocument::getName(), new CreateEmbeddingDocument());
+        $service->addAction(UpdateEmbeddingDocument::getName(), new UpdateEmbeddingDocument());
     }
 }

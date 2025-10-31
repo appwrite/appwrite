@@ -16,7 +16,9 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
+use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
+use Utopia\Agents\Adapters\Ollama;
 
 class Update extends CollectionAction
 {
@@ -61,7 +63,7 @@ class Update extends CollectionAction
             ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('description', null, new Text(1024), 'Collection description. Max length: 1024 chars.', true)
             ->param('dimensions', null, new Integer(), 'Embedding dimensions.', true)
-            ->param('embeddingModel', null, new Text(256), 'Embedding model identifier.', true)
+            ->param('embeddingModel', '', new WhiteList((new Ollama())->getModels()), 'Embedding model identifier.')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)

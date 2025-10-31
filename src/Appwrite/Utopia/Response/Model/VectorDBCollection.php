@@ -79,19 +79,8 @@ class VectorDBCollection extends Model
             ])
             ->addRule('attributes', [
                 'type' => [
-                    Response::MODEL_ATTRIBUTE_BOOLEAN,
-                    Response::MODEL_ATTRIBUTE_INTEGER,
-                    Response::MODEL_ATTRIBUTE_FLOAT,
-                    Response::MODEL_ATTRIBUTE_EMAIL,
-                    Response::MODEL_ATTRIBUTE_ENUM,
-                    Response::MODEL_ATTRIBUTE_URL,
-                    Response::MODEL_ATTRIBUTE_IP,
-                    Response::MODEL_ATTRIBUTE_DATETIME,
-                    Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-                    Response::MODEL_ATTRIBUTE_POINT,
-                    Response::MODEL_ATTRIBUTE_LINE,
-                    Response::MODEL_ATTRIBUTE_POLYGON,
-                    Response::MODEL_ATTRIBUTE_STRING,
+                    Response::MODEL_ATTRIBUTE_OBJECT,
+                    Response::MODEL_ATTRIBUTE_VECTOR,
                 ],
                 'description' => 'Collection attributes.',
                 'default' => [],

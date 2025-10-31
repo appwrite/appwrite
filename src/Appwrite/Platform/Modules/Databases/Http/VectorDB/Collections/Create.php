@@ -27,6 +27,8 @@ use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
+use Utopia\Agents\Adapters\Ollama;
 
 class Create extends CollectionAction
 {
@@ -70,7 +72,7 @@ class Create extends CollectionAction
             ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('dimensions', 0, new Integer(), 'Embedding dimensions.')
-            ->param('embeddingModel', '', new Text(256), 'Embedding model identifier.')
+            ->param('embeddingModel', '', new WhiteList((new Ollama())->getModels()), 'Embedding model identifier.')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)

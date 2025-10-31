@@ -7,6 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Agents\Adapters\Ollama;
 
 trait DatabasesBase
 {
@@ -50,7 +51,7 @@ trait DatabasesBase
             'name' => 'Movies',
             'documentSecurity' => true,
             'dimensions' => 1536,
-            'embeddingModel' => 'gemma',
+            'embeddingModel' => Ollama::MODEL_EMBEDDING_GEMMA,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -68,7 +69,7 @@ trait DatabasesBase
             'name' => 'Actors',
             'documentSecurity' => true,
             'dimensions' => 1536,
-            'embeddingModel' => 'gemma',
+            'embeddingModel' => Ollama::MODEL_EMBEDDING_GEMMA,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -166,7 +167,7 @@ trait DatabasesBase
         /**
          * Helper to create a collection
          */
-        $createCollection = function (string $databaseId, string $name) use ($projectId, $apiKey, $userId) {
+        $createCollection = function (string $databaseId, string $name, int $dimensions = 1536, string $embeddingModel = Ollama::MODEL_EMBEDDING_GEMMA) use ($projectId, $apiKey, $userId) {
             $res = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -175,8 +176,8 @@ trait DatabasesBase
                 'collectionId' => ID::unique(),
                 'name' => $name,
                 'documentSecurity' => true,
-                'dimensions' => 1536,
-                'embeddingModel' => 'gemma',
+                'dimensions' => $dimensions,
+                'embeddingModel' => $embeddingModel,
                 'permissions' => [
                     Permission::create(Role::user($userId)),
                 ],
@@ -212,11 +213,45 @@ trait DatabasesBase
             $contentCollectionIds[$col] = $createCollection($contentDbId, $col);
         }
 
+        // Create a tiny-dimension collection and insert a document to validate vector and object attributes
+        $tinyCollectionName = 'VectorsTiny';
+        $tinyDimensions = 8;
+        $tinyCollectionId = $createCollection($mediaDbId, $tinyCollectionName, $tinyDimensions, Ollama::MODEL_EMBEDDING_GEMMA);
+
+        // Build embeddings vector of correct length and metadata object
+        $embeddings = [];
+        for ($i = 0; $i < $tinyDimensions; $i++) {
+            $embeddings[] = (float)($i + 1) / 10.0;
+        }
+        $metadata = [
+            'genre' => 'drama',
+            'score' => 9,
+            'tags' => ['award', 'festival']
+        ];
+
+        $docRes = $this->client->call(Client::METHOD_POST, '/vectordb/' . $mediaDbId . '/collections/' . $tinyCollectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'embeddings' => $embeddings,
+                'metadata' => $metadata,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::write(Role::user($userId)),
+            ],
+        ]);
+
+        $this->assertEquals(201, $docRes['headers']['status-code']);
+
         return [
             'databases' => [
                 'MediaDB' => [
                     'id' => $mediaDbId,
-                    'collections' => $mediaCollectionIds,
+                    'collections' => $mediaCollectionIds + ['VectorsTiny' => $tinyCollectionId],
                 ],
                 'ContentDB' => [
                     'id' => $contentDbId,

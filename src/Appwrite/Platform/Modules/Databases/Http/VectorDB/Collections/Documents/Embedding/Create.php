@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents;
+namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Embedding;
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as DocumentCreate;
 use Appwrite\SDK\AuthType;
@@ -21,7 +21,7 @@ class Create extends DocumentCreate
 {
     public static function getName(): string
     {
-        return 'createDocumentsDBDocument';
+        return 'createVectorDBDocument';
     }
 
     protected function getResponseModel(): string
@@ -50,9 +50,9 @@ class Create extends DocumentCreate
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: $this->getSdkGroup(),
-                    name: 'createDocument',
+                    name: 'createEmbeddingDocument',
                     desc: 'Create document',
                     description: '/docs/references/vectordb/create-document.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],

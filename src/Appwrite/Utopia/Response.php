@@ -27,6 +27,8 @@ use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\AttributeList;
 use Appwrite\Utopia\Response\Model\AttributePoint;
 use Appwrite\Utopia\Response\Model\AttributePolygon;
+use Appwrite\Utopia\Response\Model\AttributeObject;
+use Appwrite\Utopia\Response\Model\AttributeVector;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeURL;
@@ -215,6 +217,8 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
     public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
     public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
+    public const MODEL_ATTRIBUTE_OBJECT = 'attributeObject';
+    public const MODEL_ATTRIBUTE_VECTOR = 'attributeVector';
 
     // Database Columns
     public const MODEL_COLUMN = 'column';
@@ -511,6 +515,8 @@ class Response extends SwooleResponse
             ->setModel(new AttributePoint())
             ->setModel(new AttributeLine())
             ->setModel(new AttributePolygon())
+            ->setModel(new AttributeObject())
+            ->setModel(new AttributeVector())
             // Table API Models
             ->setModel(new Table())
             ->setModel(new Column())
