@@ -186,6 +186,8 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_VECTORDB_COLLECTION = 'vectordbCollection';
+    public const MODEL_VECTORDB_COLLECTION_LIST = 'vectordbCollectionList';
     public const MODEL_TABLE = 'table';
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
@@ -438,6 +440,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('VectorDB Collections List', self::MODEL_VECTORDB_COLLECTION_LIST, 'collections', self::MODEL_VECTORDB_COLLECTION))
             ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Column Indexes List', self::MODEL_COLUMN_INDEX_LIST, 'indexes', self::MODEL_COLUMN_INDEX))
@@ -492,6 +495,7 @@ class Response extends SwooleResponse
             ->setModel(new Database())
             // Collection API Models
             ->setModel(new Collection())
+            ->setModel(new \Appwrite\Utopia\Response\Model\VectorDBCollection())
             ->setModel(new Attribute())
             ->setModel(new AttributeList())
             ->setModel(new AttributeString())

@@ -35,6 +35,7 @@ class Create extends Action
     {
         return match ($this->getDatabaseType()) {
             DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
+            VECTORDB => $project->getAttribute('vectorDatabase'),
             default => $project->getAttribute('database'),
         };
     }
@@ -127,11 +128,11 @@ class Create extends Action
 
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
-            $dbFordatabases = $getDatabasesDB($database);
             // legacy and tablesdb are created on the same project database
             // need to check for multitype databases
             if ($this->getDatabaseType() !== TABLESDB && $this->getDatabaseType() !== 'legacy') {
-                $dbFordatabases->create();
+                $dbFordatabases = $getDatabasesDB(new Document(['database' => $this->getDatabaseDSN($project)]));
+                // $dbFordatabases->createCollection(Database::METADATA,$attributes);
             }
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);

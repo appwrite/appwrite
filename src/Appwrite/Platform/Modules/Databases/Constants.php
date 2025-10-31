@@ -25,3 +25,4 @@ const COLLECTIONS = 'collection';
 
 const TABLESDB = 'tablesdb';
 const DOCUMENTSDB = 'documentsdb';
+const VECTORDB = 'vectordb';

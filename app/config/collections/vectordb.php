@@ -41,29 +41,11 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('description'),
-                'type' => Database::VAR_STRING,
-                'size' => 1024,
-                'required' => true,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('dimensions'),
                 'type' => Database::VAR_INTEGER,
                 'size' => 0,
                 'required' => true,
                 'signed' => false,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('metric'),
-                'type' => Database::VAR_STRING,
-                'size' => 256,
-                'default' => 'cosine',
-                'signed' => true,
                 'array' => false,
                 'filters' => [],
             ],
@@ -128,6 +110,27 @@ return [
                 'filters' => [],
             ],
         ],
+        'defaultAttributes' => [
+            [
+                '$id' => ID::custom('embeddings'),
+                'type' => Database::VAR_VECTOR,
+                'required' => true,
+                'size' => 128,
+                'signed' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('metadata'),
+                'type' => Database::VAR_OBJECT,
+                'default' => [],
+                'required' => false,
+                'size' => 0,
+                'signed' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
         'indexes' => [
             [
                 '$id' => ID::custom('_fulltext_search'),
@@ -158,5 +161,15 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
         ],
+        'defaultIndexes' => [
+            // not creating default indexes on the embeddings as it depends on the type of query users using the most
+            [
+                '$id' => ID::custom('_key_metadata'),
+                'type' => Database::INDEX_OBJECT,
+                'attributes' => ['metadata'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ]
     ]
 ];

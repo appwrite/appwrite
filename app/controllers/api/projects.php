@@ -67,6 +67,12 @@ function getDatabaseDSN(string $databasetype, $region): string
             $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
             $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
             break;
+        case 'vectorDatabase':
+            $databases = Config::getParam('pools-vectordb', []);
+            $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
+            $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
+            $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql');
+            break;
         default:
             // legacy/tablesdb
             $databases = Config::getParam('pools-database', []);
@@ -232,7 +238,8 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
-                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region)
+                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region),
+                'vectorDatabase' => getDatabaseDSN('vectorDatabase', $region)
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);

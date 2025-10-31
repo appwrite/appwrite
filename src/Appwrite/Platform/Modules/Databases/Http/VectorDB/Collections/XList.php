@@ -22,7 +22,7 @@ class XList extends CollectionXList
 
     protected function getResponseModel(): string
     {
-        return UtopiaResponse::MODEL_COLLECTION_LIST;
+        return UtopiaResponse::MODEL_VECTORDB_COLLECTION_LIST;
     }
 
     public function __construct()

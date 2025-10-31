@@ -410,6 +410,7 @@ class Update extends Action
     {
         return match ($this->getDatabaseType()) {
             DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
+            VECTORDB => $project->getAttribute('vectorDatabase'),
             default => $project->getAttribute('database'),
         };
     }
