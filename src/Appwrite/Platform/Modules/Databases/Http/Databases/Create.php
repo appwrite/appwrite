@@ -120,10 +120,10 @@ class Create extends Action
 
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
-            $dbFordatabases = $getDatabasesDB($database);
             // legacy and tablesdb are created on the same project database
             // need to check for multitype databases
             if ($this->getDatabaseType() !== TABLESDB && $this->getDatabaseType() !== 'legacy') {
+                $dbFordatabases = $getDatabasesDB($this->getDatabaseDSN($project));
                 $dbFordatabases->create();
             }
         } catch (DuplicateException) {
