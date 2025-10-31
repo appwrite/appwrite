@@ -991,6 +991,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         Console::info("File security: " . ($fileSecurity ? "true" : "false"));
         Console::info("File valid: " . ($valid ? "true" : "false"));
         Console::info("File token: " . ($isToken ? "true" : "false"));
+        Console::info("Bucket read permissions: " . json_encode($bucket->getRead()));
+        Console::info("Current authorization roles: " . json_encode(Authorization::getRoles()));
 
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
