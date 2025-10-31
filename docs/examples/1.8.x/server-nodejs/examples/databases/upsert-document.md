@@ -12,6 +12,6 @@ const result = await databases.upsertDocument({
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
     data: {},
-    permissions: ["read("any")"], // optional
+    permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });
