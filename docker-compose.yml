@@ -92,6 +92,7 @@ services:
 
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
       # - clamav
     entrypoint:
@@ -269,6 +270,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
     environment:
       - _APP_ENV
@@ -303,6 +305,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -333,6 +336,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - request-catcher-sms
       - request-catcher-webhook
     environment:
@@ -364,6 +368,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -431,6 +436,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -467,6 +473,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -535,6 +542,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -578,6 +586,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - openruntimes-executor
     environment:
       - _APP_ENV
@@ -715,6 +724,7 @@ services:
       - ./tests:/usr/src/code/tests
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -798,6 +808,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -830,6 +841,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -862,6 +874,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -893,6 +906,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
     environment:
       - _APP_ENV
@@ -922,6 +936,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
     environment:
       - _APP_ENV
@@ -950,6 +965,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
     environment:
       - _APP_ENV
@@ -1123,6 +1139,24 @@ services:
     depends_on:
       - mongodb
 
+
+  postgresql:
+    build:
+      context: .
+      dockerfile: postgres.dockerfile
+    container_name: appwrite-postgresql
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
 
   redis:
     image: redis:7.2.4-alpine
