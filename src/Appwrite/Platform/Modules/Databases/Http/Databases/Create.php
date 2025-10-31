@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Databases\Services\Registry\TablesDB;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -83,11 +84,12 @@ class Create extends Action
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $name, bool $enabled, Document $project, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $name, bool $enabled, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
     {
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -125,6 +127,12 @@ class Create extends Action
 
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
+            $dbFordatabases = $getDatabasesDB($database);
+            // legacy and tablesdb are created on the same project database
+            // need to check for multitype databases
+            if ($this->getDatabaseType() !== TABLESDB && $this->getDatabaseType() !== 'legacy') {
+                $dbFordatabases->create();
+            }
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         } catch (IndexException) {
