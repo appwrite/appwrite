@@ -23,6 +23,8 @@ use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Redaction\Exceptions\Redaction;
+use Appwrite\Redaction\Redactor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -70,42 +72,196 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
-{
-    $subject = $locale->getText("emails.sessionAlert.subject");
-    $preview = $locale->getText("emails.sessionAlert.preview");
-    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+/**
+ * @throws Exception
+ */
+function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails): void {
+    sendSecurityEmail($locale, $user, $project, $queueForMails, 'sessionAlert', [
+        'session' => $session,
+    ]);
+}
 
-    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
-    $message
-        ->setParam('{{hello}}', $locale->getText("emails.sessionAlert.hello"))
-        ->setParam('{{body}}', $locale->getText("emails.sessionAlert.body"))
-        ->setParam('{{listDevice}}', $locale->getText("emails.sessionAlert.listDevice"))
-        ->setParam('{{listIpAddress}}', $locale->getText("emails.sessionAlert.listIpAddress"))
-        ->setParam('{{listCountry}}', $locale->getText("emails.sessionAlert.listCountry"))
-        ->setParam('{{footer}}', $locale->getText("emails.sessionAlert.footer"))
-        ->setParam('{{thanks}}', $locale->getText("emails.sessionAlert.thanks"))
-        ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
+/**
+ * @throws Exception
+ */
+function sendPasswordChangeEmail(Locale $locale, Document $user, Document $project, Mail $queueForMails, ?string $ip = null, ?string $device = null): void {
+    sendSecurityEmail($locale, $user, $project, $queueForMails, 'passwordChange', [
+        'variables' => array_filter(['ip' => $ip, 'device' => $device]),
+    ]);
+}
+
+/**
+ * @throws Exception
+ */
+function sendEmailChangeEmail(Locale $locale, Document $user, Document $project, Mail $queueForMails, string $oldEmail, string $newEmail): void {
+    $emailAdapter = (new \Appwrite\Redaction\Adapters\Email())
+        ->setRedactDomain(true)
+        ->setRedactUser(true)
+        ->setRedactTLD(false);
+    $redactor = new Redactor($emailAdapter);
+
+    try {
+        $oldEmailMasked = $redactor->redact($oldEmail)->getValue();
+    } catch (Redaction $e) {
+        $oldEmailMasked = $oldEmail;
+    }
+
+    try {
+        $newEmailMasked = $redactor->redact($newEmail)->getValue();
+    } catch (Redaction $e) {
+        $newEmailMasked = $newEmail;
+    }
+
+    sendSecurityEmail($locale, $user, $project, $queueForMails, 'emailChange', [
+        'recipientEmail' => $oldEmail,
+        'variables' => [
+            'oldEmail' => $oldEmailMasked,
+            'newEmail' => $newEmailMasked,
+        ],
+    ]);
+}
+
+/**
+ * @throws Exception
+ */
+function sendPhoneChangeEmail(Locale $locale, Document $user, Document $project, Mail $queueForMails, ?string $oldPhone, string $newPhone): void {
+    $phoneAdapter = (new \Appwrite\Redaction\Adapters\Phone())
+        ->setKeepCountryCode(true)
+        ->setVisibleSuffixDigits(4);
+    $phoneRedactor = new Redactor($phoneAdapter);
+
+    $oldPhoneMasked = '';
+    if ($oldPhone !== null && $oldPhone !== '') {
+        try {
+            $oldPhoneMasked = $phoneRedactor->redact($oldPhone)->getValue();
+        } catch (Redaction $e) {
+            $oldPhoneMasked = $oldPhone;
+        }
+    }
+
+    try {
+        $newPhoneMasked = $phoneRedactor->redact($newPhone)->getValue();
+    } catch (Redaction $e) {
+        $newPhoneMasked = $newPhone;
+    }
+
+    sendSecurityEmail($locale, $user, $project, $queueForMails, 'phoneChange', [
+        'variables' => [
+            'oldPhone' => $oldPhoneMasked,
+            'newPhone' => $newPhoneMasked,
+        ],
+    ]);
+}
+
+/**
+ * Generic email sender for account/security notifications.
+ *
+ * Events supported out of the box:
+ *  - 'sessionAlert' (user signed in)
+ *  - 'passwordChange' (password updated)
+ *  - 'emailChange' (email updated; you can override recipient to OLD email)
+ *  - 'phoneChange' (phone updated)
+ *
+ * Conventions this relies on:
+ *  1) Locale keys like: "emails.<event>.subject", ".preview", ".hello", ".body", ".footer", ".thanks", ".signature"
+ *     and for sessionAlert also ".listDevice", ".listIpAddress", ".listCountry"
+ *  2) Default template files under: /config/locale/templates/
+ *     - email-session-alert.tpl
+ *     - email-password-change.tpl
+ *     - email-email-change.tpl
+ *     - email-phone-change.tpl
+ *  3) Optional project overrides in $project->getAttribute('templates') with keys like:
+ *     "email.<event>-<locale>" => [
+ *         "subject" => "...",
+ *         "message" => "...",   // full HTML body
+ *         "senderEmail" => "...",
+ *         "senderName"  => "...",
+ *         "replyTo"     => "..."
+ *     ]
+ *
+ * @param Locale $locale
+ * @param Document $user
+ * @param Document $project
+ * @param Mail $queueForMails
+ * @param string $event One of: sessionAlert|passwordChange|emailChange|phoneChange
+ * @param array $context Extra data (all optional):
+ *                              - 'session' (Document): for sessionAlert (ip, countryCode, userAgent, clientName)
+ *                              - 'recipientEmail': override recipient (e.g., send email-change notice to OLD email)
+ *                              - 'variables' (array): additional template variables (e.g., oldEmail/newEmail, oldPhone/newPhone)
+ *                              - 'params' (array): additional Template::setParam key=>value pairs (e.g., '{{cta}}' => '...')
+ *                              - 'templateFile': override default template filename
+ * @throws Exception
+ */
+function sendSecurityEmail(
+    Locale $locale,
+    Document $user,
+    Document $project,
+    Mail $queueForMails,
+    string $event,
+    array $context = []
+): void {
+    // Map events to default template filenames
+    $templateFiles = [
+        'sessionAlert'   => 'email-session-alert.tpl',
+        'passwordChange' => 'email-password-change.tpl',
+        'emailChange'    => 'email-email-change.tpl',
+        'phoneChange'    => 'email-phone-change.tpl',
+    ];
+
+    $baseKey  = 'emails.' . $event;
+    $subject  = $locale->getText("$baseKey.subject");
+    $preview  = $locale->getText("$baseKey.preview");
+    $tplName  = $context['templateFile'] ?? ($templateFiles[$event] ?? 'email-generic.tpl');
+
+    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/' . $tplName);
+
+    // Shared strings
+    $params = [
+        '{{hello}}'     => $locale->getText("emails.generic.hello"),
+        '{{changedDate}}'    => $locale->getText("emails.generic.changedDate"),
+        '{{changedTime}}'    => $locale->getText("emails.generic.changedTime"),
+        '{{deviceName}}'    => $locale->getText("emails.generic.deviceName"),
+        '{{deviceIpAddress}}'    => $locale->getText("emails.generic.deviceIpAddress"),
+        '{{thanks}}'    => $locale->getText("emails.generic.thanks"),
+        '{{signature}}' => $locale->getText("emails.generic.signature"),
+        '{{body}}'      => $locale->getText("$baseKey.body"),
+        '{{footer}}'    => $locale->getText("$baseKey.footer"),
+        '{{addedNewEmail}}'      => $locale->getText("$baseKey.addedNewEmail"),
+        '{{changedOldEmail}}'    => $locale->getText("$baseKey.changedOldEmail"),
+        '{{addedNewPhone}}'    => $locale->getText("$baseKey.addedNewPhone"),
+        '{{changedOldPhone}}'    => $locale->getText("$baseKey.changedOldPhone"),
+    ];
+
+    // Session-alert specific labels (only if your template uses them)
+    if ($event === 'sessionAlert') {
+        $params['{{listDevice}}']    = $locale->getText("$baseKey.listDevice");
+        $params['{{listIpAddress}}'] = $locale->getText("$baseKey.listIpAddress");
+        $params['{{listCountry}}']   = $locale->getText("$baseKey.listCountry");
+    }
+
+    // Allow event-specific string params to be injected/overridden
+    if (!empty($context['params']) && is_array($context['params'])) {
+        $params = array_merge($params, $context['params']);
+    }
+
+    foreach ($params as $k => $v) {
+        $message->setParam($k, $v);
+    }
 
     $body = $message->render();
 
-    $smtp = $project->getAttribute('smtp', []);
+    // SMTP / Sender config (kept close to your original behavior)
+    $smtp        = $project->getAttribute('smtp', []);
     $smtpEnabled = $smtp['enabled'] ?? false;
 
     $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-    $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-    $replyTo = "";
+    $senderName  = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+    $replyTo     = '';
 
     if ($smtpEnabled) {
-        if (!empty($smtp['senderEmail'])) {
-            $senderEmail = $smtp['senderEmail'];
-        }
-        if (!empty($smtp['senderName'])) {
-            $senderName = $smtp['senderName'];
-        }
-        if (!empty($smtp['replyTo'])) {
-            $replyTo = $smtp['replyTo'];
-        }
+        if (!empty($smtp['senderEmail'])) $senderEmail = $smtp['senderEmail'];
+        if (!empty($smtp['senderName']))  $senderName  = $smtp['senderName'];
+        if (!empty($smtp['replyTo']))     $replyTo     = $smtp['replyTo'];
 
         $queueForMails
             ->setSmtpHost($smtp['host'] ?? '')
@@ -113,62 +269,84 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
             ->setSmtpUsername($smtp['username'] ?? '')
             ->setSmtpPassword($smtp['password'] ?? '')
             ->setSmtpSecure($smtp['secure'] ?? '');
+    }
 
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
+    // Project-level overrides (apply regardless of SMTP)
+    $customTemplate = $project->getAttribute('templates', [])['email.' . $event . '-' . $locale->default] ?? [];
+    if (!empty($customTemplate)) {
+        if (!empty($customTemplate['senderEmail'])) $senderEmail = $customTemplate['senderEmail'];
+        if (!empty($customTemplate['senderName']))  $senderName  = $customTemplate['senderName'];
+        if (!empty($customTemplate['replyTo']))     $replyTo     = $customTemplate['replyTo'];
 
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
+        $body    = $customTemplate['message'] ?? $body;
+        $subject = $customTemplate['subject'] ?? $subject;
+    }
 
+    if ($smtpEnabled) {
         $queueForMails
             ->setSmtpReplyTo($replyTo)
             ->setSmtpSenderEmail($senderEmail)
             ->setSmtpSenderName($senderName);
     }
 
-    // session alerts should always have a client name!
-    $clientName = $session->getAttribute('clientName');
-    if (empty($clientName)) {
-        // fallback to the user agent and then unknown!
-        $userAgent = $session->getAttribute('userAgent');
-        $clientName = !empty($userAgent) ? $userAgent : 'UNKNOWN';
-
-        $session->setAttribute('clientName', $clientName);
-    }
-
+    // Variables exposed to the template
+    $now = new \DateTime();
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
-        'date' => (new \DateTime())->format('F j'),
-        'year' => (new \DateTime())->format('YYYY'),
-        'time' => (new \DateTime())->format('H:i:s'),
-        'user' => $user->getAttribute('name'),
-        'project' => $project->getAttribute('name'),
-        'device' => $session->getAttribute('clientName'),
-        'ipAddress' => $session->getAttribute('ip'),
-        'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
+        'date'      => $now->format('F j'),
+        'year'      => $now->format('Y'),      // previously had 'YYYY'
+        'time'      => $now->format('H:i:s'),
+        'user'      => $user->getAttribute('name'),
+        'project'   => $project->getAttribute('project'),
     ];
 
-    $email = $user->getAttribute('email');
+    // Session/device info if provided
+    if ($event === 'sessionAlert' && !empty($context['session']) && $context['session'] instanceof Document) {
+        /** @var Document $session */
+        $session = $context['session'];
+
+        // Ensure a client name exists
+        $clientName = $session->getAttribute('clientName');
+        if (empty($clientName)) {
+            $userAgent  = $session->getAttribute('userAgent');
+            $clientName = !empty($userAgent) ? $userAgent : 'UNKNOWN';
+            $session->setAttribute('clientName', $clientName);
+        }
+
+        $emailVariables['device']    = $session->getAttribute('device')?$session->getAttribute('device'):'UNKNOWN';
+        $emailVariables['ip'] = $session->getAttribute('ip');
+        $emailVariables['country']   = $locale->getText(
+            'countries.' . $session->getAttribute('countryCode'),
+            $locale->getText('locale.country.unknown')
+        );
+    }
+
+    // Caller-supplied variables (e.g., old/new email/phone, IP, device, etc.)
+    if (!empty($context['variables']) && is_array($context['variables'])) {
+        $emailVariables = array_merge($emailVariables, $context['variables']);
+    }
+
+    $recipient = $context['recipientEmail'] ?? $user->getAttribute('email');
+
+    $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base-styled');
+
+    $validator = new FileName();
+    if (!$validator->isValid($smtpBaseTemplate)) {
+        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+    }
+
+    $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
+
 
     $queueForMails
         ->setSubject($subject)
         ->setPreview($preview)
+        ->setBodyTemplate($bodyTemplate)
         ->setBody($body)
         ->setVariables($emailVariables)
-        ->setRecipient($email)
+        ->setRecipient($recipient)
         ->trigger();
 }
-;
-
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
 
@@ -2940,8 +3118,10 @@ App::patch('/v1/account/password')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
-
+    ->inject('locale')
+    ->inject('queueForMails')
+    ->inject('request')
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Locale $locale, Mail $queueForMails, Request $request) {
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
@@ -2990,6 +3170,11 @@ App::patch('/v1/account/password')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+
+        sendPasswordChangeEmail($locale, $user, $project, $queueForMails, $request->getIP(),
+            $detector->getDevice()&&$detector->getDevice()['deviceName']?$detector->getDevice()['deviceName']:'UNKNOWN');
+
         $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
@@ -3025,7 +3210,9 @@ App::patch('/v1/account/email')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->inject('locale')
+    ->inject('queueForMails')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Locale $locale, Mail $queueForMails) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3087,6 +3274,8 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
+        sendEmailChangeEmail($locale, $user, $project, $queueForMails, $oldEmail, $email);
+
         $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
@@ -3122,7 +3311,9 @@ App::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->inject('locale')
+    ->inject('queueForMails')
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Locale $locale, Mail $queueForMails) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3168,6 +3359,9 @@ App::patch('/v1/account/phone')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
+
+            sendPhoneChangeEmail($locale, $user, $project, $queueForMails, $oldPhone, $phone);
+
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
