@@ -55,3 +55,23 @@ To participate in Hacktoberfest with Appwrite, follow these guidelines:
 5. Create a Pull Request (PR) from your forked repository to the Appwrite repository. Be sure to reference the issue you are addressing in your PR description.
 
 Thank you for contributing to Appwrite, and we look forward to your Hacktoberfest contributions! If you have any questions or need assistance, feel free to ask on our Discord server or in the issue discussion. Happy hacking!
+
+## Quick Tips for New Contributors
+
+### Before You Start
+- **Read the documentation**: Familiarize yourself with [Appwrite's documentation](https://appwrite.io/docs) to understand the platform
+- **Join the community**: Connect with other contributors on [Discord](https://appwrite.io/discord) in the `#hacktoberfest` channel
+- **Start small**: Look for issues labeled `good-first-issue` if you're new to the codebase
+
+### Making Quality Contributions
+- **Understand the issue**: Read the issue description thoroughly and ask questions if unclear
+- **Test your changes**: Ensure your contributions don't break existing functionality
+- **Follow coding standards**: Maintain consistency with the existing codebase style
+- **Write clear commit messages**: Use descriptive commit messages that explain your changes
+
+### After Submitting Your PR
+- **Be responsive**: Reply to review comments promptly
+- **Be patient**: Reviews can take up to 15 days due to high volume during Hacktoberfest
+- **Stay engaged**: Participate in PR review parties for faster feedback
+
+Remember: Quality contributions are more valuable than quantity. Focus on solving real problems and improving the developer experience!
