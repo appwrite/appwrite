@@ -5,7 +5,7 @@
 #
 # Source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
 #
-# Effective stop-time: 2025-11-27 03:00:29
+# Effective stop-time: 2025-12-01 15:46:50
 #
 # Job Dependency Graph:
 # ```mermaid
@@ -33,18 +33,29 @@
 #   add_labels --> update_reaction
 #   missing_tool --> update_reaction
 # ```
+#
+# Pinned GitHub Actions:
+#   - actions/checkout@v5 (08c6903cd8c0fde910a37f88322edcfb5dd907a8)
+#     https://github.com/actions/checkout/commit/08c6903cd8c0fde910a37f88322edcfb5dd907a8
+#   - actions/download-artifact@v5 (634f93cb2916e3fdff6788551b99b062d0335ce0)
+#     https://github.com/actions/download-artifact/commit/634f93cb2916e3fdff6788551b99b062d0335ce0
+#   - actions/github-script@v8 (ed597411d8f924073f98dfc5c65a23a2325f34cd)
+#     https://github.com/actions/github-script/commit/ed597411d8f924073f98dfc5c65a23a2325f34cd
+#   - actions/setup-node@v6 (2028fbc5c25fe9cf00d9f06a71cc4710d4507903)
+#     https://github.com/actions/setup-node/commit/2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+#   - actions/upload-artifact@v4 (ea165f8d65b6e75b540449e92b4886f43607fa02)
+#     https://github.com/actions/upload-artifact/commit/ea165f8d65b6e75b540449e92b4886f43607fa02
 
 name: "Agentic Triage"
 "on":
-  issues:
-    types:
-    - opened
-    - reopened
+  schedule:
+  - cron: 0 0 * * *
+  workflow_dispatch: null
 
 permissions: read-all
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}-${{ github.event.issue.number }}"
+  group: "gh-aw-${{ github.workflow }}"
 
 run-name: "Agentic Triage"
 
@@ -52,7 +63,7 @@ jobs:
   activation:
     needs: pre_activation
     if: needs.pre_activation.outputs.activated == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       discussions: write
       issues: write
@@ -414,9 +425,9 @@ jobs:
       - agent
       - detection
     if: >
-      ((!cancelled()) && (contains(needs.agent.outputs.output_types, 'add_comment'))) && (((github.event.issue.number) ||
-      (github.event.pull_request.number)) || (github.event.discussion.number))
-    runs-on: ubuntu-latest
+      (((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'add_comment'))) &&
+      (((github.event.issue.number) || (github.event.pull_request.number)) || (github.event.discussion.number))
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       discussions: write
@@ -805,9 +816,9 @@ jobs:
       - agent
       - detection
     if: >
-      ((!cancelled()) && (contains(needs.agent.outputs.output_types, 'add_labels'))) && ((github.event.issue.number) ||
-      (github.event.pull_request.number))
-    runs-on: ubuntu-latest
+      (((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'add_labels'))) &&
+      ((github.event.issue.number) || (github.event.pull_request.number))
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       issues: write
@@ -1046,6 +1057,8 @@ jobs:
     needs: activation
     runs-on: ubuntu-latest
     permissions: read-all
+    concurrency:
+      group: "gh-aw-copilot-${{ github.workflow }}"
     env:
       GH_AW_SAFE_OUTPUTS: /tmp/gh-aw/safeoutputs/outputs.jsonl
       GH_AW_SAFE_OUTPUTS_CONFIG: "{\"add_comment\":{\"max\":1},\"add_labels\":{\"max\":5},\"missing_tool\":{}}"
@@ -1055,14 +1068,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
       - name: Create gh-aw temp directory
         run: |
           mkdir -p /tmp/gh-aw/agent
           echo "Created /tmp/gh-aw/agent directory for agentic workflow temporary files"
       - name: Configure Git credentials
+        env:
+          REPO_NAME: ${{ github.repository }}
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "${{ github.workflow }}"
+          git config --global user.name "github-actions[bot]"
+          # Re-authenticate git with GitHub token
+          SERVER_URL="${{ github.server_url }}"
+          SERVER_URL="${SERVER_URL#https://}"
+          git remote set-url origin "https://x-access-token:${{ github.token }}@${SERVER_URL}/${REPO_NAME}.git"
           echo "Git configured with standard GitHub Actions identity"
       - name: Checkout PR branch
         if: |
@@ -1114,15 +1135,15 @@ jobs:
         env:
           COPILOT_CLI_TOKEN: ${{ secrets.COPILOT_CLI_TOKEN }}
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
         with:
           node-version: '24'
       - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot@0.0.351
+        run: npm install -g @github/copilot@0.0.353
       - name: Downloading container images
         run: |
           set -e
-          docker pull ghcr.io/github/github-mcp-server:v0.19.1
+          docker pull ghcr.io/github/github-mcp-server:v0.20.1
           docker pull mcp/fetch
       - name: Setup Safe Outputs Collector MCP
         run: |
@@ -1913,6 +1934,13 @@ jobs:
           chmod +x /tmp/gh-aw/safeoutputs/mcp-server.cjs
           
       - name: Setup MCPs
+        env:
+          GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_AW_SAFE_OUTPUTS: ${{ env.GH_AW_SAFE_OUTPUTS }}
+          GH_AW_SAFE_OUTPUTS_CONFIG: ${{ toJSON(env.GH_AW_SAFE_OUTPUTS_CONFIG) }}
+          GH_AW_ASSETS_BRANCH: ${{ env.GH_AW_ASSETS_BRANCH }}
+          GH_AW_ASSETS_MAX_SIZE_KB: ${{ env.GH_AW_ASSETS_MAX_SIZE_KB }}
+          GH_AW_ASSETS_ALLOWED_EXTS: ${{ env.GH_AW_ASSETS_ALLOWED_EXTS }}
         run: |
           mkdir -p /tmp/gh-aw/mcp-config
           mkdir -p /home/runner/.copilot
@@ -1932,7 +1960,7 @@ jobs:
                   "GITHUB_READ_ONLY=1",
                   "-e",
                   "GITHUB_TOOLSETS=default",
-                  "ghcr.io/github/github-mcp-server:v0.19.1"
+                  "ghcr.io/github/github-mcp-server:v0.20.1"
                 ],
                 "tools": ["*"],
                 "env": {
@@ -1949,7 +1977,9 @@ jobs:
                   "GH_AW_SAFE_OUTPUTS_CONFIG": "\${GH_AW_SAFE_OUTPUTS_CONFIG}",
                   "GH_AW_ASSETS_BRANCH": "\${GH_AW_ASSETS_BRANCH}",
                   "GH_AW_ASSETS_MAX_SIZE_KB": "\${GH_AW_ASSETS_MAX_SIZE_KB}",
-                  "GH_AW_ASSETS_ALLOWED_EXTS": "\${GH_AW_ASSETS_ALLOWED_EXTS}"
+                  "GH_AW_ASSETS_ALLOWED_EXTS": "\${GH_AW_ASSETS_ALLOWED_EXTS}",
+                  "GITHUB_REPOSITORY": "\${GITHUB_REPOSITORY}",
+                  "GITHUB_SERVER_URL": "\${GITHUB_SERVER_URL}"
                 }
               },
               "web-fetch": {
@@ -1983,20 +2013,23 @@ jobs:
           
           
           
-          You're a triage assistant for GitHub issues. Your task is to analyze issue #${{ github.event.issue.number }} and perform some initial triage tasks related to that issue.
+          You're a triage assistant for GitHub issues. Your task is to analyze issues created in the last 24 hours and perform initial triage tasks for each of them.
           
-          1. Select appropriate labels for the issue from the provided list.
+          1. First, use the `list_issues` tool to retrieve all issues created in the last 24 hours. Filter issues by using the `since` parameter with a timestamp from 24 hours ago (calculate: current time minus 24 hours in ISO 8601 format).
           
-          2. Retrieve the issue content using the `get_issue` tool. If the issue is obviously spam, or generated by bot, or something else that is not an actual issue to be worked on, then add an issue comment to the issue with a one sentence analysis and exit the workflow.
+          2. For each issue found, perform the following triage tasks:
           
-          3. Next, use the GitHub tools to gather additional context about the issue:
+          3. Select appropriate labels for the issue from the provided list.
+          
+          4. Retrieve the issue content using the `get_issue` tool. If the issue is obviously spam, or generated by bot, or something else that is not an actual issue to be worked on, then add an issue comment to the issue with a one sentence analysis and move to the next issue.
+          
+          5. Next, use the GitHub tools to gather additional context about the issue:
           
              - Fetch the list of labels available in this repository. Use 'gh label list' bash command to fetch the labels. This will give you the labels you can use for triaging issues.
              - Fetch any comments on the issue using the `get_issue_comments` tool
              - Find similar issues if needed using the `search_issues` tool
-             - List the issues to see other open issues in the repository using the `list_issues` tool
           
-          4. Analyze the issue content, considering:
+          6. Analyze the issue content, considering:
           
              - The issue title and description
              - The type of issue (bug report, feature request, question, etc.)
@@ -2005,9 +2038,9 @@ jobs:
              - User impact
              - Components affected
           
-          5. Write notes, ideas, nudges, resource links, debugging strategies and/or reproduction steps for the team to consider relevant to the issue.
+          7. Write notes, ideas, nudges, resource links, debugging strategies and/or reproduction steps for the team to consider relevant to the issue.
           
-          6. Select appropriate labels from the available labels list provided above:
+          8. Select appropriate labels from the available labels list provided above:
           
              - Choose labels that accurately reflect the issue's nature
              - Be specific but comprehensive
@@ -2017,13 +2050,13 @@ jobs:
              - Only select labels from the provided list above
              - It's okay to not add any labels if none are clearly applicable
           
-          7. Apply the selected labels:
+          9. Apply the selected labels:
           
              - Use the `update_issue` tool to apply the labels to the issue
              - DO NOT communicate directly with users
              - If no labels are clearly applicable, do not apply any labels
           
-          8. Add an issue comment to the issue with your analysis:
+          10. Add an issue comment to the issue with your analysis:
              - Start with "🎯 Agentic Issue Triage"
              - Provide a brief summary of the issue
              - Mention any relevant details that might help the team understand the issue better
@@ -2034,6 +2067,8 @@ jobs:
              - If you have any debugging strategies, include them in the comment
              - If appropriate break the issue down to sub-tasks and write a checklist of things to do.
              - Use collapsed-by-default sections in the GitHub markdown to keep the comment tidy. Collapse all sections except the short main summary at the top.
+          
+          11. After processing all issues, provide a summary of how many issues were triaged. If no issues were created in the last 24 hours, simply note that no new issues needed triage.
           
           PROMPT_EOF
       - name: Append XPIA security instructions to prompt
@@ -2194,13 +2229,6 @@ jobs:
           name: prompt.txt
           path: /tmp/gh-aw/aw-prompts/prompt.txt
           if-no-files-found: warn
-      - name: Capture agent version
-        run: |
-          VERSION_OUTPUT=$(copilot --version 2>&1 || echo "unknown")
-          # Extract semantic version pattern (e.g., 1.2.3, v1.2.3-beta)
-          CLEAN_VERSION=$(echo "$VERSION_OUTPUT" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?' | head -n1 || echo "unknown")
-          echo "AGENT_VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
-          echo "Agent version: $VERSION_OUTPUT"
       - name: Generate agentic run info
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
@@ -2212,7 +2240,7 @@ jobs:
               engine_name: "GitHub Copilot CLI",
               model: "",
               version: "",
-              agent_version: process.env.AGENT_VERSION || "",
+              agent_version: "0.0.353",
               workflow_name: "Agentic Triage",
               experimental: false,
               supports_tools_allowlist: true,
@@ -2226,6 +2254,9 @@ jobs:
               actor: context.actor,
               event_name: context.eventName,
               staged: false,
+              steps: {
+                firewall: ""
+              },
               created_at: new Date().toISOString()
             };
             
@@ -2262,9 +2293,12 @@ jobs:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_SAFE_OUTPUTS: ${{ env.GH_AW_SAFE_OUTPUTS }}
           GH_AW_SAFE_OUTPUTS_CONFIG: "{\"add_comment\":{\"max\":1},\"add_labels\":{\"max\":5},\"missing_tool\":{}}"
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
           GITHUB_TOKEN: ${{ secrets.COPILOT_CLI_TOKEN  }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
           XDG_CONFIG_HOME: /home/runner
       - name: Redact secrets in logs
         if: always()
@@ -2399,71 +2433,71 @@ jobs:
           script: |
             async function main() {
               const fs = require("fs");
-              const maxBodyLength = 65000;
-              function sanitizeContent(content, maxLength) {
-                if (!content || typeof content !== "string") {
-                  return "";
-                }
-                const allowedDomainsEnv = process.env.GH_AW_ALLOWED_DOMAINS;
-                const defaultAllowedDomains = ["github.com", "github.io", "githubusercontent.com", "githubassets.com", "github.dev", "codespaces.new"];
-                const allowedDomains = allowedDomainsEnv
-                  ? allowedDomainsEnv
-                      .split(",")
-                      .map(d => d.trim())
-                      .filter(d => d)
-                  : defaultAllowedDomains;
-                let sanitized = content;
-                sanitized = neutralizeMentions(sanitized);
-                sanitized = removeXmlComments(sanitized);
-                sanitized = sanitized.replace(/\x1b\[[0-9;]*[mGKH]/g, "");
-                sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-                sanitized = sanitizeUrlProtocols(sanitized);
-                sanitized = sanitizeUrlDomains(sanitized);
-                const lines = sanitized.split("\n");
-                const maxLines = 65000;
-                maxLength = maxLength || 524288;
-                if (lines.length > maxLines) {
-                  const truncationMsg = "\n[Content truncated due to line count]";
-                  const truncatedLines = lines.slice(0, maxLines).join("\n") + truncationMsg;
-                  if (truncatedLines.length > maxLength) {
-                    sanitized = truncatedLines.substring(0, maxLength - truncationMsg.length) + truncationMsg;
-                  } else {
-                    sanitized = truncatedLines;
-                  }
-                } else if (sanitized.length > maxLength) {
-                  sanitized = sanitized.substring(0, maxLength) + "\n[Content truncated due to length]";
-                }
-                sanitized = neutralizeBotTriggers(sanitized);
-                return sanitized.trim();
-                function sanitizeUrlDomains(s) {
-                  return s.replace(/\bhttps:\/\/[^\s\])}'"<>&\x00-\x1f,;]+/gi, match => {
-                    const urlAfterProtocol = match.slice(8);
-                    const hostname = urlAfterProtocol.split(/[\/:\?#]/)[0].toLowerCase();
-                    const isAllowed = allowedDomains.some(allowedDomain => {
-                      const normalizedAllowed = allowedDomain.toLowerCase();
-                      return hostname === normalizedAllowed || hostname.endsWith("." + normalizedAllowed);
-                    });
-                    return isAllowed ? match : "(redacted)";
-                  });
-                }
-                function sanitizeUrlProtocols(s) {
-                  return s.replace(/\b(\w+):\/\/[^\s\])}'"<>&\x00-\x1f]+/gi, (match, protocol) => {
-                    return protocol.toLowerCase() === "https" ? match : "(redacted)";
-                  });
-                }
-                function neutralizeMentions(s) {
-                  return s.replace(
-                    /(^|[^\w`])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?(?:\/[A-Za-z0-9._-]+)?)/g,
-                    (_m, p1, p2) => `${p1}\`@${p2}\``
-                  );
-                }
-                function removeXmlComments(s) {
-                  return s.replace(/<!--[\s\S]*?-->/g, "").replace(/<!--[\s\S]*?--!>/g, "");
-                }
-                function neutralizeBotTriggers(s) {
-                  return s.replace(/\b(fixes?|closes?|resolves?|fix|close|resolve)\s+#(\w+)/gi, (match, action, ref) => `\`${action} #${ref}\``);
-                }
+            function sanitizeContent(content, maxLength) {
+              if (!content || typeof content !== "string") {
+                return "";
               }
+              const allowedDomainsEnv = process.env.GH_AW_ALLOWED_DOMAINS;
+              const defaultAllowedDomains = ["github.com", "github.io", "githubusercontent.com", "githubassets.com", "github.dev", "codespaces.new"];
+              const allowedDomains = allowedDomainsEnv
+                ? allowedDomainsEnv
+                    .split(",")
+                    .map(d => d.trim())
+                    .filter(d => d)
+                : defaultAllowedDomains;
+              let sanitized = content;
+              sanitized = neutralizeMentions(sanitized);
+              sanitized = removeXmlComments(sanitized);
+              sanitized = sanitized.replace(/\x1b\[[0-9;]*[mGKH]/g, "");
+              sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+              sanitized = sanitizeUrlProtocols(sanitized);
+              sanitized = sanitizeUrlDomains(sanitized);
+              const lines = sanitized.split("\n");
+              const maxLines = 65000;
+              maxLength = maxLength || 524288;
+              if (lines.length > maxLines) {
+                const truncationMsg = "\n[Content truncated due to line count]";
+                const truncatedLines = lines.slice(0, maxLines).join("\n") + truncationMsg;
+                if (truncatedLines.length > maxLength) {
+                  sanitized = truncatedLines.substring(0, maxLength - truncationMsg.length) + truncationMsg;
+                } else {
+                  sanitized = truncatedLines;
+                }
+              } else if (sanitized.length > maxLength) {
+                sanitized = sanitized.substring(0, maxLength) + "\n[Content truncated due to length]";
+              }
+              sanitized = neutralizeBotTriggers(sanitized);
+              return sanitized.trim();
+              function sanitizeUrlDomains(s) {
+                s = s.replace(/\bhttps:\/\/([^\/\s\])}'"<>&\x00-\x1f,;]+)/gi, (match, domain) => {
+                  const hostname = domain.split(/[\/:\?#]/)[0].toLowerCase();
+                  const isAllowed = allowedDomains.some(allowedDomain => {
+                    const normalizedAllowed = allowedDomain.toLowerCase();
+                    return hostname === normalizedAllowed || hostname.endsWith("." + normalizedAllowed);
+                  });
+                  return isAllowed ? match : "(redacted)";
+                });
+                return s;
+              }
+              function sanitizeUrlProtocols(s) {
+                return s.replace(/\b(\w+):(?:\/\/)?[^\s\])}'"<>&\x00-\x1f]+/gi, (match, protocol) => {
+                  return protocol.toLowerCase() === "https" ? match : "(redacted)";
+                });
+              }
+              function neutralizeMentions(s) {
+                return s.replace(
+                  /(^|[^\w`])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?(?:\/[A-Za-z0-9._-]+)?)/g,
+                  (_m, p1, p2) => `${p1}\`@${p2}\``
+                );
+              }
+              function removeXmlComments(s) {
+                return s.replace(/<!--[\s\S]*?-->/g, "").replace(/<!--[\s\S]*?--!>/g, "");
+              }
+              function neutralizeBotTriggers(s) {
+                return s.replace(/\b(fixes?|closes?|resolves?|fix|close|resolve)\s+#(\w+)/gi, (match, action, ref) => `\`${action} #${ref}\``);
+              }
+            }
+              const maxBodyLength = 65000;
               function getMaxAllowedForType(itemType, config) {
                 const itemConfig = config?.[itemType];
                 if (itemConfig && typeof itemConfig === "object" && "max" in itemConfig && itemConfig.max) {
@@ -4295,7 +4329,9 @@ jobs:
   detection:
     needs: agent
     runs-on: ubuntu-latest
-    permissions: read-all
+    permissions: {}
+    concurrency:
+      group: "gh-aw-copilot-${{ github.workflow }}"
     timeout-minutes: 10
     steps:
       - name: Download prompt artifact
@@ -4444,11 +4480,11 @@ jobs:
         env:
           COPILOT_CLI_TOKEN: ${{ secrets.COPILOT_CLI_TOKEN }}
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
         with:
           node-version: '24'
       - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot@0.0.351
+        run: npm install -g @github/copilot@0.0.353
       - name: Execute GitHub Copilot CLI
         id: agentic_execution
         # Copilot CLI tool arguments (sorted):
@@ -4471,8 +4507,11 @@ jobs:
         env:
           COPILOT_AGENT_RUNNER_TYPE: STANDALONE
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
           GITHUB_TOKEN: ${{ secrets.COPILOT_CLI_TOKEN  }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
           XDG_CONFIG_HOME: /home/runner
       - name: Parse threat detection results
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
@@ -4522,8 +4561,8 @@ jobs:
     needs:
       - agent
       - detection
-    if: (!cancelled()) && (contains(needs.agent.outputs.output_types, 'missing_tool'))
-    runs-on: ubuntu-latest
+    if: ((!cancelled()) && (needs.agent.result != 'skipped')) && (contains(needs.agent.outputs.output_types, 'missing_tool'))
+    runs-on: ubuntu-slim
     permissions:
       contents: read
     timeout-minutes: 5
@@ -4651,89 +4690,15 @@ jobs:
             });
 
   pre_activation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
-      activated: ${{ (steps.check_membership.outputs.is_team_member == 'true') && (steps.check_stop_time.outputs.stop_time_ok == 'true') }}
+      activated: ${{ steps.check_stop_time.outputs.stop_time_ok == 'true' }}
     steps:
-      - name: Check team membership for workflow
-        id: check_membership
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        env:
-          GH_AW_REQUIRED_ROLES: admin,maintainer,write
-        with:
-          script: |
-            async function main() {
-              const { eventName } = context;
-              const actor = context.actor;
-              const { owner, repo } = context.repo;
-              const requiredPermissionsEnv = process.env.GH_AW_REQUIRED_ROLES;
-              const requiredPermissions = requiredPermissionsEnv ? requiredPermissionsEnv.split(",").filter(p => p.trim() !== "") : [];
-              if (eventName === "workflow_dispatch") {
-                const hasWriteRole = requiredPermissions.includes("write");
-                if (hasWriteRole) {
-                  core.info(`✅ Event ${eventName} does not require validation (write role allowed)`);
-                  core.setOutput("is_team_member", "true");
-                  core.setOutput("result", "safe_event");
-                  return;
-                }
-                core.info(`Event ${eventName} requires validation (write role not allowed)`);
-              }
-              const safeEvents = ["workflow_run", "schedule"];
-              if (safeEvents.includes(eventName)) {
-                core.info(`✅ Event ${eventName} does not require validation`);
-                core.setOutput("is_team_member", "true");
-                core.setOutput("result", "safe_event");
-                return;
-              }
-              if (!requiredPermissions || requiredPermissions.length === 0) {
-                core.warning("❌ Configuration error: Required permissions not specified. Contact repository administrator.");
-                core.setOutput("is_team_member", "false");
-                core.setOutput("result", "config_error");
-                core.setOutput("error_message", "Configuration error: Required permissions not specified");
-                return;
-              }
-              try {
-                core.info(`Checking if user '${actor}' has required permissions for ${owner}/${repo}`);
-                core.info(`Required permissions: ${requiredPermissions.join(", ")}`);
-                const repoPermission = await github.rest.repos.getCollaboratorPermissionLevel({
-                  owner: owner,
-                  repo: repo,
-                  username: actor,
-                });
-                const permission = repoPermission.data.permission;
-                core.info(`Repository permission level: ${permission}`);
-                for (const requiredPerm of requiredPermissions) {
-                  if (permission === requiredPerm || (requiredPerm === "maintainer" && permission === "maintain")) {
-                    core.info(`✅ User has ${permission} access to repository`);
-                    core.setOutput("is_team_member", "true");
-                    core.setOutput("result", "authorized");
-                    core.setOutput("user_permission", permission);
-                    return;
-                  }
-                }
-                core.warning(`User permission '${permission}' does not meet requirements: ${requiredPermissions.join(", ")}`);
-                core.setOutput("is_team_member", "false");
-                core.setOutput("result", "insufficient_permissions");
-                core.setOutput("user_permission", permission);
-                core.setOutput(
-                  "error_message",
-                  `Access denied: User '${actor}' is not authorized. Required permissions: ${requiredPermissions.join(", ")}`
-                );
-              } catch (repoError) {
-                const errorMessage = repoError instanceof Error ? repoError.message : String(repoError);
-                core.warning(`Repository permission check failed: ${errorMessage}`);
-                core.setOutput("is_team_member", "false");
-                core.setOutput("result", "api_error");
-                core.setOutput("error_message", `Repository permission check failed: ${errorMessage}`);
-                return;
-              }
-            }
-            await main();
       - name: Check stop-time limit
         id: check_stop_time
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
-          GH_AW_STOP_TIME: 2025-11-27 03:00:29
+          GH_AW_STOP_TIME: 2025-12-01 15:46:50
           GH_AW_WORKFLOW_NAME: "Agentic Triage"
         with:
           script: |
@@ -4776,7 +4741,7 @@ jobs:
     if: >
       (((((always()) && (needs.agent.result != 'skipped')) && (needs.activation.outputs.comment_id)) && (!contains(needs.agent.outputs.output_types, 'add_comment'))) &&
       (!contains(needs.agent.outputs.output_types, 'create_pull_request'))) && (!contains(needs.agent.outputs.output_types, 'push_to_pull_request_branch'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       contents: read
       discussions: write
