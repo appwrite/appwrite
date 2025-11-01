@@ -57,6 +57,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Email as EmailCanonical;
 use Utopia\Locale\Locale;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -1695,7 +1696,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (empty($user->getAttribute('email'))) {
-            $user->setAttribute('email', $oauth2->getUserEmail($accessToken));
+            $emailCanonical = new EmailCanonical($oauth2->getUserEmail($accessToken));
+
+            $user
+                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
+                ->setAttribute('emailCanonical', $emailCanonical->getCanonical())
+                ->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported())
+                ->setAttribute('emailIsCorporate', $emailCanonical->isCorporate())
+                ->setAttribute('emailIsDisposable', $emailCanonical->isDisposable())
+                ->setAttribute('emailIsFree', $emailCanonical->isFree());
         }
 
         if (empty($user->getAttribute('name'))) {
@@ -2240,6 +2249,8 @@ App::post('/v1/account/tokens/email')
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
+            $emailCanonical = new EmailCanonical($email);
+
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -2262,6 +2273,11 @@ App::post('/v1/account/tokens/email')
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
+                'emailCanonical' => $emailCanonical->getCanonical(),
+                'emailIsCanonical' => $emailCanonical->isCanonicalSupported(),
+                'emailIsCorporate' => $emailCanonical->isCorporate(),
+                'emailIsDisposable' => $emailCanonical->isDisposable(),
+                'emailIsFree' => $emailCanonical->isFree(),
             ]);
 
             $user->removeAttribute('$sequence');
@@ -3072,9 +3088,16 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
+        $emailCanonical = new EmailCanonical($email);
+
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
+            ->setAttribute('emailCanonical', $emailCanonical->getCanonical())
+            ->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported())
+            ->setAttribute('emailIsCorporate', $emailCanonical->isCorporate())
+            ->setAttribute('emailIsDisposable', $emailCanonical->isDisposable())
+            ->setAttribute('emailIsFree', $emailCanonical->isFree())
         ;
 
         if (empty($passwordUpdate)) {
