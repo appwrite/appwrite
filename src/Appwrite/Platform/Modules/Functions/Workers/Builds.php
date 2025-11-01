@@ -467,11 +467,10 @@ class Builds extends Action
                     }
 
                     $providerCommitHash = \trim($stdout);
-                    $authorUrl = "https://github.com/$cloneOwner";
 
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
-                    $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
-                    $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
+                    $deployment->setAttribute('providerCommitAuthorUrl', APP_VCS_GITHUB_URL);
+                    $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
@@ -868,13 +867,17 @@ class Builds extends Action
 
             $deployment->setAttribute('buildLogs', $logs);
 
+            $adapter = null;
             if ($resource->getCollection() === 'sites' && !empty($detectionLogs)) {
                 $files = \explode("\n", $detectionLogs); // Parse output
                 $files = \array_filter($files); // Remove empty
                 $files = \array_map(fn ($file) => \trim($file), $files); // Remove whitepsaces
                 $files = \array_map(fn ($file) => \str_starts_with($file, './') ? \substr($file, 2) : $file, $files); // Remove beginning ./
 
-                $detector = new Rendering($files, $resource->getAttribute('framework', ''));
+                $detector = new Rendering($resource->getAttribute('framework', ''));
+                foreach ($files as $file) {
+                    $detector->addInput($file);
+                }
                 $detector
                     ->addOption(new SSR())
                     ->addOption(new XStatic());
@@ -985,7 +988,7 @@ class Builds extends Action
                                     $config['sleep'] = $framework['screenshotSleep'];
                                 }
 
-                                $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+                                $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
                                 $fetchResponse = $client->fetch(
                                     url: $browserEndpoint . '/screenshots',
                                     method: 'POST',

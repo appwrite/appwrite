@@ -13,7 +13,7 @@ Collection result = await databases.CreateCollection(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     name: "<NAME>",
-    permissions: ["read("any")"], // optional
+    permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     documentSecurity: false, // optional
     enabled: false // optional
 );

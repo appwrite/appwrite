@@ -193,7 +193,7 @@ class Comment
         }
 
         $tip = $this->tips[array_rand($this->tips)];
-        $text .= "\n<br>\n\n> [!NOTE]\n> $tip\n\n";
+        $text .= "\n<br>\n\n> [!TIP]\n> $tip\n\n";
 
         return $text;
     }

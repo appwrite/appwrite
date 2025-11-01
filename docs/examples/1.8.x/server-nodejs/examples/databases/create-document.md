@@ -18,6 +18,6 @@ const result = await databases.createDocument({
         "age": 30,
         "isAdmin": false
     },
-    permissions: ["read("any")"], // optional
+    permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });

@@ -1,6 +1,8 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Databases;
+import io.appwrite.Permission;
+import io.appwrite.Role;
 
 Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,7 +15,7 @@ databases.upsertDocument(
     "<COLLECTION_ID>", // collectionId 
     "<DOCUMENT_ID>", // documentId 
     mapOf( "a" to "b" ), // data 
-    listOf("read("any")"), // permissions (optional)
+    listOf(Permission.read(Role.any())), // permissions (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

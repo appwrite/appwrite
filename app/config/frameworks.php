@@ -202,6 +202,31 @@ return [
             ]
         ]
     ],
+    'tanstack-start' => [
+        'key' => 'tanstack-start',
+        'name' => 'TanStack Start',
+        'screenshotSleep' => 3000,
+        'buildRuntime' => 'node-22',
+        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'bundleCommand' => 'bash /usr/local/server/helpers/tanstack-start/bundle.sh',
+        'envCommand' => 'source /usr/local/server/helpers/tanstack-start/env.sh',
+        'adapters' => [
+            'ssr' => [
+                'key' => 'ssr',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist',
+                'startCommand' => 'bash helpers/tanstack-start/server.sh',
+            ],
+            'static' => [
+                'key' => 'static',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm install',
+                'outputDirectory' => './dist/client',
+                'startCommand' => 'bash helpers/server.sh',
+            ]
+        ]
+    ],
     'remix' => [
         'key' => 'remix',
         'name' => 'Remix',

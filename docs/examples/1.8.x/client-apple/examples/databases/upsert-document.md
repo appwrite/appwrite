@@ -11,7 +11,7 @@ let document = try await databases.upsertDocument(
     collectionId: "<COLLECTION_ID>",
     documentId: "<DOCUMENT_ID>",
     data: [:],
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     transactionId: "<TRANSACTION_ID>" // optional
 )
 

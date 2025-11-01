@@ -1,5 +1,7 @@
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
+from appwrite.permission import Permission
+from appwrite.role import Role
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -19,6 +21,6 @@ result = tables_db.create_row(
         "age": 30,
         "isAdmin": False
     },
-    permissions = ["read("any")"], # optional
+    permissions = [Permission.read(Role.any())], # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )

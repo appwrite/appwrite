@@ -2,6 +2,8 @@ import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.models.InputFile;
 import io.appwrite.services.Storage;
+import io.appwrite.Permission;
+import io.appwrite.Role;
 
 Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,7 +15,7 @@ storage.createFile(
     "<BUCKET_ID>", // bucketId 
     "<FILE_ID>", // fileId 
     InputFile.fromPath("file.png"), // file 
-    listOf("read("any")"), // permissions (optional)
+    listOf(Permission.read(Role.any())), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

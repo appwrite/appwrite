@@ -2,6 +2,8 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Databases;
+use Appwrite\Permission;
+use Appwrite\Role;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -14,7 +16,7 @@ $result = $databases->createCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // optional
+    permissions: [Permission::read(Role::any())], // optional
     documentSecurity: false, // optional
     enabled: false // optional
 );

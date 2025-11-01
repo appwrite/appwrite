@@ -1234,9 +1234,10 @@ App::get('/v1/projects/:projectId/webhooks')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1251,7 +1252,7 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
-            'total' => count($webhooks),
+            'total' => $includeTotal ? count($webhooks) : 0,
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -1531,9 +1532,10 @@ App::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1548,7 +1550,7 @@ App::get('/v1/projects/:projectId/keys')
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'total' => count($keys),
+            'total' => $includeTotal ? count($keys) : 0,
         ]), Response::MODEL_KEY_LIST);
     });
 
@@ -1834,9 +1836,10 @@ App::get('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1851,7 +1854,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
-            'total' => count($platforms),
+            'total' => $includeTotal ? count($platforms) : 0,
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
