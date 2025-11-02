@@ -571,44 +571,47 @@ App::post('/v1/teams/:teamId/memberships')
                 $emailCanonical = null;
             }
 
+            $userId = ID::unique();
+
+            $userDocument = new Document([
+                '$id' => $userId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::read(Role::user($userId)),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'email' => empty($email) ? null : $email,
+                'phone' => empty($phone) ? null : $phone,
+                'emailVerification' => false,
+                'status' => true,
+                // TODO: Set password empty?
+                'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                /**
+                 * Set the password update time to 0 for users created using
+                 * team invite and OAuth to allow password updates without an
+                 * old password
+                 */
+                'passwordUpdate' => null,
+                'registration' => DateTime::now(),
+                'reset' => false,
+                'name' => $name,
+                'prefs' => new \stdClass(),
+                'sessions' => null,
+                'tokens' => null,
+                'memberships' => null,
+                'search' => implode(' ', [$userId, $email, $name]),
+                'emailCanonical' => $emailCanonical?->getCanonical(),
+                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
+                'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
+            ]);
+
             try {
-                $userId = ID::unique();
-                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
-                    '$id' => $userId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::read(Role::user($userId)),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'email' => empty($email) ? null : $email,
-                    'phone' => empty($phone) ? null : $phone,
-                    'emailVerification' => false,
-                    'status' => true,
-                    // TODO: Set password empty?
-                    'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
-                    'hash' => Auth::DEFAULT_ALGO,
-                    'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
-                    /**
-                     * Set the password update time to 0 for users created using
-                     * team invite and OAuth to allow password updates without an
-                     * old password
-                     */
-                    'passwordUpdate' => null,
-                    'registration' => DateTime::now(),
-                    'reset' => false,
-                    'name' => $name,
-                    'prefs' => new \stdClass(),
-                    'sessions' => null,
-                    'tokens' => null,
-                    'memberships' => null,
-                    'search' => implode(' ', [$userId, $email, $name]),
-                    'emailCanonical' => $emailCanonical?->getCanonical(),
-                    'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                    'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                    'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
-                    'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
-                ])));
+                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', $userDocument));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
