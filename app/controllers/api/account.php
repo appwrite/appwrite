@@ -75,6 +75,14 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
     $subject = $locale->getText("emails.sessionAlert.subject");
     $preview = $locale->getText("emails.sessionAlert.preview");
     $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+    $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+    $validator = new FileName();
+    if (!$validator->isValid($smtpBaseTemplate)) {
+        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+    }
+
+    $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
     $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
     $message
@@ -157,12 +165,25 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
     ];
 
+    if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+        $emailVariables = array_merge($emailVariables, [
+            'accentColor' => APP_EMAIL_ACCENT_COLOR,
+            'logoUrl' => APP_EMAIL_LOGO_URL,
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+        ]);
+    }
+
     $email = $user->getAttribute('email');
 
     $queueForMails
         ->setSubject($subject)
         ->setPreview($preview)
         ->setBody($body)
+        ->setBodyTemplate($bodyTemplate)
         ->setVariables($emailVariables)
         ->setRecipient($email)
         ->trigger();
