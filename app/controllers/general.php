@@ -1008,7 +1008,10 @@ App::init()
                 $endDomain->getRegisterable() !== ''
         );
 
-        $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
+        $isLocalHost =
+            $request->getHostname() === 'localhost' ||
+            $request->getHostname() === 'localhost:' . $request->getPort() ||
+            str_ends_with($request->getHostname(), '.localhost');
         $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
 
         $isConsoleProject = $project->getAttribute('$id', '') === 'console';
