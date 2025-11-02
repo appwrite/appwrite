@@ -412,8 +412,8 @@ App::post('/v1/account')
                 'emailCanonical' => $emailCanonical?->getCanonical(),
                 'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
                 'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
-                'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
+                'emailIsDisposable' => $emailCanonical?->isDisposable(),
+                'emailIsFree' => $emailCanonical?->isFree(),
             ]);
 
             $user->removeAttribute('$sequence');
@@ -2275,8 +2275,8 @@ App::post('/v1/account/tokens/email')
                 'emailCanonical' => $emailCanonical?->getCanonical(),
                 'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
                 'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
-                'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
+                'emailIsDisposable' => $emailCanonical?->isDisposable(),
+                'emailIsFree' => $emailCanonical?->isFree(),
             ]);
 
             $user->removeAttribute('$sequence');

@@ -134,8 +134,8 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'emailCanonical' => $emailCanonical?->getCanonical(),
             'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
             'emailIsCorporate' => $emailCanonical?->isCorporate(),
-            'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
-            'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
+            'emailIsDisposable' => $emailCanonical?->isDisposable(),
+            'emailIsFree' => $emailCanonical?->isFree(),
         ]);
 
         if ($hash === 'plaintext') {

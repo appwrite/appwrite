@@ -606,8 +606,8 @@ App::post('/v1/teams/:teamId/memberships')
                 'emailCanonical' => $emailCanonical?->getCanonical(),
                 'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
                 'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
-                'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
+                'emailIsDisposable' => $emailCanonical?->isDisposable(),
+                'emailIsFree' => $emailCanonical?->isFree(),
             ]);
 
             try {
