@@ -1,5 +1,15 @@
 # Change Log
 
+## 11.0.0
+
+* Rename `create-csv-migration` to `create-csv-import` command to create a CSV import of a collection/table
+* Add `create-csv-export` command to create a CSV export of a collection/table
+* Add `create-resend-provider` and `update-resend-provider` commands to create and update a Resend Email provider
+* Fix syncing of tables deleted locally during `push tables` command
+* Fix added push command support for cli spatial types
+* Fix attribute changing during push
+* Replace pkg with @yao-pkg/pkg in dependencies
+
 ## 10.2.3
 
 * Fix `init tables` command not working
