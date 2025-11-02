@@ -973,6 +973,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
+        Console::info("cookie domain: " . Config::getParam('cookieDomain'));
+
         /* @type Document $bucket */
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
