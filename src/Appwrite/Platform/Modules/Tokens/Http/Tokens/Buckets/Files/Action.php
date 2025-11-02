@@ -5,9 +5,9 @@ namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Database\Validator\Authorization;
 
 class Action extends UtopiaAction
 {
