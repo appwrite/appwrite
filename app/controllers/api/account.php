@@ -1675,10 +1675,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (empty($user->getAttribute('email'))) {
-            $emailCanonical = new EmailCanonical($oauth2->getUserEmail($accessToken));
+            $oauth2Email = $oauth2->getUserEmail($accessToken);
+
+            $emailCanonical = new EmailCanonical($oauth2Email);
 
             $user
-                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
+                ->setAttribute('email', $oauth2Email)
                 ->setAttribute('emailCanonical', $emailCanonical->getCanonical())
                 ->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported())
                 ->setAttribute('emailIsCorporate', $emailCanonical->isCorporate())
