@@ -614,7 +614,7 @@ abstract class Action extends UtopiaAction
             }
         } else {
             try {
-                $authorization->skip(fn () => $dbForProject->updateAttribute(
+                $dbForProject->updateAttribute(
                     collection: $collectionId,
                     id: $key,
                     size: $size,
@@ -622,7 +622,7 @@ abstract class Action extends UtopiaAction
                     default: $default,
                     formatOptions: $options,
                     newKey: $newKey ?? null
-                ));
+                );
             } catch (DuplicateException) {
                 throw new Exception($this->getDuplicateException());
             } catch (IndexException $e) {

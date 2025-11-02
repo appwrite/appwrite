@@ -842,15 +842,13 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         try {
             if ($fileSecurity && !$valid) {
                 $files = $dbForProject->find('bucket_' . $bucket->getSequence(), $queries);
-                $total = $includeTotal ? $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT) : 0;
+                $total = $includeTotal ? $dbForProject->count('bucket_' . $bucket->getSequence(), $queries, APP_LIMIT_COUNT) : 0;
             } else {
                 $files = $authorization->skip(fn () => $dbForProject->find('bucket_' . $bucket->getSequence(), $queries));
-                $total = $authorization->skip(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT));
+                $total = $includeTotal ? $authorization->skip(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), $queries, APP_LIMIT_COUNT)) : 0;
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);

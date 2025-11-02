@@ -91,7 +91,8 @@ class Create extends Action
             $response,
             $dbForProject,
             $queueForDatabase,
-            $queueForEvents
+            $queueForEvents,
+            $authorization
         );
 
         $response
