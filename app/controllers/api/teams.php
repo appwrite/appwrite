@@ -48,6 +48,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Email as EmailCanonical;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -565,6 +566,12 @@ App::post('/v1/teams/:teamId/memberships')
             }
 
             try {
+                $emailCanonical = new EmailCanonical($email);
+            } catch (Throwable) {
+                $emailCanonical = null;
+            }
+
+            try {
                 $userId = ID::unique();
                 $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
@@ -596,6 +603,11 @@ App::post('/v1/teams/:teamId/memberships')
                     'tokens' => null,
                     'memberships' => null,
                     'search' => implode(' ', [$userId, $email, $name]),
+                    'emailCanonical' => $emailCanonical?->getCanonical(),
+                    'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                    'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                    'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
+                    'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
                 ])));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);

@@ -374,6 +374,13 @@ App::post('/v1/account')
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+
+        try {
+            $emailCanonical = new EmailCanonical($email);
+        } catch (Throwable) {
+            $emailCanonical = null;
+        }
+
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user->setAttributes([
@@ -402,7 +409,13 @@ App::post('/v1/account')
                 'authenticators' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
+                'emailCanonical' => $emailCanonical?->getCanonical(),
+                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
+                'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
             ]);
+
             $user->removeAttribute('$sequence');
             $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
@@ -1675,17 +1688,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (empty($user->getAttribute('email'))) {
-            $oauth2Email = $oauth2->getUserEmail($accessToken);
+            $user->setAttribute('email', $oauth2->getUserEmail($accessToken));
 
-            $emailCanonical = new EmailCanonical($oauth2Email);
+            try {
+                $emailCanonical = new EmailCanonical($user->getAttribute('email'));
 
-            $user
-                ->setAttribute('email', $oauth2Email)
-                ->setAttribute('emailCanonical', $emailCanonical->getCanonical())
-                ->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported())
-                ->setAttribute('emailIsCorporate', $emailCanonical->isCorporate())
-                ->setAttribute('emailIsDisposable', $emailCanonical->isDisposable())
-                ->setAttribute('emailIsFree', $emailCanonical->isFree());
+                $user->setAttribute('emailCanonical', $emailCanonical->getCanonical());
+                $user->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported());
+                $user->setAttribute('emailIsCorporate', $emailCanonical->isCorporate());
+                $user->setAttribute('emailIsDisposable', $emailCanonical->isDisposable());
+                $user->setAttribute('emailIsFree', $emailCanonical->isFree());
+            } catch (Throwable) {
+            }
         }
 
         if (empty($user->getAttribute('name'))) {
@@ -2230,7 +2244,11 @@ App::post('/v1/account/tokens/email')
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
-            $emailCanonical = new EmailCanonical($email);
+            try {
+                $emailCanonical = new EmailCanonical($email);
+            } catch (Throwable) {
+                $emailCanonical = null;
+            }
 
             $user->setAttributes([
                 '$id' => $userId,
@@ -2254,11 +2272,11 @@ App::post('/v1/account/tokens/email')
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailCanonical->getCanonical(),
-                'emailIsCanonical' => $emailCanonical->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical->isCorporate(),
-                'emailIsDisposable' => $emailCanonical->isDisposable(),
-                'emailIsFree' => $emailCanonical->isFree(),
+                'emailCanonical' => $emailCanonical?->getCanonical(),
+                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
+                'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
             ]);
 
             $user->removeAttribute('$sequence');

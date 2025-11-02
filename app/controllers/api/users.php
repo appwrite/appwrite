@@ -49,6 +49,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Email as EmailCanonical;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -97,6 +98,12 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             }
         }
 
+        try {
+            $emailCanonical = new EmailCanonical($email ?? '');
+        } catch (Throwable) {
+            $emailCanonical = null;
+        }
+
         $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = new Document([
             '$id' => $userId,
@@ -124,6 +131,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'tokens' => null,
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $phone, $name]),
+            'emailCanonical' => $emailCanonical?->getCanonical(),
+            'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+            'emailIsCorporate' => $emailCanonical?->isCorporate(),
+            'emailIsDisposable' => $emailCanonical?->isDisposable(), // todo: fix throw
+            'emailIsFree' => $emailCanonical?->isFree(), // todo: fix throw
         ]);
 
         if ($hash === 'plaintext') {
