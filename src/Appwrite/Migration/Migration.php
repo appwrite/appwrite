@@ -13,6 +13,7 @@ use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\PDO;
+use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
 {
@@ -125,6 +126,7 @@ abstract class Migration
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
+        Authorization $authorization,
         ?callable $getProjectDB = null
     ): self {
         $this->project = $project;
@@ -132,8 +134,8 @@ abstract class Migration
         $this->dbForPlatform = $dbForPlatform;
         $this->getProjectDB = $getProjectDB;
 
-        $this->dbForPlatform->getAuthorization()->disable();
-        $this->dbForPlatform->getAuthorization()->setDefaultStatus(false);
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
 
         return $this;
     }

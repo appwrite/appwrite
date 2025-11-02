@@ -61,6 +61,7 @@ class Update extends BooleanUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

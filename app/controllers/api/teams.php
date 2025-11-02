@@ -847,7 +847,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject, Authorization $authorization) {
+    ->action(function (string $teamId, array $queries, string $search, bool $includeTotal, Response $response, Document $project, Database $dbForProject, Authorization $authorization) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {

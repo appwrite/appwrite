@@ -167,7 +167,7 @@ class Update extends Action
 
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations, $authorization) {
             $operations++;
 
             $relationships = \array_filter(
@@ -334,6 +334,7 @@ class Update extends Action
             document: $document,
             dbForProject: $dbForProject,
             collectionsCache: $collectionsCache,
+            authorization: $authorization,
         );
 
         $response->dynamic($document, $this->getResponseModel());

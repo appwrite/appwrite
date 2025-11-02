@@ -149,10 +149,10 @@ class V20 extends Filter
         }
 
         try {
-            $collection = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
+            $collection = $dbForProject->getDocument(
                 'database_' . $database->getSequence(),
                 $collectionId
-            ));
+            );
             if ($collection->isEmpty()) {
                 return [];
             }

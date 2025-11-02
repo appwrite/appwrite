@@ -125,6 +125,7 @@ class Get extends Action
             document: $document,
             dbForProject: $dbForProject,
             collectionsCache: $collectionsCache,
+            authorization: $authorization,
             operations: $operations
         );
 

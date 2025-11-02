@@ -65,6 +65,7 @@ class Delete extends DocumentsDelete
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

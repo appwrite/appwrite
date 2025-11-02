@@ -68,7 +68,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {

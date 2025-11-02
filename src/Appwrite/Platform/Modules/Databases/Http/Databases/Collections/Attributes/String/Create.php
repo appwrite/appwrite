@@ -14,6 +14,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -76,6 +77,7 @@ class Create extends Action
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -92,7 +94,8 @@ class Create extends Action
         Database       $dbForProject,
         EventDatabase  $queueForDatabase,
         Event          $queueForEvents,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ): void {
         if (!App::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted string ' . $this->getSDKGroup() . '.');
@@ -131,7 +134,8 @@ class Create extends Action
             $response,
             $dbForProject,
             $queueForDatabase,
-            $queueForEvents
+            $queueForEvents,
+            $authorization
         );
 
         $attribute->setAttribute('encrypt', $encrypt);

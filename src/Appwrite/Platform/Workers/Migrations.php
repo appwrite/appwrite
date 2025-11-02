@@ -11,7 +11,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
@@ -223,7 +222,6 @@ class Migrations extends Action
     }
 
     /**
-     * @throws Authorization
      * @throws Structure
      * @throws Conflict
      * @throws \Utopia\Database\Exception
@@ -282,7 +280,6 @@ class Migrations extends Action
     }
 
     /**
-     * @throws Authorization
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
@@ -421,7 +418,6 @@ class Migrations extends Action
      * @param Document $migration
      * @param Mail $queueForMails
      * @return void
-     * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Exception

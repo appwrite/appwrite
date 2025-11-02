@@ -91,7 +91,7 @@ class Create extends Action
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
-        $database = $authorization()->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
@@ -150,7 +150,7 @@ class Create extends Action
                 'twoWayKey' => $twoWayKey,
                 'onDelete' => $onDelete,
             ]
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
 
         foreach ($attribute->getAttribute('options', []) as $k => $option) {
             $attribute->setAttribute($k, $option);

@@ -7,29 +7,30 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
+use Utopia\Database\Validator\Authorization;
 
 class Action extends UtopiaAction
 {
-    protected function getFileAndBucket(Database $dbForProject, string $bucketId, string $fileId): array
+    protected function getFileAndBucket(Database $dbForProject, Authorization $authorization, string $bucketId, string $fileId): array
     {
-        $bucket = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = Auth::isAppUser($dbForProject->getAuthorization()->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($dbForProject->getAuthorization()->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$dbForProject->getAuthorization()->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $dbForProject->getAuthorization()->getDescription());
+        if (!$authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         if ($fileSecurity) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
-            $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if ($file->isEmpty()) {

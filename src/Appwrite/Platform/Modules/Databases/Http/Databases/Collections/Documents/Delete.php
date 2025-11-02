@@ -204,6 +204,7 @@ class Delete extends Action
             document: $document,
             dbForProject: $dbForProject,
             collectionsCache: $collectionsCache,
+            authorization: $authorization
         );
 
         $queueForStatsUsage

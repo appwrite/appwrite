@@ -258,10 +258,9 @@ abstract class Action extends AppwriteAction
         Document $collection,
         Document $document,
         Database $dbForProject,
-        Authorization $authorization,
-
         /* options */
         array &$collectionsCache,
+        Authorization $authorization,
         ?int &$operations = null,
     ): bool {
 
@@ -324,7 +323,8 @@ abstract class Action extends AppwriteAction
                         document: $relation,
                         dbForProject: $dbForProject,
                         collectionsCache: $collectionsCache,
-                        operations: $operations
+                        operations: $operations,
+                        authorization: $authorization
                     );
                 }
             }

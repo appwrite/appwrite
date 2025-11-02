@@ -68,6 +68,7 @@ class Update extends DocumentUpdate
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

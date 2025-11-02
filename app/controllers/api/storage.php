@@ -790,7 +790,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('mode')
-    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, Authorization $authorization, string $mode) {
+    ->action(function (string $bucketId, array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject, Authorization $authorization, string $mode) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser($authorization->getRoles());

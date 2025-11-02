@@ -77,7 +77,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
     {
         $isAPIKey = Auth::isAppUser($authorization->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
@@ -161,7 +161,8 @@ class XList extends Action
                 document: $document,
                 dbForProject: $dbForProject,
                 collectionsCache: $collectionsCache,
-                operations: $operations,
+                authorization: $authorization,
+                operations: $operations
             );
         }
 

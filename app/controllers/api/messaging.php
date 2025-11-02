@@ -1072,7 +1072,7 @@ App::get('/v1/messaging/providers')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2480,7 +2480,7 @@ App::get('/v1/messaging/topics')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2882,7 +2882,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
+    ->action(function (string $topicId, array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3705,7 +3705,7 @@ App::get('/v1/messaging/messages')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Authorization $authorization, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
