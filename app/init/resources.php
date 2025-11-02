@@ -1054,6 +1054,6 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
 
-App::setResource('transactionState', function (Database $dbForProject) {
-    return new TransactionState($dbForProject);
-}, ['dbForProject']);
+App::setResource('transactionState', function (Database $dbForProject, Authorization $authorization) {
+    return new TransactionState($dbForProject, $authorization);
+}, ['dbForProject', 'authorization']);
