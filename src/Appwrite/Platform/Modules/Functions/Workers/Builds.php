@@ -144,33 +144,28 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                try {
-                    $this->buildDeployment(
-                        $deviceForFunctions,
-                        $deviceForSites,
-                        $deviceForFiles,
-                        $queueForWebhooks,
-                        $queueForFunctions,
-                        $queueForRealtime,
-                        $queueForEvents,
-                        $queueForStatsUsage,
-                        $dbForPlatform,
-                        $dbForProject,
-                        $github,
-                        $project,
-                        $resource,
-                        $deployment,
-                        $template,
-                        $isResourceBlocked,
-                        $log,
-                        $executor,
-                        $plan
-                    );
-                } catch (\Exception $e) {
-                    $resourceType = $resource->getCollection() === 'functions' ? 'function' : 'site';
-                    $this->notifyError($resourceType, $resource->getAttribute('name'), $e->getMessage(), $project->getAttribute('name'), $plan, $queueForMails);
-                    throw $e;
-                }
+                $this->buildDeployment(
+                    $deviceForFunctions,
+                    $deviceForSites,
+                    $deviceForFiles,
+                    $queueForWebhooks,
+                    $queueForFunctions,
+                    $queueForRealtime,
+                    $queueForEvents,
+                    $queueForMails,
+                    $queueForStatsUsage,
+                    $dbForPlatform,
+                    $dbForProject,
+                    $github,
+                    $project,
+                    $resource,
+                    $deployment,
+                    $template,
+                    $isResourceBlocked,
+                    $log,
+                    $executor,
+                    $plan
+                );
                 break;
 
             default:
@@ -186,6 +181,7 @@ class Builds extends Action
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
+     * @param Mail $queueForMails
      * @param StatsUsage $queueForStatsUsage
      * @param Database $dbForPlatform
      * @param Database $dbForProject
@@ -210,6 +206,7 @@ class Builds extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
+        Mail $queueForMails,
         StatsUsage $queueForStatsUsage,
         Database $dbForPlatform,
         Database $dbForProject,
@@ -1297,6 +1294,8 @@ class Builds extends Action
             }
 
             Console::info('Deployment action finished');
+
+            throw new \Exception('test error from hmacr');
         } catch (\Throwable $th) {
             Console::warning('Build failed:');
             Console::error($th->getMessage());
@@ -1343,6 +1342,8 @@ class Builds extends Action
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
+
+            $this->notifyError($project, $resource, $deployment, $plan, $queueForMails);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
@@ -1645,25 +1646,48 @@ class Builds extends Action
             ->trigger();
     }
 
-    private function notifyError(string $resourceType, string $resourceName, string $errorMessage, string $project, array $plan, Mail $queueForMails): void
+    /**
+     * @param Document $project
+     * @param Document $resource
+     * @param Document $deployment
+     * @param array $plan
+     * @param Mail $queueForMails
+     * @param array $plan
+     * @return void
+     *
+     * @throws Exception
+     */
+    private function notifyError(Document $project, Document $resource, Document $deployment, array $plan, Mail $queueForMails): void
     {
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $region = $project->getAttribute('region', 'default');
+        $projectId = $project->getId();
+        $resourceId = $resource->getId();
+
+        $deploymentUrl = match ($resource->getCollection()) {
+            'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}/deployments/deployment-{$deployment->getId()}",
+            'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}/deployments/deployment-{$deployment->getId()}",
+            default => throw new \Exception('Invalid resource type')
+        };
 
         $template = Template::fromFile(__DIR__ . '/../../../../../../app/config/locale/templates/email-deployment-failed.tpl');
         $template
             ->setParam('{{hello}}', $locale->getText('emails.deployment.hello'))
             ->setParam('{{description}}', $locale->getText('emails.deployment.description'))
+            ->setParam('{{deploymentUrl}}', $deploymentUrl)
             ->setParam('{{thanks}}', $locale->getText("emails.deployment.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.deployment.signature"));
 
         $body = $template->render();
 
         $emailVariables = [
-            'resourceType' => $resourceType,
-            'resourceName' => $resourceName,
-            'project' => $project,
-            'error' => \nl2br($errorMessage),
+            'resourceType' => $resource->getCollection() === 'functions' ? 'function' : 'site',
+            'resourceName' => $resource->getAttribute('name'),
+            'project' => $project->getAttribute('name'),
             'direction' => $locale->getText('settings.direction'),
             'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
             'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
@@ -1681,7 +1705,6 @@ class Builds extends Action
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body)
-            ->setName('Appwrite Administrator')
             ->setBodyTemplate(__DIR__ . '/../../../../../../app/config/locale/templates/email-base-styled.tpl')
             ->setVariables($emailVariables)
             ->setRecipient('test@test.com')
