@@ -76,7 +76,7 @@ class Create extends Action
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Token expiry date must be a valid date, and at least 1 day from now');
             }
         }
-        
+
 
         /**
          * @var Document $bucket
