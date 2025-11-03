@@ -296,6 +296,17 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
                     }
                 ]
             }
@@ -465,6 +476,17 @@
                                 "type": "string"
                             },
                             "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
                         },
                         "in": "query"
                     }
@@ -5425,6 +5447,17 @@
                             "x-example": "<TRANSACTION_ID>"
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -6379,6 +6412,17 @@
                             "default": []
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -7331,6 +7375,17 @@
                             "type": "string",
                             "x-example": "<SEARCH>",
                             "default": ""
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
                         },
                         "in": "query"
                     }
@@ -8584,6 +8639,17 @@
                             "x-example": "<TRANSACTION_ID>"
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -9520,6 +9586,17 @@
                             "default": ""
                         },
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
                     }
                 ]
             },
@@ -9889,6 +9966,17 @@
                             "type": "string",
                             "x-example": "<SEARCH>",
                             "default": ""
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
                         },
                         "in": "query"
                     }

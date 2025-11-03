@@ -12,6 +12,7 @@ Users users = new Users(client);
 users.listTargets(
     "<USER_ID>", // userId
     listOf(), // queries (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

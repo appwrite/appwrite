@@ -397,6 +397,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -568,6 +577,15 @@
                             "type": "string"
                         },
                         "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -5302,7 +5320,8 @@
                             },
                             "parameters": [
                                 "queries",
-                                "search"
+                                "search",
+                                "total"
                             ],
                             "required": [],
                             "responses": [
@@ -5349,6 +5368,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -6358,6 +6386,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -6796,6 +6833,15 @@
                             "type": "string"
                         },
                         "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -10050,6 +10096,15 @@
                         "type": "string",
                         "x-example": "<TRANSACTION_ID>",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -11427,6 +11482,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -12168,6 +12232,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -12611,6 +12684,15 @@
                         "format": "int32",
                         "x-example": 0,
                         "default": 0,
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -13263,6 +13345,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -13996,6 +14087,15 @@
                             "type": "string"
                         },
                         "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -16588,6 +16688,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -17845,6 +17954,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -17916,6 +18034,15 @@
                             "type": "string"
                         },
                         "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -17989,6 +18116,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -21052,6 +21188,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -21123,6 +21268,15 @@
                             "type": "string"
                         },
                         "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -21196,6 +21350,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -21556,6 +21719,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -21636,6 +21808,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -21927,6 +22108,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -23592,6 +23782,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -25681,6 +25880,15 @@
                         "type": "string",
                         "x-example": "<PROJECT_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -26198,6 +26406,15 @@
                         "type": "string",
                         "x-example": "<PROJECT_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -28844,6 +29061,15 @@
                         "type": "string",
                         "x-example": "<PROJECT_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -29353,6 +29579,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -29952,6 +30187,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -31082,6 +31326,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -31816,6 +32069,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -32472,6 +32734,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -32941,6 +33212,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -33839,6 +34119,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -34726,6 +35015,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -35159,6 +35457,15 @@
                             "type": "string"
                         },
                         "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -38374,6 +38681,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -38826,6 +39142,15 @@
                         "required": false,
                         "type": "string",
                         "x-example": "<TRANSACTION_ID>",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -40359,6 +40684,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -40714,6 +41048,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -40795,6 +41138,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -41444,6 +41796,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -41791,6 +42152,15 @@
                         "x-example": "<SEARCH>",
                         "default": "",
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -42137,6 +42507,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -43223,6 +43602,15 @@
                         },
                         "default": [],
                         "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             }
@@ -43302,6 +43690,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -44449,6 +44846,15 @@
                         "type": "string",
                         "x-example": "<USER_ID>",
                         "in": "path"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
                     }
                 ]
             },
@@ -44776,6 +45182,15 @@
                             "type": "string"
                         },
                         "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]
@@ -45984,6 +46399,15 @@
                         "type": "string",
                         "x-example": "<SEARCH>",
                         "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
                         "in": "query"
                     }
                 ]

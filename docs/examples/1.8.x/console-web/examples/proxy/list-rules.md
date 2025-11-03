@@ -8,7 +8,8 @@ const proxy = new Proxy(client);
 
 const result = await proxy.listRules({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

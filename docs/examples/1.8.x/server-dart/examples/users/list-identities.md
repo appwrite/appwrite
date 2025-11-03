@@ -10,4 +10,5 @@ Users users = Users(client);
 IdentityList result = await users.listIdentities(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

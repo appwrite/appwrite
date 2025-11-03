@@ -20,8 +20,8 @@
                 }
                 a.button {
                     color: #ffffff !important;
-                    background-color: #2D2D31 !important;
-                    border-color: #414146 !important;
+                    background-color: {{accentColor}} !important;
+                    border-color: {{accentColor}} !important;
                 }
                 h1, h2, h3 {
                     color: #373b4d !important;
@@ -129,6 +129,7 @@
                 color: #ffffff;
                 border-radius: 8px;
                 height: 48px;
+                line-height: 24px;
                 padding: 12px 20px;
                 box-sizing: border-box;
                 cursor: pointer;
@@ -184,7 +185,7 @@
                 <tr>
                     <td>
                         <img
-                            height="32px"
+                            height="26px"
                             src="{{logoUrl}}"
                             alt="Appwrite logo"
                         />

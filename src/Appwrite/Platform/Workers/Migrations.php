@@ -449,7 +449,12 @@ class Migrations extends Action
         $fileId = ID::unique();
 
         $sizeMB = \round($size / (1000 * 1000), 2);
-        if ($sizeMB > $this->plan['fileSize'] ?? PHP_INT_MAX) {
+
+        $planFileSize = empty($this->plan['fileSize'])
+            ? PHP_INT_MAX
+            : $this->plan['fileSize'];
+
+        if ($sizeMB > $planFileSize) {
             try {
                 $this->deviceForFiles->delete($path);
             } finally {
@@ -575,33 +580,40 @@ class Migrations extends Action
         $signature = $locale->getText("emails.csvExport.{$emailType}.signature");
         $buttonText = $success ? $locale->getText("emails.csvExport.{$emailType}.buttonText") : '';
 
-        // Build email body using inner template
-        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl')
+        // Build email body using appropriate template
+        $templatePath = $success
+            ? __DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl'
+            : __DIR__ . '/../../../../app/config/locale/templates/email-export-failed.tpl';
+
+        $message = Template::fromFile($templatePath)
             ->setParam('{{body}}', $body, escapeHtml: false)
             ->setParam('{{hello}}', $hello)
             ->setParam('{{footer}}', $footer)
             ->setParam('{{thanks}}', $thanks)
-            ->setParam('{{buttonText}}', $buttonText)
             ->setParam('{{signature}}', $signature)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
-            ->setParam('{{redirect}}', $downloadUrl)
             ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
+
+        if ($success) {
+            $message
+                ->setParam('{{buttonText}}', $buttonText)
+                ->setParam('{{redirect}}', $downloadUrl);
+        }
 
         $emailBody = $message->render();
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            'project' => $project->getAttribute('name'),
-            'user' => $user->getAttribute('name', $user->getAttribute('email')),
+            'logoUrl' => $this->plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+            'accentColor' => $this->plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+            'twitterUrl' => $this->plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+            'discordUrl' => $this->plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+            'githubUrl' => $this->plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => $this->plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+            'privacyUrl' => $this->plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
         ];
-
-        if ($success) {
-            $emailVariables['redirect'] = $downloadUrl;
-        } else {
-            $emailVariables['size'] = (string)$sizeMB;
-        }
 
         $queueForMails
             ->setSubject($subject)
