@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Operator;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends AppwriteAction
@@ -337,6 +338,53 @@ abstract class Action extends AppwriteAction
         }
 
         return true;
+    }
+
+    /**
+     * Parse operator strings in data array and convert them to Operator objects.
+     *
+     * @param array $data The data array that may contain operator JSON strings
+     * @param Document $collection The collection document to check for relationship attributes
+     * @return array The data array with operators converted to Operator objects
+     * @throws Exception If an operator string is invalid
+     */
+    protected function parseOperators(array $data, Document $collection): array
+    {
+        $relationshipKeys = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $relationshipKeys[$attribute->getAttribute('key')] = true;
+            }
+        }
+
+        foreach ($data as $key => $value) {
+            if (\str_starts_with($key, '$')) {
+                continue;
+            }
+
+            if (isset($relationshipKeys[$key])) {
+                continue;
+            }
+
+            if (\is_string($value)) {
+                $decoded = \json_decode($value, true);
+
+                if (
+                    \is_array($decoded) &&
+                    isset($decoded['method']) &&
+                    \is_string($decoded['method']) &&
+                    Operator::isMethod($decoded['method'])
+                ) {
+                    try {
+                        $data[$key] = Operator::parse($value);
+                    } catch (\Exception $e) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        return $data;
     }
 
     /**

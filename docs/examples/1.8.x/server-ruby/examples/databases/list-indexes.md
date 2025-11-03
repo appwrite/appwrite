@@ -12,5 +12,6 @@ databases = Databases.new(client)
 result = databases.list_indexes(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
-    queries: [] # optional
+    queries: [], # optional
+    total: false # optional
 )

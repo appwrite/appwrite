@@ -13,4 +13,5 @@ val result = databases.listDocuments(
     collectionId = "<COLLECTION_ID>", 
     queries = listOf(), // (optional)
     transactionId = "<TRANSACTION_ID>", // (optional)
+    total = false, // (optional)
 )

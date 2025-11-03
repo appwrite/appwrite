@@ -12,6 +12,7 @@ Messaging messaging = new Messaging(client);
 messaging.listTopics(
     listOf(), // queries (optional)
     "<SEARCH>", // search (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -1,5 +1,9 @@
 # Change Log
 
+## 11.1.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+
 ## 11.0.0
 
 * Rename `create-csv-migration` to `create-csv-import` command to create a CSV import of a collection/table

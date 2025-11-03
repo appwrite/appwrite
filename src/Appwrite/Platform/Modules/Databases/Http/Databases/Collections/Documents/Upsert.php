@@ -119,6 +119,8 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $data = $this->parseOperators($data, $collection);
+
         $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
