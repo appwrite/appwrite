@@ -184,7 +184,7 @@
                 <tr>
                     <td>
                         <img
-                            height="32px"
+                            height="26px"
                             src="{{logoUrl}}"
                             alt="Appwrite logo"
                         />
