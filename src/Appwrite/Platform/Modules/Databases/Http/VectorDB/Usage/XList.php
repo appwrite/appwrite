@@ -15,7 +15,7 @@ class XList extends DatabaseUsageXList
 {
     public static function getName(): string
     {
-        return 'listDocumentsDBUsage';
+        return 'listVectorDBUsage';
     }
 
     public function __construct()
@@ -29,7 +29,7 @@ class XList extends DatabaseUsageXList
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: null,
                     name: 'listUsage',
                     description: '/docs/references/vectordb/list-usage.md',

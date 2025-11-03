@@ -55,7 +55,7 @@ class Create extends CollectionAction
             ->label('audits.event', 'collection.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'collections',
                 name: 'createCollection',
                 description: '/docs/references/vectordb/create-collection.md',

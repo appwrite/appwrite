@@ -17,7 +17,7 @@ class XList extends CollectionXList
 {
     public static function getName(): string
     {
-        return 'listDocumentsDBCollections';
+        return 'listVectorDBCollections';
     }
 
     protected function getResponseModel(): string
@@ -35,7 +35,7 @@ class XList extends CollectionXList
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'collections',
                 name: 'listCollections',
                 description: '/docs/references/vectordb/list-collections.md',

@@ -18,7 +18,7 @@ class XList extends DatabaseLogs
 {
     public static function getName(): string
     {
-        return 'listDocumentsDBLogs';
+        return 'listVectorDBLogs';
     }
 
     public function __construct()
@@ -32,7 +32,7 @@ class XList extends DatabaseLogs
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: 'logs',
                     name: 'listDatabaseLogs',
                     description: '/docs/references/vectordb/get-logs.md',

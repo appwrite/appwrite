@@ -16,7 +16,7 @@ class Get extends CollectionUsageGet
 {
     public static function getName(): string
     {
-        return 'getDocumentsDBCollectionUsage';
+        return 'getVectorDBCollectionUsage';
     }
 
     protected function getResponseModel(): string
@@ -34,7 +34,7 @@ class Get extends CollectionUsageGet
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: null,
                 name: 'getCollectionUsage',
                 description: '/docs/references/vectordb/get-collection-usage.md',

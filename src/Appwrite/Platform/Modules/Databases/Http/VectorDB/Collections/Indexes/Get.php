@@ -16,7 +16,7 @@ class Get extends IndexGet
 {
     public static function getName(): string
     {
-        return 'getDocumentsDBIndex';
+        return 'getVectorDBIndex';
     }
 
     protected function getResponseModel(): string
@@ -34,7 +34,7 @@ class Get extends IndexGet
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'getIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/vectordb/get-index.md',

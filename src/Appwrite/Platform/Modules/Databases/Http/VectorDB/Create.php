@@ -17,7 +17,7 @@ class Create extends DatabaseCreate
 {
     public static function getName(): string
     {
-        return 'createDocumentsDBDatabase';
+        return 'createVectorDBDatabase';
     }
 
     public function __construct()
@@ -33,7 +33,7 @@ class Create extends DatabaseCreate
             ->label('audits.event', 'database.create')
             ->label('audits.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'vectordb',
                 name: 'create',
                 description: '/docs/references/vectordb/create.md',

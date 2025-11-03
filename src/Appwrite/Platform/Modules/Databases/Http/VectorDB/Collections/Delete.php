@@ -15,7 +15,7 @@ class Delete extends CollectionDelete
 {
     public static function getName(): string
     {
-        return 'deleteDocumentsDBCollection';
+        return 'deleteVectorDBCollection';
     }
 
     protected function getResponseModel(): string
@@ -36,7 +36,7 @@ class Delete extends CollectionDelete
             ->label('audits.event', 'collection.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'collections',
                 name: 'deleteCollection',
                 description: '/docs/references/vectordb/delete-collection.md',

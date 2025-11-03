@@ -16,7 +16,7 @@ class XList extends IndexXList
 {
     public static function getName(): string
     {
-        return 'listDocumentsDBIndexes';
+        return 'listVectorDBIndexes';
     }
 
     protected function getResponseModel(): string
@@ -34,7 +34,7 @@ class XList extends IndexXList
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'listIndexes', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/vectordb/list-indexes.md',

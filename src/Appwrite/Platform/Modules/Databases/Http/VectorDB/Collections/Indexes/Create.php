@@ -21,7 +21,7 @@ class Create extends IndexCreate
 {
     public static function getName(): string
     {
-        return 'createDocumentsDBIndex';
+        return 'createVectorDBIndex';
     }
 
     protected function getResponseModel(): string
@@ -42,7 +42,7 @@ class Create extends IndexCreate
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'createIndex',
                 description: '/docs/references/vectordb/create-index.md',

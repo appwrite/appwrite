@@ -15,7 +15,7 @@ class Get extends CollectionGet
 {
     public static function getName(): string
     {
-        return 'getDocumentsDBCollection';
+        return 'getVectorDBCollection';
     }
 
     protected function getResponseModel(): string
@@ -33,7 +33,7 @@ class Get extends CollectionGet
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'collections',
                 name: 'getCollection',
                 description: '/docs/references/vectordb/get-collection.md',

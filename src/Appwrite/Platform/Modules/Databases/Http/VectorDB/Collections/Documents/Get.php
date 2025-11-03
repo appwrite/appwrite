@@ -17,7 +17,7 @@ class Get extends DocumentGet
 {
     public static function getName(): string
     {
-        return 'getDocumentsDBDocument';
+        return 'getVectorDBDocument';
     }
 
     protected function getResponseModel(): string
@@ -35,7 +35,7 @@ class Get extends DocumentGet
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'getDocument',
                 description: '/docs/references/vectordb/get-document.md',

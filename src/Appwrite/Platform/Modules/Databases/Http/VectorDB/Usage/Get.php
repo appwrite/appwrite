@@ -16,7 +16,7 @@ class Get extends DatabaseUsageGet
 {
     public static function getName(): string
     {
-        return 'getDocumentsDBUsage';
+        return 'getVectorDBUsage';
     }
 
     public function __construct()
@@ -30,7 +30,7 @@ class Get extends DatabaseUsageGet
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: null,
                     name: 'getUsage',
                     description: '/docs/references/vectordb/get-database-usage.md',

@@ -17,7 +17,7 @@ class Update extends DatabaseUpdate
 {
     public static function getName(): string
     {
-        return 'updateDocumentsDBDatabase';
+        return 'updateVectorDBDatabase';
     }
 
     public function __construct()
@@ -33,7 +33,7 @@ class Update extends DatabaseUpdate
             ->label('audits.event', 'database.update')
             ->label('audits.resource', 'database/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'vectordb',
                 name: 'update',
                 description: '/docs/references/vectordb/update.md',

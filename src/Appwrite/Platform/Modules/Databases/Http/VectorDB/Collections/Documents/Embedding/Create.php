@@ -52,7 +52,7 @@ class Create extends DocumentCreate
                 new Method(
                     namespace: 'vectorDB',
                     group: $this->getSdkGroup(),
-                    name: 'createEmbeddingDocument',
+                    name: 'createDocument',
                     desc: 'Create document',
                     description: '/docs/references/vectordb/create-document.md',
                     auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -72,7 +72,7 @@ class Create extends DocumentCreate
                     ]
                 ),
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: $this->getSdkGroup(),
                     name: 'createDocuments',
                     desc: 'Create documents',

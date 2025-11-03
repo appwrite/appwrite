@@ -16,7 +16,7 @@ class XList extends DatabaseXList
 {
     public static function getName(): string
     {
-        return 'listDocumentsDBDatabases';
+        return 'listVectorDBDatabases';
     }
 
     public function __construct()
@@ -29,7 +29,7 @@ class XList extends DatabaseXList
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'vectordb',
                 name: 'list',
                 description: '/docs/references/vectordb/list.md',

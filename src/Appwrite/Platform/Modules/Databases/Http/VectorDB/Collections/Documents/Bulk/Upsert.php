@@ -17,7 +17,7 @@ class Upsert extends DocumentsUpsert
 {
     public static function getName(): string
     {
-        return 'upsertDocumentsDBDocuments';
+        return 'upsertVectorDBDocuments';
     }
 
     protected function getResponseModel(): string
@@ -41,7 +41,7 @@ class Upsert extends DocumentsUpsert
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: $this->getSdkGroup(),
                     name: 'upsertDocuments',
                     description: '/docs/references/vectordb/upsert-documents.md',

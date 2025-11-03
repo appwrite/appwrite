@@ -15,7 +15,7 @@ class Delete extends DatabaseDelete
 {
     public static function getName(): string
     {
-        return 'deleteDocumentsDBDatabase';
+        return 'deleteVectorDBDatabase';
     }
 
     public function __construct()
@@ -31,7 +31,7 @@ class Delete extends DatabaseDelete
             ->label('audits.event', 'database.delete')
             ->label('audits.resource', 'database/{request.databaseId}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'vectordb',
                 name: 'delete',
                 description: '/docs/references/vectordb/delete.md',

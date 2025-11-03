@@ -15,7 +15,7 @@ class Delete extends DocumentDelete
 {
     public static function getName(): string
     {
-        return 'deleteDocumentsDBDocument';
+        return 'deleteVectorDBDocument';
     }
 
     /**
@@ -45,7 +45,7 @@ class Delete extends DocumentDelete
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'deleteDocument',
                 description: '/docs/references/vectordb/delete-document.md',

@@ -21,7 +21,7 @@ class Create extends DocumentCreate
 {
     public static function getName(): string
     {
-        return 'createDocumentsDBDocument';
+        return 'createVectorDBDocument';
     }
 
     protected function getResponseModel(): string
@@ -50,7 +50,7 @@ class Create extends DocumentCreate
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: $this->getSdkGroup(),
                     name: 'createTextDocument',
                     desc: 'Create document',
@@ -72,7 +72,7 @@ class Create extends DocumentCreate
                     ]
                 ),
                 new Method(
-                    namespace: 'documentsDB',
+                    namespace: 'vectorDB',
                     group: $this->getSdkGroup(),
                     name: 'createDocuments',
                     desc: 'Create documents',

@@ -17,7 +17,7 @@ class XList extends DocumentXList
 {
     public static function getName(): string
     {
-        return 'listDocumentsDBDocuments';
+        return 'listVectorDBDocuments';
     }
 
     protected function getResponseModel(): string
@@ -35,7 +35,7 @@ class XList extends DocumentXList
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'listDocuments',
                 description: '/docs/references/vectordb/list-documents.md',

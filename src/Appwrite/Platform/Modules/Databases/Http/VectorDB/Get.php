@@ -15,7 +15,7 @@ class Get extends DatabaseGet
 {
     public static function getName(): string
     {
-        return 'getDocumentsDBDatabase';
+        return 'getVectorDBDatabase';
     }
 
     public function __construct()
@@ -28,7 +28,7 @@ class Get extends DatabaseGet
             ->label('scope', 'databases.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'vectordb',
                 name: 'get',
                 description: '/docs/references/vectordb/get.md',

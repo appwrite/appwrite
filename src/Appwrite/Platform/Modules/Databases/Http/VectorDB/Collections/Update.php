@@ -24,7 +24,7 @@ class Update extends CollectionAction
 {
     public static function getName(): string
     {
-        return 'updateDocumentsDBCollection';
+        return 'updateVectorDBCollection';
     }
 
     protected function getResponseModel(): string
@@ -45,7 +45,7 @@ class Update extends CollectionAction
             ->label('audits.event', 'collection.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: 'collections',
                 name: 'updateCollection',
                 description: '/docs/references/vectordb/update-collection.md',

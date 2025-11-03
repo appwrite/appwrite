@@ -18,7 +18,7 @@ class Update extends DocumentUpdate
 {
     public static function getName(): string
     {
-        return 'updateDocumentsDBDocument';
+        return 'updateVectorDBDocument';
     }
 
     protected function getResponseModel(): string
@@ -42,7 +42,7 @@ class Update extends DocumentUpdate
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'updateDocument',
                 description: '/docs/references/vectordb/update-document.md',

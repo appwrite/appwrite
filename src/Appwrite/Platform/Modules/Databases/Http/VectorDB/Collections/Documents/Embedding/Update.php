@@ -44,7 +44,7 @@ class Update extends DocumentUpdate
             ->label('sdk', new Method(
                 namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
-                name: 'updateEmbeddingDocument',
+                name: 'updateDocument',
                 description: '/docs/references/vectordb/update-document.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [

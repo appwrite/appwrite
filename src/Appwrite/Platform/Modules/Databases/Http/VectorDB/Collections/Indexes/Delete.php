@@ -16,7 +16,7 @@ class Delete extends IndexDelete
 {
     public static function getName(): string
     {
-        return 'deleteDocumentsDBIndex';
+        return 'deleteVectorDBIndex';
     }
 
     /**
@@ -41,7 +41,7 @@ class Delete extends IndexDelete
             ->label('audits.event', 'index.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: 'documentsDB',
+                namespace: 'vectorDB',
                 group: $this->getSdkGroup(),
                 name: 'deleteIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/vectordb/delete-index.md',
