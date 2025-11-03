@@ -14,7 +14,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -57,7 +57,7 @@ class Update extends Action
             contentType: ContentType::JSON
         ))
         ->param('tokenId', '', new UID(), 'Token unique ID.')
-        ->param('expire', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
+        ->param('expire', null, new Text(100), 'File token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
@@ -66,6 +66,13 @@ class Update extends Action
 
     public function action(string $tokenId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents)
     {
+        if (!is_null($expire)) {
+            $validator = new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_DAYS, offset: 0);
+            if (!$validator->isValid($expire)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Token expiry date must be a valid date, and at least 1 day from now');
+            }
+        }
+
         $token = $dbForProject->getDocument('resourceTokens', $tokenId);
 
         if ($token->isEmpty()) {
