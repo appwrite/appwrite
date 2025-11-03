@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a0ff41b0f382016b899d52307df5983",
+    "content-hash": "881b001010468bad06d1eef0693e8ed0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3922,8 +3922,8 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-authorization-instance"
+                "source": "https://github.com/utopia-php/database/tree/feat-authorization-instance",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
             "time": "2025-10-27T08:34:29+00:00"
         },
