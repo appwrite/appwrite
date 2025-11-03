@@ -366,18 +366,17 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
 
-App::setResource('session', function (Document $user) {
+App::setResource('session', function (Document $user, Store $store, Token $proofForToken) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''), $proofForToken);
 
     if (!$sessionId) {
         return;
     }
-
     foreach ($sessions as $session) {/** @var Document $session */
         if ($sessionId === $session->getId()) {
             return $session;
@@ -385,7 +384,7 @@ App::setResource('session', function (Document $user) {
     }
 
     return;
-}, ['user']);
+}, ['user', 'store', 'proofForToken']);
 
 App::setResource('console', function () {
     return new Document(Config::getParam('console'));
