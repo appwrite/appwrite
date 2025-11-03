@@ -148,7 +148,7 @@ class TikTok extends OAuth2
      * Check if the OAuth email is verified
      *
      * TikTok does not provide email in basic scope, so we return false
-     * 
+     *
      * @param string $accessToken
      *
      * @return bool
@@ -179,7 +179,7 @@ class TikTok extends OAuth2
     {
         if (empty($this->user)) {
             $headers = [
-                'Authorization: Bearer ' . \urlencode($accessToken),
+                'Authorization: Bearer ' . $accessToken,
                 'Content-Type: application/json',
             ];
 
@@ -190,7 +190,7 @@ class TikTok extends OAuth2
             );
 
             $result = \json_decode($response, true);
-            
+
             // TikTok returns data in a nested structure
             $this->user = $result['data']['user'] ?? [];
         }
