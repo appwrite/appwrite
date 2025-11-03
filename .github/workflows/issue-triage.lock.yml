@@ -5,7 +5,7 @@
 #
 # Source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
 #
-# Effective stop-time: 2025-12-01 15:46:50
+# Effective stop-time: 2025-12-03 20:01:19
 #
 # Job Dependency Graph:
 # ```mermaid
@@ -74,24 +74,82 @@ jobs:
       comment_url: ${{ steps.react.outputs.comment-url }}
       reaction_id: ${{ steps.react.outputs.reaction-id }}
     steps:
+      - name: Checkout workflows
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          sparse-checkout: |
+            .github/workflows
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+          persist-credentials: false
       - name: Check workflow file timestamps
-        run: |
-          WORKFLOW_FILE="${GITHUB_WORKSPACE}/.github/workflows/$(basename "$GITHUB_WORKFLOW" .lock.yml).md"
-          LOCK_FILE="${GITHUB_WORKSPACE}/.github/workflows/$GITHUB_WORKFLOW"
-          
-          if [ -f "$WORKFLOW_FILE" ] && [ -f "$LOCK_FILE" ]; then
-            if [ "$WORKFLOW_FILE" -nt "$LOCK_FILE" ]; then
-              echo "🔴🔴🔴 WARNING: Lock file '$LOCK_FILE' is outdated! The workflow file '$WORKFLOW_FILE' has been modified more recently. Run 'gh aw compile' to regenerate the lock file." >&2
-              echo "## ⚠️ Workflow Lock File Warning" >> $GITHUB_STEP_SUMMARY
-              echo "🔴🔴🔴 **WARNING**: Lock file \`$LOCK_FILE\` is outdated!" >> $GITHUB_STEP_SUMMARY
-              echo "The workflow file \`$WORKFLOW_FILE\` has been modified more recently." >> $GITHUB_STEP_SUMMARY
-              echo "Run \`gh aw compile\` to regenerate the lock file." >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        env:
+          GH_AW_WORKFLOW_FILE: "issue-triage.lock.yml"
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+            async function main() {
+              const workspace = process.env.GITHUB_WORKSPACE;
+              const workflowFile = process.env.GH_AW_WORKFLOW_FILE;
+              if (!workspace) {
+                core.setFailed("Configuration error: GITHUB_WORKSPACE not available.");
+                return;
+              }
+              if (!workflowFile) {
+                core.setFailed("Configuration error: GH_AW_WORKFLOW_FILE not available.");
+                return;
+              }
+              const workflowBasename = path.basename(workflowFile, ".lock.yml");
+              const workflowMdFile = path.join(workspace, ".github", "workflows", `${workflowBasename}.md`);
+              const lockFile = path.join(workspace, ".github", "workflows", workflowFile);
+              core.info(`Checking workflow timestamps:`);
+              core.info(`  Source: ${workflowMdFile}`);
+              core.info(`  Lock file: ${lockFile}`);
+              let workflowExists = false;
+              let lockExists = false;
+              try {
+                fs.accessSync(workflowMdFile, fs.constants.F_OK);
+                workflowExists = true;
+              } catch (error) {
+                core.info(`Source file does not exist: ${workflowMdFile}`);
+              }
+              try {
+                fs.accessSync(lockFile, fs.constants.F_OK);
+                lockExists = true;
+              } catch (error) {
+                core.info(`Lock file does not exist: ${lockFile}`);
+              }
+              if (!workflowExists || !lockExists) {
+                core.info("Skipping timestamp check - one or both files not found");
+                return;
+              }
+              const workflowStat = fs.statSync(workflowMdFile);
+              const lockStat = fs.statSync(lockFile);
+              const workflowMtime = workflowStat.mtime.getTime();
+              const lockMtime = lockStat.mtime.getTime();
+              core.info(`  Source modified: ${workflowStat.mtime.toISOString()}`);
+              core.info(`  Lock modified: ${lockStat.mtime.toISOString()}`);
+              if (workflowMtime > lockMtime) {
+                const warningMessage = `🔴🔴🔴 WARNING: Lock file '${lockFile}' is outdated! The workflow file '${workflowMdFile}' has been modified more recently. Run 'gh aw compile' to regenerate the lock file.`;
+                core.error(warningMessage);
+                await core.summary
+                  .addRaw("## ⚠️ Workflow Lock File Warning\n\n")
+                  .addRaw(`🔴🔴🔴 **WARNING**: Lock file \`${lockFile}\` is outdated!\n\n`)
+                  .addRaw(`The workflow file \`${workflowMdFile}\` has been modified more recently.\n\n`)
+                  .addRaw("Run `gh aw compile` to regenerate the lock file.\n\n")
+                  .write();
+              } else {
+                core.info("✅ Lock file is up to date");
+              }
+            }
+            main().catch(error => {
+              core.setFailed(error instanceof Error ? error.message : String(error));
+            });
       - name: Add eyes reaction to the triggering item
         id: react
-        if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment' || (github.event_name == 'pull_request') && (github.event.pull_request.head.repo.full_name == github.repository)
+        if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment' || (github.event_name == 'pull_request') && (github.event.pull_request.head.repo.id == github.repository_id)
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
           GH_AW_REACTION: eyes
@@ -2008,7 +2066,7 @@ jobs:
           GH_AW_SAFE_OUTPUTS: ${{ env.GH_AW_SAFE_OUTPUTS }}
         run: |
           mkdir -p $(dirname "$GH_AW_PROMPT")
-          cat > $GH_AW_PROMPT << 'PROMPT_EOF'
+          cat > "$GH_AW_PROMPT" << 'PROMPT_EOF'
           # Agentic Triage
           
           
@@ -2027,7 +2085,7 @@ jobs:
           
              - Fetch the list of labels available in this repository. Use 'gh label list' bash command to fetch the labels. This will give you the labels you can use for triaging issues.
              - Fetch any comments on the issue using the `get_issue_comments` tool
-             - Find similar issues if needed using the `search_issues` tool
+             - **Search for duplicate and related issues**: Use the `search_issues` tool to find similar issues by searching for key terms from the issue title and description. Look for both open and closed issues that might be related or duplicates.
           
           6. Analyze the issue content, considering:
           
@@ -2059,6 +2117,7 @@ jobs:
           10. Add an issue comment to the issue with your analysis:
              - Start with "🎯 Agentic Issue Triage"
              - Provide a brief summary of the issue
+             - **If duplicate or related issues were found**, add a section listing them with links (e.g., "### 🔗 Potentially Related Issues" followed by a bullet list of related issues with their titles and links)
              - Mention any relevant details that might help the team understand the issue better
              - Include any debugging strategies or reproduction steps if applicable
              - Suggest resources or links that might be helpful for resolving the issue or learning skills related to the issue or the particular area of the codebase affected by it
@@ -2075,7 +2134,7 @@ jobs:
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
         run: |
-          cat >> $GH_AW_PROMPT << 'PROMPT_EOF'
+          cat >> "$GH_AW_PROMPT" << 'PROMPT_EOF'
           
           ---
           
@@ -2107,7 +2166,7 @@ jobs:
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
         run: |
-          cat >> $GH_AW_PROMPT << 'PROMPT_EOF'
+          cat >> "$GH_AW_PROMPT" << 'PROMPT_EOF'
           
           ---
           
@@ -2120,7 +2179,7 @@ jobs:
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
         run: |
-          cat >> $GH_AW_PROMPT << 'PROMPT_EOF'
+          cat >> "$GH_AW_PROMPT" << 'PROMPT_EOF'
           
           ---
           
@@ -2145,7 +2204,7 @@ jobs:
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
         run: |
-          cat >> $GH_AW_PROMPT << 'PROMPT_EOF'
+          cat >> "$GH_AW_PROMPT" << 'PROMPT_EOF'
           
           ---
           
@@ -2214,14 +2273,14 @@ jobs:
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
         run: |
-          echo "<details>" >> $GITHUB_STEP_SUMMARY
-          echo "<summary>Generated Prompt</summary>" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```markdown' >> $GITHUB_STEP_SUMMARY
-          cat $GH_AW_PROMPT >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "</details>" >> $GITHUB_STEP_SUMMARY
+          echo "<details>" >> "$GITHUB_STEP_SUMMARY"
+          echo "<summary>Generated Prompt</summary>" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```markdown' >> "$GITHUB_STEP_SUMMARY"
+          cat "$GH_AW_PROMPT" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "</details>" >> "$GITHUB_STEP_SUMMARY"
       - name: Upload prompt
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -2446,8 +2505,10 @@ jobs:
                     .filter(d => d)
                 : defaultAllowedDomains;
               let sanitized = content;
+              sanitized = neutralizeCommands(sanitized);
               sanitized = neutralizeMentions(sanitized);
               sanitized = removeXmlComments(sanitized);
+              sanitized = convertXmlTags(sanitized);
               sanitized = sanitized.replace(/\x1b\[[0-9;]*[mGKH]/g, "");
               sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
               sanitized = sanitizeUrlProtocols(sanitized);
@@ -2469,20 +2530,65 @@ jobs:
               sanitized = neutralizeBotTriggers(sanitized);
               return sanitized.trim();
               function sanitizeUrlDomains(s) {
-                s = s.replace(/\bhttps:\/\/([^\/\s\])}'"<>&\x00-\x1f,;]+)/gi, (match, domain) => {
-                  const hostname = domain.split(/[\/:\?#]/)[0].toLowerCase();
+                s = s.replace(/\bhttps:\/\/([^\s\])}'"<>&\x00-\x1f,;]+)/gi, (match, rest) => {
+                  const hostname = rest.split(/[\/:\?#]/)[0].toLowerCase();
                   const isAllowed = allowedDomains.some(allowedDomain => {
                     const normalizedAllowed = allowedDomain.toLowerCase();
                     return hostname === normalizedAllowed || hostname.endsWith("." + normalizedAllowed);
                   });
-                  return isAllowed ? match : "(redacted)";
+                  if (isAllowed) {
+                    return match; 
+                  }
+                  const domain = hostname;
+                  const truncated = domain.length > 12 ? domain.substring(0, 12) + "..." : domain;
+                  core.info(`Redacted URL: ${truncated}`);
+                  core.debug(`Redacted URL (full): ${match}`);
+                  const urlParts = match.split(/([?&#])/);
+                  let result = "(redacted)"; 
+                  for (let i = 1; i < urlParts.length; i++) {
+                    if (urlParts[i].match(/^[?&#]$/)) {
+                      result += urlParts[i]; 
+                    } else {
+                      result += sanitizeUrlDomains(urlParts[i]);
+                    }
+                  }
+                  return result;
                 });
                 return s;
               }
               function sanitizeUrlProtocols(s) {
-                return s.replace(/\b(\w+):(?:\/\/)?[^\s\])}'"<>&\x00-\x1f]+/gi, (match, protocol) => {
-                  return protocol.toLowerCase() === "https" ? match : "(redacted)";
+                return s.replace(/(?<![-\/\w])([A-Za-z][A-Za-z0-9+.-]*):(?:\/\/|(?=[^\s:]))[^\s\])}'"<>&\x00-\x1f]+/g, (match, protocol) => {
+                  if (protocol.toLowerCase() === "https") {
+                    return match;
+                  }
+                  if (match.includes("::")) {
+                    return match;
+                  }
+                  if (match.includes("://")) {
+                    const domainMatch = match.match(/^[^:]+:\/\/([^\/\s?#]+)/);
+                    const domain = domainMatch ? domainMatch[1] : match;
+                    const truncated = domain.length > 12 ? domain.substring(0, 12) + "..." : domain;
+                    core.info(`Redacted URL: ${truncated}`);
+                    core.debug(`Redacted URL (full): ${match}`);
+                    return "(redacted)";
+                  }
+                  const dangerousProtocols = ["javascript", "data", "vbscript", "file", "about", "mailto", "tel", "ssh", "ftp"];
+                  if (dangerousProtocols.includes(protocol.toLowerCase())) {
+                    const truncated = match.length > 12 ? match.substring(0, 12) + "..." : match;
+                    core.info(`Redacted URL: ${truncated}`);
+                    core.debug(`Redacted URL (full): ${match}`);
+                    return "(redacted)";
+                  }
+                  return match;
                 });
+              }
+              function neutralizeCommands(s) {
+                const commandName = process.env.GH_AW_COMMAND;
+                if (!commandName) {
+                  return s;
+                }
+                const escapedCommand = commandName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                return s.replace(new RegExp(`^(\\s*)/(${escapedCommand})\\b`, "i"), "$1`/$2`");
               }
               function neutralizeMentions(s) {
                 return s.replace(
@@ -2492,6 +2598,23 @@ jobs:
               }
               function removeXmlComments(s) {
                 return s.replace(/<!--[\s\S]*?-->/g, "").replace(/<!--[\s\S]*?--!>/g, "");
+              }
+              function convertXmlTags(s) {
+                const allowedTags = ["details", "summary", "code", "em", "b"];
+                s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, (match, content) => {
+                  const convertedContent = content.replace(/<(\/?[A-Za-z][A-Za-z0-9]*(?:[^>]*?))>/g, "($1)");
+                  return `(![CDATA[${convertedContent}]])`;
+                });
+                return s.replace(/<(\/?[A-Za-z!][^>]*?)>/g, (match, tagContent) => {
+                  const tagNameMatch = tagContent.match(/^\/?\s*([A-Za-z][A-Za-z0-9]*)/);
+                  if (tagNameMatch) {
+                    const tagName = tagNameMatch[1].toLowerCase();
+                    if (allowedTags.includes(tagName)) {
+                      return match; 
+                    }
+                  }
+                  return `(${tagContent})`; 
+                });
               }
               function neutralizeBotTriggers(s) {
                 return s.replace(/\b(fixes?|closes?|resolves?|fix|close|resolve)\s+#(\w+)/gi, (match, action, ref) => `\`${action} #${ref}\``);
@@ -4698,7 +4821,7 @@ jobs:
         id: check_stop_time
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
-          GH_AW_STOP_TIME: 2025-12-01 15:46:50
+          GH_AW_STOP_TIME: 2025-12-03 20:01:19
           GH_AW_WORKFLOW_NAME: "Agentic Triage"
         with:
           script: |
