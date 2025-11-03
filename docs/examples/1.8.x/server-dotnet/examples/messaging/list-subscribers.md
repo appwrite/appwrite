@@ -12,5 +12,6 @@ Messaging messaging = new Messaging(client);
 SubscriberList result = await messaging.ListSubscribers(
     topicId: "<TOPIC_ID>",
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

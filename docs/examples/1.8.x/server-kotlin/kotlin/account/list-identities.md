@@ -10,5 +10,6 @@ val client = Client()
 val account = Account(client)
 
 val response = account.listIdentities(
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    total = false // optional
 )

@@ -12,5 +12,6 @@ messaging = Messaging.new(client)
 result = messaging.list_subscribers(
     topic_id: '<TOPIC_ID>',
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

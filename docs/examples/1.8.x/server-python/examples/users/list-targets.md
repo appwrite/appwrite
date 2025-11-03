@@ -10,5 +10,6 @@ users = Users(client)
 
 result = users.list_targets(
     user_id = '<USER_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

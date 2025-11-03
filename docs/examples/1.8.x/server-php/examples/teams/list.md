@@ -12,5 +12,6 @@ $teams = new Teams($client);
 
 $result = $teams->list(
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

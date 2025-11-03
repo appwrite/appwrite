@@ -20,8 +20,8 @@
                 }
                 a.button {
                     color: #ffffff !important;
-                    background-color: #2D2D31 !important;
-                    border-color: #414146 !important;
+                    background-color: {{accentColor}} !important;
+                    border-color: {{accentColor}} !important;
                 }
                 h1, h2, h3 {
                     color: #373b4d !important;
