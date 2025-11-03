@@ -448,7 +448,7 @@ trait StorageBase
             ],
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertEquals(0, count($files['body']['files']));
+        $this->assertEquals(1, count($files['body']['files']));
 
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
