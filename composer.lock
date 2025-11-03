@@ -3844,12 +3844,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "61d06624a5b96b6e4665ef1de740e31428b868ec"
+                "reference": "5464da0f13d159096b1ee62acfddf0440be36596"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/61d06624a5b96b6e4665ef1de740e31428b868ec",
-                "reference": "61d06624a5b96b6e4665ef1de740e31428b868ec",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5464da0f13d159096b1ee62acfddf0440be36596",
+                "reference": "5464da0f13d159096b1ee62acfddf0440be36596",
                 "shasum": ""
             },
             "require": {
@@ -3925,7 +3925,7 @@
                 "source": "https://github.com/utopia-php/database/tree/feat-authorization-instance",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2025-11-03T09:42:43+00:00"
+            "time": "2025-11-03T10:08:55+00:00"
         },
         {
             "name": "utopia-php/detector",
