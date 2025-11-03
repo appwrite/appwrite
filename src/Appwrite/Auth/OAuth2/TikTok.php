@@ -52,7 +52,7 @@ class TikTok extends OAuth2
         return $this->endpoint . '?' .
             \http_build_query([
                 'client_key' => $this->appID,
-                'scope' => \implode(',', $this->getScopes()),
+                'scope' => \implode(',', $this->getScopes()), // TikTok uses comma separator for scopes
                 'response_type' => 'code',
                 'redirect_uri' => $this->callback,
                 'state' => \json_encode($this->state)
@@ -141,6 +141,7 @@ class TikTok extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
+        // TikTok does not provide email with the basic scope
         return $user['email'] ?? '';
     }
 
@@ -183,6 +184,7 @@ class TikTok extends OAuth2
                 'Content-Type: application/json',
             ];
 
+            // Fetch basic user info fields as required by TikTok API
             $response = $this->request(
                 'GET',
                 $this->apiEndpoint . '/v2/user/info/?fields=open_id,union_id,avatar_url,display_name',
