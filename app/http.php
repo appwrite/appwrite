@@ -25,7 +25,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
@@ -261,7 +260,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         // create appwrite database, `dbForPlatform` is a direct access call.
         createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $app) {
             $authorization = $app->getResource('authorization');
-            
+
             if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
                 $audit = new Audit($dbForPlatform);
                 $audit->setup();

@@ -84,7 +84,7 @@ class Delete extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, Authorization $authorization, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
