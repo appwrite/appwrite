@@ -25,6 +25,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
@@ -258,7 +259,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         createDatabase($app, 'getLogsDB', 'logs', $collections['logs'], $pools);
 
         // create appwrite database, `dbForPlatform` is a direct access call.
-        createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections) {
+        createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $app) {
+            $authorization = $app->getResource('authorization');
+            
             if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
                 $audit = new Audit($dbForPlatform);
                 $audit->setup();
@@ -317,9 +320,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
             }
 
-            if ($dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
+            if ($authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
                 Console::info("    └── Creating screenshots bucket...");
-                $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
+                $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('screenshots'),
                     '$collection' => ID::custom('buckets'),
                     'name' => 'Screenshots',
@@ -334,7 +337,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'search' => 'buckets Screenshots',
                 ])));
 
-                $bucket = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+                $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                 Console::info("    └── Creating files collection for screenshots bucket...");
                 $files = $collections['buckets']['files'] ?? [];
@@ -362,7 +365,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
+                $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
             }
         });
 
@@ -559,7 +562,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate) {
+    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate, $app) {
         try {
             $time = DateTime::now();
             $limit = 1000;
@@ -576,7 +579,8 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 }
                 $results = [];
                 try {
-                    $results = $dbForPlatform->getAuthorization()->skip(fn () =>  $dbForPlatform->find('rules', $queries));
+                    $authorization = $app->getResource('authorization');
+                    $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
                     Console::error($th->getMessage());
                 }
