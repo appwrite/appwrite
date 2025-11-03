@@ -129,6 +129,7 @@
                 color: #ffffff;
                 border-radius: 8px;
                 height: 48px;
+                line-height: 24px;
                 padding: 12px 20px;
                 box-sizing: border-box;
                 cursor: pointer;
