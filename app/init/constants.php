@@ -90,6 +90,7 @@ const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
+const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Database Reconnect
@@ -273,6 +274,7 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_SITES_ID_REQUESTS = 'sites.{siteInternalId}.requests';
 const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
+const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

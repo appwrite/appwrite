@@ -222,7 +222,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.1.8
+    image: appwrite/console:7.4.11
     restart: unless-stopped
     networks:
       - appwrite
@@ -704,6 +704,7 @@ services:
       - appwrite
     volumes:
       - appwrite-imports:/storage/imports:rw
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
@@ -963,7 +964,7 @@ services:
 
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.2.4
+    image: appwrite/browser:0.3.1
     networks:
       - appwrite
 
@@ -972,7 +973,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.11.0
+    image: openruntimes/executor:0.11.4
     restart: unless-stopped
     networks:
       - appwrite

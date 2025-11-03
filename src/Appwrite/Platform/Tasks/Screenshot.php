@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
+// Example usage: docker compose exec appwrite screenshot --templateId="playground-for-tanstack-start"
+// Expected output: public/images/sites/templates/playground-for-tanstack-start-light.png (and dark.png)
+
 use Appwrite\ID;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;

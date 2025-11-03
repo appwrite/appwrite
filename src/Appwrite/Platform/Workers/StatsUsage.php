@@ -435,7 +435,6 @@ class StatsUsage extends Action
                         return $cmp;
                     }
 
-                    unset($this->projects[$sequence]);
                     // Period ASC
                     $cmp = strcmp($a['period'], $b['period']);
                     if ($cmp !== 0) {
