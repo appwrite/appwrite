@@ -264,7 +264,7 @@ class Base extends Action
             $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                $authorization()->skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -301,7 +301,7 @@ class Base extends Action
             $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                $authorization()->skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

@@ -2624,7 +2624,6 @@ App::get('/v1/users/usage')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->inject('register')
     ->action(function (string $range, Response $response, Database $dbForProject, Authorization $authorization) {
 
         $periods = Config::getParam('usage', []);
