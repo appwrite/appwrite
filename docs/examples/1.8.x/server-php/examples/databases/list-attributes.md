@@ -13,5 +13,6 @@ $databases = new Databases($client);
 $result = $databases->listAttributes(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

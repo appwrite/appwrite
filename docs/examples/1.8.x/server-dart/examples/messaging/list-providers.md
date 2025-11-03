@@ -10,4 +10,5 @@ Messaging messaging = Messaging(client);
 ProviderList result = await messaging.listProviders(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

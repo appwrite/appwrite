@@ -13,5 +13,6 @@ $teams = new Teams($client);
 $result = $teams->listMemberships(
     teamId: '<TEAM_ID>',
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

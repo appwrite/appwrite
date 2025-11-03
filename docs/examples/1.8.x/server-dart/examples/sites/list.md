@@ -10,4 +10,5 @@ Sites sites = Sites(client);
 SiteList result = await sites.list(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

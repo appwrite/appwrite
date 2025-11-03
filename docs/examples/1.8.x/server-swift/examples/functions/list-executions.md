@@ -9,6 +9,7 @@ let functions = Functions(client)
 
 let executionList = try await functions.listExecutions(
     functionId: "<FUNCTION_ID>",
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 )
 
