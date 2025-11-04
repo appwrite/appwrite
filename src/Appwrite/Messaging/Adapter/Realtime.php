@@ -283,7 +283,7 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $parts[1];
                 $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                $roles = [Role::team($payload->getAttribute('teamId'))->toString()];
                 break;
             case 'teams':
                 if ($parts[2] === 'memberships') {

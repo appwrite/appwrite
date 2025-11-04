@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\MockNumber;
+use Appwrite\Event\Event as AppwriteEvent;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
@@ -336,6 +337,7 @@ App::patch('/v1/projects/:projectId')
     ->desc('Update project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
+    ->label('event', 'projects.[projectId].update')
     ->label('audits.event', 'projects.update')
     ->label('audits.resource', 'project/{request.projectId}')
     ->label('sdk', new Method(
@@ -364,7 +366,8 @@ App::patch('/v1/projects/:projectId')
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform) {
+    ->inject('queueForEvents')
+    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform, AppwriteEvent $queueForEvents) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -384,6 +387,10 @@ App::patch('/v1/projects/:projectId')
             ->setAttribute('legalAddress', $legalAddress)
             ->setAttribute('legalTaxId', $legalTaxId)
             ->setAttribute('search', implode(' ', [$projectId, $name])));
+
+        $queueForEvents
+            ->setParam('projectId', $project->getId())
+            ->setPayload($response->output($project, Response::MODEL_PROJECT));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
