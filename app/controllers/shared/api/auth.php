@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;

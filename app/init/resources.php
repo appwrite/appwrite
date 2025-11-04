@@ -2,7 +2,6 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Audit;

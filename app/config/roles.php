@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Database\Documents\User;
 
 $member = [
