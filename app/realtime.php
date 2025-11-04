@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
@@ -460,9 +461,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
+                        /** @var Appwrite\Utopia\Database\Documents\User $user */
                         $user = $database->getDocument('users', $userId);
 
-                        $roles = Auth::getRoles($user);
+                        $roles = $user->getRoles();
                         $channels = $realtime->connections[$connection]['channels'];
 
                         $realtime->unsubscribe($connection);
@@ -529,14 +531,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
         $timelimit = $app->getResource('timelimit');
         $platforms = $app->getResource('platforms');
-        $user = $app->getResource('user'); /** @var Document $user */
+        $user = $app->getResource('user'); /** @var User $user */
 
         /*
          * Abuse Check
@@ -566,7 +568,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = Auth::getRoles($user);
+        $roles = $user->getRoles();
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
 
@@ -685,7 +687,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $store->decode($message['data']['session']);
 
-                /** @var Appwrite\Utopia\Database\Documents\User $user */
+                /** @var User $user */
                 $user = $database->getDocument('users', $store->getProperty('id', ''));
 
                 /**
@@ -705,7 +707,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
                 }
 
-                $roles = Auth::getRoles($user);
+                $roles = $user->getRoles();
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
