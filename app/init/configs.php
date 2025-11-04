@@ -4,6 +4,8 @@ use Utopia\Config\Config;
 
 require_once __DIR__ . '/../config/storage/resource_limits.php';
 
+Config::load('runtimes', __DIR__ . '/../config/runtimes.php');
+Config::load('runtimes-v2', __DIR__ . '/../config/runtimes-v2.php');
 Config::load('template-runtimes', __DIR__ . '/../config/template-runtimes.php');
 Config::load('events', __DIR__ . '/../config/events.php');
 Config::load('auth', __DIR__ . '/../config/auth.php');
@@ -14,8 +16,6 @@ Config::load('platforms', __DIR__ . '/../config/platforms.php');
 Config::load('console', __DIR__ . '/../config/console.php');
 Config::load('collections', __DIR__ . '/../config/collections.php');
 Config::load('frameworks', __DIR__ . '/../config/frameworks.php');
-Config::load('runtimes', __DIR__ . '/../config/runtimes.php');
-Config::load('runtimes-v2', __DIR__ . '/../config/runtimes-v2.php');
 Config::load('usage', __DIR__ . '/../config/usage.php');
 Config::load('roles', __DIR__ . '/../config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/../config/scopes.php');  // User roles and scopes
