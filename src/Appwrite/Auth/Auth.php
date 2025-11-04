@@ -2,14 +2,7 @@
 
 namespace Appwrite\Auth;
 
-use Appwrite\Utopia\Database\Documents\User;
-use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
-use Utopia\Database\DateTime;
-use Utopia\Database\Document;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Roles;
 
 class Auth
 {
