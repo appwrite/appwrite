@@ -33,7 +33,7 @@ Take screenshots in the following scenarios:
 1. **Install Playwright** (if not already available):
    ```bash
    npm install -D @playwright/test
-   npx playwright install
+   npx playwright install chromium
    ```
 
 2. **Create a screenshot script** in `/tmp/take-screenshots.js`:
@@ -44,8 +44,8 @@ Take screenshots in the following scenarios:
      const browser = await chromium.launch();
      const page = await browser.newPage();
      
-     // Navigate to the changed UI (replace with your actual URL)
-     await page.goto('http://localhost:3000/dashboard');
+     // Navigate to the changed UI (Appwrite runs on http://localhost by default)
+     await page.goto('http://localhost/console');
      
      // Wait for the page to fully load
      await page.waitForLoadState('networkidle');
@@ -74,8 +74,8 @@ Take screenshots in the following scenarios:
    const { test, expect } = require('@playwright/test');
    
    test('capture UI changes', async ({ page }) => {
-     // Replace with your actual URL
-     await page.goto('http://localhost:3000/dashboard');
+     // Appwrite console runs on http://localhost by default
+     await page.goto('http://localhost/console');
      await expect(page).toHaveScreenshot('ui-state.png');
    });
    ```
@@ -146,12 +146,12 @@ const { chromium } = require('playwright');
   
   // Desktop view
   await page.setViewportSize({ width: 1920, height: 1080 });
-  await page.goto('http://localhost:3000/dashboard');
-  await page.screenshot({ path: '/tmp/pr-screenshots/dashboard-desktop.png', fullPage: true });
+  await page.goto('http://localhost/console');
+  await page.screenshot({ path: '/tmp/pr-screenshots/console-desktop.png', fullPage: true });
   
   // Mobile view
   await page.setViewportSize({ width: 375, height: 667 });
-  await page.screenshot({ path: '/tmp/pr-screenshots/dashboard-mobile.png', fullPage: true });
+  await page.screenshot({ path: '/tmp/pr-screenshots/console-mobile.png', fullPage: true });
   
   // Specific component
   const component = await page.locator('.my-changed-component');
@@ -168,7 +168,7 @@ const { chromium } = require('playwright');
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage();
-  await page.goto('http://localhost:3000/form');
+  await page.goto('http://localhost/console/account');
   
   // Default state
   await page.screenshot({ path: '/tmp/pr-screenshots/form-default.png' });

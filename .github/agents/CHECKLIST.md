@@ -60,7 +60,7 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await page.setViewportSize({ width: 1920, height: 1080 });
-  await page.goto('http://localhost:3000/dashboard'); // Replace with your actual URL
+  await page.goto('http://localhost/console'); // Appwrite console URL (adjust path as needed)
   await page.waitForLoadState('networkidle');
   await page.screenshot({ path: '/tmp/pr-screenshots/screenshot.png', fullPage: true });
   await browser.close();

@@ -23,8 +23,8 @@ const { chromium } = require('playwright');
   // Set viewport size
   await page.setViewportSize({ width: 1920, height: 1080 });
   
-  // Navigate to your changed page (replace with actual URL, e.g., http://localhost:3000/settings)
-  await page.goto('http://localhost:3000/dashboard');
+  // Navigate to your changed page (Appwrite console runs on http://localhost by default)
+  await page.goto('http://localhost/console');
   await page.waitForLoadState('networkidle');
   
   // Take screenshot
@@ -191,8 +191,8 @@ const fs = require('fs');
 
   // Test your changes on different pages
   const pages = [
-    { url: 'http://localhost:3000/dashboard', name: 'dashboard' },
-    { url: 'http://localhost:3000/settings', name: 'settings' }
+    { url: 'http://localhost/console', name: 'console' },
+    { url: 'http://localhost/console/account', name: 'account' }
   ];
 
   for (const pageInfo of pages) {
