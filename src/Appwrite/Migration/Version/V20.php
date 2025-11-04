@@ -632,15 +632,15 @@ class V20 extends Migration
                 }
                 break;
             case 'sessions':
-                $duration = $this->project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+                $duration = $this->project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
                 $expire = DateTime::addSeconds(new \DateTime(), $duration);
                 $document->setAttribute('expire', $expire);
 
                 $factors = match ($document->getAttribute('provider')) {
-                    Auth::SESSION_PROVIDER_EMAIL => ['password'],
-                    Auth::SESSION_PROVIDER_PHONE => ['phone'],
-                    Auth::SESSION_PROVIDER_ANONYMOUS => ['anonymous'],
-                    Auth::SESSION_PROVIDER_TOKEN => ['token'],
+                    SESSION_PROVIDER_EMAIL => ['password'],
+                    SESSION_PROVIDER_PHONE => ['phone'],
+                    SESSION_PROVIDER_ANONYMOUS => ['anonymous'],
+                    SESSION_PROVIDER_TOKEN => ['token'],
                     default => ['email'],
                 };
 

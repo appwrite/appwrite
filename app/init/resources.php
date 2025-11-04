@@ -293,15 +293,18 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     }
 
     if (APP_MODE_ADMIN === $mode) {
+        /** @var User $user */
         $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
     } else {
         if ($project->isEmpty()) {
-            $user = new Document([]);
+            $user = new User([]);
         } else {
             if (!empty($store->getProperty('id', ''))) {
                 if ($project->getId() === 'console') {
+                    /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
                 } else {
+                    /** @var User $user */
                     $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
                 }
             }
@@ -311,7 +314,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     if (
         !$user ||
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), $store->getProperty('secret', ''), $proofForToken)
+        || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
@@ -367,13 +370,13 @@ App::setResource('project', function ($dbForPlatform, $request, $console) {
     return $project;
 }, ['dbForPlatform', 'request', 'console']);
 
-App::setResource('session', function (Document $user, Store $store, Token $proofForToken) {
+App::setResource('session', function (User $user, Store $store, Token $proofForToken) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), $store->getProperty('secret', ''), $proofForToken);
+    $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
     if (!$sessionId) {
         return;
