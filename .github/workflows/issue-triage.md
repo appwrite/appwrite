@@ -75,4 +75,5 @@ You're a triage assistant for GitHub issues. Your task is to analyze issue #${{ 
    - If you have possible reproduction steps, include them in the comment
    - If you have any debugging strategies, include them in the comment
    - If appropriate break the issue down to sub-tasks and write a checklist of things to do.
+   - **If the issue mentions UI/visual bugs or changes**, remind contributors to include screenshots in their PR using the guidance in `.github/agents/code-change-agent.md`
    - Use collapsed-by-default sections in the GitHub markdown to keep the comment tidy. Collapse all sections except the short main summary at the top.

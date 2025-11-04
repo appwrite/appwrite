@@ -15,7 +15,21 @@ Happy contributing!
 
 ## Test Plan
 
-(Write your test plan here. If you changed any code, please provide us with clear instructions on how you verified your changes work. Screenshots may also be helpful.)
+(Write your test plan here. If you changed any code, please provide us with clear instructions on how you verified your changes work.)
+
+## Screenshots
+
+**Required for UI changes**: If this PR includes visual/UI changes, please include before/after screenshots.  
+See [screenshot guide](.github/agents/screenshot-guide.md) for instructions on using Playwright to capture screenshots.
+
+- [ ] Screenshots included (or not applicable)
+
+<!-- 
+To capture screenshots:
+1. Install Playwright: npm install -D @playwright/test && npx playwright install chromium
+2. See .github/agents/screenshot-guide.md for example scripts
+3. Drag and drop screenshot images here
+-->
 
 ## Related PRs and Issues
 
