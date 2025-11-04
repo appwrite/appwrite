@@ -23,8 +23,8 @@ const { chromium } = require('playwright');
   // Set viewport size
   await page.setViewportSize({ width: 1920, height: 1080 });
   
-  // Navigate to your changed page
-  await page.goto('http://localhost:PORT/your-path');
+  // Navigate to your changed page (replace with actual URL, e.g., http://localhost:3000/settings)
+  await page.goto('http://localhost:3000/dashboard');
   await page.waitForLoadState('networkidle');
   
   // Take screenshot

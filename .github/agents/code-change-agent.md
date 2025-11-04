@@ -44,8 +44,8 @@ Take screenshots in the following scenarios:
      const browser = await chromium.launch();
      const page = await browser.newPage();
      
-     // Navigate to the changed UI
-     await page.goto('http://localhost:PORT/YOUR-PATH');
+     // Navigate to the changed UI (replace with your actual URL)
+     await page.goto('http://localhost:3000/dashboard');
      
      // Wait for the page to fully load
      await page.waitForLoadState('networkidle');
@@ -74,7 +74,8 @@ Take screenshots in the following scenarios:
    const { test, expect } = require('@playwright/test');
    
    test('capture UI changes', async ({ page }) => {
-     await page.goto('http://localhost:PORT/YOUR-PATH');
+     // Replace with your actual URL
+     await page.goto('http://localhost:3000/dashboard');
      await expect(page).toHaveScreenshot('ui-state.png');
    });
    ```
