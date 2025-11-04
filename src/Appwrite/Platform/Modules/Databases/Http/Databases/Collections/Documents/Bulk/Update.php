@@ -107,6 +107,8 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $data = $this->parseOperators($data, $collection);
+
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
             fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP

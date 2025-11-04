@@ -331,8 +331,15 @@ class Mapper
                 break;
             case 'Utopia\Validator\Integer':
             case 'Utopia\Validator\Numeric':
-            case 'Utopia\Validator\Range':
                 $type = Type::int();
+                break;
+            case 'Utopia\Validator\Range':
+                // Check if the Range validator is for float or integer
+                if ($validator instanceof \Utopia\Validator\Range && $validator->getType() === \Utopia\Validator\Range::TYPE_FLOAT) {
+                    $type = Type::float();
+                } else {
+                    $type = Type::int();
+                }
                 break;
             case 'Utopia\Validator\FloatValidator':
                 $type = Type::float();

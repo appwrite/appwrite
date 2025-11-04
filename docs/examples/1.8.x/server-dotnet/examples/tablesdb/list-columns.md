@@ -12,5 +12,6 @@ TablesDB tablesDB = new TablesDB(client);
 ColumnList result = await tablesDB.ListColumns(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    total: false // optional
 );

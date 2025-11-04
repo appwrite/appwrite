@@ -9,5 +9,6 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 users = Users(client)
 
 result = users.list_sessions(
-    user_id = '<USER_ID>'
+    user_id = '<USER_ID>',
+    total = False # optional
 )

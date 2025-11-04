@@ -12,5 +12,6 @@ TablesDB tablesDB = new TablesDB(client);
 TableList result = await tablesDB.ListTables(
     databaseId: "<DATABASE_ID>",
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

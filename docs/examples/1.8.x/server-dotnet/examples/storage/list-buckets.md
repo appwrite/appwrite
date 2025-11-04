@@ -11,5 +11,6 @@ Storage storage = new Storage(client);
 
 BucketList result = await storage.ListBuckets(
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

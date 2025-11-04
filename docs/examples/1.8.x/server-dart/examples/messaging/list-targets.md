@@ -10,4 +10,5 @@ Messaging messaging = Messaging(client);
 TargetList result = await messaging.listTargets(
     messageId: '<MESSAGE_ID>',
     queries: [], // (optional)
+    total: false, // (optional)
 );

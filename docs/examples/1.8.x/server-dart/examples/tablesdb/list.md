@@ -10,4 +10,5 @@ TablesDB tablesDB = TablesDB(client);
 DatabaseList result = await tablesDB.list(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

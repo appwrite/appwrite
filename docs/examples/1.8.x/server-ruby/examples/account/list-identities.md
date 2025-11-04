@@ -10,5 +10,6 @@ client = Client.new
 account = Account.new(client)
 
 result = account.list_identities(
-    queries: [] # optional
+    queries: [], # optional
+    total: false # optional
 )

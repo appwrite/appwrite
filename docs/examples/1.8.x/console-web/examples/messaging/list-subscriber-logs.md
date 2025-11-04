@@ -8,7 +8,8 @@ const messaging = new Messaging(client);
 
 const result = await messaging.listSubscriberLogs({
     subscriberId: '<SUBSCRIBER_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 });
 
 console.log(result);

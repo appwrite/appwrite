@@ -11,5 +11,6 @@ val sites = Sites(client)
 
 val response = sites.list(
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )
