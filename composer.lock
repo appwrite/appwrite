@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "550f8ddb2f6c846a6476916ca35fb1c6",
+    "content-hash": "352d5b81626632665fbc8e3e76a1b950",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3457,7 +3457,7 @@
                 "reference": "611fa66a97e87c0dbbc133a717d970da7a5ca828"
             },
             "dist": {
-                "type": "zip",\
+                "type": "zip",
                 "url": "https://api.github.com/repos/utopia-php/abuse/zipball/611fa66a97e87c0dbbc133a717d970da7a5ca828",
                 "reference": "611fa66a97e87c0dbbc133a717d970da7a5ca828",
                 "shasum": ""
@@ -8981,7 +8981,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
