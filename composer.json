@@ -107,23 +107,5 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/migration"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/emails"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/validators"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
-        }
-    ]
+    }
 }
