@@ -52,7 +52,7 @@ Take screenshots in the following scenarios:
      
      // Take screenshot
      await page.screenshot({ 
-       path: 'screenshot-before.png',
+       path: '/tmp/pr-screenshots/screenshot-before.png',
        fullPage: true 
      });
      
@@ -76,7 +76,7 @@ Take screenshots in the following scenarios:
    test('capture UI changes', async ({ page }) => {
      // Appwrite console runs on http://localhost by default
      await page.goto('http://localhost/console');
-     await expect(page).toHaveScreenshot('ui-state.png');
+     await expect(page).toHaveScreenshot('/tmp/pr-screenshots/ui-state.png');
    });
    ```
 

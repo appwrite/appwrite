@@ -53,19 +53,19 @@ npx playwright install chromium
 # 2. Create directory
 mkdir -p /tmp/pr-screenshots
 
-# 3. Use this template (save as /tmp/capture.js)
-cat > /tmp/capture.js << 'EOF'
-const { chromium } = require('playwright');
-(async () => {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await page.setViewportSize({ width: 1920, height: 1080 });
-  await page.goto('http://localhost/console'); // Appwrite console URL (adjust path as needed)
-  await page.waitForLoadState('networkidle');
-  await page.screenshot({ path: '/tmp/pr-screenshots/screenshot.png', fullPage: true });
-  await browser.close();
-})();
-EOF
+# 3. Create a simple script (save as /tmp/capture.js):
+# Copy the example below, modify the URL, and save to /tmp/capture.js:
+#
+# const { chromium } = require('playwright');
+# (async () => {
+#   const browser = await chromium.launch();
+#   const page = await browser.newPage();
+#   await page.setViewportSize({ width: 1920, height: 1080 });
+#   await page.goto('http://localhost/console'); // Adjust URL as needed
+#   await page.waitForLoadState('networkidle');
+#   await page.screenshot({ path: '/tmp/pr-screenshots/screenshot.png', fullPage: true });
+#   await browser.close();
+# })();
 
 # 4. Run it
 node /tmp/capture.js

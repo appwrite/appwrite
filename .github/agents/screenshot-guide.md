@@ -142,7 +142,8 @@ Drag and drop images into a PR comment or paste from clipboard.
 
 ### Option 3: Use GitHub CLI
 ```bash
-gh pr comment PR_NUMBER --body "📸 Screenshots attached" -F /tmp/pr-screenshots/screenshot.png
+# Upload screenshots by dragging files into the PR comment box in the web UI
+# Or use the GitHub API to attach images
 ```
 
 ## Pro Tips
