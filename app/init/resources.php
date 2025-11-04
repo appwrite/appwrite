@@ -23,6 +23,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
@@ -440,6 +441,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+    $database->setDocumentType('users', User::class);
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -468,6 +470,8 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
         ->setMetadata('project', 'console')
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+    $database->setDocumentType('users', User::class);
 
     return $database;
 }, ['pools', 'cache']);

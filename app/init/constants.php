@@ -294,3 +294,53 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
+
+
+// Auth
+/**
+ * Token Types.
+ */
+const TOKEN_TYPE_LOGIN = 1; // Deprecated
+const TOKEN_TYPE_VERIFICATION = 2;
+const TOKEN_TYPE_RECOVERY = 3;
+const TOKEN_TYPE_INVITE = 4;
+const TOKEN_TYPE_MAGIC_URL = 5;
+const TOKEN_TYPE_PHONE = 6;
+const TOKEN_TYPE_OAUTH2 = 7;
+const TOKEN_TYPE_GENERIC = 8;
+const TOKEN_TYPE_EMAIL = 9; // OTP
+
+/**
+ * Session Providers.
+ */
+const SESSION_PROVIDER_EMAIL = 'email';
+const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+const SESSION_PROVIDER_PHONE = 'phone';
+const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_TOKEN = 'token';
+const SESSION_PROVIDER_SERVER = 'server';
+
+/**
+ * Token Expiration times.
+ */
+const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
+const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
+const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
+const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
+const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+
+/**
+ * Token Lengths.
+ */
+const TOKEN_LENGTH_MAGIC_URL = 64;
+const TOKEN_LENGTH_VERIFICATION = 256;
+const TOKEN_LENGTH_RECOVERY = 256;
+const TOKEN_LENGTH_OAUTH2 = 64;
+const TOKEN_LENGTH_SESSION = 256;
+
+/**
+ * MFA
+ */
+const MFA_RECENT_DURATION = 1800; // 30 mins
