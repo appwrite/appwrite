@@ -315,6 +315,8 @@ class Builds extends Action
         }
 
         try {
+            throw new \Exception('test error from hmacr');
+
             if (!$isVcsEnabled) {
                 // Non-VCS + Template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
@@ -1294,8 +1296,6 @@ class Builds extends Action
             }
 
             Console::info('Deployment action finished');
-
-            throw new \Exception('test error from hmacr');
         } catch (\Throwable $th) {
             Console::warning('Build failed:');
             Console::error($th->getMessage());
@@ -1343,7 +1343,7 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
-            $this->notifyError($project, $resource, $deployment, $plan, $queueForMails);
+            $this->notifyError($project, $resource, $deployment, $plan, $dbForPlatform, $queueForMails);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
@@ -1657,8 +1657,19 @@ class Builds extends Action
      *
      * @throws Exception
      */
-    private function notifyError(Document $project, Document $resource, Document $deployment, array $plan, Mail $queueForMails): void
+    private function notifyError(Document $project, Document $resource, Document $deployment, array $plan, Database $dbForPlatform, Mail $queueForMails): void
     {
+        $memberships = $dbForPlatform->find('memberships', [
+            Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        $userIds = array_column(\array_map(fn ($membership) => $membership->getArrayCopy(), $memberships), 'userId');
+
+        $users = $dbForPlatform->find('users', [
+            Query::equal('$id', $userIds),
+        ]);
+
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
         $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 
@@ -1673,12 +1684,14 @@ class Builds extends Action
             'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}/deployments/deployment-{$deployment->getId()}",
             default => throw new \Exception('Invalid resource type')
         };
+        $alertsUrl = "{$protocol}://{$hostname}/console/account/alerts";
 
         $template = Template::fromFile(__DIR__ . '/../../../../../../app/config/locale/templates/email-deployment-failed.tpl');
         $template
             ->setParam('{{hello}}', $locale->getText('emails.deployment.hello'))
             ->setParam('{{description}}', $locale->getText('emails.deployment.description'))
             ->setParam('{{deploymentUrl}}', $deploymentUrl)
+            ->setParam('{{alertsUrl}}', $alertsUrl)
             ->setParam('{{thanks}}', $locale->getText("emails.deployment.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.deployment.signature"));
 
@@ -1706,8 +1719,16 @@ class Builds extends Action
             ->setPreview($preview)
             ->setBody($body)
             ->setBodyTemplate(__DIR__ . '/../../../../../../app/config/locale/templates/email-base-styled.tpl')
-            ->setVariables($emailVariables)
-            ->setRecipient('test@test.com')
-            ->trigger();
+            ->setVariables($emailVariables);
+
+        foreach ($users as $user) {
+            $prefs = $user->getAttribute('prefs');
+            if (!\array_key_exists('deploymentFailedEmailAlert', $prefs) || $prefs['deploymentFailedEmailAlert'] === true) {
+                $queueForMails
+                    ->setRecipient($user->getAttribute('email'))
+                    ->trigger();
+            }
+
+        }
     }
 }
