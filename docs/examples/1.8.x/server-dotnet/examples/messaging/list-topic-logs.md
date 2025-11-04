@@ -11,5 +11,6 @@ Messaging messaging = new Messaging(client);
 
 LogList result = await messaging.ListTopicLogs(
     topicId: "<TOPIC_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    total: false // optional
 );

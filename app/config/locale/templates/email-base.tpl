@@ -2,6 +2,38 @@
 <html>
     <head>
         <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+        <meta name="color-scheme" content="light dark">
+        <meta name="supported-color-schemes" content="light dark">
+        <style type="text/css">
+            :root {
+                color-scheme: light dark;
+                supported-color-schemes: light dark;
+            }
+
+            @media (prefers-color-scheme: dark ) {
+                body {
+                    color: #616b7c !important;
+                    background-color: #ffffff !important;
+                }
+                a {
+                    color: currentColor !important;
+                }
+                a.button {
+                    color: #ffffff !important;
+                    background-color: #2D2D31 !important;
+                    border-color: #414146 !important;
+                }
+                h1, h2, h3 {
+                    color: #373b4d !important;
+                }
+                h4 {
+                    color: #4f5769 !important;
+                }
+                p.security-phrase:not(:empty), hr {
+                    border-color: #e8e9f0 !important;
+                }
+            }
+        </style>
         <style>
             @font-face {
                 font-family: 'Inter';
@@ -43,6 +75,21 @@
             a {
                 color: currentColor;
                 word-break: break-all;
+            }
+            a.button {
+                box-sizing: border-box;
+                display: inline-block;
+                text-align: center;
+                text-decoration: none;
+                padding: 9px 14px;
+                color: #ffffff;
+                background-color: #2D2D31;
+                border: 1px solid #414146;
+                border-radius: 8px;
+            }
+            a.button:hover,
+            a.button:focus {
+                opacity: 0.8;
             }
             table {
                 width: 100%;
@@ -94,9 +141,14 @@
             h* {
                 font-family: 'Poppins', sans-serif;
             }
-    
             p {
                 margin-bottom: 10px;
+            }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
             }
         </style>
     </head>

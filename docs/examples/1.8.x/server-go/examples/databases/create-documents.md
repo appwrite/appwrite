@@ -18,4 +18,5 @@ response, error := service.CreateDocuments(
     "<DATABASE_ID>",
     "<COLLECTION_ID>",
     []interface{}{},
+    databases.WithCreateDocumentsTransactionId("<TRANSACTION_ID>"),
 )

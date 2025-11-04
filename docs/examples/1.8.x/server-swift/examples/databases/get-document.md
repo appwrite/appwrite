@@ -11,6 +11,7 @@ let document = try await databases.getDocument(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     documentId: "<DOCUMENT_ID>",
-    queries: [] // optional
+    queries: [], // optional
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

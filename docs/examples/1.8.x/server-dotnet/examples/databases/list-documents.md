@@ -12,5 +12,7 @@ Databases databases = new Databases(client);
 DocumentList result = await databases.ListDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    transactionId: "<TRANSACTION_ID>", // optional
+    total: false // optional
 );

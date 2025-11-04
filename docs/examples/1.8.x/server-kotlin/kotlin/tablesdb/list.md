@@ -11,5 +11,6 @@ val tablesDB = TablesDB(client)
 
 val response = tablesDB.list(
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )

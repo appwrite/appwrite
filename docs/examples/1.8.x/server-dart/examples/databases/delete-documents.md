@@ -11,4 +11,5 @@ await databases.deleteDocuments(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     queries: [], // (optional)
+    transactionId: '<TRANSACTION_ID>', // (optional)
 );

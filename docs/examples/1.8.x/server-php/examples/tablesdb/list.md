@@ -12,5 +12,6 @@ $tablesDB = new TablesDB($client);
 
 $result = $tablesDB->list(
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

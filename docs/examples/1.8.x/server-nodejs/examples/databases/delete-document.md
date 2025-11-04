@@ -10,5 +10,6 @@ const databases = new sdk.Databases(client);
 const result = await databases.deleteDocument({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    documentId: '<DOCUMENT_ID>'
+    documentId: '<DOCUMENT_ID>',
+    transactionId: '<TRANSACTION_ID>' // optional
 });

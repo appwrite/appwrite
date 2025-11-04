@@ -12,5 +12,7 @@ TablesDB tablesDB = new TablesDB(client);
 RowList result = await tablesDB.ListRows(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    transactionId: "<TRANSACTION_ID>", // optional
+    total: false // optional
 );

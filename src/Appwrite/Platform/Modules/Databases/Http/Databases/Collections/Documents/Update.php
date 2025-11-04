@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -55,8 +56,8 @@ class Update extends Action
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-document.md',
                 auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
@@ -77,17 +78,19 @@ class Update extends Action
             ->param('documentId', '', new UID(), 'Document ID.')
             ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('transactionState')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
     {
-
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
@@ -109,9 +112,18 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
+        $data = $this->parseOperators($data, $collection);
+
         // Read permission should not be required for update
         /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
+        if ($transactionId !== null) {
+            // Use transaction-aware document retrieval to see changes from same transaction
+            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+        } else {
+            $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+        }
 
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException());
@@ -230,6 +242,72 @@ class Update extends Action
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
+
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                : $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            $now = new \DateTime();
+            $expiresAt = new \DateTime($transaction->getAttribute('expiresAt', 'now'));
+            if ($now > $expiresAt) {
+                throw new Exception(Exception::TRANSACTION_EXPIRED);
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            // Stage the operation in transaction logs
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $documentId,
+                'action' => 'update',
+                'data' => $data,
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                    1
+                );
+            });
+
+            // Return successful response without actually updating document
+            $groupId = $this->getGroupId();
+            $mockDocument = new Document([
+                '$id' => $documentId,
+                '$' . $groupId => $collectionId,
+                '$databaseId' => $databaseId,
+                ...$document->getArrayCopy(),
+                ...$data
+            ]);
+            $response
+                ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                ->dynamic($mockDocument, $this->getResponseModel());
+            return;
+        }
+
 
         try {
             $document = $dbForProject->withRequestTimestamp(

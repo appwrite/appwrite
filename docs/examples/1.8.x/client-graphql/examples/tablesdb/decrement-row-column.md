@@ -5,7 +5,8 @@ mutation {
         rowId: "<ROW_ID>",
         column: "",
         value: 0,
-        min: 0
+        min: 0,
+        transactionId: "<TRANSACTION_ID>"
     ) {
         _id
         _sequence
