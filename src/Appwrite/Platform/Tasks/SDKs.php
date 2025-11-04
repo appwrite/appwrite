@@ -259,6 +259,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 if ($createRelease) {
+                    Console::execute('git config --global user.email "$GIT_EMAIL"', stdin: '', stdout: '', stderr: '');
+
                     $releaseVersion = $language['version'];
 
                     $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
