@@ -139,6 +139,36 @@ class User extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('emailCanonical', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User email address.',
+                'default' => null,
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('emailIsCanonical', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'User email is canonical.',
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsCorporate', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'User email is corporate.',
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsDisposable', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'User email is disposable.',
+                'default' => null,
+                'example' => true,
+            ])
+            ->addRule('emailIsFree', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'User email is free.',
+                'default' => null,
+                'example' => true,
+            ])
         ;
     }
 

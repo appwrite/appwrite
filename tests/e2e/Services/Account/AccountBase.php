@@ -29,7 +29,7 @@ trait AccountBase
         ]);
 
         $id = $response['body']['$id'];
-
+        var_dump($response['body']);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -41,6 +41,8 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['accessedAt']);
         $this->assertArrayHasKey('targets', $response['body']);
         $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
+        $this->assertEquals('shmuel', 'fogel');
+
 
         /**
          * Test for FAILURE
