@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -810,8 +809,8 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = Authorization::getRoles();
-                $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-                $isAppUser = Auth::isAppUser($roles);
+                $isPrivilegedUser = User::isPrivileged($roles);
+                $isAppUser = User::isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
                     $data->setAttribute($key, '');
