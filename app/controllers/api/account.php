@@ -5318,10 +5318,11 @@ App::get('/v1/account/identities')
         contentType: ContentType::JSON
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, User $user, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, User $user, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -5362,7 +5363,7 @@ App::get('/v1/account/identities')
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
-        $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        $total = $includeTotal ? $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT) : 0;
 
         $response->dynamic(new Document([
             'identities' => $results,
