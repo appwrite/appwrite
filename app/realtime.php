@@ -69,6 +69,8 @@ if (!function_exists('getConsoleDB')) {
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');
+        
+        $database->setDocumentType('users', User::class);
 
         return $database;
     }
@@ -120,6 +122,8 @@ if (!function_exists('getProjectDB')) {
         $database
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
+
+        $database->setDocumentType('users', User::class);
 
         return $databases[$project->getSequence()] = $database;
     }
