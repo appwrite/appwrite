@@ -69,7 +69,7 @@ if (!function_exists('getConsoleDB')) {
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');
-        
+
         $database->setDocumentType('users', User::class);
 
         return $database;
