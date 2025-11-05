@@ -1,7 +1,6 @@
 <?php
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
@@ -228,12 +227,21 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
+    $provider = match ($verifiedToken->getAttribute('type')) {
+        TOKEN_TYPE_VERIFICATION,
+        TOKEN_TYPE_RECOVERY,
+        TOKEN_TYPE_INVITE => SESSION_PROVIDER_EMAIL,
+        TOKEN_TYPE_MAGIC_URL => SESSION_PROVIDER_MAGIC_URL,
+        TOKEN_TYPE_PHONE => SESSION_PROVIDER_PHONE,
+        TOKEN_TYPE_OAUTH2 => SESSION_PROVIDER_OAUTH2,
+        default => SESSION_PROVIDER_TOKEN,
+    };
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
-            'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
+            'provider' => $provider,
             'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),

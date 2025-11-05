@@ -4,7 +4,6 @@ require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
@@ -223,7 +222,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
-            $cookie = $request->getCookie(Auth::$cookieNamePreview, '');
+            $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
 
             // Security checks to mark authorized true
@@ -1614,7 +1613,7 @@ App::get('/_appwrite/authorize')
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie(Auth::$cookieNamePreview, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
+            ->addCookie(COOKIE_NAME_PREVIEW, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $host . $path);
