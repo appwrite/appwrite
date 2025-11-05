@@ -291,6 +291,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
         $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
 
+    $user = null;
     if (APP_MODE_ADMIN === $mode) {
         /** @var User $user */
         $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
@@ -315,7 +316,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
         $user->isEmpty() // Check a document has been found in the DB
         || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
     ) { // Validate user has valid login token
-        $user = new Document([]);
+        $user = new User([]);
     }
     // if (APP_MODE_ADMIN === $mode) {
     //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
@@ -343,7 +344,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
         $jwtSessionId = $payload['sessionId'] ?? '';
         if (!empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                $user = new Document([]);
+                $user = new User([]);
             }
         }
     }
@@ -380,7 +381,8 @@ App::setResource('session', function (User $user, Store $store, Token $proofForT
     if (!$sessionId) {
         return;
     }
-    foreach ($sessions as $session) {/** @var Document $session */
+    foreach ($sessions as $session) {
+        /** @var Document $session */
         if ($sessionId === $session->getId()) {
             return $session;
         }
@@ -499,6 +501,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
                 ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+            $database->setDocumentType('users', User::class);
 
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 

@@ -149,6 +149,7 @@ use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
+use Appwrite\Utopia\Database\Documents\User as DBUser;
 
 /**
  * @method int getStatusCode()
@@ -809,8 +810,8 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = Authorization::getRoles();
-                $isPrivilegedUser = User::isPrivileged($roles);
-                $isAppUser = User::isApp($roles);
+                $isPrivilegedUser = DBUser::isPrivileged($roles);
+                $isAppUser = DBUser::isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
                     $data->setAttribute($key, '');
