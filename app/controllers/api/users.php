@@ -350,10 +350,6 @@ App::post('/v1/users/argon2')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $argon2 = new Argon2();
-        $argon2
-            ->setMemoryCost(7168)
-            ->setTimeCost(5)
-            ->setThreads(1);
 
         $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
