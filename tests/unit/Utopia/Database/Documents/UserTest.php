@@ -68,16 +68,16 @@ class UserTest extends TestCase
 
         $user1 = new User([
             '$id' => ID::custom('user1'),
-            'tokens' => $tokens1,
+            'sessions' => $tokens1,
 
         ]);
 
         $user2 = new User([
             '$id' => ID::custom('user2'),
-            'tokens' => $tokens2,
+            'sessions' => $tokens2,
         ]);
 
-        $this->assertEquals($user1->sessionVerify($secret, $proofForToken), 'token1');
+        $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken));
         $this->assertEquals($user1->sessionVerify('false-secret', $proofForToken), false);
         $this->assertEquals($user2->sessionVerify($secret, $proofForToken), false);
         $this->assertEquals($user2->sessionVerify('false-secret', $proofForToken), false);
