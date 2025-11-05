@@ -271,7 +271,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo-after.webp'), 'image/webp', 'logo-after.webp'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -280,7 +280,7 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $webpFile['headers']['status-code']);
         $this->assertNotEmpty($webpFile['body']['$id']);
-        $this->assertEquals('logo-after.webp', $webpFile['body']['name']);
+        $this->assertEquals('image.webp', $webpFile['body']['name']);
         $this->assertEquals('image/webp', $webpFile['body']['mimeType']);
 
         $webpFileId = $webpFile['body']['$id'];
