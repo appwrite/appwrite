@@ -1009,8 +1009,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         ];
 
         $roles = Authorization::getRoles();
-        $isPrivilegedUser = User::isPrivileged($roles);
-        $isAppUser = User::isApp($roles);
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
