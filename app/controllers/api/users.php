@@ -1347,10 +1347,6 @@ App::patch('/v1/users/:userId/password')
 
         // Create Argon2 hasher with default settings
         $hasher = new Argon2();
-        $hasher
-            ->setMemoryCost(7168)
-            ->setTimeCost(5)
-            ->setThreads(1);
 
         $newPassword = $hasher->hash($password);
 
