@@ -20,7 +20,7 @@ class Delete extends CollectionDelete
 
     protected function getResponseModel(): string
     {
-        return UtopiaResponse::MODEL_COLLECTION;
+        return UtopiaResponse::MODEL_VECTORDB_COLLECTION;
     }
 
     public function __construct()

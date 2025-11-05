@@ -1183,6 +1183,15 @@ App::error()
         $file = $error->getFile();
         $line = $error->getLine();
         $trace = $error->getTrace();
+        $trace = $error->getTrace();
+
+        foreach (array_slice($trace, 0, 100) as $index => $traceEntry) {
+            $file = isset($traceEntry['file']) ? $traceEntry['file'] : '[internal function]';
+            $line = isset($traceEntry['line']) ? $traceEntry['line'] : '';
+            $function = isset($traceEntry['function']) ? $traceEntry['function'] : '';
+            Console::error("[$index] $file : $line -> $function()");
+        }
+
 
         if (php_sapi_name() === 'cli') {
             Console::error('[Error] Timestamp: ' . date('c', time()));

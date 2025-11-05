@@ -25,13 +25,13 @@ use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeObject;
 use Appwrite\Utopia\Response\Model\AttributePoint;
 use Appwrite\Utopia\Response\Model\AttributePolygon;
-use Appwrite\Utopia\Response\Model\AttributeObject;
-use Appwrite\Utopia\Response\Model\AttributeVector;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeURL;
+use Appwrite\Utopia\Response\Model\AttributeVector;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
@@ -190,6 +190,8 @@ class Response extends SwooleResponse
     public const MODEL_COLLECTION_LIST = 'collectionList';
     public const MODEL_VECTORDB_COLLECTION = 'vectordbCollection';
     public const MODEL_VECTORDB_COLLECTION_LIST = 'vectordbCollectionList';
+    public const MODEL_EMBEDDING = 'embedding';
+    public const MODEL_EMBEDDING_LIST = 'embeddingList';
     public const MODEL_TABLE = 'table';
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
@@ -495,8 +497,10 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
             ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
+            ->setModel(new BaseList('Embedding list', self::MODEL_EMBEDDING_LIST, 'embeddings', self::MODEL_EMBEDDING))
             // Entities
             ->setModel(new Database())
+            ->setModel(new \Appwrite\Utopia\Response\Model\Embedding())
             // Collection API Models
             ->setModel(new Collection())
             ->setModel(new \Appwrite\Utopia\Response\Model\VectorDBCollection())
@@ -875,7 +879,11 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
+            ->send((function (array $payload) {
+                $func = 'yaml_emit';
+                $encoding = \defined('YAML_UTF8_ENCODING') ? \constant('YAML_UTF8_ENCODING') : 0;
+                return \call_user_func($func, $payload, $encoding);
+            })($data));
     }
 
     /**

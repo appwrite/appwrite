@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Embedding;
+namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents;
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Create as DocumentCreate;
 use Appwrite\SDK\AuthType;

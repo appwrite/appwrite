@@ -25,5 +25,3 @@ class AttributeObject extends Attribute
         return Response::MODEL_ATTRIBUTE_OBJECT;
     }
 }
-
-

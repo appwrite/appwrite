@@ -33,5 +33,3 @@ class AttributeVector extends Attribute
         return Response::MODEL_ATTRIBUTE_VECTOR;
     }
 }
-
-

@@ -50,15 +50,6 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('embeddingModel'),
-                'type' => Database::VAR_STRING,
-                'size' => 256,
-                'required' => true,
-                'signed' => true,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('enabled'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,

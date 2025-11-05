@@ -89,7 +89,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      - .vendor:/usr/src/code/dev
+      - ./vendor:/usr/src/code/vendor
 
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
@@ -451,6 +451,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
@@ -1208,6 +1209,8 @@ services:
       - MODELS=${OLLAMA_MODELS:-embeddinggemma}
       # duration to keep model in memory
       - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - appwrite
 
   redis:
     image: redis:7.2.4-alpine

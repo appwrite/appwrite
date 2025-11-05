@@ -15,10 +15,8 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
-use Utopia\Validator\WhiteList;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Utopia\Agents\Adapters\Ollama;
 
 class Update extends CollectionAction
 {
@@ -61,9 +59,7 @@ class Update extends CollectionAction
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-            ->param('description', null, new Text(1024), 'Collection description. Max length: 1024 chars.', true)
-            ->param('dimensions', null, new Integer(), 'Embedding dimensions.', true)
-            ->param('embeddingModel', '', new WhiteList((new Ollama())->getModels()), 'Embedding model identifier.')
+            ->param('dimensions', null, new Range(1, 16000), 'Embedding dimensions.', true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
@@ -74,7 +70,7 @@ class Update extends CollectionAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, ?string $name, ?string $description, ?int $dimensions, ?string $embeddingModel, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, \Utopia\Database\Database $dbForProject, callable $getDatabasesDB, \Appwrite\Event\Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, \Utopia\Database\Database $dbForProject, callable $getDatabasesDB, \Appwrite\Event\Event $queueForEvents): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -98,9 +94,7 @@ class Update extends CollectionAction
             $collectionId,
             $collection
                 ->setAttribute('name', $name ?? $collection->getAttribute('name'))
-                ->setAttribute('description', $description ?? $collection->getAttribute('description'))
                 ->setAttribute('dimensions', $dimensions ?? $collection->getAttribute('dimensions'))
-                ->setAttribute('embeddingModel', $embeddingModel ?? $collection->getAttribute('embeddingModel'))
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)

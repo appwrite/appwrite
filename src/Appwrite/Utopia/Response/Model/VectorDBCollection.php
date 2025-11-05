@@ -65,12 +65,6 @@ class VectorDBCollection extends Model
                 'default' => 0,
                 'example' => 1536,
             ])
-            ->addRule('embeddingModel', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Embedding model identifier.',
-                'default' => '',
-                'example' => 'text-embedding-3-large',
-            ])
             ->addRule('search', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Search text.',

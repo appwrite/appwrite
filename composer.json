@@ -34,6 +34,10 @@
         { 
             "type": "vcs",
             "url": "https://github.com/utopia-php/database"
+        },
+        { 
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/agents"
         }
     ],
     "minimum-stability": "dev",

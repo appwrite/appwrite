@@ -26,6 +26,8 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Agent;
 use Utopia\App;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -60,8 +62,6 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
-use Utopia\Agents\Agent;
-use Utopia\Agents\Adapters\Ollama;
 
 // Runtime Execution
 App::setResource('log', fn () => new Log());
@@ -1173,5 +1173,6 @@ App::setResource('transactionState', function (Database $dbForProject, callable 
 App::setResource('embeddingAgent', function () {
     // TODO: ollama endpoint should be taken from env in cloud(for autoscaling)
     $adapter = new Ollama();
+    $adapter->setEndpoint('http://ollama:11434/api/embed');
     return new Agent($adapter);
 });
