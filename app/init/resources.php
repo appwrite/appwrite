@@ -485,7 +485,6 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
-        $database->setAuthorization($authorization);
         $databases[$dsn->getHost()] = $database;
         $configure($database);
 
