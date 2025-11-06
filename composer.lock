@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "906a58683ad0d15b8899368f6b5a4279",
+    "content-hash": "8bd5b13070de55ea9f32489879056da6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3895,16 +3895,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "3.1.5",
+            "version": "dev-feat-custom-type",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "76568b81f25d89fc1e0c53f0370f139130eeb939"
+                "reference": "a0ddee09f19fb4f8fa0e13b2599957564f45ea25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/76568b81f25d89fc1e0c53f0370f139130eeb939",
-                "reference": "76568b81f25d89fc1e0c53f0370f139130eeb939",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a0ddee09f19fb4f8fa0e13b2599957564f45ea25",
+                "reference": "a0ddee09f19fb4f8fa0e13b2599957564f45ea25",
                 "shasum": ""
             },
             "require": {
@@ -3977,10 +3977,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/3.1.5",
+                "source": "https://github.com/utopia-php/database/tree/feat-custom-type",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2025-11-05T10:17:55+00:00"
+            "time": "2025-11-06T02:01:40+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -9037,13 +9037,15 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-feat-external-type",
+            "version": "dev-feat-custom-type",
             "alias": "3.1.99",
             "alias_normalized": "3.1.99.0"
         }
     ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
