@@ -1,3 +1,58 @@
+# Version 1.7.5
+
+## What's Changed
+
+### Fixes
+
+* Fix an issue with parsing API keys in [3f1eb35](https://github.com/appwrite/appwrite/commit/3f1eb35a1c595c8707bf3f2058599cea85916df6)
+
+# Version 1.7.4
+
+## What's Changed
+
+### Notable changes
+
+* Update console image to version 6.0.13 in [#9891](https://github.com/appwrite/appwrite/pull/9891)
+
+### Fixes
+
+* Fix createDeployment chunk upload in [#9886](https://github.com/appwrite/appwrite/pull/9886)
+
+### Miscellaneous
+
+* Update version from 1.7.3 to 1.7.4 in [#9893](https://github.com/appwrite/appwrite/pull/9893)
+
+# Version 1.7.3
+
+## What's Changed
+
+### Notable changes
+
+* Allow unlimited deployment size in [#9866](https://github.com/appwrite/appwrite/pull/9866)
+* Bump console to version 6.0.11 in [#9881](https://github.com/appwrite/appwrite/pull/9881)
+
+### Fixes
+
+* Send deploymentResourceType in rules verification in [#9859](https://github.com/appwrite/appwrite/pull/9859)
+* Fix CNAME validation in [#9861](https://github.com/appwrite/appwrite/pull/9861)
+* Fix bucket not included in path in [#9864](https://github.com/appwrite/appwrite/pull/9864)
+* Fix URL for view logs in github comment in [#9875](https://github.com/appwrite/appwrite/pull/9875)
+* Set owner and region while migrating rules in [#9856](https://github.com/appwrite/appwrite/pull/9856)
+* Remove _APP_DEFAULT_REGION because it is not a valid env var in [#9883](https://github.com/appwrite/appwrite/pull/9883)
+
+### Miscellaneous
+
+* Only load error page for development mode in [#9860](https://github.com/appwrite/appwrite/pull/9860)
+* Make max deployment and build size configurable in [#9863](https://github.com/appwrite/appwrite/pull/9863)
+* Update flutter_web_auth_2 docs to match 4.x in [#9858](https://github.com/appwrite/appwrite/pull/9858)
+* Use unique filename for health check in [#9842](https://github.com/appwrite/appwrite/pull/9842)
+* Added encrypt property in the attribute string response model in [#9868](https://github.com/appwrite/appwrite/pull/9868)
+* Add sequence in [#9865](https://github.com/appwrite/appwrite/pull/9865)
+* Add builds worker group in [#9873](https://github.com/appwrite/appwrite/pull/9873)
+* updated errro for the string encryption in [#9878](https://github.com/appwrite/appwrite/pull/9878)
+* Revert "Add sequence" in [#9879](https://github.com/appwrite/appwrite/pull/9879)
+* Prepare 1.7.3 release in [#9882](https://github.com/appwrite/appwrite/pull/9882)
+
 # Version 1.6.2
 
 ## What's Changed
