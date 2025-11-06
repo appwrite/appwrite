@@ -8,12 +8,25 @@ on:
 
 permissions: read-all
 
+# Add stricter error-detection patterns so issue text doesn't trigger agent error detection.
+# After merging this file run `gh aw compile` to regenerate the lock file.
+env:
+  GH_AW_ERROR_PATTERNS: >-
+    [
+      {"id":"gh-action-error","pattern":"^::(error)(?:\\\\s+[^:]*)?::(.+)","level_group":1,"message_group":2,"description":"GitHub Actions workflow command - error"},
+      {"id":"gh-action-warning","pattern":"^::(warning)(?:\\\\s+[^:]*)?::(.+)","level_group":1,"message_group":2,"description":"GitHub Actions workflow command - warning"},
+      {"id":"bracketed-level","pattern":"^\\[(ERROR|CRITICAL|WARNING|WARN)\\]\\s+(.+)","level_group":1,"message_group":2,"description":"Bracketed log level at start of line"},
+      {"id":"timestamped-copilot","pattern":"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z\\s+\\[(ERROR|WARN|WARNING|CRITICAL)\\]\\s+(.+)","level_group":1,"message_group":3,"description":"Timestamped Copilot CLI messages"}
+    ]
+
 network: defaults
 
 safe-outputs:
   add-labels:
     max: 5
+    target: "*"
   add-comment:
+    target: "*"
 
 tools:
   web-fetch:
