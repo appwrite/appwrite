@@ -7,6 +7,6 @@
     <li>Manually re-trigger the deployment from the Appwrite Console</li>
 </ol>
 
-<p style="margin-bottom: 0px;">If you wish to stop receiving these emails, please unsubscribe <a rel="noopener" target="_blank" href="{{alertsUrl}}">here</a></p>
 <p style="margin-bottom: 0px;">{{thanks}}</p>
 <p style="margin-top: 0px;">{{signature}}</p>
+<p style="font-size: 12px; margin-top: 24px; margin-bottom: 0px;">If you wish to stop receiving these emails, please unsubscribe <a rel="noopener" target="_blank" href="{{alertsUrl}}">here</a></p>

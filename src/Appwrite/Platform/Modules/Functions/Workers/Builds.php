@@ -315,8 +315,6 @@ class Builds extends Action
         }
 
         try {
-            throw new \Exception('test error from hmacr');
-
             if (!$isVcsEnabled) {
                 // Non-VCS + Template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
