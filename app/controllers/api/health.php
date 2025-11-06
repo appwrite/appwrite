@@ -132,8 +132,9 @@ App::get('/v1/health/db')
         }
 
         if (!empty($failures)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
-        }
+            $output=  $failures;
+            //throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
+        } 
 
         $response->dynamic(new Document([
             'statuses' => $output,
