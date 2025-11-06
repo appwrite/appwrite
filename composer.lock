@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "83cdce512b67057f3f2562279a003bf4",
+    "content-hash": "f77849b9786698b7a38c6dd132534fdc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3933,38 +3933,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "php -d memory_limit=2G ./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "php -d memory_limit=2G ./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3977,8 +3946,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/3.2.0",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/3.2.0"
             },
             "time": "2025-11-06T05:41:54+00:00"
         },
@@ -4223,35 +4192,7 @@
                     "Utopia\\Emails\\": "src/Emails"
                 }
             },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse"
-                ],
-                "import": [
-                    "php import.php"
-                ],
-                "import:all": [
-                    "php import.php all --commit=true"
-                ],
-                "import:disposable": [
-                    "php import.php disposable --commit=true"
-                ],
-                "import:free": [
-                    "php import.php free --commit=true"
-                ],
-                "import:stats": [
-                    "php import.php stats"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4263,19 +4204,19 @@
             ],
             "description": "Utopia Emails library is simple and lite library for parsing and validating email addresses. This library is aiming to be as simple and easy to learn and use.",
             "keywords": [
+                "RFC5322",
                 "email",
                 "emails",
                 "framework",
                 "parsing",
                 "php",
-                "rfc5322",
                 "upf",
                 "utopia",
                 "validation"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/emails/tree/0.6.2",
-                "issues": "https://github.com/utopia-php/emails/issues"
+                "issues": "https://github.com/utopia-php/emails/issues",
+                "source": "https://github.com/utopia-php/emails/tree/0.6.2"
             },
             "time": "2025-10-28T16:08:17+00:00"
         },
@@ -4603,25 +4544,7 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Migration"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4634,8 +4557,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/1.3.3",
-                "issues": "https://github.com/utopia-php/migration/issues"
+                "issues": "https://github.com/utopia-php/migration/issues",
+                "source": "https://github.com/utopia-php/migration/tree/1.3.3"
             },
             "time": "2025-10-28T04:02:08+00:00"
         },
@@ -5267,20 +5190,7 @@
                     "Utopia\\": "src/"
                 }
             },
-            "scripts": {
-                "lint": [
-                    "vendor/bin/pint --test"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ],
-                "check": [
-                    "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 512M"
-                ],
-                "test": [
-                    "vendor/bin/phpunit --configuration phpunit.xml"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5292,8 +5202,8 @@
                 "validator"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/validators/tree/0.0.2",
-                "issues": "https://github.com/utopia-php/validators/issues"
+                "issues": "https://github.com/utopia-php/validators/issues",
+                "source": "https://github.com/utopia-php/validators/tree/0.0.2"
             },
             "time": "2025-10-20T21:52:28+00:00"
         },
