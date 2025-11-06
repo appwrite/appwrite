@@ -5,7 +5,7 @@
 #
 # Source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
 #
-# Effective stop-time: 2025-12-06 22:33:07
+# Effective stop-time: 2025-12-06 23:05:45
 #
 # Job Dependency Graph:
 # ```mermaid
@@ -2147,7 +2147,7 @@ jobs:
           
           5. Next, use the GitHub tools to gather additional context about the issue:
           
-             - Fetch the list of labels available in this repository using the `list_labels` GitHub tool. This will give you the labels you can use for triaging issues.
+             - Fetch the list of labels available in this repository using the `list_label` tool. This will give you the labels you can use for triaging issues.
              - Fetch any comments on the issue using the `get_issue_comments` tool
              - **Search for duplicate and related issues**: Use the `search_issues` tool to find similar issues by searching for key terms from the issue title and description. Look for both open and closed issues that might be related or duplicates.
           
@@ -4938,7 +4938,7 @@ jobs:
         id: check_stop_time
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
-          GH_AW_STOP_TIME: 2025-12-06 22:33:07
+          GH_AW_STOP_TIME: 2025-12-06 23:05:45
           GH_AW_WORKFLOW_NAME: "Agentic Triage"
         with:
           script: |

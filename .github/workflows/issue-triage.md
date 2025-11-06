@@ -51,7 +51,7 @@ You're a triage assistant for GitHub issues. Your task is to analyze issues crea
 
 5. Next, use the GitHub tools to gather additional context about the issue:
 
-   - Fetch the list of labels available in this repository using the `list_labels` GitHub tool. This will give you the labels you can use for triaging issues.
+   - Fetch the list of labels available in this repository using the `list_label` tool. This will give you the labels you can use for triaging issues.
    - Fetch any comments on the issue using the `get_issue_comments` tool
    - **Search for duplicate and related issues**: Use the `search_issues` tool to find similar issues by searching for key terms from the issue title and description. Look for both open and closed issues that might be related or duplicates.
 
