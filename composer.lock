@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ac89d83b4f8d0d03065a9cd569432546",
+    "content-hash": "f9b66abe46119ae12f0cf2becc8bc299",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3500,12 +3500,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
-                "reference": "d59a69bde505670c8434921659d116ea45b2acd1"
+                "reference": "b448a4d06374c7a538c9495ac69a1a8f8e526823"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/d59a69bde505670c8434921659d116ea45b2acd1",
-                "reference": "d59a69bde505670c8434921659d116ea45b2acd1",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/b448a4d06374c7a538c9495ac69a1a8f8e526823",
+                "reference": "b448a4d06374c7a538c9495ac69a1a8f8e526823",
                 "shasum": ""
             },
             "require": {
@@ -3546,7 +3546,7 @@
                 "issues": "https://github.com/utopia-php/agents/issues",
                 "source": "https://github.com/utopia-php/agents/tree/feat-embeddings"
             },
-            "time": "2025-10-30T12:38:42+00:00"
+            "time": "2025-11-06T07:53:14+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -3893,12 +3893,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9a96110abbec4bd841f3eacc473471a37bebf9be"
+                "reference": "9a0cea65abbfb325506cb1d619db60dac7ee7e55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9a96110abbec4bd841f3eacc473471a37bebf9be",
-                "reference": "9a96110abbec4bd841f3eacc473471a37bebf9be",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9a0cea65abbfb325506cb1d619db60dac7ee7e55",
+                "reference": "9a0cea65abbfb325506cb1d619db60dac7ee7e55",
                 "shasum": ""
             },
             "require": {
@@ -3927,38 +3927,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "php -d memory_limit=2G ./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "php -d memory_limit=2G ./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3971,23 +3940,23 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/var_object",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/var_object"
             },
-            "time": "2025-11-03T05:12:58+00:00"
+            "time": "2025-11-06T09:02:12+00:00"
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.2.1",
+            "version": "0.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "89f96e864220de13800cf398a1f1686a85401eaa"
+                "reference": "9a41be5f21efe2d865de79b08dff94fff85ce5e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/89f96e864220de13800cf398a1f1686a85401eaa",
-                "reference": "89f96e864220de13800cf398a1f1686a85401eaa",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/9a41be5f21efe2d865de79b08dff94fff85ce5e9",
+                "reference": "9a41be5f21efe2d865de79b08dff94fff85ce5e9",
                 "shasum": ""
             },
             "require": {
@@ -4017,9 +3986,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.2.1"
+                "source": "https://github.com/utopia-php/detector/tree/0.2.2"
             },
-            "time": "2025-10-27T13:38:33+00:00"
+            "time": "2025-10-31T12:43:31+00:00"
         },
         {
             "name": "utopia-php/dns",
@@ -5458,16 +5427,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.4.16",
+            "version": "1.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "08f839443f678208eb56a6c5a7456dd632adfc9a"
+                "reference": "cd712674e34136f706e9170641ed6f4ce160e772"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/08f839443f678208eb56a6c5a7456dd632adfc9a",
-                "reference": "08f839443f678208eb56a6c5a7456dd632adfc9a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cd712674e34136f706e9170641ed6f4ce160e772",
+                "reference": "cd712674e34136f706e9170641ed6f4ce160e772",
                 "shasum": ""
             },
             "require": {
@@ -5503,9 +5472,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.4.16"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.1"
             },
-            "time": "2025-10-29T08:39:55+00:00"
+            "time": "2025-11-04T09:55:47+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -6158,24 +6127,24 @@
         },
         {
             "name": "phpbench/container",
-            "version": "2.2.2",
+            "version": "2.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpbench/container.git",
-                "reference": "a59b929e00b87b532ca6d0edd8eca0967655af33"
+                "reference": "0c7b2d36c1ea53fe27302fb8873ded7172047196"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpbench/container/zipball/a59b929e00b87b532ca6d0edd8eca0967655af33",
-                "reference": "a59b929e00b87b532ca6d0edd8eca0967655af33",
+                "url": "https://api.github.com/repos/phpbench/container/zipball/0c7b2d36c1ea53fe27302fb8873ded7172047196",
+                "reference": "0c7b2d36c1ea53fe27302fb8873ded7172047196",
                 "shasum": ""
             },
             "require": {
                 "psr/container": "^1.0|^2.0",
-                "symfony/options-resolver": "^4.2 || ^5.0 || ^6.0 || ^7.0"
+                "symfony/options-resolver": "^4.2 || ^5.0 || ^6.0 || ^7.0 || ^8.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.16",
+                "php-cs-fixer/shim": "^3.89",
                 "phpstan/phpstan": "^0.12.52",
                 "phpunit/phpunit": "^8"
             },
@@ -6203,9 +6172,9 @@
             "description": "Simple, configurable, service container.",
             "support": {
                 "issues": "https://github.com/phpbench/container/issues",
-                "source": "https://github.com/phpbench/container/tree/2.2.2"
+                "source": "https://github.com/phpbench/container/tree/2.2.3"
             },
-            "time": "2023-10-30T13:38:26+00:00"
+            "time": "2025-11-06T09:05:13+00:00"
         },
         {
             "name": "phpbench/phpbench",

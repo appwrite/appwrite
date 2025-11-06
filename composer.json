@@ -30,16 +30,6 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
-    "repositories": [
-        { 
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
-        },
-        { 
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/agents"
-        }
-    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
