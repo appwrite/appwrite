@@ -21725,7 +21725,7 @@
                 "tags": [
                     "sites"
                 ],
-                "description": "Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the function's deployment to use your new deployment ID.",
+                "description": "Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the site's deployment to use your new deployment ID.",
                 "responses": {
                     "202": {
                         "description": "Deployment",
@@ -21746,7 +21746,7 @@
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the function's deployment to use your new deployment ID.",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterCreate a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the site's deployment to use your new deployment ID.",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",

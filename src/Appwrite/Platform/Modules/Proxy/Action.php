@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS;
 use Appwrite\Platform\Action as PlatformAction;
 use Utopia\Database\Document;
+use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
 use Utopia\System\System;
@@ -44,17 +45,17 @@ class Action extends PlatformAction
         // Ensure CAA won't block certificate issuance
         if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
             $validationStart = \microtime(true);
-            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), Record::TYPE_CAA);
             if (!$validator->isValid($domain->get())) {
                 if (!\is_null($log)) {
                     $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
                     $log->addTag('dnsDomain', $domain->get());
 
-                    $error = $validator->getLogs();
+                    $error = $validator->getDescription();
                     $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
                 }
 
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $validator->getDescription());
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'Domain verification failed because CAA records do not allow Appwrite\'s certificate issuer.');
             }
         }
 
@@ -89,8 +90,8 @@ class Action extends PlatformAction
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
-        if (!is_null($targetCNAME)) {
-            $validator = new $dnsValidatorClass($targetCNAME->get(), DNS::RECORD_CNAME);
+        if (!is_null($targetCNAME) && $targetCNAME->isKnown() && !$targetCNAME->isTest()) {
+            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
@@ -99,7 +100,7 @@ class Action extends PlatformAction
         }
 
         if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
+            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_A', ''), Record::TYPE_A);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
@@ -108,7 +109,7 @@ class Action extends PlatformAction
         }
 
         if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
+            $validator = new $dnsValidatorClass(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), Record::TYPE_AAAA);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
