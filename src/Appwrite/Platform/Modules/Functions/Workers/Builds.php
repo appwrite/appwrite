@@ -1659,6 +1659,11 @@ class Builds extends Action
      */
     private function notifyError(Document $project, Document $resource, Document $deployment, array $plan, Database $dbForPlatform, Mail $queueForMails): void
     {
+        if (!$this->shouldNotifyError($project, $dbForPlatform)) {
+            Console::warning('Deployment failure notification disabled for project ' . $project->getId());
+            return;
+        }
+
         $memberships = $dbForPlatform->find('memberships', [
             Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
             Query::limit(APP_LIMIT_SUBQUERY)
@@ -1730,5 +1735,17 @@ class Builds extends Action
             }
 
         }
+    }
+
+    /**
+     * Determine if we should notify the error to the team
+     *
+     * @param Document $project
+     * @param Database $dbForPlatform
+     * @return bool
+     */
+    protected function shouldNotifyError(Document $project, Database $dbForPlatform): bool
+    {
+        return true;
     }
 }
