@@ -105,11 +105,11 @@ class Create extends CreateDocumentAction
 
         // Validate and process each document
         $availableModels = [];
-        if (method_exists($embeddingAgent, 'getAdapter') && method_exists($embeddingAgent->getAdapter(), 'getModels')) {
-            $availableModels = $embeddingAgent->getAdapter()->getModels();
-        }
+        $availableModels = $embeddingAgent->getAdapter()->getModels();
 
         $results = [];
+
+        // validating all documents first
         foreach ($documents as $index => $item) {
             if (!\is_array($item)) {
                 throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Invalid item at index ' . $index);
@@ -127,10 +127,9 @@ class Create extends CreateDocumentAction
             if (!empty($availableModels) && !\in_array($model, $availableModels, true)) {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Unknown embedding model: ' . $model);
             }
-
-            if (method_exists($embeddingAgent, 'getAdapter') && method_exists($embeddingAgent->getAdapter(), 'setModel')) {
-                $embeddingAgent->getAdapter()->setModel($model);
-            }
+        }
+        foreach ($documents as $index => $item) {
+            $embeddingAgent->getAdapter()->setModel($model);
 
             $embedResult = $embeddingAgent->embed($text);
             $vector = $embedResult['embedding'] ?? [];
@@ -141,8 +140,8 @@ class Create extends CreateDocumentAction
                 'dimensions' => $dimensions,
                 'embeddings' => $vector,
             ]);
-        }
 
+        }
         $list = new Document([
             'embeddings' => array_map(fn ($d) => $d, $results),
             'total' => \count($results),
