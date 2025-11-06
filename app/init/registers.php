@@ -119,7 +119,7 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
-    $fallbackForVECTORDB = 'db_main=' . AppwriteURL::unparse([
+    $fallbackForVectorDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORDB', 'postgresql'),
         'host' => System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql'),
         'port' => System::getEnv('_APP_DB_PORT_VECTORDB', '5432'),
@@ -156,7 +156,7 @@ $register->set('pools', function () {
         ],
         'vectordb' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORDB', $fallbackForVECTORDB),
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORDB', $fallbackForVectorDB),
             'multiple' => true,
             'schemes' => ['postgresql'],
         ],
@@ -399,6 +399,9 @@ $register->set('smtp', function () {
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2024-09.mmdb');
+});
+$register->set('embeddingAgent', function () {
+    return System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');

@@ -1,8 +1,10 @@
-FROM ollama/ollama:latest
+FROM ollama/ollama:0.12.7
 
 # Preload specific models
-ENV MODELS="embeddinggemma"
-ENV OLLAMA_KEEP_ALIVE=24h
+ARG MODELS
+# needed to set in the environment
+ARG OLLAMA_KEEP_ALIVE
+ENV OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-24h}
 
 # Pre-pull models at build time for Docker layer caching
 RUN ollama serve & \

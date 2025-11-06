@@ -25,7 +25,7 @@ class Create extends CreateDocumentAction
 {
     public static function getName(): string
     {
-        return 'createVectorDBDocument';
+        return 'createTextEmbedding';
     }
 
     protected function getResponseModel(): string
@@ -144,7 +144,7 @@ class Create extends CreateDocumentAction
         }
 
         $list = new Document([
-            'embeddings' => array_map(fn($d) => $d, $results),
+            'embeddings' => array_map(fn ($d) => $d, $results),
             'total' => \count($results),
         ]);
 

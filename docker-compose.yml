@@ -276,6 +276,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - postgresql
@@ -751,6 +752,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - postgresql
@@ -1125,55 +1127,55 @@ services:
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
 
-  # mongodb:
-  #   image: mongo:8.0.10
-  #   container_name: appwrite-mongodb
-  #   <<: *x-logging
-  #   networks:
-  #     - appwrite
-  #   volumes:
-  #     - appwrite-mongodb:/data/db
-  #     - appwrite-mongodb-keyfile:/data/keyfile
-  #     - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-  #     - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
-  #   ports:
-  #     - "27017:27017"
-  #   environment:
-  #     - MONGO_INITDB_ROOT_USERNAME=root
-  #     - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-  #     - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
-  #     - MONGO_INITDB_USERNAME=${_APP_DB_USER}
-  #     - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
-  #   entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
-  #   healthcheck:
-  #     test: |
-  #       bash -c "
-  #         if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
-  #           exit 0
-  #         else
-  #           mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
-  #             rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]})
-  #           \" 2>/dev/null || exit 1
-  #         fi
-  #       "
-  #     interval: 10s
-  #     timeout: 10s
-  #     retries: 10
-  #     start_period: 30s
+  mongodb:
+    image: mongo:8.0.10
+    container_name: appwrite-mongodb
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db
+      - appwrite-mongodb-keyfile:/data/keyfile
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+    healthcheck:
+      test: |
+        bash -c "
+          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
+            exit 0
+          else
+            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]})
+            \" 2>/dev/null || exit 1
+          fi
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
-  # appwrite-mongo-express:
-  #   image: mongo-express
-  #   container_name: appwrite-mongo-express
-  #   networks:
-  #     - appwrite
-  #   ports:
-  #     - "8082:8081"
-  #   environment:
-  #     ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
-  #     ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
-  #     ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
-  #   depends_on:
-  #     - mongodb
+  appwrite-mongo-express:
+    image: mongo-express
+    container_name: appwrite-mongo-express
+    networks:
+      - appwrite
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
+      ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
+    depends_on:
+      - mongodb
 
 
   postgresql:
@@ -1198,17 +1200,17 @@ services:
     build: 
       context: .
       dockerfile: ollama.dockerfile
+      args:
+        MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
+        # duration to keep model in memory
+        OLLAMA_KEEP_ALIVE: 24h
     container_name: ollama
     ports:
       - "11434:11434"
     restart: unless-stopped
     # persistent for caching models across restarts and preloading
     volumes:
-      - ollama_models:/root/.ollama
-    environment:
-      - MODELS=${OLLAMA_MODELS:-embeddinggemma}
-      # duration to keep model in memory
-      - OLLAMA_KEEP_ALIVE=24h
+      - _APP_EMBEDDING_MODELS:/root/.ollama
     networks:
       - appwrite
 
@@ -1310,8 +1312,8 @@ networks:
 
 volumes:
   appwrite-mariadb:
-  # appwrite-mongodb:
-  # appwrite-mongodb-keyfile:
+  appwrite-mongodb:
+  appwrite-mongodb-keyfile:
   appwrite-postgresql:
   appwrite-redis:
   appwrite-cache:
@@ -1322,4 +1324,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
-  ollama_models:
+  _APP_EMBEDDING_MODELS:

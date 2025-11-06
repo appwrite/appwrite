@@ -684,8 +684,10 @@ class Event
                 ];
                 break;
             case 'documentsdb':
+            case 'vectordb':
+                // sending the type itself(eg: documentsdb, vectordb)
                 $eventMap = [
-                    'databases'    => 'documentsdb'
+                    'databases'    => $database->getAttribute('type')
                 ];
                 break;
         }

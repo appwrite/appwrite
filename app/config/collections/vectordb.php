@@ -106,7 +106,6 @@ return [
                 '$id' => ID::custom('embeddings'),
                 'type' => Database::VAR_VECTOR,
                 'required' => true,
-                'size' => 128,
                 'signed' => false,
                 'array' => false,
                 'filters' => [],

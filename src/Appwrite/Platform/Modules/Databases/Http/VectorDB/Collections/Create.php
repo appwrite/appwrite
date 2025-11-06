@@ -140,22 +140,11 @@ class Create extends CollectionAction
                 attributes:$attributes,
                 indexes:$indexes
             );
-        } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
-        } catch (IndexException) {
-            throw new Exception($this->getInvalidIndexException());
-        } catch (LimitException) {
-            throw new Exception($this->getLimitException());
-        }
-
-        // Create attribute metadata documents in the attributes table
-        // This is necessary so that indexes can find the attributes when they're created
-        foreach ($collections['defaultAttributes'] as $attributeConfig) {
-            $key = \is_string($attributeConfig['$id']) ? $attributeConfig['$id'] : (string)$attributeConfig['$id'];
-            $size = $key === 'embeddings' ? $dimensions : ($attributeConfig['size'] ?? 0);
-
-            try {
-                $attributeDoc = new Document([
+            // Create attribute metadata documents in the attributes table
+            // This is necessary so that indexes can find the attributes when they're created
+            $attributeDocs = array_map(function ($attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimensions) {
+                $key = \is_string($attributeConfig['$id']) ? $attributeConfig['$id'] : (string) $attributeConfig['$id'];
+                return new Document([
                     '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
                     'key' => $key,
                     'databaseInternalId' => $database->getSequence(),
@@ -164,7 +153,7 @@ class Create extends CollectionAction
                     'collectionId' => $collectionId,
                     'type' => $attributeConfig['type'],
                     'status' => 'available',
-                    'size' => $size,
+                    'size' => $dimensions,
                     'required' => $attributeConfig['required'] ?? false,
                     'signed' => $attributeConfig['signed'] ?? false,
                     'default' => $attributeConfig['default'] ?? null,
@@ -174,11 +163,14 @@ class Create extends CollectionAction
                     'filters' => $attributeConfig['filters'] ?? [],
                     'options' => $attributeConfig['options'] ?? [],
                 ]);
-
-                $dbForProject->createDocument('attributes', $attributeDoc);
-            } catch (DuplicateException) {
-                // Attribute already exists, skip
-            }
+            }, $collections['defaultAttributes']);
+            $dbForProject->createDocuments('attributes', $attributeDocs);
+        } catch (DuplicateException) {
+            throw new Exception($this->getDuplicateException());
+        } catch (IndexException) {
+            throw new Exception($this->getInvalidIndexException());
+        } catch (LimitException) {
+            throw new Exception($this->getLimitException());
         }
 
         $queueForEvents

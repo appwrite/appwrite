@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Bulk
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Get as GetDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Text\Create as CreateTextEmbeddings;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\XList as ListDocuments;
@@ -29,7 +30,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorDB\Update as UpdateVectorData
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Usage\Get as GetVectorDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Usage\XList as ListVectorDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\XList as ListVectorDatabases;
-use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Text\Create as CreateTextEmbeddings;
 use Utopia\Platform\Service;
 
 class VectorDB extends Base
@@ -87,7 +87,8 @@ class VectorDB extends Base
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
     }
 
-    private function registerEmbeddingActions(Service $service):void{
-        $service->addAction(CreateTextEmbeddings::getName(),new CreateTextEmbeddings());
+    private function registerEmbeddingActions(Service $service): void
+    {
+        $service->addAction(CreateTextEmbeddings::getName(), new CreateTextEmbeddings());
     }
 }

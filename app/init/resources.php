@@ -1170,9 +1170,8 @@ App::setResource('transactionState', function (Database $dbForProject, callable 
     return new TransactionState($dbForProject, $getDatabasesDB);
 }, ['dbForProject', 'getDatabasesDB']);
 
-App::setResource('embeddingAgent', function () {
-    // TODO: ollama endpoint should be taken from env in cloud(for autoscaling)
+App::setResource('embeddingAgent', function ($register) {
     $adapter = new Ollama();
-    $adapter->setEndpoint('http://ollama:11434/api/embed');
+    $adapter->setEndpoint($register->get('embeddingAgent'));
     return new Agent($adapter);
-});
+}, ['register']);

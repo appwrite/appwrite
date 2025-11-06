@@ -63,6 +63,7 @@ use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
+use Appwrite\Utopia\Response\Model\Embedding;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -144,6 +145,7 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
+use Appwrite\Utopia\Response\Model\VectorDBCollection;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
@@ -500,10 +502,10 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Embedding list', self::MODEL_EMBEDDING_LIST, 'embeddings', self::MODEL_EMBEDDING))
             // Entities
             ->setModel(new Database())
-            ->setModel(new \Appwrite\Utopia\Response\Model\Embedding())
+            ->setModel(new Embedding())
             // Collection API Models
             ->setModel(new Collection())
-            ->setModel(new \Appwrite\Utopia\Response\Model\VectorDBCollection())
+            ->setModel(new VectorDBCollection())
             ->setModel(new Attribute())
             ->setModel(new AttributeList())
             ->setModel(new AttributeString())
