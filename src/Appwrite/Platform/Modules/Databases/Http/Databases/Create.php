@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Databases\Services\Registry\TablesDB;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -120,12 +119,6 @@ class Create extends Action
 
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
-            // legacy and tablesdb are created on the same project database
-            // need to check for multitype databases
-            if ($this->getDatabaseType() !== TABLESDB && $this->getDatabaseType() !== 'legacy') {
-                $dbFordatabases = $getDatabasesDB($this->getDatabaseDSN($project));
-                $dbFordatabases->create();
-            }
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         } catch (IndexException) {
