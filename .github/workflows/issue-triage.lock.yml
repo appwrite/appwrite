@@ -5,7 +5,7 @@
 #
 # Source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
 #
-# Effective stop-time: 2025-12-06 23:05:45
+# Effective stop-time: 2025-12-06 23:42:23
 #
 # Job Dependency Graph:
 # ```mermaid
@@ -2081,7 +2081,7 @@ jobs:
                   "-e",
                   "GITHUB_READ_ONLY=1",
                   "-e",
-                  "GITHUB_TOOLSETS=default",
+                  "GITHUB_TOOLSETS=default,labels",
                   "ghcr.io/github/github-mcp-server:v0.20.1"
                 ],
                 "tools": ["*"],
@@ -4938,7 +4938,7 @@ jobs:
         id: check_stop_time
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
-          GH_AW_STOP_TIME: 2025-12-06 23:05:45
+          GH_AW_STOP_TIME: 2025-12-06 23:42:23
           GH_AW_WORKFLOW_NAME: "Agentic Triage"
         with:
           script: |

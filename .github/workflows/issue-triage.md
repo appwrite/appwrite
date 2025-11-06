@@ -31,6 +31,10 @@ safe-outputs:
 tools:
   web-fetch:
   web-search:
+  github:
+    toolsets:
+      - default
+      - labels
 
 timeout_minutes: 10
 source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
