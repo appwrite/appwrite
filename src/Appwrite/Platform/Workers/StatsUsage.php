@@ -138,6 +138,7 @@ class StatsUsage extends Action
         $this->getLogsDB = $getLogsDB;
         $this->register = $register;
         $payload = $message->getPayload() ?? [];
+        Console::log('Payload: ' . json_encode($payload));
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
