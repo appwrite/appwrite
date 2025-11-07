@@ -5,7 +5,7 @@
 #
 # Source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
 #
-# Effective stop-time: 2025-12-07 20:00:16
+# Effective stop-time: 2025-12-07 20:16:16
 #
 # Job Dependency Graph:
 # ```mermaid
@@ -2130,7 +2130,7 @@ jobs:
         run: |
           PROMPT_DIR="$(dirname "$GH_AW_PROMPT")"
           mkdir -p "$PROMPT_DIR"
-          cat > "$GH_AW_PROMPT" << PROMPT_EOF
+          cat > "$GH_AW_PROMPT" << 'PROMPT_EOF'
           # Agentic Triage
           
           
@@ -2149,7 +2149,10 @@ jobs:
           
              - Fetch the list of labels available in this repository using the `list_label` tool. This will give you the labels you can use for triaging issues.
              - Fetch any comments on the issue using the `get_issue_comments` tool
-             - **Search for duplicate and related issues**: Use the `search_issues` tool to find similar issues by searching for key terms from the issue title and description. Look for both open and closed issues that might be related or duplicates.
+             - **Search for duplicate and related issues (repo first, then org-wide)**:
+               - First search in this repository using the `search_issues` tool with a query like: `repo:${GH_AW_EXPR_D892F163} is:issue (is:open OR is:closed) <key terms>`.
+               - Then perform an org-wide search across the entire Appwrite organization using: `org:appwrite is:issue (is:open OR is:closed) <key terms>`.
+               - Prefer linking to OPEN issues when identifying potential duplicates; include CLOSED ones as related history when useful.
           
           6. Analyze the issue content, considering:
           
@@ -2168,7 +2171,8 @@ jobs:
              - Be specific but comprehensive
              - Select priority labels if you can determine urgency (high-priority, med-priority, or low-priority)
              - Consider platform labels (android, ios) if applicable
-             - Search for similar issues, and if you find similar issues consider using a "duplicate" label if appropriate. Only do so if the issue is a duplicate of another OPEN issue.
+            - Search for similar issues. If you find a duplicate of another OPEN issue in THIS repository, you may use a "duplicate" label (if available) and reference the canonical issue.
+            - If the closest match is in another repository within the Appwrite org, do NOT mark as duplicate here; instead, link it in your comment under a "Cross‑repo related issues" section.
              - Only select labels from the provided list above
              - It's okay to not add any labels if none are clearly applicable
           
@@ -2181,7 +2185,9 @@ jobs:
           10. Add an issue comment to the issue with your analysis:
              - Start with "🎯 Agentic Issue Triage"
              - Provide a brief summary of the issue
-             - **If duplicate or related issues were found**, add a section listing them with links (e.g., "### 🔗 Potentially Related Issues" followed by a bullet list of related issues with their titles and links)
+             - **If duplicate or related issues were found**, add sections listing them with links:
+               - "### 🔗 Potentially Related Issues (this repo)" – bullet list of same‑repo issues with titles and links
+               - If applicable: "### 🌐 Cross‑repo related issues (org: appwrite)" – bullet list including `owner/repo#number` with titles and links
              - Mention any relevant details that might help the team understand the issue better
              - Include any debugging strategies or reproduction steps if applicable
              - Suggest resources or links that might be helpful for resolving the issue or learning skills related to the issue or the particular area of the codebase affected by it
@@ -2298,10 +2304,11 @@ jobs:
           Use this context information to understand the scope of your work.
           
           PROMPT_EOF
-      - name: Render template conditionals
+      - name: Interpolate variables and render templates
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
+          GH_AW_EXPR_D892F163: ${{ github.repository }}
         with:
           script: |
             const fs = require("fs");
@@ -2309,25 +2316,48 @@ jobs:
               const v = expr.trim().toLowerCase();
               return !(v === "" || v === "false" || v === "0" || v === "null" || v === "undefined");
             }
+            function interpolateVariables(content, variables) {
+              let result = content;
+              for (const [varName, value] of Object.entries(variables)) {
+                const pattern = new RegExp(`\\$\\{${varName}\\}`, "g");
+                result = result.replace(pattern, value);
+              }
+              return result;
+            }
             function renderMarkdownTemplate(markdown) {
               return markdown.replace(/{{#if\s+([^}]+)}}([\s\S]*?){{\/if}}/g, (_, cond, body) => (isTruthy(cond) ? body : ""));
             }
-            function main() {
+            async function main() {
               try {
                 const promptPath = process.env.GH_AW_PROMPT;
                 if (!promptPath) {
                   core.setFailed("GH_AW_PROMPT environment variable is not set");
-                  process.exit(1);
+                  return;
                 }
-                const markdown = fs.readFileSync(promptPath, "utf8");
-                const hasConditionals = /{{#if\s+[^}]+}}/.test(markdown);
-                if (!hasConditionals) {
+                let content = fs.readFileSync(promptPath, "utf8");
+                const variables = {};
+                for (const [key, value] of Object.entries(process.env)) {
+                  if (key.startsWith("GH_AW_EXPR_")) {
+                    variables[key] = value || "";
+                  }
+                }
+                const varCount = Object.keys(variables).length;
+                if (varCount > 0) {
+                  core.info(`Found ${varCount} expression variable(s) to interpolate`);
+                  content = interpolateVariables(content, variables);
+                  core.info(`Successfully interpolated ${varCount} variable(s) in prompt`);
+                } else {
+                  core.info("No expression variables found, skipping interpolation");
+                }
+                const hasConditionals = /{{#if\s+[^}]+}}/.test(content);
+                if (hasConditionals) {
+                  core.info("Processing conditional template blocks");
+                  content = renderMarkdownTemplate(content);
+                  core.info("Template rendered successfully");
+                } else {
                   core.info("No conditional blocks found in prompt, skipping template rendering");
-                  process.exit(0);
                 }
-                const rendered = renderMarkdownTemplate(markdown);
-                fs.writeFileSync(promptPath, rendered, "utf8");
-                core.info("Template rendered successfully");
+                fs.writeFileSync(promptPath, content, "utf8");
               } catch (error) {
                 core.setFailed(error instanceof Error ? error.message : String(error));
               }
@@ -3447,9 +3477,10 @@ jobs:
           GH_AW_AGENT_OUTPUT: /tmp/gh-aw/.copilot/logs/
         with:
           script: |
-            function main() {
+            function runLogParser(options) {
               const fs = require("fs");
               const path = require("path");
+              const { parseLog, parserName, supportsDirectories = false } = options;
               try {
                 const logPath = process.env.GH_AW_AGENT_OUTPUT;
                 if (!logPath) {
@@ -3463,6 +3494,10 @@ jobs:
                 let content = "";
                 const stat = fs.statSync(logPath);
                 if (stat.isDirectory()) {
+                  if (!supportsDirectories) {
+                    core.info(`Log path is a directory but ${parserName} parser does not support directories: ${logPath}`);
+                    return;
+                  }
                   const files = fs.readdirSync(logPath);
                   const logFiles = files.filter(file => file.endsWith(".log") || file.endsWith(".txt"));
                   if (logFiles.length === 0) {
@@ -3473,25 +3508,54 @@ jobs:
                   for (const file of logFiles) {
                     const filePath = path.join(logPath, file);
                     const fileContent = fs.readFileSync(filePath, "utf8");
-                    content += fileContent;
                     if (content.length > 0 && !content.endsWith("\n")) {
                       content += "\n";
                     }
+                    content += fileContent;
                   }
                 } else {
                   content = fs.readFileSync(logPath, "utf8");
                 }
-                const parsedLog = parseCopilotLog(content);
-                if (parsedLog) {
-                  core.info(parsedLog);
-                  core.summary.addRaw(parsedLog).write();
-                  core.info("Copilot log parsed successfully");
+                const result = parseLog(content);
+                let markdown = "";
+                let mcpFailures = [];
+                let maxTurnsHit = false;
+                if (typeof result === "string") {
+                  markdown = result;
+                } else if (result && typeof result === "object") {
+                  markdown = result.markdown || "";
+                  mcpFailures = result.mcpFailures || [];
+                  maxTurnsHit = result.maxTurnsHit || false;
+                }
+                if (markdown) {
+                  core.info(markdown);
+                  core.summary.addRaw(markdown).write();
+                  core.info(`${parserName} log parsed successfully`);
                 } else {
-                  core.error("Failed to parse Copilot log");
+                  core.error(`Failed to parse ${parserName} log`);
+                }
+                if (mcpFailures && mcpFailures.length > 0) {
+                  const failedServers = mcpFailures.join(", ");
+                  core.setFailed(`MCP server(s) failed to launch: ${failedServers}`);
+                }
+                if (maxTurnsHit) {
+                  core.setFailed(`Agent execution stopped: max-turns limit reached. The agent did not complete its task successfully.`);
                 }
               } catch (error) {
                 core.setFailed(error instanceof Error ? error : String(error));
               }
+            }
+            if (typeof module !== "undefined" && module.exports) {
+              module.exports = {
+                runLogParser,
+              };
+            }
+            function main() {
+              runLogParser({
+                parseLog: parseCopilotLog,
+                parserName: "Copilot",
+                supportsDirectories: true,
+              });
             }
             function extractPremiumRequestCount(logContent) {
               const patterns = [
@@ -4938,7 +5002,7 @@ jobs:
         id: check_stop_time
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
-          GH_AW_STOP_TIME: 2025-12-07 20:00:16
+          GH_AW_STOP_TIME: 2025-12-07 20:16:16
           GH_AW_WORKFLOW_NAME: "Agentic Triage"
         with:
           script: |

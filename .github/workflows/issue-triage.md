@@ -37,7 +37,7 @@ tools:
       - default
       - labels
 
-timeout_minutes: 10
+timeout-minutes: 10
 source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
 ---
 # Agentic Triage
@@ -58,7 +58,10 @@ You're a triage assistant for GitHub issues. Your task is to analyze issues crea
 
    - Fetch the list of labels available in this repository using the `list_label` tool. This will give you the labels you can use for triaging issues.
    - Fetch any comments on the issue using the `get_issue_comments` tool
-   - **Search for duplicate and related issues**: Use the `search_issues` tool to find similar issues by searching for key terms from the issue title and description. Look for both open and closed issues that might be related or duplicates.
+   - **Search for duplicate and related issues (repo first, then org-wide)**:
+     - First search in this repository using the `search_issues` tool with a query like: `repo:${{ github.repository }} is:issue (is:open OR is:closed) <key terms>`.
+     - Then perform an org-wide search across the entire Appwrite organization using: `org:appwrite is:issue (is:open OR is:closed) <key terms>`.
+     - Prefer linking to OPEN issues when identifying potential duplicates; include CLOSED ones as related history when useful.
 
 6. Analyze the issue content, considering:
 
@@ -77,7 +80,8 @@ You're a triage assistant for GitHub issues. Your task is to analyze issues crea
    - Be specific but comprehensive
    - Select priority labels if you can determine urgency (high-priority, med-priority, or low-priority)
    - Consider platform labels (android, ios) if applicable
-   - Search for similar issues, and if you find similar issues consider using a "duplicate" label if appropriate. Only do so if the issue is a duplicate of another OPEN issue.
+  - Search for similar issues. If you find a duplicate of another OPEN issue in THIS repository, you may use a "duplicate" label (if available) and reference the canonical issue.
+  - If the closest match is in another repository within the Appwrite org, do NOT mark as duplicate here; instead, link it in your comment under a "Cross‑repo related issues" section.
    - Only select labels from the provided list above
    - It's okay to not add any labels if none are clearly applicable
 
@@ -90,7 +94,9 @@ You're a triage assistant for GitHub issues. Your task is to analyze issues crea
 10. Add an issue comment to the issue with your analysis:
    - Start with "🎯 Agentic Issue Triage"
    - Provide a brief summary of the issue
-   - **If duplicate or related issues were found**, add a section listing them with links (e.g., "### 🔗 Potentially Related Issues" followed by a bullet list of related issues with their titles and links)
+   - **If duplicate or related issues were found**, add sections listing them with links:
+     - "### 🔗 Potentially Related Issues (this repo)" – bullet list of same‑repo issues with titles and links
+     - If applicable: "### 🌐 Cross‑repo related issues (org: appwrite)" – bullet list including `owner/repo#number` with titles and links
    - Mention any relevant details that might help the team understand the issue better
    - Include any debugging strategies or reproduction steps if applicable
    - Suggest resources or links that might be helpful for resolving the issue or learning skills related to the issue or the particular area of the codebase affected by it
