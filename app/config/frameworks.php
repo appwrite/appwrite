@@ -8,20 +8,13 @@ use Utopia\Config\Config;
 
 $templateRuntimes = Config::getParam('template-runtimes');
 
-function getVersions(array $versions, string $prefix)
-{
-    return array_map(function ($version) use ($prefix) {
-        return $prefix . '-' . $version;
-    }, $versions);
-}
-
 return [
     'analog' => [
         'key' => 'analog',
         'name' => 'Analog',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/analog/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/analog/env.sh',
         'adapters' => [
@@ -47,7 +40,7 @@ return [
         'name' => 'Angular',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/angular/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/angular/env.sh',
         'adapters' => [
@@ -73,7 +66,7 @@ return [
         'name' => 'Next.js',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/next-js/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/next-js/env.sh',
         'adapters' => [
@@ -98,7 +91,7 @@ return [
         'name' => 'React',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -115,7 +108,7 @@ return [
         'name' => 'Nuxt',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/nuxt/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/nuxt/env.sh',
         'adapters' => [
@@ -140,7 +133,7 @@ return [
         'name' => 'Vue.js',
         'screenshotSleep' => 5000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -157,7 +150,7 @@ return [
         'name' => 'SvelteKit',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/sveltekit/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/sveltekit/env.sh',
         'adapters' => [
@@ -182,7 +175,7 @@ return [
         'name' => 'Astro',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/astro/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/astro/env.sh',
         'adapters' => [
@@ -232,7 +225,7 @@ return [
         'name' => 'Remix',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/remix/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/remix/env.sh',
         'adapters' => [
@@ -257,7 +250,7 @@ return [
         'name' => 'Lynx',
         'screenshotSleep' => 5000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -274,7 +267,7 @@ return [
         'name' => 'Flutter',
         'screenshotSleep' => 5000,
         'buildRuntime' => 'flutter-3.29',
-        'runtimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
+        'runtimes' => $templateRuntimes['FLUTTER'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -290,7 +283,7 @@ return [
         'name' => 'React Native',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -307,7 +300,7 @@ return [
         'name' => 'Vite',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
@@ -323,7 +316,7 @@ return [
         'name' => 'Other',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'adapters' => [
             'static' => [
                 'key' => 'static',
