@@ -1382,7 +1382,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.5.*',
+        'providerVersion' => '0.6.*',
         'variables' => [
             [
                 'name' => 'ELEVENLABS_API_KEY',
