@@ -883,4 +883,106 @@ class DatabasesCustomServerTest extends Scope
         }
     }
 
+    public function testCustomTimestamps(): void
+    {
+        // Setup: create database and collection
+        $db = $this->client->call(Client::METHOD_POST, '/vectordb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'TimestampTestDB'
+        ]);
+        $this->assertEquals(201, $db['headers']['status-code']);
+        $databaseId = $db['body']['$id'];
+
+        $col = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'TimestampTestCollection',
+            'documentSecurity' => true,
+            'dimensions' => 1536,
+            'permissions' => [Permission::read(Role::any())]
+        ]);
+        $this->assertEquals(201, $col['headers']['status-code']);
+        $collectionId = $col['body']['$id'];
+
+        // Test: Create document with custom timestamps using PUT (upsert)
+        $customCreatedAt = '1970-01-01T00:00:00.000+00:00';
+        $customUpdatedAt = '1970-01-01T00:00:00.000+00:00';
+        $vector = array_fill(0, 1536, 0.0);
+        $vector[0] = 1.0;
+        $documentId = ID::unique();
+
+        $doc = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$collectionId}/documents", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documentId' => $documentId,
+            'data' => [
+                '$createdAt' => $customCreatedAt,
+                '$updatedAt' => $customUpdatedAt,
+                'embeddings' => $vector,
+                'metadata' => ['test' => 'custom_timestamps']
+            ]
+        ]);
+
+        $this->assertEquals(201, $doc['headers']['status-code']);
+        $documentId = $doc['body']['$id'];
+        $this->assertNotEmpty($documentId);
+
+        // Verify timestamps were set correctly
+        $this->assertEquals($customCreatedAt, $doc['body']['$createdAt'], 'CreatedAt should match custom timestamp');
+        $this->assertEquals($customUpdatedAt, $doc['body']['$updatedAt'], 'UpdatedAt should match custom timestamp');
+
+        // Fetch document and verify timestamps persist
+        $fetched = $this->client->call(Client::METHOD_GET, "/vectordb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($customCreatedAt, $fetched['body']['$createdAt'], 'CreatedAt should persist after fetch');
+        $this->assertEquals($customUpdatedAt, $fetched['body']['$updatedAt'], 'UpdatedAt should persist after fetch');
+
+        // Test: Update document with new custom timestamps
+        $newCustomUpdatedAt = '2000-01-01T12:00:00.000+00:00';
+        $vector2 = array_fill(0, 1536, 0.0);
+        $vector2[1] = 1.0;
+
+        $updated = $this->client->call(Client::METHOD_PUT, "/vectordb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'data' => [
+                '$createdAt' => $customCreatedAt, // Keep original createdAt
+                '$updatedAt' => $newCustomUpdatedAt, // Update updatedAt
+                'embeddings' => $vector2,
+                'metadata' => ['test' => 'updated_timestamps']
+            ]
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals($customCreatedAt, $updated['body']['$createdAt'], 'CreatedAt should remain unchanged');
+        $this->assertEquals($newCustomUpdatedAt, $updated['body']['$updatedAt'], 'UpdatedAt should be updated to new custom timestamp');
+
+        // Final verification
+        $final = $this->client->call(Client::METHOD_GET, "/vectordb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $final['headers']['status-code']);
+        $this->assertEquals($customCreatedAt, $final['body']['$createdAt'], 'CreatedAt should persist through updates');
+        $this->assertEquals($newCustomUpdatedAt, $final['body']['$updatedAt'], 'UpdatedAt should reflect the latest custom timestamp');
+    }
+
 }
