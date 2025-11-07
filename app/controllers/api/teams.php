@@ -36,6 +36,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -51,6 +52,7 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -168,9 +170,10 @@ App::get('/v1/teams')
     ))
     ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -210,7 +213,7 @@ App::get('/v1/teams')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $results = $dbForProject->find('teams', $queries);
-            $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -282,7 +285,13 @@ App::get('/v1/teams/:teamId/prefs')
 
         $prefs = $team->getAttribute('prefs', []);
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        try {
+            $prefs = new Document($prefs);
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
+
+        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
 App::put('/v1/teams/:teamId')
@@ -357,6 +366,11 @@ App::put('/v1/teams/:teamId/prefs')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
+        try {
+            $prefs = new Document($prefs);
+        } catch (StructureException $e) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
+        }
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -364,11 +378,13 @@ App::put('/v1/teams/:teamId/prefs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
+        $team = $dbForProject->updateDocument('teams', $team->getId(), new Document([
+            'prefs' => $prefs->getArrayCopy()
+        ]));
 
         $queueForEvents->setParam('teamId', $team->getId());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+        $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
@@ -658,7 +674,7 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $body = $locale->getText("emails.invitation.body");
                 $preview = $locale->getText("emails.invitation.preview");
-                $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+                $subject = $locale->getText("emails.invitation.subject");
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
@@ -824,10 +840,11 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (string $teamId, array $queries, string $search, bool $includeTotal, Response $response, Document $project, Database $dbForProject) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -879,11 +896,11 @@ App::get('/v1/teams/:teamId/memberships')
                 collection: 'memberships',
                 queries: $queries,
             );
-            $total = $dbForProject->count(
+            $total = $includeTotal ? $dbForProject->count(
                 collection: 'memberships',
                 queries: $filterQueries,
                 max: APP_LIMIT_COUNT
-            );
+            ) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -1416,11 +1433,12 @@ App::get('/v1/teams/:teamId/logs')
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1489,7 +1507,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

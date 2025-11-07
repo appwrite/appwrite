@@ -30,14 +30,11 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Exception\Order as OrderException;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -302,77 +299,6 @@ App::post('/v1/projects')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::get('/v1/projects')
-    ->desc('List projects')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'list',
-        description: '/docs/references/projects/list.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT_LIST,
-            )
-        ]
-    ))
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForPlatform) {
-
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
-        }
-
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
-
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-
-            $projectId = $cursor->getValue();
-            $cursorDocument = $dbForPlatform->getDocument('projects', $projectId);
-
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
-
-        $filterQueries = Query::groupByType($queries)['filters'];
-        try {
-            $projects = $dbForPlatform->find('projects', $queries);
-            $total = $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT);
-        } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
-        }
-        $response->dynamic(new Document([
-            'projects' => $projects,
-            'total' => $total,
-        ]), Response::MODEL_PROJECT_LIST);
     });
 
 App::get('/v1/projects/:projectId')
@@ -1308,9 +1234,10 @@ App::get('/v1/projects/:projectId/webhooks')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1325,7 +1252,7 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
-            'total' => count($webhooks),
+            'total' => $includeTotal ? count($webhooks) : 0,
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -1605,9 +1532,10 @@ App::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1622,7 +1550,7 @@ App::get('/v1/projects/:projectId/keys')
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'total' => count($keys),
+            'total' => $includeTotal ? count($keys) : 0,
         ]), Response::MODEL_KEY_LIST);
     });
 
@@ -1830,7 +1758,28 @@ App::post('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Platform::TYPE_WEB, Platform::TYPE_FLUTTER_WEB, Platform::TYPE_FLUTTER_IOS, Platform::TYPE_FLUTTER_ANDROID, Platform::TYPE_FLUTTER_LINUX, Platform::TYPE_FLUTTER_MACOS, Platform::TYPE_FLUTTER_WINDOWS, Platform::TYPE_APPLE_IOS, Platform::TYPE_APPLE_MACOS,  Platform::TYPE_APPLE_WATCHOS, Platform::TYPE_APPLE_TVOS, Platform::TYPE_ANDROID, Platform::TYPE_UNITY, Platform::TYPE_REACT_NATIVE_IOS, Platform::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
+    ->param(
+        'type',
+        null,
+        new WhiteList([
+            Platform::TYPE_WEB,
+            Platform::TYPE_FLUTTER_WEB,
+            Platform::TYPE_FLUTTER_IOS,
+            Platform::TYPE_FLUTTER_ANDROID,
+            Platform::TYPE_FLUTTER_LINUX,
+            Platform::TYPE_FLUTTER_MACOS,
+            Platform::TYPE_FLUTTER_WINDOWS,
+            Platform::TYPE_APPLE_IOS,
+            Platform::TYPE_APPLE_MACOS,
+            Platform::TYPE_APPLE_WATCHOS,
+            Platform::TYPE_APPLE_TVOS,
+            Platform::TYPE_ANDROID,
+            Platform::TYPE_UNITY,
+            Platform::TYPE_REACT_NATIVE_IOS,
+            Platform::TYPE_REACT_NATIVE_ANDROID,
+        ], true),
+        'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.'
+    )
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1887,9 +1836,10 @@ App::get('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1904,7 +1854,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
-            'total' => count($platforms),
+            'total' => $includeTotal ? count($platforms) : 0,
         ]), Response::MODEL_PLATFORM_LIST);
     });
 

@@ -19,6 +19,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Boolean;
 
 class XList extends Action
 {
@@ -42,8 +43,8 @@ class XList extends Action
             ->label('scope', 'collections.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/list-indexes.md',
                 auth: [AuthType::KEY],
@@ -62,12 +63,13 @@ class XList extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $collectionId, array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
     {
         /** @var Document $database */
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -125,7 +127,7 @@ class XList extends Action
         }
 
         try {
-            $total = $dbForProject->count('indexes', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('indexes', $queries, APP_LIMIT_COUNT) : 0;
             $indexes = $dbForProject->find('indexes', $queries);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';

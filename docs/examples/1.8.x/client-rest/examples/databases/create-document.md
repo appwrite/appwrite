@@ -8,6 +8,13 @@ X-Appwrite-JWT: <YOUR_JWT>
 
 {
   "documentId": "<DOCUMENT_ID>",
-  "data": {},
-  "permissions": ["read(\"any\")"]
+  "data": {
+    "username": "walter.obrien",
+    "email": "walter.obrien@example.com",
+    "fullName": "Walter O'Brien",
+    "age": 30,
+    "isAdmin": false
+  },
+  "permissions": ["read(\"any\")"],
+  "transactionId": "<TRANSACTION_ID>"
 }

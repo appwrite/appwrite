@@ -10,6 +10,7 @@ let databases = Databases(client)
 let documentList = try await databases.createDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    documents: []
+    documents: [],
+    transactionId: "<TRANSACTION_ID>" // optional
 )
 

@@ -51,8 +51,8 @@ class Create extends Action
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-index.md',
                 auth: [AuthType::KEY],
@@ -71,7 +71,7 @@ class Create extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('key', null, new Key(), 'Index Key.')
-            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE]), 'Index type.')
+            ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL]), 'Index type.')
             ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true)
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
@@ -160,7 +160,7 @@ class Create extends Action
                 throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // ensure attribute is available
+            // Ensure attribute is available
             if ($attributeStatus !== 'available') {
                 $contextType = ucfirst($contextType);
                 throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
@@ -171,7 +171,7 @@ class Create extends Action
             }
 
             if ($attributeArray === true) {
-                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                 $orders[$i] = null;
             }
         }
@@ -192,9 +192,16 @@ class Create extends Action
 
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
+            $collection->getAttribute('indexes'),
             $dbForProject->getAdapter()->getMaxIndexLength(),
             $dbForProject->getAdapter()->getInternalIndexesKeys(),
-            $dbForProject->getAdapter()->getSupportForIndexArray()
+            $dbForProject->getAdapter()->getSupportForIndexArray(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForProject->getAdapter()->getSupportForVectors(),
+            $dbForProject->getAdapter()->getSupportForAttributes(),
+            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
         );
 
         if (!$validator->isValid($index)) {

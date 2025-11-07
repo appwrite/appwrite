@@ -8,5 +8,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
 X-Appwrite-JWT: <YOUR_JWT>
 
 {
-  "rows": []
+  "rows": [],
+  "transactionId": "<TRANSACTION_ID>"
 }

@@ -10,6 +10,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Columns;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Boolean;
 
 class XList extends AttributesXList
 {
@@ -33,8 +34,8 @@ class XList extends AttributesXList
             ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/list-columns.md',
                 auth: [AuthType::KEY],
@@ -48,6 +49,7 @@ class XList extends AttributesXList
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('queries', [], new Columns(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following columns: ' . implode(', ', Columns::ALLOWED_COLUMNS), true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

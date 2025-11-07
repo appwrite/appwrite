@@ -634,18 +634,20 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
             'framework' => 'other',
-            'name' => 'Test Site',
+            'name' => 'Test List Sites',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
 
-        $sites = $this->listSites();
+        $sites = $this->listSites([
+            'search' => 'Test List Sites',
+        ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test Site');
+        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
 
         // Test pagination limit
         $sites = $this->listSites([
@@ -689,7 +691,7 @@ class SitesCustomServerTest extends Scope
 
         // Test search name
         $sites = $this->listSites([
-            'search' => 'Test'
+            'search' => 'Test List Sites'
         ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
@@ -712,21 +714,23 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
             'framework' => 'other',
-            'name' => 'Test Site 2',
+            'name' => 'Test List Sites 2',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             'siteId' => ID::unique()
         ]);
 
-        $sites = $this->listSites();
+        $sites = $this->listSites([
+            'search' => 'Test List Sites',
+        ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertEquals($sites['body']['total'], 2);
         $this->assertIsArray($sites['body']['sites']);
         $this->assertCount(2, $sites['body']['sites']);
-        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test Site');
-        $this->assertEquals($sites['body']['sites'][1]['name'], 'Test Site 2');
+        $this->assertEquals($sites['body']['sites'][0]['name'], 'Test List Sites');
+        $this->assertEquals($sites['body']['sites'][1]['name'], 'Test List Sites 2');
 
         $sites1 = $this->listSites([
             'queries' => [
@@ -736,7 +740,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($sites1['headers']['status-code'], 200);
         $this->assertCount(1, $sites1['body']['sites']);
-        $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test Site 2');
+        $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test List Sites 2');
 
         $sites2 = $this->listSites([
             'queries' => [
@@ -746,7 +750,7 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($sites2['headers']['status-code'], 200);
         $this->assertCount(1, $sites2['body']['sites']);
-        $this->assertEquals($sites2['body']['sites'][0]['name'], 'Test Site');
+        $this->assertEquals($sites2['body']['sites'][0]['name'], 'Test List Sites');
 
         /**
          * Test for FAILURE
@@ -1051,6 +1055,30 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals($deployments['headers']['status-code'], 200);
         $this->assertCount(1, $deployments['body']['deployments']);
+
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
+                Query::select(['status'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('status', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
+
+        // Extra select query check, for attribute not allowed by filter queries
+        $deployments = $this->listDeployments($siteId, [
+            'queries' => [
+                Query::select(['buildLogs'])->toString(),
+            ],
+        ]);
+        $this->assertEquals($deployments['headers']['status-code'], 200);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][0]);
+        $this->assertArrayHasKey('buildLogs', $deployments['body']['deployments'][1]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][0]);
+        $this->assertArrayNotHasKey('sourceSize', $deployments['body']['deployments'][1]);
 
         $deployments = $this->listDeployments($siteId, [
             'queries' => [
@@ -2751,11 +2779,13 @@ class SitesCustomServerTest extends Scope
         $proxyClient->setEndpoint('http://' . $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/cookies', [
-            'cookie' => 'custom-session-id=abcd123'
+            'cookie' => 'custom-session-id=abcd123; custom-user-id=efgh456'
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals("abcd123", $response['body']);
+        $this->assertEquals("abcd123;efgh456", $response['body']);
+        $this->assertEquals("value-one", $response['cookies']['my-cookie-one']);
+        $this->assertEquals("value-two", $response['cookies']['my-cookie-two']);
 
         $this->cleanupSite($siteId);
     }

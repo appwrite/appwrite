@@ -63,8 +63,8 @@ class Create extends Action
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', [
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: self::getName(),
                     desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
@@ -82,6 +82,7 @@ class Create extends Action
                         new Parameter('documentId', optional: false),
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -89,8 +90,8 @@ class Create extends Action
                     ),
                 ),
                 new Method(
-                    namespace: $this->getSdkNamespace(),
-                    group: $this->getSdkGroup(),
+                    namespace: $this->getSDKNamespace(),
+                    group: $this->getSDKGroup(),
                     name: $this->getBulkActionName(self::getName()),
                     desc: 'Create documents',
                     description: '/docs/references/databases/create-documents.md',
@@ -106,6 +107,7 @@ class Create extends Action
                         new Parameter('databaseId', optional: false),
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -116,9 +118,10 @@ class Create extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
-            ->param('data', [], new JSON(), 'Document data as JSON object.', true)
+            ->param('data', [], new JSON(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -127,9 +130,10 @@ class Create extends Action
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
+            ->inject('plan')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -144,7 +148,7 @@ class Create extends Action
         }
         if (!empty($data) && !empty($documents)) {
             // Both single and bulk documents provided
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'You can only send one of the following parameters: data, ' . $this->getSdkGroup());
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'You can only send one of the following parameters: data, ' . $this->getSDKGroup());
         }
         if (!empty($data) && empty($documentId)) {
             // Single document provided without document ID
@@ -157,12 +161,12 @@ class Create extends Action
             $documentId = $this->isCollectionsAPI() ? 'documentId' : 'rowId';
             throw new Exception(
                 Exception::GENERAL_BAD_REQUEST,
-                "Param \"$documentId\" is not allowed when creating multiple " . $this->getSdkGroup() . ', set "$id" on each instead.'
+                "Param \"$documentId\" is not allowed when creating multiple " . $this->getSDKGroup() . ', set "$id" on each instead.'
             );
         }
         if (!empty($documents) && !empty($permissions)) {
             // Bulk documents provided with permissions
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple ' . $this->getSdkGroup() . ', set "$permissions" on each instead');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "permissions" is disallowed when creating multiple ' . $this->getSDKGroup() . ', set "$permissions" on each instead');
         }
 
         $isBulk = true;
@@ -196,7 +200,7 @@ class Create extends Action
         );
 
         if ($isBulk && $hasRelationships) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSdkNamespace() .' with relationship ' . $this->getStructureContext());
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk create is not supported for ' . $this->getSDKNamespace() .' with relationship ' . $this->getStructureContext());
         }
 
         $setPermissions = function (Document $document, ?array $permissions) use ($user, $isAPIKey, $isPrivilegedUser, $isBulk) {
@@ -254,7 +258,7 @@ class Create extends Action
 
         $operations = 0;
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, &$operations) {
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use ($isAPIKey, $isPrivilegedUser, &$checkPermissions, $dbForProject, $database, &$operations) {
             $operations++;
 
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
@@ -307,6 +311,8 @@ class Create extends Action
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
+                        $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
+
                         $current = Authorization::skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relation->getId())
                         );
@@ -318,7 +324,6 @@ class Create extends Action
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $this->removeReadonlyAttributes($relation);
                             $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
@@ -351,29 +356,82 @@ class Create extends Action
                 }
             }
 
-            // Remove sequence if set
-            unset($document['$sequence']);
-
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === 'unique()' ? ID::unique() : $sourceId;
-
-            // Allowing to add createdAt and updatedAt timestamps if server side(api key
-            if (!$isAPIKey && !$isPrivilegedUser) {
-                if (isset($document['$createdAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$createdAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-                }
-
-                if (isset($document['$updatedAt'])) {
-                    throw new Exception($this->getInvalidStructureException(), 'Attribute "$updatedAt" can not be modified. Please use a server SDK with an API key to modify server attributes.');
-                }
-            }
-
+            $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $document = new Document($document);
             $setPermissions($document, $permissions);
             $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
-
             return $document;
         }, $documents);
+
+        // Handle transaction staging
+        if ($transactionId !== null) {
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                : $dbForProject->getDocument('transactions', $transactionId);
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            }
+            if ($transaction->getAttribute('status', '') !== 'pending') {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
+            $now = new \DateTime();
+            $expiresAt = new \DateTime($transaction->getAttribute('expiresAt', 'now'));
+            if ($now > $expiresAt) {
+                throw new Exception(Exception::TRANSACTION_EXPIRED);
+            }
+
+            // Enforce max operations per transaction
+            $maxBatch = $plan['databasesTransactionSize'] ?? APP_LIMIT_DATABASE_TRANSACTION;
+            $existing = $transaction->getAttribute('operations', 0);
+            if (($existing + 1) > $maxBatch) {
+                throw new Exception(
+                    Exception::TRANSACTION_LIMIT_EXCEEDED,
+                    'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            $staged = new Document([
+                '$id' => ID::unique(),
+                'databaseInternalId' => $database->getSequence(),
+                'collectionInternalId' => $collection->getSequence(),
+                'transactionInternalId' => $transaction->getSequence(),
+                'documentId' => $isBulk ? null : $documentId,
+                'action' => $isBulk ? 'bulkCreate' : 'create',
+                'data' => $isBulk ? $documents : $documents[0],
+            ]);
+
+            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
+                $dbForProject->createDocument('transactionLogs', $staged);
+                $dbForProject->increaseDocumentAttribute(
+                    'transactions',
+                    $transactionId,
+                    'operations',
+                );
+            });
+
+            // Return successful response without actually creating documents
+            if ($isBulk) {
+                $response->dynamic(new Document([
+                    $this->getSDKGroup() => [],
+                    'total' => \count($documents),
+                ]), $this->getBulkResponseModel());
+            } else {
+                $groupId = $this->getGroupId();
+                $mockDocument = new Document([
+                    '$id' => $documents[0]['$id'] ?? $documentId,
+                    '$' . $groupId => $collectionId,
+                    '$databaseId' => $databaseId,
+                    ...$documents[0]
+                ]);
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
+                    ->dynamic($mockDocument, $this->getResponseModel());
+            }
+            return;
+        }
 
         try {
             $dbForProject->withPreserveDates(
@@ -389,7 +447,7 @@ class Create extends Action
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
-            throw new Exception($this->getInvalidStructureException(), $e->getMessage());
+            throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
         $queueForEvents
@@ -419,7 +477,7 @@ class Create extends Action
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($documents),
-                $this->getSdkGroup() => $documents
+                $this->getSDKGroup() => $documents
             ]), $this->getBulkResponseModel());
 
             $this->triggerBulk(

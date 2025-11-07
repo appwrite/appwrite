@@ -15,5 +15,6 @@ result = tables_db.increment_row_column(
     row_id: '<ROW_ID>',
     column: '',
     value: null, # optional
-    max: null # optional
+    max: null, # optional
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

@@ -58,6 +58,8 @@ class Mapper
             'json' => Types::json(),
             'none' => Types::json(),
             'any' => Types::json(),
+            'array' => Types::json(),
+            'enum' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {
@@ -329,8 +331,15 @@ class Mapper
                 break;
             case 'Utopia\Validator\Integer':
             case 'Utopia\Validator\Numeric':
-            case 'Utopia\Validator\Range':
                 $type = Type::int();
+                break;
+            case 'Utopia\Validator\Range':
+                // Check if the Range validator is for float or integer
+                if ($validator instanceof \Utopia\Validator\Range && $validator->getType() === \Utopia\Validator\Range::TYPE_FLOAT) {
+                    $type = Type::float();
+                } else {
+                    $type = Type::int();
+                }
                 break;
             case 'Utopia\Validator\FloatValidator':
                 $type = Type::float();
@@ -451,11 +460,15 @@ class Mapper
                 'ip' => static::model("{$prefix}Ip"),
                 default => static::model("{$prefix}String"),
             },
+            'enum' => static::model("{$prefix}String"), // TODO: Add enum type (breaking change if added)
             'integer' => static::model("{$prefix}Integer"),
             'double' => static::model("{$prefix}Float"),
             'boolean' => static::model("{$prefix}Boolean"),
             'datetime' => static::model("{$prefix}Datetime"),
             'relationship' => static::model("{$prefix}Relationship"),
+            'point' => static::model("{$prefix}Point"),
+            'linestring' => static::model("{$prefix}Line"),
+            'polygon' => static::model("{$prefix}Polygon"),
             default => throw new Exception('Unknown ' . strtolower($prefix) . ' implementation'),
         };
     }

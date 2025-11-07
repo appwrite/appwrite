@@ -2,7 +2,8 @@ mutation {
     tablesDBDeleteRows(
         databaseId: "<DATABASE_ID>",
         tableId: "<TABLE_ID>",
-        queries: []
+        queries: [],
+        transactionId: "<TRANSACTION_ID>"
     ) {
         total
         rows {

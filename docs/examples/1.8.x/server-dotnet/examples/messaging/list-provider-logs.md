@@ -11,5 +11,6 @@ Messaging messaging = new Messaging(client);
 
 LogList result = await messaging.ListProviderLogs(
     providerId: "<PROVIDER_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    total: false // optional
 );

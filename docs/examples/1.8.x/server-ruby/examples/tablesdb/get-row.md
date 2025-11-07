@@ -13,5 +13,6 @@ result = tables_db.get_row(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
     row_id: '<ROW_ID>',
-    queries: [] # optional
+    queries: [], # optional
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

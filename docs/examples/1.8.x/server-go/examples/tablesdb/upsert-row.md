@@ -20,4 +20,5 @@ response, error := service.UpsertRow(
     "<ROW_ID>",
     tablesdb.WithUpsertRowData(map[string]interface{}{}),
     tablesdb.WithUpsertRowPermissions(interface{}{"read("any")"}),
+    tablesdb.WithUpsertRowTransactionId("<TRANSACTION_ID>"),
 )

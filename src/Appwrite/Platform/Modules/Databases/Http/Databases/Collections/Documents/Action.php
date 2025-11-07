@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Operator;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends AppwriteAction
@@ -27,9 +28,18 @@ abstract class Action extends AppwriteAction
             $this->context = ROWS;
         }
 
-        // Use the same helper method to ensure consistency
         $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
-        $this->removableAttributes = ['$databaseId', $contextId, '$sequence'];
+        $this->removableAttributes = [
+            '*' => [
+                '$sequence',
+                '$databaseId',
+                $contextId,
+            ],
+            'privileged' => [
+                '$createdAt',
+                '$updatedAt',
+            ],
+        ];
 
         return parent::setHttpPath($path);
     }
@@ -67,7 +77,7 @@ abstract class Action extends AppwriteAction
      *
      * Can be used for XList operations as well!
      */
-    protected function getSdkGroup(): string
+    protected function getSDKGroup(): string
     {
         return $this->isCollectionsAPI() ? 'documents' : 'rows';
     }
@@ -75,7 +85,7 @@ abstract class Action extends AppwriteAction
     /**
      * Get the SDK namespace for the current action.
      */
-    protected function getSdkNamespace(): string
+    protected function getSDKNamespace(): string
     {
         return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
     }
@@ -151,7 +161,7 @@ abstract class Action extends AppwriteAction
     /**
      * Get the correct invalid structure message.
      */
-    protected function getInvalidStructureException(): string
+    protected function getStructureException(): string
     {
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_INVALID_STRUCTURE
@@ -197,14 +207,47 @@ abstract class Action extends AppwriteAction
     }
 
     /**
+     * Get the correct attribute/column key for increment/decrement operations.
+     */
+    protected function getAttributeKey(): string
+    {
+        return $this->isCollectionsAPI() ? 'attribute' : 'column';
+    }
+
+    /**
+     * Get the key used in ID parameters (e.g., 'collectionId' or 'tableId').
+     */
+    protected function getGroupId(): string
+    {
+        return $this->getCollectionsEventsContext() . 'Id';
+    }
+
+    /**
+     * Get the resource ID key for the current action.
+     */
+    protected function getResourceId(): string
+    {
+        $resource = $this->isCollectionsAPI() ? 'document' : 'row';
+        return $resource . 'Id';
+    }
+
+    /**
      * Remove configured removable attributes from a document.
      * Used for relationship path handling to remove API-specific attributes.
      */
-    protected function removeReadonlyAttributes(Document $document): void
-    {
-        foreach ($this->removableAttributes as $attribute) {
-            $document->removeAttribute($attribute);
+    protected function removeReadonlyAttributes(
+        Document|array $document,
+        bool $privileged = false,
+    ): Document|array {
+        foreach ($this->removableAttributes['*'] as $attribute) {
+            unset($document[$attribute]);
         }
+        if (!$privileged) {
+            foreach ($this->removableAttributes['privileged'] ?? [] as $attribute) {
+                unset($document[$attribute]);
+            }
+        }
+        return $document;
     }
 
     /**
@@ -294,6 +337,53 @@ abstract class Action extends AppwriteAction
         }
 
         return true;
+    }
+
+    /**
+     * Parse operator strings in data array and convert them to Operator objects.
+     *
+     * @param array $data The data array that may contain operator JSON strings
+     * @param Document $collection The collection document to check for relationship attributes
+     * @return array The data array with operators converted to Operator objects
+     * @throws Exception If an operator string is invalid
+     */
+    protected function parseOperators(array $data, Document $collection): array
+    {
+        $relationshipKeys = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $relationshipKeys[$attribute->getAttribute('key')] = true;
+            }
+        }
+
+        foreach ($data as $key => $value) {
+            if (\str_starts_with($key, '$')) {
+                continue;
+            }
+
+            if (isset($relationshipKeys[$key])) {
+                continue;
+            }
+
+            if (\is_string($value)) {
+                $decoded = \json_decode($value, true);
+
+                if (
+                    \is_array($decoded) &&
+                    isset($decoded['method']) &&
+                    \is_string($decoded['method']) &&
+                    Operator::isMethod($decoded['method'])
+                ) {
+                    try {
+                        $data[$key] = Operator::parse($value);
+                    } catch (\Exception $e) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        return $data;
     }
 
     /**

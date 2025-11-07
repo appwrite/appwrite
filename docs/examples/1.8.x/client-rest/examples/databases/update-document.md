@@ -8,5 +8,6 @@ X-Appwrite-JWT: <YOUR_JWT>
 
 {
   "data": {},
-  "permissions": ["read(\"any\")"]
+  "permissions": ["read(\"any\")"],
+  "transactionId": "<TRANSACTION_ID>"
 }

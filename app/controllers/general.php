@@ -562,15 +562,18 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
                 memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                 logging: $resource->getAttribute('logging', true),
-                requestTimeout: 30
+                requestTimeout: 30,
+                responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
             );
+
+            $headerOverrides = [];
 
             // Branded 404 override
             $isResponseBranded = false;
             if ($executionResponse['statusCode'] === 404 && $deployment->getAttribute('adapter', '') === 'static') {
                 $layout = new View(__DIR__ . '/../views/general/404.phtml');
                 $executionResponse['body'] = $layout->render();
-                $executionResponse['headers']['content-length'] = \strlen($executionResponse['body']);
+                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
                 $isResponseBranded = true;
             }
 
@@ -580,15 +583,16 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                     $transformation = new Transformation();
                     $transformation->addAdapter(new Preview());
                     $transformation->setInput($executionResponse['body']);
-                    $transformation->setTraits($executionResponse['headers']);
+
+                    $simpleHeaders = [];
+                    foreach ($executionResponse['headers'] as $key => $value) {
+                        $simpleHeaders[$key] = \is_array($value) ? \implode(', ', $value) : $value;
+                    }
+
+                    $transformation->setTraits($simpleHeaders);
                     if ($isPreview && $transformation->transform()) {
                         $executionResponse['body'] = $transformation->getOutput();
-
-                        foreach ($executionResponse['headers'] as $key => $value) {
-                            if (\strtolower($key) === 'content-length') {
-                                $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
-                            }
-                        }
+                        $headerOverrides['content-length'] = \strlen($executionResponse['body']);
                     }
                 }
             }
@@ -602,25 +606,33 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                     ->setParam('code', $executionResponse['statusCode']);
 
                 $executionResponse['body'] = $layout->render();
-                foreach ($executionResponse['headers'] as $key => $value) {
-                    if (\strtolower($key) === 'content-length') {
-                        $executionResponse['headers'][$key] = \strlen($executionResponse['body']);
-                    } elseif (\strtolower($key) === 'content-type') {
-                        $executionResponse['headers'][$key] = 'text/html';
-                    }
-                }
+
+                $headerOverrides['content-length'] = \strlen($executionResponse['body']);
+                $headerOverrides['content-type'] = 'text/html';
             }
 
             if ($deployment->getAttribute('resourceType') === 'functions') {
-                $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+                $headerOverrides['x-appwrite-execution-id'] = $execution->getId();
             } elseif ($deployment->getAttribute('resourceType') === 'sites') {
-                $executionResponse['headers']['x-appwrite-log-id'] = $execution->getId();
+                $headerOverrides['x-appwrite-log-id'] = $execution->getId();
+            }
+
+            foreach ($headerOverrides as $key => $value) {
+                if (\array_key_exists($key, $executionResponse['headers'])) {
+                    if (\is_array($executionResponse['headers'][$key])) {
+                        $executionResponse['headers'][$key][] = $value;
+                    } else {
+                        $executionResponse['headers'][$key] = [$executionResponse['headers'][$key], $value];
+                    }
+                } else {
+                    $executionResponse['headers'][$key] = $value;
+                }
             }
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
-                    $headersFiltered[] = ['name' => $key, 'value' => $value];
+                    $headersFiltered[] = ['name' => $key, 'value' => \is_array($value) ? \implode(', ', $value) : $value];
                 }
             }
 
@@ -687,7 +699,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {
-            $headers[] = ['name' => $key, 'value' => $value];
+            $headers[] = ['name' => $key, 'value' => \is_array($value) ? \implode(', ', $value) : $value];
         }
 
         $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
@@ -696,16 +708,26 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $body = $execution['responseBody'] ?? '';
 
         $contentType = 'text/plain';
-        foreach ($execution['responseHeaders'] as $header) {
-            if (\strtolower($header['name']) === 'content-type') {
-                $contentType = $header['value'];
-            }
-
-            if (\strtolower($header['name']) === 'transfer-encoding') {
+        foreach ($executionResponse['headers'] as $name => $values) {
+            if (\strtolower($name) === 'content-type') {
+                $contentType = \is_array($values) ? $values[0] : $values;
                 continue;
             }
 
-            $response->addHeader(\strtolower($header['name']), $header['value']);
+            if (\strtolower($name) === 'transfer-encoding') {
+                continue;
+            }
+
+            if (\is_array($values)) {
+                $count = 0;
+                foreach ($values as $value) {
+                    $override = $count === 0;
+                    $response->addHeader($name, $value, override: $override);
+                    $count++;
+                }
+            } else {
+                $response->addHeader($name, $values);
+            }
         }
 
         $response
@@ -1060,26 +1082,6 @@ App::init()
             $response->addHeader('Access-Control-Allow-Origin', '*');
         }
 
-        /**
-         * Deprecation Warning
-         */
-        /** @var \Appwrite\SDK\Method $sdk */
-        $sdk = $route->getLabel('sdk', false);
-        $deprecationWarning = 'This route is deprecated. See the updated documentation for improved compatibility and migration details.';
-        $sdkItems = is_array($sdk) ? $sdk : (!empty($sdk) ? [$sdk] : []);
-        if (!empty($sdkItems) && count($sdkItems) > 0) {
-            $allDeprecated = true;
-            foreach ($sdkItems as $sdkItem) {
-                if (!$sdkItem->isDeprecated()) {
-                    $allDeprecated = false;
-                    break;
-                }
-            }
-            if ($allDeprecated) {
-                $warnings[] = $deprecationWarning;
-            }
-        }
-
         if (!empty($warnings)) {
             $response->addHeader('X-Appwrite-Warning', implode(';', $warnings));
         }
@@ -1251,7 +1253,7 @@ App::error()
         }
 
         /**
-         * If its not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
+         * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
             if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
@@ -1353,6 +1355,7 @@ App::error()
             case 409: // Error allowed publicly
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
+            case 422: // Error allowed publicly
             case 429: // Error allowed publicly
             case 451: // Error allowed publicly
             case 501: // Error allowed publicly

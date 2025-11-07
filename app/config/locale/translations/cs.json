@@ -2,7 +2,7 @@
     "settings.inspire": "\"Umění moudrosti je umění vědět, co přehlédnout.\"",
     "settings.locale": "cs",
     "settings.direction": "ltr",
-    "emails.sender": "%s tým",
+    "emails.sender": "{{project}} tým",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",

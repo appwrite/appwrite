@@ -11,6 +11,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Tables;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class XList extends CollectionXList
@@ -35,7 +36,7 @@ class XList extends CollectionXList
             ->label('scope', ['tables.read', 'collections.read'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
+                namespace: $this->getSDKNamespace(),
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/list-tables.md',
@@ -51,6 +52,7 @@ class XList extends CollectionXList
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('queries', [], new Tables(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following columns: ' . implode(', ', Tables::ALLOWED_COLUMNS), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

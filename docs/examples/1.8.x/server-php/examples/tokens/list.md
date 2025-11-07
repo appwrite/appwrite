@@ -13,5 +13,6 @@ $tokens = new Tokens($client);
 $result = $tokens->list(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

@@ -13,6 +13,7 @@ messaging.listSubscribers(
     "<TOPIC_ID>", // topicId
     listOf(), // queries (optional)
     "<SEARCH>", // search (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

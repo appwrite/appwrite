@@ -18,7 +18,7 @@ result = messaging.create_push(
     targets: [], # optional
     data: {}, # optional
     action: '<ACTION>', # optional
-    image: '[ID1:ID2]', # optional
+    image: '<ID1:ID2>', # optional
     icon: '<ICON>', # optional
     sound: '<SOUND>', # optional
     color: '<COLOR>', # optional

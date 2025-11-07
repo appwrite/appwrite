@@ -29,7 +29,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -55,7 +54,20 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         };
 
         if (array_key_exists($replace, $params)) {
-            $label = \str_replace($find, $params[$replace], $label);
+            $replacement = $params[$replace];
+            // Convert to string if it's not already a string
+            if (!is_string($replacement)) {
+                if (is_array($replacement)) {
+                    $replacement = json_encode($replacement);
+                } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
+                    $replacement = (string)$replacement;
+                } elseif (is_scalar($replacement)) {
+                    $replacement = (string)$replacement;
+                } else {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
+                }
+            }
+            $label = \str_replace($find, $replacement, $label);
         }
     }
     return $label;
@@ -247,10 +259,11 @@ App::init()
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-            // Disable authorization checks for API keys
-            Authorization::setDefaultStatus(false);
 
             if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
+                // Disable authorization checks for API keys
+                Authorization::setDefaultStatus(false);
+
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
@@ -416,6 +429,7 @@ App::init()
     ->inject('user')
     ->inject('publisher')
     ->inject('publisherFunctions')
+    ->inject('publisherWebhooks')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -431,7 +445,7 @@ App::init()
     ->inject('plan')
     ->inject('devKey')
     ->inject('telemetry')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, BrokerPool $publisherFunctions, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -544,7 +558,7 @@ App::init()
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
         $queueForFunctions = new Func($publisherFunctions);
-        $queueForWebhooks = new Webhook($publisher);
+        $queueForWebhooks = new Webhook($publisherWebhooks);
         $queueForRealtime = new Realtime();
 
         $dbForProject
@@ -579,6 +593,10 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
+                $usageMetric = $route->getLabel('usage.metric', null);
+                if ($usageMetric === METRIC_AVATARS_SCREENSHOTS_GENERATED) {
+                    $queueForStatsUsage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
+                }
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 

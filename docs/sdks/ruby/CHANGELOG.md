@@ -1,5 +1,20 @@
 # Change Log
 
+## 19.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+* Add `create_resend_provider` and `update_resend_provider` methods to `Messaging` service
+
+## 19.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 19.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 16.1.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Request\Filters;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
@@ -54,8 +55,8 @@ class V20 extends Filter
 
         try {
             $parsed = Query::parseQueries($content['queries']);
-        } catch (QueryException) {
-            return $content;
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         $selections = Query::groupByType($parsed)['selections'] ?? [];
@@ -136,16 +137,27 @@ class V20 extends Filter
             return [];
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
+        try {
+            $database = Authorization::skip(fn () => $dbForProject->getDocument(
+                'databases',
+                $databaseId
+            ));
+            if ($database->isEmpty()) {
+                return [];
+            }
+        } catch (\Throwable) {
             return [];
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument(
-            'database_' . $database->getSequence(),
-            $collectionId
-        ));
-        if ($collection->isEmpty()) {
+        try {
+            $collection = Authorization::skip(fn () => $dbForProject->getDocument(
+                'database_' . $database->getSequence(),
+                $collectionId
+            ));
+            if ($collection->isEmpty()) {
+                return [];
+            }
+        } catch (\Throwable) {
             return [];
         }
 

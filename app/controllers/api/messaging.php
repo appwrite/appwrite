@@ -231,6 +231,88 @@ App::post('/v1/messaging/providers/sendgrid')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
+App::post('/v1/messaging/providers/resend')
+    ->desc('Create Resend provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createResendProvider',
+        description: '/docs/references/messaging/create-resend-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('apiKey', '', new Text(0), 'Resend API key.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+            'replyToName' => $replyToName,
+            'replyToEmail' => $replyToEmail,
+        ];
+
+        if (
+            $enabled === true
+            && !empty($fromEmail)
+            && \array_key_exists('apiKey', $credentials)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'resend',
+            'type' => MESSAGE_TYPE_EMAIL,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+            'options' => $options,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 App::post('/v1/messaging/providers/smtp')
     ->desc('Create SMTP provider')
     ->groups(['api', 'messaging'])
@@ -985,9 +1067,10 @@ App::get('/v1/messaging/providers')
     ))
     ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -1023,7 +1106,7 @@ App::get('/v1/messaging/providers')
         }
         try {
             $providers = $dbForProject->find('providers', $queries);
-            $total = $dbForProject->count('providers', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('providers', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -1053,11 +1136,12 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1125,7 +1209,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1315,6 +1399,104 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'sendgrid') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        if (!empty($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $options = $provider->getAttribute('options');
+
+        if (!empty($fromName)) {
+            $options['fromName'] = $fromName;
+        }
+
+        if (!empty($fromEmail)) {
+            $options['fromEmail'] = $fromEmail;
+        }
+
+        if (!empty($replyToName)) {
+            $options['replyToName'] = $replyToName;
+        }
+
+        if (!empty($replyToEmail)) {
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        $provider->setAttribute('options', $options);
+
+        if (!empty($apiKey)) {
+            $provider->setAttribute('credentials', [
+                'apiKey' => $apiKey,
+            ]);
+        }
+
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
+                    \array_key_exists('fromEmail', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
+            } else {
+                $provider->setAttribute('enabled', false);
+            }
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::patch('/v1/messaging/providers/resend/:providerId')
+    ->desc('Update Resend provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'updateResendProvider',
+        description: '/docs/references/messaging/update-resend-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('apiKey', '', new Text(0), 'Resend API key.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+        $providerAttr = $provider->getAttribute('provider');
+
+        if ($providerAttr !== 'resend') {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
@@ -2292,9 +2474,10 @@ App::get('/v1/messaging/topics')
     ))
     ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2330,7 +2513,7 @@ App::get('/v1/messaging/topics')
         }
         try {
             $topics = $dbForProject->find('topics', $queries);
-            $total = $dbForProject->count('topics', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('topics', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -2360,11 +2543,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2433,7 +2617,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2693,9 +2877,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2757,7 +2942,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $response
             ->dynamic(new Document([
                 'subscribers' => $subscribers,
-                'total' => $dbForProject->count('subscribers', $queries, APP_LIMIT_COUNT),
+                'total' => $includeTotal ? $dbForProject->count('subscribers', $queries, APP_LIMIT_COUNT) : 0,
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
 
@@ -2781,11 +2966,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ))
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2854,7 +3040,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3011,7 +3197,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3102,7 +3288,7 @@ App::post('/v1/messaging/messages/email')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => 'message',
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3184,7 +3370,7 @@ App::post('/v1/messaging/messages/sms')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, ?array $topics, ?array $users, ?array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3244,7 +3430,7 @@ App::post('/v1/messaging/messages/sms')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => 'message',
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3319,7 +3505,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3462,7 +3648,7 @@ App::post('/v1/messaging/messages/push')
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => 'message',
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3511,9 +3697,10 @@ App::get('/v1/messaging/messages')
     ))
     ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3549,7 +3736,7 @@ App::get('/v1/messaging/messages')
         }
         try {
             $messages = $dbForProject->find('messages', $queries);
-            $total = $dbForProject->count('messages', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('messages', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -3579,11 +3766,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3652,7 +3840,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3677,9 +3865,10 @@ App::get('/v1/messaging/messages/:messageId/targets')
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject) {
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3729,7 +3918,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
         }
         try {
             $targets = $dbForProject->find('targets', $queries);
-            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('targets', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -3863,7 +4052,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'message',
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -4084,7 +4273,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'message',
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -4258,7 +4447,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
         if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
-                'resourceType' => 'message',
+                'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getSequence(),
                 'resourceUpdatedAt' => DateTime::now(),

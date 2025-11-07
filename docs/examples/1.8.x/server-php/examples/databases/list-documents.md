@@ -13,5 +13,7 @@ $databases = new Databases($client);
 $result = $databases->listDocuments(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    transactionId: '<TRANSACTION_ID>', // optional
+    total: false // optional
 );

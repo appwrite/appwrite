@@ -1,5 +1,55 @@
 # Change Log
 
+## 11.1.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+
+## 11.0.0
+
+* Rename `create-csv-migration` to `create-csv-import` command to create a CSV import of a collection/table
+* Add `create-csv-export` command to create a CSV export of a collection/table
+* Add `create-resend-provider` and `update-resend-provider` commands to create and update a Resend Email provider
+* Fix syncing of tables deleted locally during `push tables` command
+* Fix added push command support for cli spatial types
+* Fix attribute changing during push
+* Replace pkg with @yao-pkg/pkg in dependencies
+
+## 10.2.3
+
+* Fix `init tables` command not working
+* Improve tablesDB resource syncing during `push tables` command
+
+## 10.2.2
+
+* Fix `logout` command showing duplicate sessions
+* Fix `logout` command showing a blank email even when logged out
+* Add syncing of `tablesDB` resource during `push tables` command
+
+## 10.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 10.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 10.0.1
+
+* Fix CLI Dart model generation issues
+* Fix row permissions and security sync
+* Fix error when pushing columns with relationships
+* Fix resource name from attributes to columns for TablesDB indexes
+
+## 10.0.0
+
+* **Breaking:** Removed Avatars CLI command and all related subcommands; corresponding examples deleted
+* **Feat:** Geo defaults now accept coordinate arrays for Databases and Tables DB, with automatic normalization
+* **Feat:** Pull command skips deprecated resources by default and shows clearer totals/messages
+* **Feat:** Updated CLI descriptions: Databases marked legacy; added tables-db, projects, and project
+* Fix TypeScript type generation now quotes invalid property names to produce valid typings
+* Update documentation: Removed Avatars CLI examples and updated help text to reflect new geo defaults and terminology
+
 ## 8.3.0
 
 * **Feat:** Add support for `appwrite.config.json` file
