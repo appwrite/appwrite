@@ -50,12 +50,8 @@ class Action extends PlatformAction
                 if (!\is_null($log)) {
                     $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
                     $log->addTag('dnsDomain', $domain->get());
-
-                    $error = $validator->getDescription();
-                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
                 }
-
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'Domain verification failed because CAA records do not allow Appwrite\'s certificate issuer.');
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED);
             }
         }
 
@@ -90,7 +86,7 @@ class Action extends PlatformAction
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
-        if (!is_null($targetCNAME) && $targetCNAME->isKnown() && !$targetCNAME->isTest()) {
+        if (!is_null($targetCNAME)) {
             $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME);
             $validators[] = $validator;
 
@@ -128,17 +124,7 @@ class Action extends PlatformAction
             if (!\is_null($log)) {
                 $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
                 $log->addTag('dnsDomain', $domain->get());
-
-                $errors = [];
-                foreach ($validators as $validator) {
-                    if (!empty($validator->getLogs())) {
-                        $errors[] = \is_array($validator->getLogs()) ? \json_encode($validator->getLogs()) : \strval($validator->getLogs());
-                    }
-                }
-                $error = \implode("\n", $errors);
-                $log->addExtra('dnsResponse', $error);
             }
-
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
         }
     }

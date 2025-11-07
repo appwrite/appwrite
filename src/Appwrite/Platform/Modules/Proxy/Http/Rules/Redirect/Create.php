@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\DNS;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -16,14 +15,11 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
-use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
@@ -164,28 +160,6 @@ class Create extends Action
         $status = RULE_STATUS_VERIFICATION_FAILED;
         if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
             $status = RULE_STATUS_SUCCESSFUL;
-        }
-        if ($status === RULE_STATUS_VERIFICATION_FAILED) {
-            $validators = [];
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validators[] = new DNS($targetCNAME->get(), Record::TYPE_CNAME);
-            }
-            if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), Record::TYPE_A);
-            }
-            if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), Record::TYPE_AAAA);
-            }
-
-            if (empty($validators)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
-            }
-
-            $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
-            if ($validator->isValid($domain->get())) {
-                $status = RULE_STATUS_GENERATING_CERTIFICATE;
-            }
         }
 
         $owner = '';

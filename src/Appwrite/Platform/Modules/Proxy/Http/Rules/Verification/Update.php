@@ -14,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
@@ -83,8 +82,7 @@ class Update extends Action
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 
-        // Check both status (HEAD) and verification attribute (1.8.x)
-        if ($rule->getAttribute('status', '') !== RULE_STATUS_VERIFICATION_FAILED || $rule->getAttribute('verification') === true) {
+        if ($rule->getAttribute('status', '') !== RULE_STATUS_VERIFICATION_FAILED) {
             return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         }
 

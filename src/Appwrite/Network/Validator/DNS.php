@@ -2,7 +2,6 @@
 
 namespace Appwrite\Network\Validator;
 
-use Swoole\Coroutine\WaitGroup;
 use Utopia\DNS\Client;
 use Utopia\DNS\Message;
 use Utopia\DNS\Message\Question;
