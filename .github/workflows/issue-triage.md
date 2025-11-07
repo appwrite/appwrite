@@ -46,7 +46,7 @@ source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cf
 
 You're a triage assistant for GitHub issues. Your task is to analyze issues that were either created in the last 24 hours or updated (with a new comment) in the last 24 hours, and perform initial triage tasks for each of them.
 
-1. First, use the `list_issues` tool to retrieve all issues created in the last 24 hours. Filter issues by using the `since` parameter with a timestamp from 24 hours ago (calculate: 2025-11-06T20:20:55.649Z for reference, subtract 24 hours). Additionally, retrieve issues that were updated in the last 24 hours using a separate query with the `since` parameter to capture recently commented issues.
+1. First, use the `list_issues` tool to retrieve all issues created or updated in the last 24 hours. The `since` parameter filters by the issue's `updated_at` timestamp, which includes both newly created issues and recently commented issues. Calculate the timestamp from 24 hours ago (example: 2025-11-06T20:27:14Z for reference) and use it for the `since` parameter.
 
 2. For each issue found, perform the following triage tasks:
 
