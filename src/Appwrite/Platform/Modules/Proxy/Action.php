@@ -3,10 +3,10 @@
 namespace Appwrite\Platform\Modules\Proxy;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\DNS;
 use Appwrite\Platform\Action as PlatformAction;
 use Utopia\Database\Document;
 use Utopia\DNS\Message\Record;
+use Utopia\DNS\Validator\DNS as ValidatorDNS;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
 use Utopia\System\System;
@@ -15,7 +15,7 @@ use Utopia\Validator\IP;
 
 class Action extends PlatformAction
 {
-    public function __construct(protected string $dnsValidatorClass = DNS::class)
+    public function __construct(protected string $dnsValidatorClass = ValidatorDNS::class)
     {
     }
 
