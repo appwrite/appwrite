@@ -5,7 +5,7 @@
 #
 # Source: githubnext/agentics/workflows/issue-triage.md@0837fb7b24c3b84ee77fb7c8cfa8735c48be347a
 #
-# Effective stop-time: 2025-12-06 23:42:23
+# Effective stop-time: 2025-12-07 20:00:16
 #
 # Job Dependency Graph:
 # ```mermaid
@@ -927,7 +927,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
           GH_AW_LABELS_ALLOWED: ""
-          GH_AW_LABELS_MAX_COUNT: 5
+          GH_AW_LABELS_MAX_COUNT: 100
           GH_AW_LABELS_TARGET: "*"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
@@ -1269,7 +1269,7 @@ jobs:
         run: |
           mkdir -p /tmp/gh-aw/safeoutputs
           cat > /tmp/gh-aw/safeoutputs/config.json << 'EOF'
-          {"add_comment":{"max":1,"target":"*"},"add_labels":{"max":5},"missing_tool":{}}
+          {"add_comment":{"max":10,"target":"*"},"add_labels":{"max":100},"missing_tool":{}}
           EOF
           cat > /tmp/gh-aw/safeoutputs/mcp-server.cjs << 'EOF'
             const fs = require("fs");
@@ -4938,7 +4938,7 @@ jobs:
         id: check_stop_time
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         env:
-          GH_AW_STOP_TIME: 2025-12-06 23:42:23
+          GH_AW_STOP_TIME: 2025-12-07 20:00:16
           GH_AW_WORKFLOW_NAME: "Agentic Triage"
         with:
           script: |

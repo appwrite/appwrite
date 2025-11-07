@@ -23,9 +23,10 @@ network: defaults
 
 safe-outputs:
   add-labels:
-    max: 5
+    max: 100
     target: "*"
   add-comment:
+    max: 10
     target: "*"
 
 tools:
