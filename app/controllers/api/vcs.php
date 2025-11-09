@@ -166,7 +166,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 } else {
@@ -237,7 +237,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 }
@@ -458,7 +458,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                             $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                         }
                     } finally {
-                        $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId);
+                        Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                     }
                 }
             }
