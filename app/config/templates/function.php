@@ -2,7 +2,7 @@
 
 use Utopia\Config\Config;
 
-$templateRuntimes = Config::getParam('template-runtimes');
+$templateRuntimes = Config::getParam('runtimes');
 
 function getRuntimes($runtime, $commands, $entrypoint, $providerRootDirectory, $versionsDenyList = [])
 {

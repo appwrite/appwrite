@@ -6,7 +6,7 @@
 
 use Utopia\Config\Config;
 
-$templateRuntimes = Config::getParam('template-runtimes');
+$templateRuntimes = Config::getParam('runtimes');
 
 function getVersions(array $versions, string $prefix)
 {
