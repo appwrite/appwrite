@@ -336,10 +336,10 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
 
-        // count runtimes
+        // Count runtimes
         $runtimes = [];
 
-        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region) {
+        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region, &$runtimes) {
             $functionDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
@@ -404,7 +404,7 @@ class StatsResources extends Action
         // Count frameworks
         $frameworks = [];
 
-        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region) {
+        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region, &$frameworks) {
             $siteDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
