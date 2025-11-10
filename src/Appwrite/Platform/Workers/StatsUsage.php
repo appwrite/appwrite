@@ -86,6 +86,124 @@ class StatsUsage extends Action
     ];
 
     /**
+     * Valid metrics defined in constants.php
+     * Metrics with placeholders use regex patterns for validation
+     */
+    protected array $validMetrics = [
+        METRIC_TEAMS,
+        METRIC_USERS,
+        METRIC_WEBHOOKS_SENT,
+        METRIC_WEBHOOKS_FAILED,
+        METRIC_AUTH_METHOD_PHONE,
+        METRIC_MESSAGES,
+        METRIC_MESSAGES_SENT,
+        METRIC_MESSAGES_FAILED,
+        METRIC_SESSIONS,
+        METRIC_DATABASES,
+        METRIC_COLLECTIONS,
+        METRIC_DATABASES_STORAGE,
+        METRIC_DOCUMENTS,
+        METRIC_DATABASES_OPERATIONS_READS,
+        METRIC_DATABASES_OPERATIONS_WRITES,
+        METRIC_BUCKETS,
+        METRIC_FILES,
+        METRIC_FILES_STORAGE,
+        METRIC_FILES_TRANSFORMATIONS,
+        METRIC_FILES_IMAGES_TRANSFORMED,
+        METRIC_SITES,
+        METRIC_FUNCTIONS,
+        METRIC_DEPLOYMENTS,
+        METRIC_DEPLOYMENTS_STORAGE,
+        METRIC_BUILDS,
+        METRIC_BUILDS_SUCCESS,
+        METRIC_BUILDS_FAILED,
+        METRIC_BUILDS_STORAGE,
+        METRIC_BUILDS_COMPUTE,
+        METRIC_BUILDS_COMPUTE_SUCCESS,
+        METRIC_BUILDS_COMPUTE_FAILED,
+        METRIC_BUILDS_MB_SECONDS,
+        METRIC_EXECUTIONS,
+        METRIC_EXECUTIONS_COMPUTE,
+        METRIC_EXECUTIONS_MB_SECONDS,
+        METRIC_NETWORK_REQUESTS,
+        METRIC_NETWORK_INBOUND,
+        METRIC_NETWORK_OUTBOUND,
+        METRIC_MAU,
+        METRIC_DAU,
+        METRIC_WAU,
+        METRIC_WEBHOOKS,
+        METRIC_PLATFORMS,
+        METRIC_PROVIDERS,
+        METRIC_TOPICS,
+        METRIC_TARGETS,
+        METRIC_KEYS,
+        METRIC_DOMAINS,
+        METRIC_SITES_REQUESTS,
+        METRIC_SITES_INBOUND,
+        METRIC_SITES_OUTBOUND,
+        METRIC_AVATARS_SCREENSHOTS_GENERATED,
+    ];
+
+    /**
+     * Metrics with dynamic placeholders (need regex validation)
+     * Pattern => Regex to validate the metric
+     */
+    protected array $validMetricPatterns = [
+        METRIC_WEBHOOK_ID_SENT => '/^\d+\.webhooks\.events\.sent$/',
+        METRIC_WEBHOOK_ID_FAILED => '/^\d+\.webhooks\.events\.failed$/',
+        METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE => '/^auth\.method\.phone\.[A-Z]{2}$/',
+        METRIC_MESSAGES_TYPE => '/^messages\.(email|sms|push)$/',
+        METRIC_MESSAGES_TYPE_SENT => '/^messages\.(email|sms|push)\.sent$/',
+        METRIC_MESSAGES_TYPE_FAILED => '/^messages\.(email|sms|push)\.failed$/',
+        METRIC_MESSAGES_TYPE_PROVIDER => '/^messages\.(email|sms|push)\..+$/',
+        METRIC_MESSAGES_TYPE_PROVIDER_SENT => '/^messages\.(email|sms|push)\..+\.sent$/',
+        METRIC_MESSAGES_TYPE_PROVIDER_FAILED => '/^messages\.(email|sms|push)\..+\.failed$/',
+        METRIC_DATABASE_ID_COLLECTIONS => '/^\d+\.collections$/',
+        METRIC_DATABASE_ID_STORAGE => '/^\d+\.databases\.storage$/',
+        METRIC_DATABASE_ID_DOCUMENTS => '/^\d+\.documents$/',
+        METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS => '/^\d+\.\d+\.documents$/',
+        METRIC_DATABASE_ID_COLLECTION_ID_STORAGE => '/^\d+\.\d+\.databases\.storage$/',
+        METRIC_DATABASE_ID_OPERATIONS_READS => '/^\d+\.databases\.operations\.reads$/',
+        METRIC_DATABASE_ID_OPERATIONS_WRITES => '/^\d+\.databases\.operations\.writes$/',
+        METRIC_BUCKET_ID_FILES_TRANSFORMATIONS => '/^\d+\.files\.transformations$/',
+        METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED => '/^\d+\.files\.imagesTransformed$/',
+        METRIC_BUCKET_ID_FILES => '/^\d+\.files$/',
+        METRIC_BUCKET_ID_FILES_STORAGE => '/^\d+\.files\.storage$/',
+        METRIC_RESOURCE_TYPE_ID_EXECUTIONS => '/^(functions|sites)\.\d+\.executions$/',
+        METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE => '/^(functions|sites)\.\d+\.executions\.compute$/',
+        METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS => '/^(functions|sites)\.\d+\.executions\.mbSeconds$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS => '/^(functions|sites)\.\d+\.builds\.success$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED => '/^(functions|sites)\.\d+\.builds\.failed$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE => '/^(functions|sites)\.\d+\.builds\.compute$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS => '/^(functions|sites)\.\d+\.builds\.compute\.success$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED => '/^(functions|sites)\.\d+\.builds\.compute\.failed$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS => '/^(functions|sites)\.\d+\.builds\.mbSeconds$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS => '/^(functions|sites)\.\d+\.builds$/',
+        METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE => '/^(functions|sites)\.\d+\.builds\.storage$/',
+        METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS => '/^(functions|sites)\.\d+\.deployments$/',
+        METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE => '/^(functions|sites)\.\d+\.deployments\.storage$/',
+        METRIC_RESOURCE_TYPE_EXECUTIONS => '/^(functions|sites)\.executions$/',
+        METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE => '/^(functions|sites)\.executions\.compute$/',
+        METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS => '/^(functions|sites)\.executions\.mbSeconds$/',
+        METRIC_RESOURCE_TYPE_BUILDS_SUCCESS => '/^(functions|sites)\.builds\.success$/',
+        METRIC_RESOURCE_TYPE_BUILDS_FAILED => '/^(functions|sites)\.builds\.failed$/',
+        METRIC_RESOURCE_TYPE_BUILDS_COMPUTE => '/^(functions|sites)\.builds\.compute$/',
+        METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS => '/^(functions|sites)\.builds\.compute\.success$/',
+        METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED => '/^(functions|sites)\.builds\.compute\.failed$/',
+        METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS => '/^(functions|sites)\.builds\.mbSeconds$/',
+        METRIC_RESOURCE_TYPE_BUILDS => '/^(functions|sites)\.builds$/',
+        METRIC_RESOURCE_TYPE_BUILDS_STORAGE => '/^(functions|sites)\.builds\.storage$/',
+        METRIC_RESOURCE_TYPE_DEPLOYMENTS => '/^(functions|sites)\.deployments$/',
+        METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE => '/^(functions|sites)\.deployments\.storage$/',
+        METRIC_SITES_ID_REQUESTS => '/^sites\.\d+\.requests$/',
+        METRIC_SITES_ID_INBOUND => '/^sites\.\d+\.inbound$/',
+        METRIC_SITES_ID_OUTBOUND => '/^sites\.\d+\.outbound$/',
+        METRIC_PROVIDER_TYPE_TARGETS => '/^(email|sms|push)\.targets$/',
+        METRIC_FUNCTIONS_RUNTIME => '/^functions\.runtimes\..+$/',
+        METRIC_SITES_FRAMEWORK => '/^sites\.frameworks\..+$/',
+    ];
+
+    /**
      * @var callable(): Database
      */
     protected mixed $getLogsDB;
@@ -122,6 +240,26 @@ class StatsUsage extends Action
             ->callback($this->action(...));
 
         $this->lastTriggeredTime = time();
+    }
+
+    /**
+     * Validate if a metric is defined in constants
+     * @param string $metricKey
+     * @return bool
+     */
+    protected function isValidMetric(string $metricKey): bool
+    {
+        if (in_array($metricKey, $this->validMetrics)) {
+            return true;
+        }
+
+        foreach ($this->validMetricPatterns as $pattern => $regex) {
+            if (preg_match($regex, $metricKey)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -162,13 +300,21 @@ class StatsUsage extends Action
         $this->stats[$projectId]['project'] = $project;
         $this->stats[$projectId]['receivedAt'] = DateTime::now();
         foreach ($payload['metrics'] ?? [] as $metric) {
-            $this->keys++;
-            if (!isset($this->stats[$projectId]['keys'][$metric['key']])) {
-                $this->stats[$projectId]['keys'][$metric['key']] = $metric['value'];
+            $metricKey = $metric['key'] ?? '';
+
+            // Skip invalid metrics
+            if (!$this->isValidMetric($metricKey)) {
+                Console::warning('[' . DateTime::now() . '] Skipping unknown metric: ' . $metricKey);
                 continue;
             }
 
-            $this->stats[$projectId]['keys'][$metric['key']] += $metric['value'];
+            $this->keys++;
+            if (!isset($this->stats[$projectId]['keys'][$metricKey])) {
+                $this->stats[$projectId]['keys'][$metricKey] = $metric['value'];
+                continue;
+            }
+
+            $this->stats[$projectId]['keys'][$metricKey] += $metric['value'];
         }
 
         // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
