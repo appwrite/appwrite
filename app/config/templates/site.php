@@ -1387,7 +1387,7 @@ return [
             [
                 'name' => 'ELEVENLABS_API_KEY',
                 'description' => 'Your ElevenLabs API key',
-                'value' => '',
+                'value' => 'sk_XXX',
                 'placeholder' => 'sk_.....',
                 'required' => true,
                 'type' => 'password'
