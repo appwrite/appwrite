@@ -27,6 +27,13 @@ class DetectionRuntime extends Model
                 'description' => 'Function install and build commands',
                 'default' => '',
                 'example' => 'npm install && npm run build',
+            ])
+            ->addRule('variables', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Environment variables found in .env files',
+                'default' => [],
+                'array' => true,
+                'example' => ['PORT', 'NODE_ENV'],
             ]);
     }
 

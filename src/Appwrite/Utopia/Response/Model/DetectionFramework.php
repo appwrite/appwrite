@@ -33,6 +33,13 @@ class DetectionFramework extends Model
                 'description' => 'Site Output Directory',
                 'default' => '',
                 'example' => 'dist',
+            ])
+            ->addRule('variables', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Environment variables found in .env files',
+                'default' => [],
+                'array' => true,
+                'example' => ['PORT', 'NODE_ENV'],
             ]);
     }
 
