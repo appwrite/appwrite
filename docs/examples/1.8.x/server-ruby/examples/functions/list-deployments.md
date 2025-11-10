@@ -12,5 +12,6 @@ functions = Functions.new(client)
 result = functions.list_deployments(
     function_id: '<FUNCTION_ID>',
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

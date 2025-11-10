@@ -8,4 +8,5 @@ Account account = Account(client);
 
 IdentityList result = await account.listIdentities(
     queries: [], // optional
+    total: false, // optional
 );

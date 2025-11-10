@@ -10,6 +10,6 @@ let file = try await storage.updateFile(
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     name: "<NAME>", // optional
-    permissions: ["read("any")"] // optional
+    permissions: [Permission.read(Role.any())] // optional
 )
 

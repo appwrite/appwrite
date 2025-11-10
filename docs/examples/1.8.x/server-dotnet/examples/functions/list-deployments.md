@@ -12,5 +12,6 @@ Functions functions = new Functions(client);
 DeploymentList result = await functions.ListDeployments(
     functionId: "<FUNCTION_ID>",
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

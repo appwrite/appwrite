@@ -12,6 +12,7 @@ Sites sites = new Sites(client);
 sites.listLogs(
     "<SITE_ID>", // siteId
     listOf(), // queries (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

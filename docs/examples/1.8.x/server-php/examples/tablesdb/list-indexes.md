@@ -13,5 +13,6 @@ $tablesDB = new TablesDB($client);
 $result = $tablesDB->listIndexes(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

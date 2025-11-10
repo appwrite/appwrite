@@ -9,6 +9,7 @@ let users = Users(client)
 
 let logList = try await users.listLogs(
     userId: "<USER_ID>",
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 )
 

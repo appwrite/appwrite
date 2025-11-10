@@ -11,5 +11,6 @@ Sites sites = new Sites(client);
 
 SiteList result = await sites.List(
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );
