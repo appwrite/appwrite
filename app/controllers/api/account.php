@@ -1764,16 +1764,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
-        $proofsForTokenOAuth2 = new ProofsToken(TOKEN_LENGTH_OAUTH2);
+        $proofForTokenOAuth2 = new ProofsToken(TOKEN_LENGTH_OAUTH2);
+        $proofForTokenOAuth2->setHash(new Sha());
         // If the `token` param is set, we will return the token in the query string
         if ($state['token']) {
-            $secret = $proofsForTokenOAuth2->generate();
+            $secret = $proofForTokenOAuth2->generate();
             $token = new Document([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'type' => TOKEN_TYPE_OAUTH2,
-                'secret' => $proofsForTokenOAuth2->hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForTokenOAuth2->hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
