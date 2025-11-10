@@ -2,6 +2,9 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Avatars;
+use Appwrite\Enums\Theme;
+use Appwrite\Enums\Timezone;
+use Appwrite\Enums\Output;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -16,11 +19,11 @@ $result = $avatars->getScreenshot(
     viewportWidth: 1, // optional
     viewportHeight: 1, // optional
     scale: 0.1, // optional
-    theme: ::LIGHT(), // optional
+    theme: Theme::LIGHT(), // optional
     userAgent: '<USER_AGENT>', // optional
     fullpage: false, // optional
     locale: '<LOCALE>', // optional
-    timezone: ::AFRICAABIDJAN(), // optional
+    timezone: Timezone::AFRICAABIDJAN(), // optional
     latitude: -90, // optional
     longitude: -180, // optional
     accuracy: 0, // optional
@@ -30,5 +33,5 @@ $result = $avatars->getScreenshot(
     width: 0, // optional
     height: 0, // optional
     quality: -1, // optional
-    output: ::JPG() // optional
+    output: Output::JPG() // optional
 );
