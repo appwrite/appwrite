@@ -146,6 +146,12 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
+                'ForwardedFor' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Forwarded-For',
+                    'description' => 'The IP address of the client that made the request',
+                    'in' => 'header',
+                ],
             ],
             APP_PLATFORM_CONSOLE => [
                 'Project' => [
