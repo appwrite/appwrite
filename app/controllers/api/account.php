@@ -1580,7 +1580,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $sessionUpgrade = true;
         }
 
-        $sessions = $user->getAttribute('sessions', []);
         $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         if ($current) { // Delete current session of new one.
