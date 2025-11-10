@@ -239,7 +239,11 @@ class Request extends UtopiaRequest
             if ($isAppUser) {
                 // x-forwarded-for can contain multiple IPs, the first one is the original client
                 $ips = explode(',', $forwardedIP);
-                return trim($ips[0]);
+                $firstIP = trim($ips[0]);
+                // Validate the IP and fallback if invalid
+                if (!empty($firstIP) && filter_var($firstIP, FILTER_VALIDATE_IP)) {
+                    return $firstIP;
+                }
             }
         }
 
