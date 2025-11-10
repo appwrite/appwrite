@@ -3072,4 +3072,83 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
     }
+
+    public function testForwardedIPWithAPIKey(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // Create a user to test with
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'forwardedip@test.com',
+            'password' => 'password123',
+            'name' => 'Forwarded IP Test',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        // Create a token for the user
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $secret = $response['body']['secret'];
+
+        // Test with x-forwarded-for header and API key - should use forwarded IP
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-forwarded-for' => '203.0.113.1, 198.51.100.1' // Test with multiple IPs
+        ], [
+            'userId' => $userId,
+            'secret' => $secret
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        // Get session details to verify IP was recorded
+        $sessionId = $response['body']['$id'];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Get account sessions to verify the IP
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $sessions = $response['body']['sessions'];
+        $currentSession = null;
+        foreach ($sessions as $sess) {
+            if ($sess['$id'] === $sessionId) {
+                $currentSession = $sess;
+                break;
+            }
+        }
+
+        $this->assertNotNull($currentSession);
+        // The IP should be the first one from the x-forwarded-for header
+        $this->assertEquals('203.0.113.1', $currentSession['ip']);
+
+        // Clean up
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+    }
 }

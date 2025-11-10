@@ -222,6 +222,31 @@ class Request extends UtopiaRequest
     }
 
     /**
+    * Get IP
+    *
+    * Method for getting IP address. Preferring forwarded IP for privileged users; otherwise returns default.
+    *
+    * @param  string  $default
+    * @return string
+    */
+    public function getIP(string $default = ''): string
+    {
+        $forwardedIP = $this->getHeader('x-forwarded-for');
+        if (!empty($forwardedIP)) {
+            $roles = Authorization::getRoles();
+            $isAppUser = Auth::isAppUser($roles);
+
+            if ($isAppUser) {
+                // x-forwarded-for can contain multiple IPs, the first one is the original client
+                $ips = explode(',', $forwardedIP);
+                return trim($ips[0]);
+            }
+        }
+
+        return parent::getIP($default);
+    }
+
+    /**
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
      *
