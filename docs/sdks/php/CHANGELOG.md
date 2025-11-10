@@ -1,6 +1,6 @@
 # Change Log
 
-## 17.6.0
+## 18.0.0
 
 * Fix duplicate methods issue (e.g., `updateMFA` and `updateMfa`) causing build and runtime errors
 * Add support for `getScreenshot` method to `Avatars` service
