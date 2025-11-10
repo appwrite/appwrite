@@ -1,5 +1,11 @@
 # Change Log
 
+## 17.6.0
+
+* Fix duplicate methods issue (e.g., `updateMFA` and `updateMfa`) causing build and runtime errors
+* Add support for `getScreenshot` method to `Avatars` service
+* Add `Output`, `Theme` and `Timezone` enums
+
 ## 17.5.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
