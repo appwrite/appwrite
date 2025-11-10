@@ -275,7 +275,7 @@ class Mapper
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Network\Validator\Email':
             case 'Appwrite\Network\Validator\Redirect':
-            case 'Appwrite\Network\Validator\DNS':
+            case 'Utopia\DNS\Validator\DNS':
             case 'Appwrite\Network\Validator\Origin':
             case 'Appwrite\Task\Validator\Cron':
             case 'Appwrite\Utopia\Database\Validator\CustomId':
