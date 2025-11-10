@@ -304,8 +304,7 @@ class StatsUsage extends Action
 
             // Skip invalid metrics
             if (!$this->isValidMetric($metricKey)) {
-                Console::warning('[' . DateTime::now() . '] Skipping unknown metric: ' . $metricKey);
-                continue;
+                throw new Exception('Invalid metric key: ' . $metricKey);
             }
 
             $this->keys++;
