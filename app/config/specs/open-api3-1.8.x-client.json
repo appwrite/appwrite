@@ -6313,7 +6313,8 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     },
                                     "documents": {
                                         "type": "array",
@@ -6326,7 +6327,8 @@
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -6583,12 +6585,14 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 },
                                 "required": [
@@ -6701,12 +6705,14 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -6801,7 +6807,8 @@
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -6920,12 +6927,14 @@
                                     "min": {
                                         "type": "number",
                                         "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -7044,12 +7053,14 @@
                                     "max": {
                                         "type": "number",
                                         "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -7251,7 +7262,8 @@
                                     "scheduledAt": {
                                         "type": "string",
                                         "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
-                                        "x-example": "<SCHEDULED_AT>"
+                                        "x-example": "<SCHEDULED_AT>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -8194,7 +8206,8 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     }
                                 },
                                 "required": [
@@ -8360,7 +8373,8 @@
                                     "name": {
                                         "type": "string",
                                         "description": "Name of the file",
-                                        "x-example": "<NAME>"
+                                        "x-example": "<NAME>",
+                                        "x-nullable": true
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -8368,7 +8382,8 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -9500,7 +9515,8 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     },
                                     "rows": {
                                         "type": "array",
@@ -9513,7 +9529,8 @@
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -9763,12 +9780,14 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -9877,12 +9896,14 @@
                                         "x-example": "[\"read(\"any\")\"]",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -9976,7 +9997,8 @@
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -10094,12 +10116,14 @@
                                     "min": {
                                         "type": "number",
                                         "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
@@ -10217,12 +10241,14 @@
                                     "max": {
                                         "type": "number",
                                         "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "x-nullable": true
                                     },
                                     "transactionId": {
                                         "type": "string",
                                         "description": "Transaction ID for staging the operation.",
-                                        "x-example": "<TRANSACTION_ID>"
+                                        "x-example": "<TRANSACTION_ID>",
+                                        "x-nullable": true
                                     }
                                 }
                             }
