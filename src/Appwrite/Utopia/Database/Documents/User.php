@@ -141,7 +141,7 @@ class User extends Document
                 $token->isSet('expire') &&
                 $token->isSet('type') &&
                 ($type === null ||  $token->getAttribute('type') === $type) &&
-                $proofForToken->verify($secret, $token->getAttribute('secret')) &&
+                $proofForToken->verify($proofForToken->hash($secret), $token->getAttribute('secret')) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $token;
