@@ -149,7 +149,7 @@ class Specs extends Action
                 'ForwardedFor' => [
                     'type' => 'apiKey',
                     'name' => 'X-Forwarded-For',
-                    'description' => 'The IP address of the client that made the request',
+                    'description' => 'The IP address of the client that made the request. Used in SSR scenarios with API key authentication to forward the real client IP instead of the server IP.',
                     'in' => 'header',
                 ],
             ],
