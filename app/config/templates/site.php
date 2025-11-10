@@ -24,6 +24,7 @@ class UseCases
     public const ECOMMERCE = 'ecommerce';
     public const DOCUMENTATION = 'documentation';
     public const BLOG = 'blog';
+    public const AI = 'artificial intelligence';
 }
 
 const TEMPLATE_FRAMEWORKS = [
@@ -970,7 +971,7 @@ return [
         'name' => 'TanStack Start starter',
         'useCases' => [UseCases::STARTER],
         'tagline' => 'Simple TanStack Start application integrated with Appwrite SDK.',
-        'score' => 6, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'score' => 9, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
         'screenshotDark' => $url . '/images/sites/templates/starter-for-tanstack-start-dark.png',
         'screenshotLight' => $url . '/images/sites/templates/starter-for-tanstack-start-light.png',
         'frameworks' => [
@@ -1442,5 +1443,33 @@ return [
         'providerOwner' => 'appwrite',
         'providerVersion' => '0.3.*',
         'variables' => []
+    ],
+    [
+        'key' => 'text-to-speech',
+        'name' => 'Text-to-speech with ElevenLabs',
+        'tagline' => 'Next.js app that transforms text into natural, human-like speech using ElevenLabs',
+        'score' => 10, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::AI],
+        'screenshotDark' => $url . '/images/sites/templates/text-to-speech-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/text-to-speech-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/text-to-speech',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.6.*',
+        'variables' => [
+            [
+                'name' => 'ELEVENLABS_API_KEY',
+                'description' => 'Your ElevenLabs API key',
+                'value' => '',
+                'placeholder' => 'sk_.....',
+                'required' => true,
+                'type' => 'password'
+            ],
+        ]
     ],
 ];
