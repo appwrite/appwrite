@@ -1,5 +1,9 @@
 # Change Log
 
+## 18.0.1
+
+* Fix `TablesDB` service to use correct file name
+
 ## 18.0.0
 
 * Fix duplicate methods issue (e.g., `updateMFA` and `updateMfa`) causing build and runtime errors

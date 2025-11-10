@@ -281,7 +281,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '18.0.0',
+                'version' => '18.0.1',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'package' => 'https://packagist.org/packages/appwrite/appwrite',
                 'enabled' => true,
