@@ -1613,6 +1613,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
 
                 try {
+                    $emailCanonical = new EmailCanonical($email);
+                } catch (Throwable) {
+                    $emailCanonical = null;
+                }
+
+                try {
                     $userId = ID::unique();
                     $user->setAttributes([
                         '$id' => $userId,
@@ -1639,7 +1645,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'authenticators' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
+                        'emailCanonical' => $emailCanonical?->getCanonical(),
+                        'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                        'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                        'emailIsDisposable' => $emailCanonical?->isDisposable(),
+                        'emailIsFree' => $emailCanonical?->isFree(),
                     ]);
+
                     $user->removeAttribute('$sequence');
                     $userDoc = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
@@ -2015,6 +2027,12 @@ App::post('/v1/account/tokens/magic-url')
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
+            try {
+                $emailCanonical = new EmailCanonical($email);
+            } catch (Throwable) {
+                $emailCanonical = null;
+            }
+
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -2039,6 +2057,11 @@ App::post('/v1/account/tokens/magic-url')
                 'authenticators' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
+                'emailCanonical' => $emailCanonical?->getCanonical(),
+                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                'emailIsDisposable' => $emailCanonical?->isDisposable(),
+                'emailIsFree' => $emailCanonical?->isFree(),
             ]);
 
             $user->removeAttribute('$sequence');
@@ -2645,6 +2668,11 @@ App::post('/v1/account/tokens/phone')
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $phone]),
                 'accessedAt' => DateTime::now(),
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
             ]);
 
             $user->removeAttribute('$sequence');
