@@ -589,7 +589,10 @@ class Builds extends Action
             // Some runtimes/frameworks can't compile with less memory than this
             $minMemory = $resource->getCollection() === 'sites' ? 2048 : 1024;
 
-            if ($resource->getAttribute('framework', '') === 'analog') {
+            if (
+                $resource->getAttribute('framework', '') === 'analog' ||
+                $resource->getAttribute('framework', '') === 'tanstack-start'
+            ) {
                 $minMemory = 4096;
             }
 
@@ -988,7 +991,7 @@ class Builds extends Action
                                     $config['sleep'] = $framework['screenshotSleep'];
                                 }
 
-                                $browserEndpoint = Config::getParam('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
+                                $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
                                 $fetchResponse = $client->fetch(
                                     url: $browserEndpoint . '/screenshots',
                                     method: 'POST',

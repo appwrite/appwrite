@@ -76,6 +76,14 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
     $subject = $locale->getText("emails.sessionAlert.subject");
     $preview = $locale->getText("emails.sessionAlert.preview");
     $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+    $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
+
+    $validator = new FileName();
+    if (!$validator->isValid($smtpBaseTemplate)) {
+        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid template path');
+    }
+
+    $bodyTemplate = __DIR__ . '/../../config/locale/templates/' . $smtpBaseTemplate . '.tpl';
 
     $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-session-alert.tpl');
     $message
@@ -158,12 +166,25 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
     ];
 
+    if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+        $emailVariables = array_merge($emailVariables, [
+            'accentColor' => APP_EMAIL_ACCENT_COLOR,
+            'logoUrl' => APP_EMAIL_LOGO_URL,
+            'twitterUrl' => APP_SOCIAL_TWITTER,
+            'discordUrl' => APP_SOCIAL_DISCORD,
+            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => APP_EMAIL_TERMS_URL,
+            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+        ]);
+    }
+
     $email = $user->getAttribute('email');
 
     $queueForMails
         ->setSubject($subject)
         ->setPreview($preview)
         ->setBody($body)
+        ->setBodyTemplate($bodyTemplate)
         ->setVariables($emailVariables)
         ->setRecipient($email)
         ->trigger();
@@ -2850,12 +2871,13 @@ App::get('/v1/account/logs')
         contentType: ContentType::JSON,
     ))
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -2900,7 +2922,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getSequence(), $queries),
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -5254,10 +5276,11 @@ App::get('/v1/account/identities')
         contentType: ContentType::JSON
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Document $user, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -5298,7 +5321,7 @@ App::get('/v1/account/identities')
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
-        $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        $total = $includeTotal ? $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT) : 0;
 
         $response->dynamic(new Document([
             'identities' => $results,

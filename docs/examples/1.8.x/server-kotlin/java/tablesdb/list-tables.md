@@ -13,6 +13,7 @@ tablesDB.listTables(
     "<DATABASE_ID>", // databaseId
     listOf(), // queries (optional)
     "<SEARCH>", // search (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

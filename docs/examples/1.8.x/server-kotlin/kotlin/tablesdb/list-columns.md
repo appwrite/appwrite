@@ -12,5 +12,6 @@ val tablesDB = TablesDB(client)
 val response = tablesDB.listColumns(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    total = false // optional
 )

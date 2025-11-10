@@ -18,4 +18,5 @@ response, error := service.ListDeployments(
     "<FUNCTION_ID>",
     functions.WithListDeploymentsQueries([]interface{}{}),
     functions.WithListDeploymentsSearch("<SEARCH>"),
+    functions.WithListDeploymentsTotal(false),
 )

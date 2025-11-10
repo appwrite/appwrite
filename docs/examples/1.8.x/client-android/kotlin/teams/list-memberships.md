@@ -12,4 +12,5 @@ val result = teams.listMemberships(
     teamId = "<TEAM_ID>", 
     queries = listOf(), // (optional)
     search = "<SEARCH>", // (optional)
+    total = false, // (optional)
 )

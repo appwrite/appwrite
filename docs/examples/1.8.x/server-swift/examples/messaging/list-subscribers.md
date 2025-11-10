@@ -10,6 +10,7 @@ let messaging = Messaging(client)
 let subscriberList = try await messaging.listSubscribers(
     topicId: "<TOPIC_ID>",
     queries: [], // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 )
 

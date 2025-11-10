@@ -13,5 +13,6 @@ val response = databases.listDocuments(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     queries = listOf(), // optional
-    transactionId = "<TRANSACTION_ID>" // optional
+    transactionId = "<TRANSACTION_ID>", // optional
+    total = false // optional
 )
