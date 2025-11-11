@@ -5561,4 +5561,380 @@ trait TransactionsBase
         $this->assertEquals('Updated after upsert', $response['body']['name']);
         $this->assertEquals(20, $response['body']['counter']);
     }
+
+    /**
+     * Test array operators in transactions using updateRow with transactionId
+     * This tests the fix for operators not being parsed when stored in transaction logs
+     */
+    public function testArrayOperatorsWithUpdateRow(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'ArrayOperatorsTestDB'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create table with array column
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Items',
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create array column
+        $column = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'columnId' => 'items',
+            'name' => 'Items',
+            'size' => 255,
+            'required' => false,
+            'array' => true,
+        ]);
+
+        $this->assertEquals(202, $column['headers']['status-code']);
+        sleep(2); // Wait for column to be created
+
+        // Create initial row with some items
+        $row = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'test-row',
+            'data' => [
+                'items' => ['item1', 'item2', 'item3', 'item4']
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+        $this->assertEquals(['item1', 'item2', 'item3', 'item4'], $row['body']['items']);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test arrayRemove operator
+        $updateResponse = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/test-row", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'transactionId' => $transactionId,
+            'data' => [
+                'items' => '{"method":"arrayRemove","attribute":"","values":["item2"]}'
+            ]
+        ]);
+
+        $this->assertEquals(200, $updateResponse['headers']['status-code']);
+
+        // Test arrayInsert operator
+        $updateResponse = $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/test-row", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'transactionId' => $transactionId,
+            'data' => [
+                'items' => '{"method":"arrayInsert","attribute":"","values":[2,"newItem"]}'
+            ]
+        ]);
+
+        $this->assertEquals(200, $updateResponse['headers']['status-code']);
+
+        // Commit transaction
+        $commitResponse = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $commitResponse['headers']['status-code']);
+
+        // Verify the operations were applied correctly
+        $row = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/test-row", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        // After removing item2: ['item1', 'item3', 'item4']
+        // After inserting 'newItem' at index 2: ['item1', 'item3', 'newItem', 'item4']
+        $this->assertEquals(['item1', 'item3', 'newItem', 'item4'], $row['body']['items']);
+    }
+
+    /**
+     * Test array operators in transactions using createOperations
+     * This tests the fix for operators not being parsed in bulk operation creation
+     */
+    public function testArrayOperatorsWithCreateOperations(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'ArrayOperatorsBulkTestDB'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create table with array column
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Tags',
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create array column
+        $column = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'columnId' => 'tags',
+            'name' => 'Tags',
+            'size' => 255,
+            'required' => false,
+            'array' => true,
+        ]);
+
+        $this->assertEquals(202, $column['headers']['status-code']);
+        sleep(2); // Wait for column to be created
+
+        // Create initial row
+        $row = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'doc1',
+            'data' => [
+                'tags' => ['php', 'javascript', 'python', 'ruby']
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Create operations using bulk createOperations endpoint with array operators
+        $operations = $this->client->call(Client::METHOD_POST, "/tablesdb/transactions/{$transactionId}/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'operations' => [
+                [
+                    'action' => 'update',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => 'doc1',
+                    'data' => [
+                        'tags' => '{"method":"arrayRemove","attribute":"","values":["javascript"]}'
+                    ]
+                ],
+                [
+                    'action' => 'update',
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => 'doc1',
+                    'data' => [
+                        'tags' => '{"method":"arrayAppend","attribute":"","values":["go","rust"]}'
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(201, $operations['headers']['status-code']);
+        $this->assertEquals(2, $operations['body']['operations']);
+
+        // Commit transaction
+        $commitResponse = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $commitResponse['headers']['status-code']);
+
+        // Verify the operations were applied correctly
+        $row = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/doc1", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        // After removing 'javascript': ['php', 'python', 'ruby']
+        // After appending ['go', 'rust']: ['php', 'python', 'ruby', 'go', 'rust']
+        $this->assertEquals(['php', 'python', 'ruby', 'go', 'rust'], $row['body']['tags']);
+    }
+
+    /**
+     * Test multiple array operators in a single transaction
+     * This tests all common array operators to ensure comprehensive coverage
+     */
+    public function testMultipleArrayOperators(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'MultipleOperatorsTestDB'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create table
+        $table = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Arrays',
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        // Create multiple array columns
+        $columns = [
+            ['columnId' => 'list1', 'name' => 'List1'],
+            ['columnId' => 'list2', 'name' => 'List2'],
+            ['columnId' => 'list3', 'name' => 'List3'],
+        ];
+
+        foreach ($columns as $col) {
+            $column = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/columns/string", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'columnId' => $col['columnId'],
+                'name' => $col['name'],
+                'size' => 255,
+                'required' => false,
+                'array' => true,
+            ]);
+            $this->assertEquals(202, $column['headers']['status-code']);
+        }
+
+        sleep(2); // Wait for columns to be created
+
+        // Create initial row
+        $row = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/rows", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => 'multi-ops',
+            'data' => [
+                'list1' => ['a', 'b', 'c'],
+                'list2' => ['x', 'y', 'z'],
+                'list3' => ['1', '2', '3', '4', '5']
+            ]
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        // Create transaction
+        $transaction = $this->client->call(Client::METHOD_POST, '/tablesdb/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        // Test arrayPrepend
+        $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/multi-ops", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'transactionId' => $transactionId,
+            'data' => [
+                'list1' => '{"method":"arrayPrepend","attribute":"","values":["z"]}'
+            ]
+        ]);
+
+        // Test arrayAppend
+        $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/multi-ops", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'transactionId' => $transactionId,
+            'data' => [
+                'list2' => '{"method":"arrayAppend","attribute":"","values":["w"]}'
+            ]
+        ]);
+
+        // Test arrayRemove
+        $this->client->call(Client::METHOD_PATCH, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/multi-ops", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'transactionId' => $transactionId,
+            'data' => [
+                'list3' => '{"method":"arrayRemove","attribute":"","values":["3"]}'
+            ]
+        ]);
+
+        // Commit transaction
+        $commitResponse = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $commitResponse['headers']['status-code']);
+
+        // Verify all operations were applied correctly
+        $row = $this->client->call(Client::METHOD_GET, "/tablesdb/{$databaseId}/tables/{$tableId}/rows/multi-ops", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $row['headers']['status-code']);
+        $this->assertEquals(['z', 'a', 'b', 'c'], $row['body']['list1'], 'arrayPrepend should add element at the beginning');
+        $this->assertEquals(['x', 'y', 'z', 'w'], $row['body']['list2'], 'arrayAppend should add element at the end');
+        $this->assertEquals(['1', '2', '4', '5'], $row['body']['list3'], 'arrayRemove should remove the element');
+    }
 }
