@@ -1067,7 +1067,6 @@ class Builds extends Action
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
                         ->trigger();
-                }
                 } catch (\Throwable $th) {
                     Console::error("Screenshot generation failed:");
                     Console::error("Error: " . $th->getMessage());
