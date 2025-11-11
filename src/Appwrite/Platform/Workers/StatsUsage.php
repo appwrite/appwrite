@@ -16,6 +16,13 @@ use Utopia\System\System;
 class StatsUsage extends Action
 {
     /**
+     * Log Error Callback
+     *
+     * @var callable
+     */
+    protected mixed $logError;
+
+    /**
      * In memory per project metrics calculation
      */
     protected array $stats = [];
@@ -237,6 +244,7 @@ class StatsUsage extends Action
             ->inject('getProjectDB')
             ->inject('getLogsDB')
             ->inject('register')
+            ->inject('logError')
             ->callback($this->action(...));
 
         $this->lastTriggeredTime = time();
@@ -267,14 +275,16 @@ class StatsUsage extends Action
      * @param callable(): Database $getProjectDB
      * @param callable(): Database $getLogsDB
      * @param Registry $register
+     * @param callable $logError
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    public function action(Message $message, callable $getProjectDB, callable $getLogsDB, Registry $register): void
+    public function action(Message $message, callable $getProjectDB, callable $getLogsDB, Registry $register, callable $logError): void
     {
         $this->getLogsDB = $getLogsDB;
         $this->register = $register;
+        $this->logError = $logError;
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -304,7 +314,10 @@ class StatsUsage extends Action
 
             // Skip invalid metrics
             if (!$this->isValidMetric($metricKey)) {
-                throw new Exception('Invalid metric key: ' . $metricKey);
+                call_user_func($this->logError, new Exception('Invalid metric key: ' . $metricKey), 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                    'metricKey' => $metricKey,
+                ]);
+                continue;
             }
 
             $this->keys++;
