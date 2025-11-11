@@ -300,7 +300,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '13.6.0',
+                'version' => '13.6.1',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,

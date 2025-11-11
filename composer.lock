@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a184716dd568cd37c015e1e929dd3c24",
+    "content-hash": "ad28b7155175986191bd19bbcd13d623",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3840,16 +3840,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "3.1.2",
+            "version": "3.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b6541a9cd9b21786a5020327f582838afdb159aa"
+                "reference": "76568b81f25d89fc1e0c53f0370f139130eeb939"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b6541a9cd9b21786a5020327f582838afdb159aa",
-                "reference": "b6541a9cd9b21786a5020327f582838afdb159aa",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/76568b81f25d89fc1e0c53f0370f139130eeb939",
+                "reference": "76568b81f25d89fc1e0c53f0370f139130eeb939",
                 "shasum": ""
             },
             "require": {
@@ -3878,38 +3878,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "php -d memory_limit=2G ./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "php -d memory_limit=2G ./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3922,10 +3891,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/3.1.2",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/3.1.5"
             },
-            "time": "2025-10-30T13:10:13+00:00"
+            "time": "2025-11-05T10:17:55+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -3974,29 +3943,28 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "0.3.0",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "8fd4161bc3a8021a670c1101b40f6b09a97f1a54"
+                "reference": "d6eca184883262bdcb4261e57491c91b16079b9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/8fd4161bc3a8021a670c1101b40f6b09a97f1a54",
-                "reference": "8fd4161bc3a8021a670c1101b40f6b09a97f1a54",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/d6eca184883262bdcb4261e57491c91b16079b9a",
+                "reference": "d6eca184883262bdcb4261e57491c91b16079b9a",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0",
-                "utopia-php/cli": "0.15.*",
-                "utopia-php/telemetry": "^0.1.1"
+                "php": ">=8.3",
+                "utopia-php/console": "0.0.*",
+                "utopia-php/telemetry": "0.1.*"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.8.*",
-                "phpunit/phpunit": "^9.3",
-                "rregeer/phpunit-coverage-check": "^0.3.1",
-                "swoole/ide-helper": "4.6.6"
+                "laravel/pint": "1.25.*",
+                "phpstan/phpstan": "2.0.*",
+                "phpunit/phpunit": "12.4.*",
+                "swoole/ide-helper": "5.1.8"
             },
             "type": "library",
             "autoload": {
@@ -4024,9 +3992,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/0.3.0"
+                "source": "https://github.com/utopia-php/dns/tree/1.1.0"
             },
-            "time": "2025-08-04T11:05:53+00:00"
+            "time": "2025-11-03T22:49:02+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4169,35 +4137,7 @@
                     "Utopia\\Emails\\": "src/Emails"
                 }
             },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse"
-                ],
-                "import": [
-                    "php import.php"
-                ],
-                "import:all": [
-                    "php import.php all --commit=true"
-                ],
-                "import:disposable": [
-                    "php import.php disposable --commit=true"
-                ],
-                "import:free": [
-                    "php import.php free --commit=true"
-                ],
-                "import:stats": [
-                    "php import.php stats"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4209,19 +4149,19 @@
             ],
             "description": "Utopia Emails library is simple and lite library for parsing and validating email addresses. This library is aiming to be as simple and easy to learn and use.",
             "keywords": [
+                "RFC5322",
                 "email",
                 "emails",
                 "framework",
                 "parsing",
                 "php",
-                "rfc5322",
                 "upf",
                 "utopia",
                 "validation"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/emails/tree/0.6.2",
-                "issues": "https://github.com/utopia-php/emails/issues"
+                "issues": "https://github.com/utopia-php/emails/issues",
+                "source": "https://github.com/utopia-php/emails/tree/0.6.2"
             },
             "time": "2025-10-28T16:08:17+00:00"
         },
@@ -4549,25 +4489,7 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Migration"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4580,8 +4502,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/1.3.3",
-                "issues": "https://github.com/utopia-php/migration/issues"
+                "issues": "https://github.com/utopia-php/migration/issues",
+                "source": "https://github.com/utopia-php/migration/tree/1.3.3"
             },
             "time": "2025-10-28T04:02:08+00:00"
         },
@@ -5213,20 +5135,7 @@
                     "Utopia\\": "src/"
                 }
             },
-            "scripts": {
-                "lint": [
-                    "vendor/bin/pint --test"
-                ],
-                "format": [
-                    "vendor/bin/pint"
-                ],
-                "check": [
-                    "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 512M"
-                ],
-                "test": [
-                    "vendor/bin/phpunit --configuration phpunit.xml"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5238,8 +5147,8 @@
                 "validator"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/validators/tree/0.0.2",
-                "issues": "https://github.com/utopia-php/validators/issues"
+                "issues": "https://github.com/utopia-php/validators/issues",
+                "source": "https://github.com/utopia-php/validators/tree/0.0.2"
             },
             "time": "2025-10-20T21:52:28+00:00"
         },
@@ -5468,16 +5377,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.5.0",
+            "version": "1.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "42df22195d6457e52e4c819678168470b114a816"
+                "reference": "cd712674e34136f706e9170641ed6f4ce160e772"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/42df22195d6457e52e4c819678168470b114a816",
-                "reference": "42df22195d6457e52e4c819678168470b114a816",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cd712674e34136f706e9170641ed6f4ce160e772",
+                "reference": "cd712674e34136f706e9170641ed6f4ce160e772",
                 "shasum": ""
             },
             "require": {
@@ -5513,9 +5422,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.1"
             },
-            "time": "2025-10-31T10:10:25+00:00"
+            "time": "2025-11-04T09:55:47+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8982,7 +8891,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -9006,5 +8915,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }

@@ -1,5 +1,9 @@
 # Change Log
 
+## 13.6.1
+
+* Fix passing of `None` to nullable parameters
+
 ## 13.6.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
