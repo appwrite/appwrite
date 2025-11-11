@@ -1449,9 +1449,20 @@ App::patch('/v1/users/:userId/email')
 
         $oldEmail = $user->getAttribute('email');
 
+        try {
+            $emailCanonical = new EmailCanonical($email);
+        } catch (Throwable) {
+            $emailCanonical = null;
+        }
+
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
+            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
+            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
+            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
+            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
+            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
         ;
 
         try {
