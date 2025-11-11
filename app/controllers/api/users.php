@@ -16,7 +16,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -49,7 +49,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Emails\Email as EmailValidator;
+use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -99,9 +99,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         }
 
         try {
-            $emailValidator = new EmailValidator($email);
+            $emailCanonical = new Email($email);
         } catch (Throwable) {
-            $emailValidator = null;
+            $emailCanonical = null;
         }
 
         $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
@@ -131,11 +131,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'tokens' => null,
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $phone, $name]),
-            'emailCanonical' => $emailValidator?->getCanonical(),
-            'emailIsCanonical' => $emailValidator?->isCanonicalSupported(),
-            'emailIsCorporate' => $emailValidator?->isCorporate(),
-            'emailIsDisposable' => $emailValidator?->isDisposable(),
-            'emailIsFree' => $emailValidator?->isFree(),
+            'emailCanonical' => $emailCanonical?->getCanonical(),
+            'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+            'emailIsCorporate' => $emailCanonical?->isCorporate(),
+            'emailIsDisposable' => $emailCanonical?->isDisposable(),
+            'emailIsFree' => $emailCanonical?->isFree(),
         ]);
 
         if ($hash === 'plaintext') {
@@ -220,7 +220,7 @@ App::post('/v1/users')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', null, new Email(), 'User email.', true)
+    ->param('email', null, new EmailValidator(), 'User email.', true)
     ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -255,7 +255,7 @@ App::post('/v1/users/bcrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -290,7 +290,7 @@ App::post('/v1/users/md5')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using MD5.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -325,7 +325,7 @@ App::post('/v1/users/argon2')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Argon2.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -360,7 +360,7 @@ App::post('/v1/users/sha')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using SHA.')
     ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -402,7 +402,7 @@ App::post('/v1/users/phpass')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using PHPass.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -437,7 +437,7 @@ App::post('/v1/users/scrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
     ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
     ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.')
@@ -485,7 +485,7 @@ App::post('/v1/users/scrypt-modified')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt Modified.')
     ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
     ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
@@ -539,7 +539,7 @@ App::post('/v1/users/:userId/targets')
 
         switch ($providerType) {
             case 'email':
-                $validator = new Email();
+                $validator = new EmailValidator();
                 if (!$validator->isValid($identifier)) {
                     throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                 }
@@ -1414,7 +1414,7 @@ App::patch('/v1/users/:userId/email')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('email', '', new Email(allowEmpty: true), 'User email.')
+    ->param('email', '', new EmailValidator(allowEmpty: true), 'User email.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1450,19 +1450,19 @@ App::patch('/v1/users/:userId/email')
         $oldEmail = $user->getAttribute('email');
 
         try {
-            $emailValidator = new EmailValidator($email);
+            $emailCanonical = new EmailValidator($email);
         } catch (Throwable) {
-            $emailValidator = null;
+            $emailCanonical = null;
         }
 
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
-            ->setAttribute('emailCanonical', $emailValidator?->getCanonical())
-            ->setAttribute('emailIsCanonical', $emailValidator?->isCanonicalSupported())
-            ->setAttribute('emailIsCorporate', $emailValidator?->isCorporate())
-            ->setAttribute('emailIsDisposable', $emailValidator?->isDisposable())
-            ->setAttribute('emailIsFree', $emailValidator?->isFree())
+            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
+            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
+            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
+            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
+            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
         ;
 
         try {
@@ -1723,7 +1723,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
 
             switch ($providerType) {
                 case 'email':
-                    $validator = new Email();
+                    $validator = new EmailValidator();
                     if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                     }
