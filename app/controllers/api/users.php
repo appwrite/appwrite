@@ -1450,7 +1450,7 @@ App::patch('/v1/users/:userId/email')
         $oldEmail = $user->getAttribute('email');
 
         try {
-            $emailCanonical = new EmailValidator($email);
+            $emailCanonical = new Email($email);
         } catch (Throwable) {
             $emailCanonical = null;
         }
