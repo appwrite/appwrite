@@ -1528,6 +1528,17 @@ return [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('transformations'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+                'default' => true,
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
