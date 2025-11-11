@@ -99,7 +99,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         }
 
         try {
-            $emailCanonical = new EmailCanonical($email ?? '');
+            $emailCanonical = new EmailCanonical($email);
         } catch (Throwable) {
             $emailCanonical = null;
         }
