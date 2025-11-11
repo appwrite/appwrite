@@ -321,7 +321,8 @@ class Event
             $trimmed['project'] = new Document([
                 '$id' => $this->project->getId(),
                 '$sequence' => $this->project->getSequence(),
-                'database' => $this->project->getAttribute('database')
+                'database' => $this->project->getAttribute('database'),
+                'region' => $this->project->getAttribute('region')
             ]);
         }
 
