@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ad28b7155175986191bd19bbcd13d623",
+    "content-hash": "f77849b9786698b7a38c6dd132534fdc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3593,6 +3593,61 @@
             "time": "2025-10-20T07:14:26+00:00"
         },
         {
+            "name": "utopia-php/auth",
+            "version": "0.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/auth.git",
+                "reference": "5ad0ded3a79f153ee904b97b49f8dfe4669e4fd0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/auth/zipball/5ad0ded3a79f153ee904b97b49f8dfe4669e4fd0",
+                "reference": "5ad0ded3a79f153ee904b97b49f8dfe4669e4fd0",
+                "shasum": ""
+            },
+            "require": {
+                "ext-hash": "*",
+                "ext-scrypt": "*",
+                "ext-sodium": "*",
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.9.x-dev",
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Auth\\": "src/Auth"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Utopia PHP",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "A simple PHP authentication library",
+            "keywords": [
+                "Authentication",
+                "auth",
+                "php",
+                "security"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/auth/issues",
+                "source": "https://github.com/utopia-php/auth/tree/0.5.0"
+            },
+            "time": "2025-10-29T07:11:43+00:00"
+        },
+        {
             "name": "utopia-php/cache",
             "version": "0.13.1",
             "source": {
@@ -3840,16 +3895,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "3.1.5",
+            "version": "3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "76568b81f25d89fc1e0c53f0370f139130eeb939"
+                "reference": "f2d01b6b38057891184f62107bf70a55bc2ea068"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/76568b81f25d89fc1e0c53f0370f139130eeb939",
-                "reference": "76568b81f25d89fc1e0c53f0370f139130eeb939",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f2d01b6b38057891184f62107bf70a55bc2ea068",
+                "reference": "f2d01b6b38057891184f62107bf70a55bc2ea068",
                 "shasum": ""
             },
             "require": {
@@ -3892,9 +3947,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/3.1.5"
+                "source": "https://github.com/utopia-php/database/tree/3.2.0"
             },
-            "time": "2025-11-05T10:17:55+00:00"
+            "time": "2025-11-06T05:41:54+00:00"
         },
         {
             "name": "utopia-php/detector",

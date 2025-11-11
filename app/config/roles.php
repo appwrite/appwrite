@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Documents\User;
 
 $member = [
     'global',
@@ -92,7 +92,7 @@ $admins = [
 ];
 
 return [
-    Auth::USER_ROLE_GUESTS => [
+    User::ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
             'global',
@@ -112,23 +112,23 @@ return [
             'execution.write',
         ],
     ],
-    Auth::USER_ROLE_USERS => [
+    User::ROLE_USERS => [
         'label' => 'Users',
         'scopes' => \array_merge($member),
     ],
-    Auth::USER_ROLE_ADMIN => [
+    User::ROLE_ADMIN => [
         'label' => 'Admin',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_DEVELOPER => [
+    User::ROLE_DEVELOPER => [
         'label' => 'Developer',
         'scopes' => \array_merge($admins),
     ],
-    Auth::USER_ROLE_OWNER => [
+    User::ROLE_OWNER => [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
-    Auth::USER_ROLE_APPS => [
+    User::ROLE_APPS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
     ],

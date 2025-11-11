@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
@@ -18,6 +17,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
@@ -28,6 +28,9 @@ use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Auth\Proofs\Password;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -86,8 +89,8 @@ App::post('/v1/teams')
     ->inject('queueForEvents')
     ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAppUser = User::isApp(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 
@@ -174,6 +177,7 @@ App::get('/v1/teams')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
+
 
         try {
             $queries = Query::parseQueries($queries);
@@ -473,10 +477,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], function (Document $project) {
         if ($project->getId() === 'console') {
-            ;
             $roles = array_keys(Config::getParam('roles', []));
-            array_filter($roles, function ($role) {
-                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+            $roles = array_filter($roles, function ($role) {
+                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
@@ -495,9 +498,11 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('timelimit')
     ->inject('queueForStatsUsage')
     ->inject('plan')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan) {
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+    ->inject('proofForPassword')
+    ->inject('proofForToken')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword, Token $proofForToken) {
+        $isAppUser = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         $url = htmlentities($url);
         if (empty($url)) {
@@ -568,6 +573,7 @@ App::post('/v1/teams/:teamId/memberships')
 
             try {
                 $userId = ID::unique();
+                $hash = $proofForPassword->hash($proofForPassword->generate());
                 $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$permissions' => [
@@ -581,9 +587,9 @@ App::post('/v1/teams/:teamId/memberships')
                     'emailVerification' => false,
                     'status' => true,
                     // TODO: Set password empty?
-                    'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
-                    'hash' => Auth::DEFAULT_ALGO,
-                    'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                    'password' => $hash,
+                    'hash' => $proofForPassword->getHash()->getName(),
+                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
                     /**
                      * Set the password update time to 0 for users created using
                      * team invite and OAuth to allow password updates without an
@@ -615,7 +621,7 @@ App::post('/v1/teams/:teamId/memberships')
             Query::equal('teamInternalId', [$team->getSequence()]),
         ]);
 
-        $secret = Auth::tokenGenerator();
+        $secret = $proofForToken->generate();
         if ($membership->isEmpty()) {
             $membershipId = ID::unique();
             $membership = new Document([
@@ -635,7 +641,7 @@ App::post('/v1/teams/:teamId/memberships')
                 'invited' => DateTime::now(),
                 'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
                 'confirm' => ($isPrivilegedUser || $isAppUser),
-                'secret' => Auth::hash($secret),
+                'secret' => $proofForToken->hash($secret),
                 'search' => implode(' ', [$membershipId, $invitee->getId()])
             ]);
 
@@ -646,9 +652,8 @@ App::post('/v1/teams/:teamId/memberships')
             if ($isPrivilegedUser || $isAppUser) {
                 Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             }
-
         } elseif ($membership->getAttribute('confirm') === false) {
-            $membership->setAttribute('secret', Auth::hash($secret));
+            $membership->setAttribute('secret', $proofForToken->hash($secret));
             $membership->setAttribute('invited', DateTime::now());
 
             if ($isPrivilegedUser || $isAppUser) {
@@ -751,7 +756,6 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
                     ->trigger();
-
             } elseif (!empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -915,8 +919,8 @@ App::get('/v1/teams/:teamId/memberships')
         ];
 
         $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
+        $isPrivilegedUser = User::isPrivileged($roles);
+        $isAppUser = User::isApp($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
@@ -1006,8 +1010,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         ];
 
         $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
+        $isPrivilegedUser = User::isPrivileged($roles);
+        $isAppUser = User::isApp($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
@@ -1073,7 +1077,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         if ($project->getId() === 'console') {
             $roles = array_keys(Config::getParam('roles', []));
             array_filter($roles, function ($role) {
-                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
@@ -1102,8 +1106,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAppUser = User::isApp(Authorization::getRoles());
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
         if ($project->getId() === 'console') {
@@ -1188,7 +1192,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('project')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
+    ->inject('store')
+    ->inject('proofForToken')
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -1207,7 +1213,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
-        if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
+        if (!$proofForToken->verify($secret, $membership->getAttribute('secret'))) {
             throw new Exception(Exception::TEAM_INVALID_SECRET);
         }
 
@@ -1241,9 +1247,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
-            $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-            $secret = Auth::tokenGenerator();
+            $secret = $proofForToken->generate();
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 '$permissions' => [
@@ -1253,9 +1259,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
-                'provider' => Auth::SESSION_PROVIDER_EMAIL,
+                'provider' => SESSION_PROVIDER_EMAIL,
                 'providerUid' => $user->getAttribute('email'),
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
@@ -1267,14 +1273,19 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
             Authorization::setRole(Role::user($userId)->toString());
 
+            $encoded = $store
+                ->setProperty('id', $user->getId())
+                ->setProperty('secret', $secret)
+                ->encode();
+
             if (!Config::getParam('domainVerification')) {
-                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+                $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
             }
 
             $response
                 ->addCookie(
-                    name: Auth::$cookieName . '_legacy',
-                    value: Auth::encodeSession($user->getId(), $secret),
+                    name: $store->getKey() . '_legacy',
+                    value: $encoded,
                     expire: (new \DateTime($expire))->getTimestamp(),
                     path: '/',
                     domain: Config::getParam('cookieDomain'),
@@ -1282,8 +1293,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                     httponly: true
                 )
                 ->addCookie(
-                    name: Auth::$cookieName,
-                    value: Auth::encodeSession($user->getId(), $secret),
+                    name: $store->getKey(),
+                    value: $encoded,
                     expire: (new \DateTime($expire))->getTimestamp(),
                     path: '/',
                     domain: Config::getParam('cookieDomain'),
