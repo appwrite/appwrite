@@ -1,9 +1,8 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Mfa\Factors;
+namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes;
 
-use Appwrite\Auth\MFA\Type;
-use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -14,52 +13,52 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class XList extends Action
+class Get extends Action
 {
     use HTTP;
 
     public static function getName(): string
     {
-        return 'listMFAFactors';
+        return 'getMFARecoveryCodes';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/account/mfa/factors')
-            ->desc('List factors')
-            ->groups(['api', 'account', 'mfa'])
+            ->setHttpPath('/v1/account/mfa/recovery-codes')
+            ->desc('List MFA recovery codes')
+            ->groups(['api', 'account', 'mfaProtected'])
             ->label('scope', 'account')
             ->label('sdk', [
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
-                    name: 'listMfaFactors',
-                    description: '/docs/references/account/list-mfa-factors.md',
+                    name: 'getMfaRecoveryCodes',
+                    description: '/docs/references/account/get-mfa-recovery-codes.md',
                     auth: [AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
-                            model: Response::MODEL_MFA_FACTORS,
+                            model: Response::MODEL_MFA_RECOVERY_CODES,
                         )
                     ],
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'account.listMFAFactors',
+                        replaceWith: 'account.getMFARecoveryCodes',
                     ),
                 ),
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
-                    name: 'listMFAFactors',
-                    description: '/docs/references/account/list-mfa-factors.md',
+                    name: 'getMFARecoveryCodes',
+                    description: '/docs/references/account/get-mfa-recovery-codes.md',
                     auth: [AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
-                            model: Response::MODEL_MFA_FACTORS,
+                            model: Response::MODEL_MFA_RECOVERY_CODES,
                         )
                     ],
                     contentType: ContentType::JSON
@@ -73,17 +72,15 @@ class XList extends Action
     public function action(Response $response, Document $user): void
     {
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-        $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
 
-        $totp = TOTP::getAuthenticatorFromUser($user);
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
 
-        $factors = new Document([
-            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
-            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
-            Type::RECOVERY_CODE => $recoveryCodeEnabled
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
         ]);
 
-        $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     }
 }

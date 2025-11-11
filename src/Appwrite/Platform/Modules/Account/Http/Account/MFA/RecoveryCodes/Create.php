@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Mfa\RecoveryCodes;
+namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes;
 
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Event\Event;
@@ -16,22 +16,22 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Update extends Action
+class Create extends Action
 {
     use HTTP;
 
     public static function getName(): string
     {
-        return 'updateMFARecoveryCodes';
+        return 'createMFARecoveryCodes';
     }
 
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/account/mfa/recovery-codes')
-            ->desc('Update MFA recovery codes (regenerate)')
-            ->groups(['api', 'account', 'mfaProtected'])
+            ->desc('Create MFA recovery codes')
+            ->groups(['api', 'account'])
             ->label('event', 'users.[userId].update.mfa')
             ->label('scope', 'account')
             ->label('audits.event', 'user.update')
@@ -41,52 +41,53 @@ class Update extends Action
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
-                    name: 'updateMfaRecoveryCodes',
-                    description: '/docs/references/account/update-mfa-recovery-codes.md',
+                    name: 'createMfaRecoveryCodes',
+                    description: '/docs/references/account/create-mfa-recovery-codes.md',
                     auth: [AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
-                            code: Response::STATUS_CODE_OK,
+                            code: Response::STATUS_CODE_CREATED,
                             model: Response::MODEL_MFA_RECOVERY_CODES,
                         )
                     ],
                     contentType: ContentType::JSON,
                     deprecated: new Deprecated(
                         since: '1.8.0',
-                        replaceWith: 'account.updateMFARecoveryCodes',
+                        replaceWith: 'account.createMFARecoveryCodes',
                     ),
                 ),
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
-                    name: 'updateMFARecoveryCodes',
-                    description: '/docs/references/account/update-mfa-recovery-codes.md',
+                    name: 'createMFARecoveryCodes',
+                    description: '/docs/references/account/create-mfa-recovery-codes.md',
                     auth: [AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
-                            code: Response::STATUS_CODE_OK,
+                            code: Response::STATUS_CODE_CREATED,
                             model: Response::MODEL_MFA_RECOVERY_CODES,
                         )
                     ],
                     contentType: ContentType::JSON
                 )
             ])
-            ->inject('dbForProject')
             ->inject('response')
             ->inject('user')
+            ->inject('dbForProject')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
     public function action(
-        Database $dbForProject,
         Response $response,
         Document $user,
+        Database $dbForProject,
         Event $queueForEvents
     ): void {
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
-        if (empty($mfaRecoveryCodes)) {
-            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+
+        if (!empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_ALREADY_EXISTS);
         }
 
         $mfaRecoveryCodes = Type::generateBackupCodes();

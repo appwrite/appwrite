@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Mfa\Authenticators;
+namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators;
 
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;

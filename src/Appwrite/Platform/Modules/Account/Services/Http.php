@@ -2,16 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Account\Services;
 
-use Appwrite\Platform\Modules\Account\Http\Mfa\Authenticators\Create as CreateAuthenticator;
-use Appwrite\Platform\Modules\Account\Http\Mfa\Authenticators\Delete as DeleteAuthenticator;
-use Appwrite\Platform\Modules\Account\Http\Mfa\Authenticators\Update as UpdateAuthenticator;
-use Appwrite\Platform\Modules\Account\Http\Mfa\Challenge\Create as CreateChallenge;
-use Appwrite\Platform\Modules\Account\Http\Mfa\Challenge\Update as UpdateChallenge;
-use Appwrite\Platform\Modules\Account\Http\Mfa\Factors\XList as ListFactors;
-use Appwrite\Platform\Modules\Account\Http\Mfa\RecoveryCodes\Create as CreateRecoveryCodes;
-use Appwrite\Platform\Modules\Account\Http\Mfa\RecoveryCodes\Get as GetRecoveryCodes;
-use Appwrite\Platform\Modules\Account\Http\Mfa\RecoveryCodes\Update as UpdateRecoveryCodes;
-use Appwrite\Platform\Modules\Account\Http\Mfa\Update as UpdateMfa;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Create as CreateAuthenticator;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Delete as DeleteAuthenticator;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Update as UpdateAuthenticator;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges\Create as CreateChallenge;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges\Update as UpdateChallenge;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\Factors\XList as ListFactors;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Create as CreateRecoveryCodes;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Get as GetRecoveryCodes;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Update as UpdateRecoveryCodes;
+use Appwrite\Platform\Modules\Account\Http\Account\MFA\Update as UpdateMfa;
 use Utopia\Platform\Service;
 
 class Http extends Service

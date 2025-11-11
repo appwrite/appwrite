@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Mfa\Challenge;
+namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
@@ -32,7 +32,8 @@ class Update extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
-            ->setHttpPath('/v1/account/mfa/challenge')
+            ->setHttpPath('/v1/account/mfa/challenges')
+            ->httpAlias('/v1/account/mfa/challenge')
             ->desc('Update MFA challenge (confirmation)')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')

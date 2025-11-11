@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Mfa\Challenge;
+namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
@@ -44,7 +44,8 @@ class Create extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/account/mfa/challenge')
+            ->setHttpPath('/v1/account/mfa/challenges')
+            ->httpAlias('/v1/account/mfa/challenge')
             ->desc('Create MFA challenge')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
