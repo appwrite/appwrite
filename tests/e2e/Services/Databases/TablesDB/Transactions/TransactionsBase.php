@@ -5600,8 +5600,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'columnId' => 'items',
-            'name' => 'Items',
+            'key' => 'items',
             'size' => 255,
             'required' => false,
             'array' => true,
@@ -5719,8 +5718,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'columnId' => 'tags',
-            'name' => 'Tags',
+            'key' => 'tags',
             'size' => 255,
             'required' => false,
             'array' => true,
@@ -5848,8 +5846,7 @@ trait TransactionsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                'columnId' => $col['columnId'],
-                'name' => $col['name'],
+                'key' => $col['columnId'],
                 'size' => 255,
                 'required' => false,
                 'array' => true,
