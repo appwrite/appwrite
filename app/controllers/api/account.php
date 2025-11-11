@@ -1725,14 +1725,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             try {
                 $emailCanonical = new EmailCanonical($user->getAttribute('email'));
-
-                $user->setAttribute('emailCanonical', $emailCanonical->getCanonical());
-                $user->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported());
-                $user->setAttribute('emailIsCorporate', $emailCanonical->isCorporate());
-                $user->setAttribute('emailIsDisposable', $emailCanonical->isDisposable());
-                $user->setAttribute('emailIsFree', $emailCanonical->isFree());
             } catch (Throwable) {
+                $emailCanonical = null;
             }
+
+            $user->setAttribute('emailCanonical', $emailCanonical?->getCanonical());
+            $user->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported());
+            $user->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate());
+            $user->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable());
+            $user->setAttribute('emailIsFree', $emailCanonical?->isFree());
         }
 
         if (empty($user->getAttribute('name'))) {
@@ -3136,16 +3137,20 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
-        $emailCanonical = new EmailCanonical($email);
+        try {
+            $emailCanonical = new EmailCanonical($email);
+        } catch (Throwable) {
+            $emailCanonical = null;
+        }
 
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-            ->setAttribute('emailCanonical', $emailCanonical->getCanonical())
-            ->setAttribute('emailIsCanonical', $emailCanonical->isCanonicalSupported())
-            ->setAttribute('emailIsCorporate', $emailCanonical->isCorporate())
-            ->setAttribute('emailIsDisposable', $emailCanonical->isDisposable())
-            ->setAttribute('emailIsFree', $emailCanonical->isFree())
+            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
+            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
+            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
+            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
+            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
         ;
 
         if (empty($passwordUpdate)) {
