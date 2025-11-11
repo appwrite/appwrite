@@ -87,8 +87,7 @@ class Action extends AppwriteAction
                 } catch (\Exception $e) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                 }
-            }
-            elseif (\is_array($value)) {
+            } elseif (\is_array($value)) {
                 $data[$key] = $this->parseOperators($value, $collection);
             }
         }
