@@ -43,6 +43,13 @@ class Action extends AppwriteAction
         }
 
         foreach ($data as $key => $value) {
+            if (!\is_string($key)) {
+                if (\is_array($value)) {
+                    $data[$key] = $this->parseOperators($value, $collection);
+                }
+                continue;
+            }
+
             if (\str_starts_with($key, '$')) {
                 continue;
             }
@@ -80,6 +87,9 @@ class Action extends AppwriteAction
                 } catch (\Exception $e) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                 }
+            }
+            elseif (\is_array($value)) {
+                $data[$key] = $this->parseOperators($value, $collection);
             }
         }
 
