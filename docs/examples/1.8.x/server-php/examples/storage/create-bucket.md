@@ -2,6 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Storage;
+use Appwrite\Enums\Compression;
 use Appwrite\Permission;
 use Appwrite\Role;
 
@@ -20,7 +21,7 @@ $result = $storage->createBucket(
     enabled: false, // optional
     maximumFileSize: 1, // optional
     allowedFileExtensions: [], // optional
-    compression: ::NONE(), // optional
+    compression: Compression::NONE(), // optional
     encryption: false, // optional
     antivirus: false // optional
 );
