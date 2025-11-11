@@ -57,7 +57,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Emails\Email as EmailCanonical;
+use Utopia\Emails\Email as EmailValidator;
 use Utopia\Locale\Locale;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -397,9 +397,9 @@ App::post('/v1/account')
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
         try {
-            $emailCanonical = new EmailCanonical($email);
+            $emailValidator = new EmailValidator($email);
         } catch (Throwable) {
-            $emailCanonical = null;
+            $emailValidator = null;
         }
 
         try {
@@ -430,11 +430,11 @@ App::post('/v1/account')
                 'authenticators' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailValidator?->getCanonical(),
+                'emailIsCanonical' => $emailValidator?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailValidator?->isCorporate(),
+                'emailIsDisposable' => $emailValidator?->isDisposable(),
+                'emailIsFree' => $emailValidator?->isFree(),
             ]);
 
             $user->removeAttribute('$sequence');
@@ -1613,9 +1613,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
 
                 try {
-                    $emailCanonical = new EmailCanonical($email);
+                    $emailValidator = new EmailValidator($email);
                 } catch (Throwable) {
-                    $emailCanonical = null;
+                    $emailValidator = null;
                 }
 
                 try {
@@ -1645,11 +1645,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'authenticators' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
-                        'emailCanonical' => $emailCanonical?->getCanonical(),
-                        'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                        'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                        'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                        'emailIsFree' => $emailCanonical?->isFree(),
+                        'emailCanonical' => $emailValidator?->getCanonical(),
+                        'emailIsCanonical' => $emailValidator?->isCanonicalSupported(),
+                        'emailIsCorporate' => $emailValidator?->isCorporate(),
+                        'emailIsDisposable' => $emailValidator?->isDisposable(),
+                        'emailIsFree' => $emailValidator?->isFree(),
                     ]);
 
                     $user->removeAttribute('$sequence');
@@ -1724,16 +1724,16 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user->setAttribute('email', $oauth2->getUserEmail($accessToken));
 
             try {
-                $emailCanonical = new EmailCanonical($user->getAttribute('email'));
+                $emailValidator = new EmailValidator($user->getAttribute('email'));
             } catch (Throwable) {
-                $emailCanonical = null;
+                $emailValidator = null;
             }
 
-            $user->setAttribute('emailCanonical', $emailCanonical?->getCanonical());
-            $user->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported());
-            $user->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate());
-            $user->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable());
-            $user->setAttribute('emailIsFree', $emailCanonical?->isFree());
+            $user->setAttribute('emailCanonical', $emailValidator?->getCanonical());
+            $user->setAttribute('emailIsCanonical', $emailValidator?->isCanonicalSupported());
+            $user->setAttribute('emailIsCorporate', $emailValidator?->isCorporate());
+            $user->setAttribute('emailIsDisposable', $emailValidator?->isDisposable());
+            $user->setAttribute('emailIsFree', $emailValidator?->isFree());
         }
 
         if (empty($user->getAttribute('name'))) {
@@ -2029,9 +2029,9 @@ App::post('/v1/account/tokens/magic-url')
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
             try {
-                $emailCanonical = new EmailCanonical($email);
+                $emailValidator = new EmailValidator($email);
             } catch (Throwable) {
-                $emailCanonical = null;
+                $emailValidator = null;
             }
 
             $user->setAttributes([
@@ -2058,11 +2058,11 @@ App::post('/v1/account/tokens/magic-url')
                 'authenticators' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailValidator?->getCanonical(),
+                'emailIsCanonical' => $emailValidator?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailValidator?->isCorporate(),
+                'emailIsDisposable' => $emailValidator?->isDisposable(),
+                'emailIsFree' => $emailValidator?->isFree(),
             ]);
 
             $user->removeAttribute('$sequence');
@@ -2290,9 +2290,9 @@ App::post('/v1/account/tokens/email')
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
             try {
-                $emailCanonical = new EmailCanonical($email);
+                $emailValidator = new EmailValidator($email);
             } catch (Throwable) {
-                $emailCanonical = null;
+                $emailValidator = null;
             }
 
             $user->setAttributes([
@@ -2317,11 +2317,11 @@ App::post('/v1/account/tokens/email')
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailValidator?->getCanonical(),
+                'emailIsCanonical' => $emailValidator?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailValidator?->isCorporate(),
+                'emailIsDisposable' => $emailValidator?->isDisposable(),
+                'emailIsFree' => $emailValidator?->isFree(),
             ]);
 
             $user->removeAttribute('$sequence');
@@ -3138,19 +3138,19 @@ App::patch('/v1/account/email')
         }
 
         try {
-            $emailCanonical = new EmailCanonical($email);
+            $emailValidator = new EmailValidator($email);
         } catch (Throwable) {
-            $emailCanonical = null;
+            $emailValidator = null;
         }
 
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
-            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
-            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
-            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
-            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
+            ->setAttribute('emailCanonical', $emailValidator?->getCanonical())
+            ->setAttribute('emailIsCanonical', $emailValidator?->isCanonicalSupported())
+            ->setAttribute('emailIsCorporate', $emailValidator?->isCorporate())
+            ->setAttribute('emailIsDisposable', $emailValidator?->isDisposable())
+            ->setAttribute('emailIsFree', $emailValidator?->isFree())
         ;
 
         if (empty($passwordUpdate)) {

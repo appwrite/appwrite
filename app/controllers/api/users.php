@@ -49,7 +49,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Emails\Email as EmailCanonical;
+use Utopia\Emails\Email as EmailValidator;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -99,9 +99,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         }
 
         try {
-            $emailCanonical = new EmailCanonical($email);
+            $emailValidator = new EmailValidator($email);
         } catch (Throwable) {
-            $emailCanonical = null;
+            $emailValidator = null;
         }
 
         $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
@@ -131,11 +131,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'tokens' => null,
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $phone, $name]),
-            'emailCanonical' => $emailCanonical?->getCanonical(),
-            'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-            'emailIsCorporate' => $emailCanonical?->isCorporate(),
-            'emailIsDisposable' => $emailCanonical?->isDisposable(),
-            'emailIsFree' => $emailCanonical?->isFree(),
+            'emailCanonical' => $emailValidator?->getCanonical(),
+            'emailIsCanonical' => $emailValidator?->isCanonicalSupported(),
+            'emailIsCorporate' => $emailValidator?->isCorporate(),
+            'emailIsDisposable' => $emailValidator?->isDisposable(),
+            'emailIsFree' => $emailValidator?->isFree(),
         ]);
 
         if ($hash === 'plaintext') {
@@ -1450,19 +1450,19 @@ App::patch('/v1/users/:userId/email')
         $oldEmail = $user->getAttribute('email');
 
         try {
-            $emailCanonical = new EmailCanonical($email);
+            $emailValidator = new EmailValidator($email);
         } catch (Throwable) {
-            $emailCanonical = null;
+            $emailValidator = null;
         }
 
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
-            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
-            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
-            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
-            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
-            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
+            ->setAttribute('emailCanonical', $emailValidator?->getCanonical())
+            ->setAttribute('emailIsCanonical', $emailValidator?->isCanonicalSupported())
+            ->setAttribute('emailIsCorporate', $emailValidator?->isCorporate())
+            ->setAttribute('emailIsDisposable', $emailValidator?->isDisposable())
+            ->setAttribute('emailIsFree', $emailValidator?->isFree())
         ;
 
         try {

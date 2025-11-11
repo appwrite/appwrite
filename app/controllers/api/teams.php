@@ -48,7 +48,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Emails\Email as EmailCanonical;
+use Utopia\Emails\Email as EmailValidator;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -568,9 +568,9 @@ App::post('/v1/teams/:teamId/memberships')
             }
 
             try {
-                $emailCanonical = new EmailCanonical($email);
+                $emailValidator = new EmailValidator($email);
             } catch (Throwable) {
-                $emailCanonical = null;
+                $emailValidator = null;
             }
 
             $userId = ID::unique();
@@ -605,11 +605,11 @@ App::post('/v1/teams/:teamId/memberships')
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailValidator?->getCanonical(),
+                'emailIsCanonical' => $emailValidator?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailValidator?->isCorporate(),
+                'emailIsDisposable' => $emailValidator?->isDisposable(),
+                'emailIsFree' => $emailValidator?->isFree(),
             ]);
 
             try {
