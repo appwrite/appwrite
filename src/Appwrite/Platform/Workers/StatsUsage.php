@@ -162,9 +162,9 @@ class StatsUsage extends Action
         METRIC_MESSAGES_TYPE => '/^messages\.(email|sms|push)$/',
         METRIC_MESSAGES_TYPE_SENT => '/^messages\.(email|sms|push)\.sent$/',
         METRIC_MESSAGES_TYPE_FAILED => '/^messages\.(email|sms|push)\.failed$/',
-        METRIC_MESSAGES_TYPE_PROVIDER => '/^messages\.(email|sms|push)\..+$/',
-        METRIC_MESSAGES_TYPE_PROVIDER_SENT => '/^messages\.(email|sms|push)\..+\.sent$/',
-        METRIC_MESSAGES_TYPE_PROVIDER_FAILED => '/^messages\.(email|sms|push)\..+\.failed$/',
+        METRIC_MESSAGES_TYPE_PROVIDER => '/^messages\.(email|sms|push)\.[^.]+$/',
+        METRIC_MESSAGES_TYPE_PROVIDER_SENT => '/^messages\.(email|sms|push)\.[^.]+\.sent$/',
+        METRIC_MESSAGES_TYPE_PROVIDER_FAILED => '/^messages\.(email|sms|push)\.[^.]+\.failed$/',
         METRIC_DATABASE_ID_COLLECTIONS => '/^\d+\.collections$/',
         METRIC_DATABASE_ID_STORAGE => '/^\d+\.databases\.storage$/',
         METRIC_DATABASE_ID_DOCUMENTS => '/^\d+\.documents$/',
@@ -206,8 +206,8 @@ class StatsUsage extends Action
         METRIC_SITES_ID_INBOUND => '/^sites\.\d+\.inbound$/',
         METRIC_SITES_ID_OUTBOUND => '/^sites\.\d+\.outbound$/',
         METRIC_PROVIDER_TYPE_TARGETS => '/^(email|sms|push)\.targets$/',
-        METRIC_FUNCTIONS_RUNTIME => '/^functions\.runtimes\..+$/',
-        METRIC_SITES_FRAMEWORK => '/^sites\.frameworks\..+$/',
+        METRIC_FUNCTIONS_RUNTIME => '/^functions\.runtimes\.[^.]+$/',
+        METRIC_SITES_FRAMEWORK => '/^sites\.frameworks\.[^.]+$/',
     ];
 
     /**
