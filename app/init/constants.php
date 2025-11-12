@@ -271,6 +271,8 @@ const METRIC_SITES_ID_REQUESTS = 'sites.{siteInternalId}.requests';
 const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
+const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
+const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
