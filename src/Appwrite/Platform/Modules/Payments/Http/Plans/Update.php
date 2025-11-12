@@ -125,7 +125,12 @@ class Update extends Base
                 'description' => $description,
                 'pricing' => !empty($pricing) ? $pricing : ($plan->getAttribute('pricing') ?? [])
             ], $ref, $state);
-            $providersMeta[$providerId] = [ 'externalId' => $newRef->externalPlanId, 'metadata' => $newRef->metadata ];
+            $meta = $newRef->metadata;
+            $providersMeta[$providerId] = [
+                'externalId' => $newRef->externalPlanId,
+                'metadata' => $meta,
+                'prices' => (array) ($meta['prices'] ?? [])
+            ];
         }
         if (!empty($providersMeta)) {
             $plan->setAttribute('providers', $providersMeta);

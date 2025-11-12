@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\Payments\Http\Plans;
 
 use Appwrite\AppwriteException;
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response;
 use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -40,7 +41,7 @@ class Create extends Base
             ->desc('Create payment plan')
             ->label('scope', 'payments.write')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
-            ->label('event', 'payments.plans.[planId].create')
+            ->label('event', 'plans.[planId].create')
             ->label('audits.event', 'payments.plan.create')
             ->label('audits.resource', 'payments/plan/{request.planId}')
             ->label('sdk', new Method(
@@ -66,6 +67,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('registryPayments')
+            ->inject('queueForEvents')
             ->inject('project')
             ->callback($this->action(...));
     }
@@ -81,6 +83,7 @@ class Create extends Base
         Database $dbForPlatform,
         Database $dbForProject,
         Registry $registryPayments,
+        Event $queueForEvents,
         Document $project
     ) {
         $document = new Document([
@@ -118,6 +121,8 @@ class Create extends Base
         }
 
         $created = $dbForPlatform->createDocument('payments_plans', $document);
+        
+        $queueForEvents->setParam('planId', $planId);
 
         // Provision on configured providers
         $payments = (array) $project->getAttribute('payments', []);
@@ -132,9 +137,11 @@ class Create extends Base
                 'description' => $description,
                 'pricing' => $pricing,
             ], $state);
+            $meta = $ref->metadata;
             $providersMeta[$providerId] = [
                 'externalId' => $ref->externalPlanId,
-                'metadata' => $ref->metadata
+                'metadata' => $meta,
+                'prices' => (array) ($meta['prices'] ?? [])
             ];
         }
 

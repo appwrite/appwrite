@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Providers;
 
+use Appwrite\Event\Event;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -54,14 +55,18 @@ class Update extends Base
             ->inject('dbForProject')
             ->inject('registryPayments')
             ->inject('project')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(array $config, Response $response, Database $dbForPlatform, Database $dbForProject, Registry $registryPayments, Document $project)
+    public function action(array $config, Response $response, Database $dbForPlatform, Database $dbForProject, Registry $registryPayments, Document $project, Event $queueForEvents)
     {
         $projectDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $existing = (array) $projectDoc->getAttribute('payments', []);
         $providers = (array) ($config['providers'] ?? []);
+
+        $providerKeys = \array_keys($providers);
+        $queueForEvents->setParam('providers', empty($providerKeys) ? 'providers' : \implode(',', $providerKeys));
 
         // Basic validation + test connection for known providers
         foreach ($providers as $providerId => $providerConfig) {
@@ -77,12 +82,15 @@ class Update extends Base
 
         foreach ($providers as $providerId => $providerConfig) {
             $adapter = $registryPayments->get($providerId, (array) $providerConfig, $project, $dbForPlatform, $dbForProject);
+            \error_log("[Payments/Update] testing provider={$providerId}");
             $test = $adapter->testConnection((array) $providerConfig);
             if (!$test->success) {
+                \error_log("[Payments/Update] provider={$providerId} test failed: {$test->message}");
                 $response->setStatusCode(400);
                 $response->json(['message' => 'Provider test failed: ' . $test->message]);
                 return;
             }
+            \error_log("[Payments/Update] provider={$providerId} test ok");
             $state = $adapter->configure((array) $providerConfig, $project);
             $providers[$providerId] = array_merge((array) $providerConfig, [
                 'state' => $state->metadata,
@@ -99,6 +107,9 @@ class Update extends Base
 
         $projectDoc->setAttribute('payments', $merged);
         $updated = $dbForPlatform->updateDocument('projects', $projectDoc->getId(), $projectDoc);
+        $mergedProviderKeys = \array_keys((array) ($merged['providers'] ?? []));
+        $queueForEvents->setParam('providers', empty($mergedProviderKeys) ? 'providers' : \implode(',', $mergedProviderKeys));
+
         $out = (array) $updated->getAttribute('payments', []);
         $prov = (array) ($out['providers'] ?? []);
         foreach ($prov as $pid => &$cfg) {
