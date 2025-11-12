@@ -109,7 +109,7 @@ You're a triage assistant for GitHub issues. Your task is to analyze issues that
    - Suggest resources or links that might be helpful for resolving the issue or learning skills related to the issue or the particular area of the codebase affected by it
    - Mention any nudges or ideas that could help the team in addressing the issue
    - If appropriate break the issue down to sub-tasks and write a checklist of things to do
-   - Use collapsed-by-default sections in the GitHub markdown to keep the comment tidy. Collapse all sections except the short main summary at the top. Ensure text is bolded using markdown syntax.
+   - Use collapsed-by-default sections in the GitHub markdown to keep the comment tidy. Collapse all sections except the short main summary at the top. For bolded section titles, wrap the text with `<strong>` and `</strong>` to make it bold.
    - Do not indicate/encourage a community member to submit a PR for the issue.
 
 12. After processing all issues, provide a summary of how many issues were triaged (created or updated in the last 24 hours). If no issues matched the criteria, simply note that no issues needed triage.
