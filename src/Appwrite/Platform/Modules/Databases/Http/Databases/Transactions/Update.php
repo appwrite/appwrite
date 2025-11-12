@@ -160,6 +160,10 @@ class Update extends Action
                         $action = $operation['action'];
                         $data = $operation['data'];
 
+                        if ($data instanceof Document) {
+                            $data = $data->getArrayCopy();
+                        }
+
                         if (!isset($collections[$collectionId])) {
                             $collections[$collectionId] = Authorization::skip(
                                 fn () => $dbForProject->getCollection($collectionId)
@@ -182,10 +186,6 @@ class Update extends Action
                         if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
                             $totalOperations++;
                             $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + 1;
-                        }
-
-                        if ($data instanceof Document) {
-                            $data = $data->getArrayCopy();
                         }
 
                         switch ($action) {
