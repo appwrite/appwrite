@@ -282,6 +282,7 @@ return [
                 'installCommand' => 'flutter pub get',
                 'outputDirectory' => './build/web',
                 'startCommand' => 'bash helpers/server.sh',
+                'fallbackFile' => 'index.html'
             ],
         ],
     ],
