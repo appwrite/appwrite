@@ -107,7 +107,9 @@ class Upsert extends Action
         }
 
         foreach ($documents as $key => $document) {
-            $document = $this->parseOperators($document, $collection);
+            if ($transactionId === null) {
+                $document = $this->parseOperators($document, $collection);
+            }
             $document = $this->removeReadonlyAttributes($document, privileged: true);
             $documents[$key] = new Document($document);
         }

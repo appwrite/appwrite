@@ -112,7 +112,9 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $data = $this->parseOperators($data, $collection);
+        if ($transactionId === null) {
+            $data = $this->parseOperators($data, $collection);
+        }
 
         // Read permission should not be required for update
         /** @var Document $document */
