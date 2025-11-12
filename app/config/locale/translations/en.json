@@ -4,8 +4,6 @@
     "settings.direction": "ltr",
     "emails.sender": "{{project}} Team",
     "emails.verification.subject": "Account Verification for {{project}}",
-    "emails.verification.preview-appwrite": "Verify your email to activate your {{project}} account.",
-    "emails.verification.heading-appwrite": "Verify your email to start using {{project}}",
     "emails.verification.preview": "Verify your email for {{project}} account.",
     "emails.verification.heading": "Verify your email for {{project}}",
     "emails.verification.hello": "Hello {{user}},",
