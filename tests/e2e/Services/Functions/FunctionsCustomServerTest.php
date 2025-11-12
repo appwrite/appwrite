@@ -543,6 +543,11 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 50000, 500);
 
+        $lastEmail = $this->getLastEmail();
+        if (!empty($lastEmail)) {
+            $this->assertNotEquals('Deployment failure for function Test', $lastEmail['subject']);
+        }
+
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => 'false'
@@ -2260,6 +2265,9 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmail();
+        $this->assertEquals('Deployment failure for function Test Error Pages', $lastEmail['subject']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
             'content-type' => 'application/json',

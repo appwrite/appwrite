@@ -5,11 +5,13 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -32,6 +34,7 @@ use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
 use Utopia\Fetch\Client as FetchClient;
+use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -61,6 +64,7 @@ class Builds extends Action
             ->inject('message')
             ->inject('project')
             ->inject('dbForPlatform')
+            ->inject('queueForMails')
             ->inject('queueForEvents')
             ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
@@ -82,6 +86,7 @@ class Builds extends Action
      * @param Message $message
      * @param Document $project
      * @param Database $dbForPlatform
+     * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
@@ -102,6 +107,7 @@ class Builds extends Action
         Message $message,
         Document $project,
         Database $dbForPlatform,
+        Mail $queueForMails,
         Event $queueForEvents,
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
@@ -146,6 +152,7 @@ class Builds extends Action
                     $queueForFunctions,
                     $queueForRealtime,
                     $queueForEvents,
+                    $queueForMails,
                     $queueForStatsUsage,
                     $dbForPlatform,
                     $dbForProject,
@@ -174,6 +181,7 @@ class Builds extends Action
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
+     * @param Mail $queueForMails
      * @param StatsUsage $queueForStatsUsage
      * @param Database $dbForPlatform
      * @param Database $dbForProject
@@ -198,6 +206,7 @@ class Builds extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
+        Mail $queueForMails,
         StatsUsage $queueForStatsUsage,
         Database $dbForPlatform,
         Database $dbForProject,
@@ -454,7 +463,7 @@ class Builds extends Action
                     Console::execute('rsync -av --exclude \'.git\' ' . \escapeshellarg($tmpTemplateDirectory . '/' . $templateRootDirectory . '/') . ' ' . \escapeshellarg($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email '. \escapeshellarg(APP_VCS_GITHUB_EMAIL) .' && git config --global user.name '. \escapeshellarg(APP_VCS_GITHUB_USERNAME) .' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email ' . \escapeshellarg(APP_VCS_GITHUB_EMAIL) . ' && git config --global user.name ' . \escapeshellarg(APP_VCS_GITHUB_USERNAME) . ' && cd ' . \escapeshellarg($tmpDirectory) . ' && git checkout -b ' . \escapeshellarg($branchName) . ' && git add . && git commit -m "Create ' . \escapeshellarg($resource->getAttribute('name', '')) . ' function" && git push origin ' . \escapeshellarg($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -491,7 +500,7 @@ class Builds extends Action
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $sizeLimit = (int)System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
+                $sizeLimit = (int) System::getEnv('_APP_COMPUTE_SIZE_LIMIT', '30000000');
 
                 if (isset($plan['deploymentSize'])) {
                     $sizeLimit = (int) $plan['deploymentSize'] * 1000 * 1000;
@@ -597,11 +606,11 @@ class Builds extends Action
             }
 
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
-            $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
+            $memory = max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
 
-            $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
+            $jwtExpiry = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
 
             $apiKey = $jwtObj->encode([
@@ -723,7 +732,7 @@ class Builds extends Action
                             cpus: $cpus,
                             memory: $memory,
                             timeout: $timeout,
-                            remove:  true,
+                            remove: true,
                             entrypoint: $deployment->getAttribute('entrypoint', ''),
                             destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                             variables: $vars,
@@ -843,7 +852,7 @@ class Builds extends Action
                 throw $err;
             }
 
-            $buildSizeLimit = (int)System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
+            $buildSizeLimit = (int) System::getEnv('_APP_COMPUTE_BUILD_SIZE_LIMIT', '2000000000');
             if (isset($plan['buildSize'])) {
                 $buildSizeLimit = $plan['buildSize'] * 1000 * 1000;
             }
@@ -940,12 +949,12 @@ class Builds extends Action
 
                     $configs = [
                         'screenshotLight' => [
-                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'headers' => ['x-appwrite-hostname' => $rule->getAttribute('domain')],
                             'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=light',
                             'theme' => 'light'
                         ],
                         'screenshotDark' => [
-                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                            'headers' => ['x-appwrite-hostname' => $rule->getAttribute('domain')],
                             'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=dark',
                             'theme' => 'dark'
                         ],
@@ -1332,6 +1341,8 @@ class Builds extends Action
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
 
+            $this->notifyError($project, $resource, $deployment, $plan, $dbForPlatform, $queueForMails);
+
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
@@ -1341,7 +1352,7 @@ class Builds extends Action
                 ->trigger();
 
             $this->sendUsage(
-                resource:$resource,
+                resource: $resource,
                 deployment: $deployment,
                 project: $project,
                 queue: $queueForStatsUsage
@@ -1357,36 +1368,36 @@ class Builds extends Action
             case 'ready':
                 $queue
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_SUCCESS), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_SUCCESS), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int) $deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
             case 'failed':
                 $queue
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
-                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+                    ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
+                    ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE_FAILED), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED), 1) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_FAILED), (int) $deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
         }
 
         $queue
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int) $deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(METRIC_BUILDS_MB_SECONDS, (int) (($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS), 1) // per function
             ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_COMPUTE), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_MB_SECONDS), (int) (($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int) $deployment->getAttribute('buildDuration', 0) * 1000)
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int) (($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ->setProject($project)
             ->trigger();
     }
@@ -1424,7 +1435,7 @@ class Builds extends Action
     protected function getRuntime(Document $resource, string $version): array
     {
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $key =  $resource->getAttribute('runtime');
+        $key = $resource->getAttribute('runtime');
         $runtime = match ($resource->getCollection()) {
             'functions' => $runtimes[$resource->getAttribute('runtime')] ?? null,
             'sites' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
@@ -1570,7 +1581,7 @@ class Builds extends Action
 
                 // Wrap in try/finally to ensure lock file gets deleted
                 try {
-                    $resourceType = match($resource->getCollection()) {
+                    $resourceType = match ($resource->getCollection()) {
                         'functions' => 'function',
                         'sites' => 'site',
                         default => throw new \Exception('Invalid resource type')
@@ -1583,7 +1594,7 @@ class Builds extends Action
                     ]));
 
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                    $previewUrl = match($resource->getCollection()) {
+                    $previewUrl = match ($resource->getCollection()) {
                         'functions' => '',
                         'sites' => !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '',
                         default => throw new \Exception('Invalid resource type')
@@ -1631,5 +1642,108 @@ class Builds extends Action
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())
             ->trigger();
+    }
+
+    /**
+     * @param Document $project
+     * @param Document $resource
+     * @param Document $deployment
+     * @param array $plan
+     * @param Mail $queueForMails
+     * @param array $plan
+     * @return void
+     *
+     * @throws Exception
+     */
+    private function notifyError(Document $project, Document $resource, Document $deployment, array $plan, Database $dbForPlatform, Mail $queueForMails): void
+    {
+        if (!$this->shouldNotifyError($project, $dbForPlatform)) {
+            Console::warning('Deployment failure notification disabled for project ' . $project->getId());
+            return;
+        }
+
+        $memberships = $dbForPlatform->find('memberships', [
+            Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        $userIds = array_column(\array_map(fn ($membership) => $membership->getArrayCopy(), $memberships), 'userId');
+
+        $users = $dbForPlatform->find('users', [
+            Query::equal('$id', $userIds),
+        ]);
+
+        $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $region = $project->getAttribute('region', 'default');
+        $projectId = $project->getId();
+        $resourceId = $resource->getId();
+
+        $deploymentUrl = match ($resource->getCollection()) {
+            'functions' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/functions/function-{$resourceId}/deployments/deployment-{$deployment->getId()}",
+            'sites' => "{$protocol}://{$hostname}/console/project-{$region}-{$projectId}/sites/site-{$resourceId}/deployments/deployment-{$deployment->getId()}",
+            default => throw new \Exception('Invalid resource type')
+        };
+        $alertsUrl = "{$protocol}://{$hostname}/console/account/alerts";
+
+        $template = Template::fromFile(__DIR__ . '/../../../../../../app/config/locale/templates/email-deployment-failed.tpl');
+        $template
+            ->setParam('{{hello}}', $locale->getText('emails.deployment.hello'))
+            ->setParam('{{description}}', $locale->getText('emails.deployment.description'))
+            ->setParam('{{deploymentUrl}}', $deploymentUrl)
+            ->setParam('{{alertsUrl}}', $alertsUrl)
+            ->setParam('{{thanks}}', $locale->getText("emails.deployment.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.deployment.signature"));
+
+        $body = $template->render();
+
+        $emailVariables = [
+            'resourceType' => $resource->getCollection() === 'functions' ? 'function' : 'site',
+            'resourceName' => $resource->getAttribute('name'),
+            'project' => $project->getAttribute('name'),
+            'direction' => $locale->getText('settings.direction'),
+            'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
+            'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
+            'twitterUrl' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+            'discordUrl' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+            'githubUrl' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+            'termsUrl' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+            'privacyUrl' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+        ];
+
+        $subject = $locale->getText("emails.deployment.subject");
+        $preview = $locale->getText("emails.deployment.preview");
+
+        $queueForMails
+            ->setSubject($subject)
+            ->setPreview($preview)
+            ->setBody($body)
+            ->setBodyTemplate(__DIR__ . '/../../../../../../app/config/locale/templates/email-base-styled.tpl')
+            ->setVariables($emailVariables);
+
+        foreach ($users as $user) {
+            $prefs = $user->getAttribute('prefs');
+            if (!\array_key_exists('deploymentFailedEmailAlert', $prefs) || $prefs['deploymentFailedEmailAlert'] === true) {
+                $queueForMails
+                    ->setRecipient($user->getAttribute('email'))
+                    ->trigger();
+            }
+
+        }
+    }
+
+    /**
+     * Determine if we should notify the error to the team
+     *
+     * @param Document $project
+     * @param Database $dbForPlatform
+     * @return bool
+     */
+    protected function shouldNotifyError(Document $project, Database $dbForPlatform): bool
+    {
+        return true;
     }
 }
