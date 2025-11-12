@@ -21,7 +21,6 @@ class Action extends UtopiaAction
         if (\str_contains($path, '/documentsdb')) {
             $this->context = 'documentsdb';
         }
-
         if (\str_contains($path, '/vectordb')) {
             $this->context = 'vectordb';
         }
