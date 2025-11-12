@@ -38,6 +38,6 @@ return [
     ],
     'FLUTTER' => [
         'name' => 'flutter',
-        'versions' => ['3.32', '3.24', '3.35']
+        'versions' => ['3.35', '3.32', '3.24']
     ],
 ];
