@@ -17,7 +17,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
+use Utopia\Validator\Nullable;
 
 class Create extends Action
 {
@@ -61,7 +61,7 @@ class Create extends Action
         ))
         ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
         ->param('fileId', '', new UID(), 'File unique ID.')
-        ->param('expire', null, new Text(100), 'Token expiry date', true)
+        ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
@@ -70,14 +70,6 @@ class Create extends Action
 
     public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents): void
     {
-        if (!is_null($expire)) {
-            $validator = new DatetimeValidator(requireDateInFuture: true, precision: DateTimeValidator::PRECISION_DAYS, offset: 0);
-            if (!$validator->isValid($expire)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Token expiry date must be a valid date, and at least 1 day from now');
-            }
-        }
-
-
         /**
          * @var Document $bucket
          * @var Document $file
