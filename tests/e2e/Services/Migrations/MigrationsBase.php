@@ -1282,39 +1282,11 @@ trait MigrationsBase
         $this->assertEquals(200, $docs['headers']['status-code']);
         $this->assertEquals(10, $docs['body']['total'], 'Expected 10 documents but got ' . $docs['body']['total']);
 
-        // Create a storage bucket for the export
-        $bucketIdUnique = ID::unique();
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'bucketId' => $bucketIdUnique,
-            'name' => 'Test Export Bucket',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'fileSecurity' => false,
-            'enabled' => true,
-            'maximumFileSize' => 10485760, // 10MB
-            'allowedFileExtensions' => ['csv'],
-            'compression' => 'none',
-            'encryption' => false,
-            'antivirus' => false
-        ]);
-
-        $this->assertEquals(201, $bucket['headers']['status-code']);
-        $bucketId = $bucket['body']['$id'];
-
-        // Perform CSV export with notification enabled
+        // Perform CSV export with notification enabled (uses internal bucket)
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'bucketId' => $bucketId,
             'resourceId' => $databaseId . ':' . $collectionId,
             'filename' => 'test-export',
             'columns' => [],
@@ -1329,7 +1301,7 @@ trait MigrationsBase
         $this->assertNotEmpty($migration['body']['$id']);
         $migrationId = $migration['body']['$id'];
 
-        $this->assertEventually(function () use ($bucketId, $migrationId) {
+        $this->assertEventually(function () use ($migrationId) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1341,54 +1313,9 @@ trait MigrationsBase
             $this->assertEquals('completed', $response['body']['status']);
             $this->assertEquals('Appwrite', $response['body']['source']);
             $this->assertEquals('CSV', $response['body']['destination']);
-            $this->assertEquals($bucketId, $response['body']['options']['bucketId']);
 
             return true;
         }, 30000, 500);
-
-        // Check that the file was created in the bucket
-        // Query files by filename
-        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'queries' => [
-                Query::equal('name', ['test-export'])->toString()
-            ]
-        ]);
-
-        $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertEquals(1, $files['body']['total'], 'Expected exactly one file with name "test-export"');
-
-        // Get the exported file
-        $file = $files['body']['files'][0];
-        $fileId = $file['$id'];
-
-        $this->assertEquals($bucketId, $file['bucketId']);
-        $this->assertEquals('test-export', $file['name']);
-        $this->assertEquals('text/csv', $file['mimeType']);
-        $this->assertGreaterThan(0, $file['sizeOriginal']);
-
-        // Download and verify CSV content
-        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', \array_merge([
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $download['headers']['status-code']);
-
-        $csvContent = $download['body'];
-        $lines = explode("\n", trim($csvContent));
-        $this->assertCount(11, $lines);
-        $this->assertStringContainsString('$id', $lines[0]);
-        $this->assertStringContainsString('$permissions', $lines[0]);
-        $this->assertStringContainsString('$createdAt', $lines[0]);
-        $this->assertStringContainsString('$updatedAt', $lines[0]);
-        $this->assertStringContainsString('name', $lines[0]);
-        $this->assertStringContainsString('email', $lines[0]);
-
-        $this->assertStringContainsString('Test User 1', $lines[1]);
-        $this->assertStringContainsString('user1@appwrite.io', $lines[1]);
 
         // Check that email was sent with download link
         $lastEmail = $this->getLastEmail();
@@ -1407,6 +1334,8 @@ trait MigrationsBase
         \parse_str($components['query'] ?? '', $queryParams);
         $this->assertArrayHasKey('jwt', $queryParams, 'JWT not found in download URL');
         $this->assertNotEmpty($queryParams['jwt']);
+        $this->assertArrayHasKey('project', $queryParams, 'Project not found in download URL');
+        $this->assertStringContainsString('/storage/buckets/default/files/', $downloadUrl);
 
         // Test download with JWT
         $path = \str_replace('/v1', '', $components['path']);
@@ -1423,10 +1352,6 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-        $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
