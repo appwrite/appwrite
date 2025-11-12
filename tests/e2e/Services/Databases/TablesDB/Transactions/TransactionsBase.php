@@ -5589,6 +5589,12 @@ trait TransactionsBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Items',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -5707,6 +5713,12 @@ trait TransactionsBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Tags',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -5828,6 +5840,12 @@ trait TransactionsBase
         ]), [
             'tableId' => ID::unique(),
             'name' => 'Arrays',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
