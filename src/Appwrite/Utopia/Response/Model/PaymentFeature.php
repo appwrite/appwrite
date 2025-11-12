@@ -52,5 +52,3 @@ class PaymentFeature extends Model
         return Response::MODEL_PAYMENT_FEATURE;
     }
 }
-
-

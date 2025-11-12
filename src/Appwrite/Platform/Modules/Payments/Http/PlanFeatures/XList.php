@@ -57,8 +57,7 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         $items = $dbForPlatform->find('payments_plan_features', [
             Query::equal('projectId', [$project->getId()]),
             Query::equal('planId', [$planId])
@@ -69,5 +68,3 @@ class XList extends Base
         ]);
     }
 }
-
-

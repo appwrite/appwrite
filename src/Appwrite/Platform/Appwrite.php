@@ -6,11 +6,11 @@ use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
+use Appwrite\Platform\Modules\Payments;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
 use Appwrite\Platform\Modules\Sites;
 use Appwrite\Platform\Modules\Tokens;
-use Appwrite\Platform\Modules\Payments;
 use Utopia\Platform\Platform;
 
 class Appwrite extends Platform

@@ -2,17 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Providers;
 
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Payments\Provider\Registry;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON as JSONValidator;
 
 class Update extends Base
@@ -103,12 +102,14 @@ class Update extends Base
         $out = (array) $updated->getAttribute('payments', []);
         $prov = (array) ($out['providers'] ?? []);
         foreach ($prov as $pid => &$cfg) {
-            if (isset($cfg['secretKey'])) $cfg['secretKey'] = '***';
-            if (isset($cfg['webhookSecret'])) $cfg['webhookSecret'] = '***';
+            if (isset($cfg['secretKey'])) {
+                $cfg['secretKey'] = '***';
+            }
+            if (isset($cfg['webhookSecret'])) {
+                $cfg['webhookSecret'] = '***';
+            }
         }
         $out['providers'] = $prov;
         $response->json(['payments' => $out]);
     }
 }
-
-

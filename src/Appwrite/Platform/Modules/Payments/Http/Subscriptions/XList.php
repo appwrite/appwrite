@@ -61,12 +61,17 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         $filters = [ Query::equal('projectId', [$project->getId()]) ];
-        if ($actorType !== '') $filters[] = Query::equal('actorType', [$actorType]);
-        if ($actorId !== '') $filters[] = Query::equal('actorId', [$actorId]);
-        if ($status !== '') $filters[] = Query::equal('status', [$status]);
+        if ($actorType !== '') {
+            $filters[] = Query::equal('actorType', [$actorType]);
+        }
+        if ($actorId !== '') {
+            $filters[] = Query::equal('actorId', [$actorId]);
+        }
+        if ($status !== '') {
+            $filters[] = Query::equal('status', [$status]);
+        }
         $list = $dbForPlatform->find('payments_subscriptions', $filters);
         $plansById = [];
         foreach ($list as $sub) {
@@ -76,7 +81,9 @@ class XList extends Base
                     Query::equal('projectId', [$project->getId()]),
                     Query::equal('planId', [$planId])
                 ]);
-                if ($plan) $plansById[$planId] = $plan;
+                if ($plan) {
+                    $plansById[$planId] = $plan;
+                }
             }
         }
         $subs = [];
@@ -91,5 +98,3 @@ class XList extends Base
         $response->dynamic(new Document(['total' => count($subs), 'subscriptions' => $subs]), Response::MODEL_PAYMENT_SUBSCRIPTION_LIST);
     }
 }
-
-

@@ -66,8 +66,7 @@ class Create extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -105,5 +104,3 @@ class Create extends Base
         $response->json($created->getArrayCopy());
     }
 }
-
-

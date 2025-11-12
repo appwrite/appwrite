@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
+use Appwrite\Event\Event;
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Payments\Provider\Registry;
 use Appwrite\Utopia\Response;
-use Appwrite\Event\Event;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -79,8 +79,7 @@ class Create extends Base
         Registry $registryPayments,
         Document $project,
         Event $queueForEvents
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -158,42 +157,66 @@ class Create extends Base
             $state = new \Appwrite\Payments\Provider\ProviderState((string) $primary, $config, (array) ($config['state'] ?? []));
 
             // Find the fixed plan price (not metered features)
-            $planPriceId = null;
+            // Plan prices are stored first in the prices array, followed by feature prices
             $priceIds = (array) ($planProviders[$primary]['prices'] ?? []);
-            $apiKey = (string) ($config['secretKey'] ?? '');
 
+            // If no prices in plan providers, return error
+            if (empty($priceIds)) {
+                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                $response->json(['message' => 'Plan has no prices configured for provider: ' . $primary]);
+                return;
+            }
+
+            // Use the first price ID as the plan price
+            // Plan prices are created first and stored first in the array (see StripeAdapter::ensurePlan)
+            $planPriceId = null;
             foreach ($priceIds as $priceId) {
-                // Fetch price details to check metadata
-                try {
-                    $priceData = $adapter->request($apiKey, 'GET', '/prices/' . $priceId);
-                    if (($priceData['metadata']['type'] ?? '') === 'payments_plan_price') {
-                        $planPriceId = $priceId;
-                        break;
-                    }
-                } catch (\Throwable $e) {
-                    // Skip invalid prices
-                    continue;
+                if (!empty($priceId)) {
+                    $planPriceId = $priceId;
+                    break;
                 }
             }
 
-            // Create checkout session if we have URLs
-            if ($planPriceId && $successUrl !== '' && $cancelUrl !== '') {
-                $checkoutSession = $adapter->createCheckoutSession($payer, [
-                    'priceId' => $planPriceId
-                ], $state, [
-                    'successUrl' => $successUrl,
-                    'cancelUrl' => $cancelUrl
-                ]);
-                $checkoutUrl = $checkoutSession->url;
+            if ($planPriceId === null) {
+                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                $response->json(['message' => 'Plan has no valid prices configured for provider: ' . $primary]);
+                return;
             }
 
-            $subRef = $adapter->ensureSubscription($payer, [
-                'planId' => $planId,
-                'planProviders' => $planProviders
-            ], $state);
-            $providerData = [ (string) $primary => [ 'subscriptionId' => $subRef->externalSubscriptionId ] ];
-            // Use status from provider if available
-            $initialStatus = (string) ($subRef->metadata['status'] ?? 'pending');
+            // Create checkout session if we have a price ID and URLs
+            if ($planPriceId && $successUrl !== '' && $cancelUrl !== '') {
+                try {
+                    $checkoutSession = $adapter->createCheckoutSession($payer, [
+                        'priceId' => $planPriceId
+                    ], $state, [
+                        'successUrl' => $successUrl,
+                        'cancelUrl' => $cancelUrl
+                    ]);
+                    $checkoutUrl = $checkoutSession->url;
+                } catch (\Throwable $e) {
+                    // Log error but continue with subscription creation
+                    // The subscription can be created without checkout URL for manual payment flows
+                }
+            }
+
+            // Create or ensure subscription exists in provider
+            try {
+                $subRef = $adapter->ensureSubscription($payer, [
+                    'planId' => $planId,
+                    'planProviders' => $planProviders
+                ], $state);
+                $providerData = [ (string) $primary => [ 'subscriptionId' => $subRef->externalSubscriptionId ] ];
+                // Use status from provider if available
+                $initialStatus = (string) ($subRef->metadata['status'] ?? 'pending');
+            } catch (\Throwable $e) {
+                $response->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR);
+                $response->json(['message' => 'Failed to create subscription: ' . $e->getMessage()]);
+                return;
+            }
+        } else {
+            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+            $response->json(['message' => 'No payment provider configured for this project']);
+            return;
         }
 
         $subscription = new Document([
@@ -233,5 +256,3 @@ class Create extends Base
         $response->json($responseData);
     }
 }
-
-

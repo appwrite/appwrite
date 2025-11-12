@@ -40,5 +40,3 @@ interface Adapter
 
     public function testConnection(array $config): ProviderTestResult;
 }
-
-

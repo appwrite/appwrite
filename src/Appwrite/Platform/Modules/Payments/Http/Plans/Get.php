@@ -57,8 +57,7 @@ class Get extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         $plan = $dbForPlatform->findOne('payments_plans', [
             Query::equal('projectId', [$project->getId()]),
             Query::equal('planId', [$planId])
@@ -73,5 +72,3 @@ class Get extends Base
         $response->dynamic($plan, Response::MODEL_PAYMENT_PLAN);
     }
 }
-
-

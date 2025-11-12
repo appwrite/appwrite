@@ -2,14 +2,18 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Plans;
 
+use Appwrite\AppwriteException;
+use Appwrite\Extend\Exception as ExtendException;
+use Appwrite\Payments\Provider\ProviderState;
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Query;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Payments\Provider\ProviderState;
-use Appwrite\Payments\Provider\Registry;
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Response;
+use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -78,8 +82,7 @@ class Create extends Base
         Database $dbForProject,
         Registry $registryPayments,
         Document $project
-    )
-    {
+    ) {
         $document = new Document([
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
@@ -102,6 +105,16 @@ class Create extends Base
             $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
             $response->json(['message' => 'Payments feature is disabled for this project']);
             return;
+        }
+
+        // Check if plan already exists
+        $existingPlan = $dbForPlatform->findOne('payments_plans', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::equal('planId', [$planId])
+        ]);
+        if ($existingPlan !== null && !$existingPlan->isEmpty()) {
+            // TODO: create a custom exception for this
+            return new AppwriteException(ExtendException::RESOURCE_ALREADY_EXISTS);
         }
 
         $created = $dbForPlatform->createDocument('payments_plans', $document);
@@ -134,5 +147,3 @@ class Create extends Base
         $response->json($created->getArrayCopy());
     }
 }
-
-

@@ -2,12 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Webhooks\Provider;
 
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response;
-use Appwrite\Payments\Provider\Registry;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -68,12 +66,14 @@ class Create extends Base
         $payload = \file_get_contents('php://input') ?: '';
         $signature = (string) ($request->getHeader('stripe-signature') ?? '');
         $json = [];
-        try { $json = \json_decode($payload, true) ?: []; } catch (\Throwable $e) { $json = []; }
+        try {
+            $json = \json_decode($payload, true) ?: [];
+        } catch (\Throwable $e) {
+            $json = [];
+        }
         $json['_signature'] = $signature;
         $json['_raw'] = $payload;
-        $registryPayments->get($providerId, $config, $project, $dbForPlatform, $dbForProject)->handleWebhook($json , new \Appwrite\Payments\Provider\ProviderState($providerId, $config, (array) ($config['state'] ?? [])));
+        $registryPayments->get($providerId, $config, $project, $dbForPlatform, $dbForProject)->handleWebhook($json, new \Appwrite\Payments\Provider\ProviderState($providerId, $config, (array) ($config['state'] ?? [])));
         $response->noContent();
     }
 }
-
-

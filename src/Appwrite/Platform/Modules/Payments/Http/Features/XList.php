@@ -57,8 +57,7 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         $filters = [ Query::equal('projectId', [$project->getId()]) ];
         if ($search !== '') {
             $filters[] = Query::search('name', $search);
@@ -70,5 +69,3 @@ class XList extends Base
         ]);
     }
 }
-
-

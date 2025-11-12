@@ -14,5 +14,3 @@ class Module extends Platform\Module
         $this->addService('workers', new Workers());
     }
 }
-
-

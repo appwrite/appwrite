@@ -64,5 +64,3 @@ class PaymentSubscription extends Model
         return Response::MODEL_PAYMENT_SUBSCRIPTION;
     }
 }
-
-

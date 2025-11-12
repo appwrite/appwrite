@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Payments\Http\Plans;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -55,8 +54,7 @@ class Delete extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -79,5 +77,3 @@ class Delete extends Base
         $response->noContent();
     }
 }
-
-

@@ -60,8 +60,7 @@ class Get extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         $events = $dbForPlatform->find('payments_usage_events', [
             Query::equal('projectId', [$project->getId()]),
             Query::equal('subscriptionId', [$subscriptionId])
@@ -77,5 +76,3 @@ class Get extends Base
         ]);
     }
 }
-
-

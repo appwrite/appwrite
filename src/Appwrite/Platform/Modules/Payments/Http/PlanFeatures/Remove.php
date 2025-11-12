@@ -2,14 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\PlanFeatures;
 
+use Appwrite\Event\Audit;
+use Appwrite\Event\Event;
+use Appwrite\Payments\Provider\ProviderState;
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\Payments\Provider\ProviderState;
-use Appwrite\Payments\Provider\Registry;
 use Appwrite\Utopia\Response;
-use Appwrite\Event\Event;
-use Appwrite\Event\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -68,8 +68,7 @@ class Remove extends Base
         Document $project,
         Event $queueForEvents,
         Audit $queueForAudits
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -123,5 +122,3 @@ class Remove extends Base
         $response->noContent();
     }
 }
-
-

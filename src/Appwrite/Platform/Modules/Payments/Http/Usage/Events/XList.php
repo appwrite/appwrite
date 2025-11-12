@@ -62,11 +62,14 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         $filters = [ Query::equal('projectId', [$project->getId()]) ];
-        if ($subscriptionId !== '') $filters[] = Query::equal('subscriptionId', [$subscriptionId]);
-        if ($featureId !== '') $filters[] = Query::equal('featureId', [$featureId]);
+        if ($subscriptionId !== '') {
+            $filters[] = Query::equal('subscriptionId', [$subscriptionId]);
+        }
+        if ($featureId !== '') {
+            $filters[] = Query::equal('featureId', [$featureId]);
+        }
         $list = $dbForPlatform->find('payments_usage_events', $filters);
         $response->json([
             'total' => count($list),
@@ -74,5 +77,3 @@ class XList extends Base
         ]);
     }
 }
-
-

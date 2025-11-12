@@ -57,8 +57,7 @@ class Get extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         $sub = $dbForPlatform->findOne('payments_subscriptions', [
             Query::equal('projectId', [$project->getId()]),
             Query::equal('subscriptionId', [$subscriptionId])
@@ -75,10 +74,10 @@ class Get extends Base
                 Query::equal('projectId', [$project->getId()]),
                 Query::equal('planId', [$planId])
             ]);
-            if ($plan) $arr['plan'] = $plan->getArrayCopy();
+            if ($plan) {
+                $arr['plan'] = $plan->getArrayCopy();
+            }
         }
         $response->dynamic(new Document($arr), Response::MODEL_PAYMENT_SUBSCRIPTION);
     }
 }
-
-

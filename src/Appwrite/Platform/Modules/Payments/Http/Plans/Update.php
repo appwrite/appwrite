@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Plans;
 
+use Appwrite\Payments\Provider\ProviderState;
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Payments\Provider\ProviderState;
-use Appwrite\Payments\Provider\Registry;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -78,8 +78,7 @@ class Update extends Base
         Database $dbForProject,
         Registry $registryPayments,
         Document $project
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -98,11 +97,17 @@ class Update extends Base
             $response->json(['message' => 'Plan not found']);
             return;
         }
-        if ($name !== '') $plan->setAttribute('name', $name);
-        if ($description !== '') $plan->setAttribute('description', $description);
+        if ($name !== '') {
+            $plan->setAttribute('name', $name);
+        }
+        if ($description !== '') {
+            $plan->setAttribute('description', $description);
+        }
         $plan->setAttribute('isDefault', $isDefault);
         $plan->setAttribute('isFree', $isFree);
-        if (!empty($pricing)) $plan->setAttribute('pricing', $pricing);
+        if (!empty($pricing)) {
+            $plan->setAttribute('pricing', $pricing);
+        }
         $plan = $dbForPlatform->updateDocument('payments_plans', $plan->getId(), $plan);
 
         // Update on providers if pricing changed or name/desc changed
@@ -129,5 +134,3 @@ class Update extends Base
         $response->json($plan->getArrayCopy());
     }
 }
-
-

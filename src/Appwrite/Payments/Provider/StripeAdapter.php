@@ -2,10 +2,13 @@
 
 namespace Appwrite\Payments\Provider;
 
+use Swoole\Coroutine\Http\ClientProxy;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\System\System;
 use Utopia\Database\Query;
+use Utopia\System\System;
+
+use function Swoole\Coroutine\Http\request;
 
 class StripeAdapter implements Adapter
 {
@@ -46,10 +49,12 @@ class StripeAdapter implements Adapter
             'description' => 'Appwrite Payments Webhook for Project ' . $project->getId()
         ]);
 
+        $endpointData = json_decode($endpoint->getBody(), true);
+
         $meta = [
             'currency' => $account['default_currency'] ?? 'usd',
-            'webhookEndpointId' => $endpoint['id'] ?? null,
-            'webhookSecret' => $endpoint['secret'] ?? null,
+            'webhookEndpointId' => $endpointData['id'] ?? null,
+            'webhookSecret' => $endpointData['secret'] ?? null,
         ];
         return new ProviderState($this->getIdentifier(), $config, $meta);
     }
@@ -59,6 +64,17 @@ class StripeAdapter implements Adapter
         $apiKey = (string) ($state->config['secretKey'] ?? '');
         $name = (string) ($planData['name'] ?? '');
         $description = (string) ($planData['description'] ?? '');
+
+        $providerPlanId = json_decode($planData['providers']['stripe']['planId'] ?? '', true);
+
+        // Check if product already exists
+        $existingProduct = $this->request($apiKey, 'GET', '/products/' . $providerPlanId);
+
+        if ($existingProduct->getStatusCode() === 200) {
+            $data = json_decode($existingProduct->getBody(), true);
+            return new ProviderPlanRef(externalPlanId: $data['id'], metadata: ['productId' => $data['id']]);
+        }
+
         $product = $this->request($apiKey, 'POST', '/products', [
             'name' => $name,
             'description' => $description,
@@ -67,7 +83,8 @@ class StripeAdapter implements Adapter
                 'plan_id' => (string) ($planData['planId'] ?? '')
             ]
         ]);
-        $productId = (string) ($product['id'] ?? '');
+        $productData = json_decode($product->getBody(), true);
+        $productId = (string) ($productData['id'] ?? '');
         $refs = ['productId' => $productId, 'prices' => []];
         $pricing = (array) ($planData['pricing'] ?? []);
         foreach ($pricing as $price) {
@@ -93,7 +110,7 @@ class StripeAdapter implements Adapter
     {
         $apiKey = (string) ($state->config['secretKey'] ?? '');
 
-        // 1) Update product name/description if provided
+        // Update product name/description if provided
         $updates = [];
         if (isset($planData['name']) && $planData['name'] !== '') {
             $updates['name'] = (string) $planData['name'];
@@ -105,18 +122,21 @@ class StripeAdapter implements Adapter
             $this->request($apiKey, 'POST', '/products/' . $reference->externalPlanId, $updates);
         }
 
-        // 2) Reconcile prices: create new prices for provided pricing entries; deactivate orphaned
+        // Reconcile prices: create new prices for provided pricing entries; deactivate orphaned
         $newPricing = (array) ($planData['pricing'] ?? []);
         $existingPrices = (array) ($reference->metadata['prices'] ?? []);
 
         // Fetch details for existing price ids
         $existingMap = []; // key => priceId
         foreach ($existingPrices as $pid) {
-            if (!$pid) { continue; }
+            if (!$pid) {
+                continue;
+            }
             $price = $this->request($apiKey, 'GET', '/prices/' . $pid);
-            $currency = (string) ($price['currency'] ?? '');
-            $interval = (string) ($price['recurring']['interval'] ?? '');
-            $amount = (int) ($price['unit_amount'] ?? 0);
+            $priceData = json_decode($price->getBody(), true);
+            $currency = (string) ($priceData['currency'] ?? '');
+            $interval = (string) ($priceData['recurring']['interval'] ?? '');
+            $amount = (int) ($priceData['unit_amount'] ?? 0);
             $key = $currency . ':' . $interval . ':' . $amount;
             $existingMap[$key] = (string) $pid;
         }
@@ -147,7 +167,8 @@ class StripeAdapter implements Adapter
                     'type' => 'payments_plan_price'
                 ]
             ]);
-            $keptPriceIds[] = (string) ($res['id'] ?? '');
+            $resData = json_decode($res->getBody(), true);
+            $keptPriceIds[] = (string) ($resData['id'] ?? '');
         }
 
         // Deactivate any existing price not in desired set
@@ -250,8 +271,10 @@ class StripeAdapter implements Adapter
             'metadata' => [ 'project_id' => $this->project->getId(), 'actor_id' => $actor->getId() ]
         ]);
 
+        $respData = json_decode($resp->getBody(), true);
+
         // Map Stripe status to internal status
-        $stripeStatus = (string) ($resp['status'] ?? 'incomplete');
+        $stripeStatus = (string) ($respData['status'] ?? 'incomplete');
         $statusMap = [
             'active' => 'active',
             'trialing' => 'trialing',
@@ -265,7 +288,7 @@ class StripeAdapter implements Adapter
         $internalStatus = $statusMap[$stripeStatus] ?? 'pending';
 
         return new ProviderSubscriptionRef(
-            externalSubscriptionId: (string) ($resp['id'] ?? ''),
+            externalSubscriptionId: (string) ($respData['id'] ?? ''),
             metadata: ['status' => $internalStatus]
         );
     }
@@ -276,7 +299,8 @@ class StripeAdapter implements Adapter
         $newPriceId = (string) ($changes['priceId'] ?? '');
         if ($newPriceId !== '') {
             $sub = $this->request($apiKey, 'GET', '/subscriptions/' . $subscription->externalSubscriptionId);
-            $itemId = $sub['items']['data'][0]['id'] ?? '';
+            $subData = json_decode($sub->getBody(), true);
+            $itemId = $subData['items']['data'][0]['id'] ?? '';
             if ($itemId !== '') {
                 $this->request($apiKey, 'POST', '/subscriptions/' . $subscription->externalSubscriptionId, [
                     'items' => [ [ 'id' => $itemId, 'price' => $newPriceId ] ],
@@ -315,8 +339,9 @@ class StripeAdapter implements Adapter
             'client_reference_id' => $actor->getId(),
             'metadata' => [ 'project_id' => $this->project->getId(), 'actor_id' => $actor->getId() ]
         ];
-        $session = $this->request($apiKey, 'POST', '/checkout/sessions', $params);
-        return new ProviderCheckoutSession(url: (string) ($session['url'] ?? ''));
+        $sessionResponse = $this->request($apiKey, 'POST', '/checkout/sessions', $params);
+        $sessionData = json_decode($sessionResponse->getBody(), true);
+        return new ProviderCheckoutSession(url: (string) ($sessionData['url'] ?? ''));
     }
 
     public function createPortalSession(Document $actor, ProviderState $state, array $options = []): ProviderPortalSession
@@ -324,8 +349,9 @@ class StripeAdapter implements Adapter
         $apiKey = (string) ($state->config['secretKey'] ?? '');
         $returnUrl = (string) ($options['returnUrl'] ?? '');
         $customerId = $this->ensureCustomer($apiKey, $actor);
-        $session = $this->request($apiKey, 'POST', '/billing_portal/sessions', [ 'customer' => $customerId, 'return_url' => $returnUrl ]);
-        return new ProviderPortalSession(url: (string) ($session['url'] ?? ''));
+        $sessionResponse = $this->request($apiKey, 'POST', '/billing_portal/sessions', [ 'customer' => $customerId, 'return_url' => $returnUrl ]);
+        $sessionData = json_decode($sessionResponse->getBody(), true);
+        return new ProviderPortalSession(url: (string) ($sessionData['url'] ?? ''));
     }
 
     public function reportUsage(ProviderSubscriptionRef $subscription, string $featureId, int $quantity, \DateTimeInterface $timestamp, ProviderState $state): void
@@ -337,7 +363,8 @@ class StripeAdapter implements Adapter
         if ($stripeSubId !== '') {
             try {
                 $sub = $this->request($apiKey, 'GET', '/subscriptions/' . $stripeSubId);
-                $customerId = (string) ($sub['customer'] ?? '');
+                $subData = json_decode($sub->getBody(), true);
+                $customerId = (string) ($subData['customer'] ?? '');
             } catch (\Throwable $_) {
                 $customerId = '';
             }
@@ -368,7 +395,9 @@ class StripeAdapter implements Adapter
             $parts = [];
             foreach (explode(',', $signature) as $part) {
                 [$k, $v] = array_pad(explode('=', trim($part), 2), 2, '');
-                if ($k !== '') { $parts[$k] = $v; }
+                if ($k !== '') {
+                    $parts[$k] = $v;
+                }
             }
             $ts = (string) ($parts['t'] ?? '');
             $v1 = (string) ($parts['v1'] ?? '');
@@ -413,8 +442,12 @@ class StripeAdapter implements Adapter
                 $prov = (array) ($providerMap['stripe'] ?? []);
                 if ((string) ($prov['subscriptionId'] ?? '') === $stripeSubId) {
                     $sub->setAttribute('status', $internalStatus);
-                    if ($periodStart) $sub->setAttribute('currentPeriodStart', $periodStart);
-                    if ($periodEnd) $sub->setAttribute('currentPeriodEnd', $periodEnd);
+                    if ($periodStart) {
+                        $sub->setAttribute('currentPeriodStart', $periodStart);
+                    }
+                    if ($periodEnd) {
+                        $sub->setAttribute('currentPeriodEnd', $periodEnd);
+                    }
                     $this->dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
                     $changes['subscription'] = $sub->getId();
                     $changes['status'] = $internalStatus;
@@ -461,8 +494,9 @@ class StripeAdapter implements Adapter
     {
         $eventName = 'appwrite.payments.feature.usage.' . $projectId . '.' . $planId . '.' . $featureId;
         $list = $this->request($apiKey, 'GET', '/billing/meters', ['limit' => 100]);
-        if (isset($list['data']) && is_array($list['data'])) {
-            foreach ($list['data'] as $m) {
+        $listData = json_decode($list->getBody(), true);
+        if (isset($listData['data']) && is_array($listData['data'])) {
+            foreach ($listData['data'] as $m) {
                 if ((string) ($m['event_name'] ?? '') === $eventName) {
                     $id = (string) ($m['id'] ?? '');
                     if ($id !== '' && (($m['active'] ?? true) === false)) {
@@ -479,19 +513,23 @@ class StripeAdapter implements Adapter
             'value_settings' => [ 'event_payload_key' => 'value' ],
             'customer_mapping' => [ 'type' => 'by_id', 'event_payload_key' => 'stripe_customer_id' ],
         ]);
-        return (string) ($meter['id'] ?? '');
+        $meterData = json_decode($meter->getBody(), true);
+        return (string) ($meterData['id'] ?? '');
     }
 
     private function ensureCustomer(string $apiKey, Document $actor): string
     {
         // Persist per-actor customer id in platform DB cache (users/teams) with dedicated attribute
         $existing = (string) $actor->getAttribute('stripeCustomerId', '');
-        if ($existing !== '') return $existing;
+        if ($existing !== '') {
+            return $existing;
+        }
         $customer = $this->request($apiKey, 'POST', '/customers', [
             'email' => $actor->getAttribute('email', ''),
             'metadata' => [ 'project_id' => $this->project->getId(), 'actor_id' => $actor->getId() ]
         ]);
-        $customerId = (string) ($customer['id'] ?? '');
+        $customerData = json_decode($customer->getBody(), true);
+        $customerId = (string) ($customerData['id'] ?? '');
         try {
             $actor->setAttribute('stripeCustomerId', $customerId);
             $collection = $actor->getAttribute('kind', '') === 'team' ? 'teams' : 'users';
@@ -502,37 +540,39 @@ class StripeAdapter implements Adapter
         return $customerId;
     }
 
-    public function request(string $apiKey, string $method, string $path, array $params = []): array
+    public function request(string $apiKey, string $method, string $path, array $params = []): ClientProxy
     {
-        $ch = \curl_init();
-        $url = 'https://api.stripe.com/v1' . $path;
-        $headers = [ 'Authorization: Bearer ' . $apiKey, 'Content-Type: application/x-www-form-urlencoded' ];
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        switch ($method) {
-            case 'GET':
-                if (!empty($params)) { $url .= '?' . http_build_query($params); }
-                break;
-            case 'POST':
-                \curl_setopt($ch, CURLOPT_POST, true);
-                if (!empty($params)) { \curl_setopt($ch, CURLOPT_POSTFIELDS, $this->buildFormData($params)); }
-                break;
-            case 'DELETE':
-                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-                if (!empty($params)) { \curl_setopt($ch, CURLOPT_POSTFIELDS, $this->buildFormData($params)); }
-                break;
-        }
-        \curl_setopt($ch, CURLOPT_URL, $url);
-        $response = \curl_exec($ch);
-        $httpCode = (int) \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        \curl_close($ch);
-        if ($response === false) { throw new \RuntimeException('Stripe API request failed'); }
-        $data = \json_decode($response, true);
-        if ($httpCode >= 400) {
-            $message = is_array($data) && isset($data['error']['message']) ? (string) $data['error']['message'] : 'Stripe API error';
-            throw new \RuntimeException($message, $httpCode);
-        }
-        return is_array($data) ? $data : [];
+        // $ch = \curl_init();
+        // $url = 'https://api.stripe.com/v1' . $path;
+        // $headers = [ 'Authorization: Bearer ' . $apiKey, 'Content-Type: application/x-www-form-urlencoded' ];
+        // \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        // switch ($method) {
+        //     case 'GET':
+        //         if (!empty($params)) { $url .= '?' . http_build_query($params); }
+        //         break;
+        //     case 'POST':
+        //         \curl_setopt($ch, CURLOPT_POST, true);
+        //         if (!empty($params)) { \curl_setopt($ch, CURLOPT_POSTFIELDS, $this->buildFormData($params)); }
+        //         break;
+        //     case 'DELETE':
+        //         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        //         if (!empty($params)) { \curl_setopt($ch, CURLOPT_POSTFIELDS, $this->buildFormData($params)); }
+        //         break;
+        // }
+        // \curl_setopt($ch, CURLOPT_URL, $url);
+        // $response = \curl_exec($ch);
+        // $httpCode = (int) \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        // \curl_close($ch);
+        // if ($response === false) { throw new \RuntimeException('Stripe API request failed'); }
+        // $data = \json_decode($response, true);
+        // if ($httpCode >= 400) {
+        //     $message = is_array($data) && isset($data['error']['message']) ? (string) $data['error']['message'] : 'Stripe API error';
+        //     throw new \RuntimeException($message, $httpCode);
+        // }
+        // return is_array($data) ? $data : [];
+        $response = request($method, $path, $params, ['headers' => [ 'Authorization: Bearer ' . $apiKey, 'Content-Type: application/x-www-form-urlencoded' ]]);
+        return $response;
     }
 
     private function buildFormData(array $params, string $prefix = ''): string
@@ -549,5 +589,3 @@ class StripeAdapter implements Adapter
         return implode('&', $data);
     }
 }
-
-

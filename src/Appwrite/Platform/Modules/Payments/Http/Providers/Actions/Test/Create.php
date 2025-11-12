@@ -2,12 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Providers\Actions\Test;
 
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Payments\Provider\Registry;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -63,5 +63,3 @@ class Create extends Base
         $response->json(['success' => $result->success, 'message' => $result->message]);
     }
 }
-
-

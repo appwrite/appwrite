@@ -43,5 +43,3 @@ class Registry
         return $adapter;
     }
 }
-
-

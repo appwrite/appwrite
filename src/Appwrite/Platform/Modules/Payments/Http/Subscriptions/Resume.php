@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
+use Appwrite\Payments\Provider\ProviderState;
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
-use Appwrite\Payments\Provider\ProviderState;
-use Appwrite\Payments\Provider\Registry;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -62,8 +62,7 @@ class Resume extends Base
         Document $user,
         Registry $registryPayments,
         Document $project
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -131,5 +130,3 @@ class Resume extends Base
         $response->noContent();
     }
 }
-
-

@@ -13,5 +13,3 @@ class Workers extends Service
         $this->addAction(UsageSync::getName(), new UsageSync());
     }
 }
-
-

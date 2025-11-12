@@ -11,7 +11,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Queue\Broker\Pool as BrokerPool;
-use Utopia\Queue\Publisher;
 use Utopia\System\System;
 
 class SchedulePaymentsUsage extends Action
@@ -67,5 +66,3 @@ class SchedulePaymentsUsage extends Action
         }, $interval);
     }
 }
-
-

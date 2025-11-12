@@ -66,8 +66,7 @@ class Update extends Base
         Response $response,
         Database $dbForPlatform,
         Document $project
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -86,12 +85,16 @@ class Update extends Base
             $response->json(['message' => 'Feature not found']);
             return;
         }
-        if ($name !== '') $feature->setAttribute('name', $name);
-        if ($type !== '') $feature->setAttribute('type', $type);
-        if ($description !== '') $feature->setAttribute('description', $description);
+        if ($name !== '') {
+            $feature->setAttribute('name', $name);
+        }
+        if ($type !== '') {
+            $feature->setAttribute('type', $type);
+        }
+        if ($description !== '') {
+            $feature->setAttribute('description', $description);
+        }
         $feature = $dbForPlatform->updateDocument('payments_features', $feature->getId(), $feature);
         $response->json($feature->getArrayCopy());
     }
 }
-
-

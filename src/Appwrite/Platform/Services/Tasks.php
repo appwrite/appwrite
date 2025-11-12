@@ -10,6 +10,7 @@ use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMessages;
+use Appwrite\Platform\Tasks\SchedulePaymentsUsage;
 use Appwrite\Platform\Tasks\Screenshot;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
@@ -18,7 +19,6 @@ use Appwrite\Platform\Tasks\StatsResources;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
-use Appwrite\Platform\Tasks\SchedulePaymentsUsage;
 use Utopia\Platform\Service;
 
 class Tasks extends Service

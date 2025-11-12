@@ -2,10 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Payments\Workers;
 
-use Appwrite\Payments\Provider\Registry as ProviderRegistry;
-use Appwrite\Platform\Action;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\ProviderSubscriptionRef;
+use Appwrite\Payments\Provider\Registry as ProviderRegistry;
+use Appwrite\Platform\Action;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -99,5 +99,3 @@ class UsageSync extends Action
         }
     }
 }
-
-

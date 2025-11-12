@@ -55,12 +55,14 @@ class Get extends Base
         $payments = (array) $projectDoc->getAttribute('payments', []);
         $providers = (array) ($payments['providers'] ?? []);
         foreach ($providers as $pid => &$cfg) {
-            if (isset($cfg['secretKey'])) $cfg['secretKey'] = '***';
-            if (isset($cfg['webhookSecret'])) $cfg['webhookSecret'] = '***';
+            if (isset($cfg['secretKey'])) {
+                $cfg['secretKey'] = '***';
+            }
+            if (isset($cfg['webhookSecret'])) {
+                $cfg['webhookSecret'] = '***';
+            }
         }
         $payments['providers'] = $providers;
         $response->json(['payments' => $payments]);
     }
 }
-
-

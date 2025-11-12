@@ -32,5 +32,3 @@ class PaymentPlan extends Model
         return Response::MODEL_PAYMENT_PLAN;
     }
 }
-
-

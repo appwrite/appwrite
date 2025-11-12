@@ -2,24 +2,24 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\PlanFeatures;
 
+use Appwrite\Event\Audit;
+use Appwrite\Event\Event;
+use Appwrite\Payments\Provider\ProviderState;
+use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Payments\Provider\ProviderState;
-use Appwrite\Payments\Provider\Registry;
 use Appwrite\Utopia\Response;
-use Appwrite\Event\Event;
-use Appwrite\Event\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Text;
-use Utopia\Validator\Integer;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Text;
 
 class Assign extends Base
 {
@@ -89,8 +89,7 @@ class Assign extends Base
         Document $project,
         Event $queueForEvents,
         Audit $queueForAudits
-    )
-    {
+    ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
@@ -186,5 +185,3 @@ class Assign extends Base
         $response->json($created->getArrayCopy());
     }
 }
-
-
