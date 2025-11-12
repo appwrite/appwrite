@@ -152,6 +152,8 @@ class Decrement extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually decrementing
             $groupId = $this->getGroupId();
             $mockDocument = new Document([

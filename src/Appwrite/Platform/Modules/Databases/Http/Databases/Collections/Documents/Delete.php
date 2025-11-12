@@ -176,6 +176,8 @@ class Delete extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually deleting document
             $response->noContent();
             return;

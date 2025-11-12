@@ -149,6 +149,8 @@ class Upsert extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually upserting documents
             $response->dynamic(new Document([
                 $this->getSDKGroup() => [],

@@ -174,6 +174,8 @@ class Update extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually updating documents
             $response->dynamic(new Document([
                 $this->getSDKGroup() => [],

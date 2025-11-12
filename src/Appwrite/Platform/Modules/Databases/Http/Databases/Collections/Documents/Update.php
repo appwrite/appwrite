@@ -243,7 +243,6 @@ class Update extends Action
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
-
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
@@ -302,6 +301,9 @@ class Update extends Action
                 ...$document->getArrayCopy(),
                 ...$data
             ]);
+
+            $queueForEvents->reset();
+
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
                 ->dynamic($mockDocument, $this->getResponseModel());

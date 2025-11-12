@@ -302,6 +302,8 @@ class Upsert extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually upserting document
             $groupId = $this->getGroupId();
             $mockDocument = new Document([
