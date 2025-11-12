@@ -105,7 +105,7 @@ class Create extends Base
             throw new Exception(Exception::SITE_NOT_FOUND);
         }
 
-        $branchUrl = $type == GitHub::CLONE_TYPE_BRANCH ? "https://github.com/$owner/$repository/tree/$reference" : "";
+        $branchUrl = "https://github.com/$owner/$repository/blob/$reference";
         $repositoryUrl = "https://github.com/$owner/$repository";
 
         $template = new Document([
