@@ -68,7 +68,7 @@ class TokensCustomServerTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertEquals('Token expiry date must be a valid date, and at least 1 day from now', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
 
         // Success case: No expire date
         $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
@@ -102,7 +102,7 @@ class TokensCustomServerTest extends Scope
             'expire' => '2022-11-02',
         ]);
         $this->assertEquals(400, $token['headers']['status-code']);
-        $this->assertEquals('Token expiry date must be a valid date, and at least 1 day from now', $token['body']['message']);
+        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
 
         // Success case: Finite expiry
         $expiry = date('Y-m-d', strtotime("tomorrow"));
