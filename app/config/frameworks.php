@@ -273,7 +273,7 @@ return [
         'key' => 'flutter',
         'name' => 'Flutter',
         'screenshotSleep' => 5000,
-        'buildRuntime' => 'flutter-3.29',
+        'buildRuntime' => 'flutter-3.35',
         'runtimes' => getVersions($templateRuntimes['FLUTTER']['versions'], 'flutter'),
         'adapters' => [
             'static' => [
