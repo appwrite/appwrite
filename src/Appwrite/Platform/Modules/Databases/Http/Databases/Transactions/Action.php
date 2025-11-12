@@ -20,6 +20,7 @@ abstract class Action extends UtopiaAction
     public function setHttpPath(string $path): UtopiaAction
     {
         switch (true) {
+            // TODO: set the getDatabaseType() from each database group instead of path matching
             case str_contains($path, '/tablesdb'):
                 $this->context = TABLES;
                 $this->databaseType = TABLESDB;
@@ -28,6 +29,10 @@ abstract class Action extends UtopiaAction
             case str_contains($path, '/documentsdb'):
                 $this->context = COLLECTIONS;
                 $this->databaseType = DOCUMENTSDB;
+                break;
+            case str_contains($path, '/vectordb'):
+                $this->context = COLLECTIONS;
+                $this->databaseType = VECTORDB;
                 break;
         }
         return parent::setHttpPath($path);

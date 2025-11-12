@@ -26,6 +26,12 @@ use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\XList as ListC
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Create as CreateVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Delete as DeleteVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Get as GetVectorDatabase;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\Create as CreateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\Delete as DeleteTransaction;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\Get as GetTransaction;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\Operations\Create as CreateOperations;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\Update as UpdateTransaction;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\XList as ListTransactions;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Update as UpdateVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Usage\Get as GetVectorDatabaseUsage;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Usage\XList as ListVectorDatabaseUsage;
@@ -41,7 +47,7 @@ class VectorDB extends Base
         $this->registerIndexActions($service);
         $this->registerDocumentActions($service);
         $this->registerEmbeddingActions($service);
-        // $this->registerTransactionActions($service);
+        $this->registerTransactionActions($service);
     }
 
     private function registerDatabaseActions(Service $service): void
@@ -85,6 +91,16 @@ class VectorDB extends Base
         $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
         $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
+    }
+
+    private function registerTransactionActions(Service $service): void
+    {
+        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
+        $service->addAction(GetTransaction::getName(), new GetTransaction());
+        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
+        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
+        $service->addAction(ListTransactions::getName(), new ListTransactions());
+        $service->addAction(CreateOperations::getName(), new CreateOperations());
     }
 
     private function registerEmbeddingActions(Service $service): void
