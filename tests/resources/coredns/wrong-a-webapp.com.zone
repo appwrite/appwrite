@@ -1,8 +1,0 @@
-; Necessary setup
-$ORIGIN wrong-a-webapp.com.zone.
-@ IN SOA ns1.wrong-a-webapp.com.zone. hostmaster.wrong-a-webapp.com.zone. (2025091201 7200 3600 1209600 3600)
-@ IN NS ns1.wrong-a-webapp.com.zone.
-ns1 IN A 127.0.0.1
-
-; Custom DNS records
-@ IN A 203.0.0.5
