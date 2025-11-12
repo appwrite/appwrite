@@ -1112,7 +1112,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$sequence');
-        $authorization-> skip(fn () => $dbForProject->createDocument('users', $user));
+        $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
