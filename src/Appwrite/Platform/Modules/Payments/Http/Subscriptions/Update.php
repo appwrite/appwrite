@@ -53,6 +53,7 @@ class Update extends Base
             ))
             ->param('subscriptionId', '', new Text(128), 'Subscription ID')
             ->param('planId', '', new Text(128), 'New plan ID', true)
+            ->param('priceId', '', new Text(128), 'New price ID', true)
             ->param('cancelAtPeriodEnd', false, new Boolean(), 'Cancel at period end', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -66,6 +67,7 @@ class Update extends Base
     public function action(
         string $subscriptionId,
         string $planId,
+        string $priceId,
         bool $cancelAtPeriodEnd,
         Response $response,
         Database $dbForPlatform,
@@ -132,16 +134,77 @@ class Update extends Base
             if ($subscriptionRef !== '') {
                 $state = new ProviderState((string) $primary, $config, (array) ($config['state'] ?? []));
                 $adapter = $registryPayments->get((string) $primary, $config, $project, $dbForPlatform, $dbForProject);
-                if ($planId !== '') {
-                    // map planId -> priceId
+                if ($planId !== '' || $priceId !== '') {
+                    $currentPlanId = (string) $sub->getAttribute('planId', '');
+                    $targetPlanId = $planId !== '' ? $planId : $currentPlanId;
                     $plan = $dbForPlatform->findOne('payments_plans', [
                         Query::equal('projectId', [$project->getId()]),
-                        Query::equal('planId', [$planId])
+                        Query::equal('planId', [$targetPlanId])
                     ]);
-                    $planProviders = (array) ($plan?->getAttribute('providers', []) ?? []);
-                    $priceId = (string) (($planProviders[(string) $primary]['metadata']['prices'][0] ?? '') ?: '');
-                    $adapter->updateSubscription(new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef), ['priceId' => $priceId], $state);
-                    $sub->setAttribute('planId', $planId);
+                    if ($plan === null || $plan->isEmpty()) {
+                        $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                        $response->json(['message' => 'Target plan not found']);
+                        return;
+                    }
+                    $planProviders = (array) $plan->getAttribute('providers', []);
+                    $planPricing = array_values((array) ($plan->getAttribute('pricing') ?? []));
+                    $providerEntry = (array) ($planProviders[(string) $primary] ?? []);
+                    $rawProviderPrices = (array) ($providerEntry['prices'] ?? []);
+                    $providerPriceMap = [];
+                    if (!empty($rawProviderPrices)) {
+                        if (!\array_is_list($rawProviderPrices)) {
+                            foreach ($rawProviderPrices as $internalId => $providerPrice) {
+                                $internalKey = (string) $internalId;
+                                $providerValue = (string) $providerPrice;
+                                if ($internalKey !== '' && $providerValue !== '') {
+                                    $providerPriceMap[$internalKey] = $providerValue;
+                                }
+                            }
+                        } else {
+                            foreach ($planPricing as $index => $pricingEntry) {
+                                $internalId = (string) ($pricingEntry['priceId'] ?? '');
+                                $providerValue = (string) ($rawProviderPrices[$index] ?? '');
+                                if ($internalId !== '' && $providerValue !== '') {
+                                    $providerPriceMap[$internalId] = $providerValue;
+                                }
+                            }
+                        }
+                    }
+                    if (empty($providerPriceMap)) {
+                        $metaPrices = (array) (($providerEntry['metadata']['prices'] ?? []) ?: []);
+                        foreach ($metaPrices as $internalId => $providerPrice) {
+                            $internalKey = (string) $internalId;
+                            $providerValue = (string) $providerPrice;
+                            if ($internalKey !== '' && $providerValue !== '') {
+                                $providerPriceMap[$internalKey] = $providerValue;
+                            }
+                        }
+                    }
+
+                    $selectedPriceId = $priceId !== '' ? $priceId : (string) $sub->getAttribute('priceId', '');
+                    if ($selectedPriceId === '' && !empty($providerPriceMap)) {
+                        $selectedPriceId = (string) array_key_first($providerPriceMap);
+                    }
+
+                    if ($selectedPriceId === '' || !isset($providerPriceMap[$selectedPriceId])) {
+                        $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                        $response->json(['message' => 'Price ID not configured for provider']);
+                        return;
+                    }
+
+                    $providerPriceId = (string) $providerPriceMap[$selectedPriceId];
+                    $adapter->updateSubscription(
+                        new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef),
+                        ['priceId' => $providerPriceId],
+                        $state
+                    );
+                    $sub->setAttribute('planId', $targetPlanId);
+                    $sub->setAttribute('priceId', $selectedPriceId);
+                    $provEntry = (array) ($provMap[(string) $primary] ?? []);
+                    $provEntry['priceId'] = $selectedPriceId;
+                    $provEntry['providerPriceId'] = $providerPriceId;
+                    $provMap[(string) $primary] = $provEntry;
+                    $sub->setAttribute('providers', $provMap);
                 }
                 if ($cancelAtPeriodEnd) {
                     $adapter->cancelSubscription(new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef), true, $state);

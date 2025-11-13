@@ -87,6 +87,7 @@ return [
             [ '$id' => ID::custom('actorId'), 'type' => Database::VAR_STRING, 'size' => Database::LENGTH_KEY, 'signed' => true, 'required' => true, 'default' => null, 'array' => false, 'filters' => [] ],
             [ '$id' => ID::custom('actorInternalId'), 'type' => Database::VAR_STRING, 'size' => Database::LENGTH_KEY, 'signed' => true, 'required' => true, 'default' => null, 'array' => false, 'filters' => [] ],
             [ '$id' => ID::custom('planId'), 'type' => Database::VAR_STRING, 'size' => Database::LENGTH_KEY, 'signed' => true, 'required' => true, 'default' => null, 'array' => false, 'filters' => [] ],
+            [ '$id' => ID::custom('priceId'), 'type' => Database::VAR_STRING, 'size' => Database::LENGTH_KEY, 'signed' => true, 'required' => false, 'default' => null, 'array' => false, 'filters' => [] ],
             [ '$id' => ID::custom('status'), 'type' => Database::VAR_STRING, 'size' => 32, 'signed' => true, 'required' => false, 'default' => 'active', 'array' => false, 'filters' => [] ],
             [ '$id' => ID::custom('trialEndsAt'), 'type' => Database::VAR_DATETIME, 'size' => 0, 'signed' => false, 'required' => false, 'default' => null, 'array' => false, 'filters' => ['datetime'] ],
             [ '$id' => ID::custom('currentPeriodStart'), 'type' => Database::VAR_DATETIME, 'size' => 0, 'signed' => false, 'required' => false, 'default' => null, 'array' => false, 'filters' => ['datetime'] ],

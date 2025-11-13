@@ -34,6 +34,12 @@ class PaymentSubscription extends Model
                 'default' => '',
                 'example' => 'pro',
             ])
+            ->addRule('priceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Selected price ID.',
+                'default' => '',
+                'example' => 'pro-monthly',
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Subscription status.',

@@ -62,7 +62,7 @@ class Create extends Base
             ->param('description', '', new Text(8192, 0), 'Plan description.', true)
             ->param('isDefault', false, new Boolean(), 'Set as default plan for new users.', true)
             ->param('isFree', false, new Boolean(), 'Is the plan free.', true)
-            ->param('pricing', [], new JSONValidator(), 'Pricing configuration array [{amount,currency,interval}]', true)
+            ->param('pricing', [], new JSONValidator(), 'Pricing configuration array [{priceId,amount,currency,interval}]', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -86,13 +86,39 @@ class Create extends Base
         Event $queueForEvents,
         Document $project
     ) {
+        // Normalize and validate pricing definitions (ensure user-provided priceIds)
+        $normalizedPricing = [];
+        $seenPriceIds = [];
+        foreach ($pricing as $entry) {
+            if (!is_array($entry)) {
+                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                $response->json(['message' => 'Invalid pricing entry format']);
+                return;
+            }
+            $priceId = (string) ($entry['priceId'] ?? '');
+            if ($priceId === '') {
+                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                $response->json(['message' => 'Each pricing entry must include a priceId']);
+                return;
+            }
+            if (isset($seenPriceIds[$priceId])) {
+                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                $response->json(['message' => 'Duplicate priceId detected: ' . $priceId]);
+                return;
+            }
+            $seenPriceIds[$priceId] = true;
+            $normalizedPricing[] = $entry;
+        }
+
+        $pricing = $normalizedPricing;
+
         $document = new Document([
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
             'planId' => $planId,
             'name' => $name,
             'description' => $description,
-            'pricing' => $pricing,
+            'pricing' => $normalizedPricing,
             'isDefault' => $isDefault,
             'isFree' => $isFree,
             'status' => 'active',
@@ -121,7 +147,7 @@ class Create extends Base
         }
 
         $created = $dbForPlatform->createDocument('payments_plans', $document);
-        
+
         $queueForEvents->setParam('planId', $planId);
 
         // Provision on configured providers

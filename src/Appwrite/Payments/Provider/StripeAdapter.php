@@ -70,6 +70,7 @@ class StripeAdapter implements Adapter
         $apiKey = (string) ($state->config['secretKey'] ?? '');
         $name = (string) ($planData['name'] ?? '');
         $description = (string) ($planData['description'] ?? '');
+        $pricing = (array) ($planData['pricing'] ?? []);
 
         $providerPlanRaw = $planData['providers']['stripe']['planId'] ?? '';
         $providerPlanDecoded = \is_string($providerPlanRaw) ? \json_decode($providerPlanRaw, true) : $providerPlanRaw;
@@ -84,7 +85,19 @@ class StripeAdapter implements Adapter
             $existingProduct = $this->request($apiKey, 'GET', '/products/' . $providerPlanId);
             if (($existingProduct['status'] ?? 0) === 200) {
                 $data = $this->decodeResponse($existingProduct);
-                return new ProviderPlanRef(externalPlanId: $data['id'], metadata: ['productId' => $data['id']]);
+                $productId = (string) ($data['id'] ?? '');
+                $priceMap = $this->mapStripePricesForPlan(
+                    $apiKey,
+                    $productId,
+                    $pricing
+                );
+                return new ProviderPlanRef(
+                    externalPlanId: $productId,
+                    metadata: [
+                        'productId' => $productId,
+                        'prices' => $priceMap,
+                    ]
+                );
             }
         }
 
@@ -98,9 +111,15 @@ class StripeAdapter implements Adapter
         ]);
         $productData = $this->decodeResponse($product);
         $productId = (string) ($productData['id'] ?? '');
-        $refs = ['productId' => $productId, 'prices' => []];
-        $pricing = (array) ($planData['pricing'] ?? []);
+        $priceMap = [];
         foreach ($pricing as $price) {
+            if (!is_array($price)) {
+                continue;
+            }
+            $internalPriceId = (string) ($price['priceId'] ?? '');
+            if ($internalPriceId === '') {
+                continue;
+            }
             $amount = (int) ($price['amount'] ?? 0);
             $currency = (string) ($price['currency'] ?? ($state->metadata['currency'] ?? 'usd'));
             $interval = (string) ($price['interval'] ?? 'month');
@@ -111,13 +130,109 @@ class StripeAdapter implements Adapter
                 'recurring' => [ 'interval' => $interval ],
                 'metadata' => [
                     'plan_id' => (string) ($planData['planId'] ?? ''),
-                    'type' => 'payments_plan_price'
+                    'type' => 'payments_plan_price',
+                    'internal_price_id' => $internalPriceId,
                 ]
             ]);
             $resData = $this->decodeResponse($res);
-            $refs['prices'][] = $resData['id'] ?? null;
+            $providerPriceId = (string) ($resData['id'] ?? '');
+            if ($providerPriceId !== '') {
+                $priceMap[$internalPriceId] = $providerPriceId;
+            }
         }
-        return new ProviderPlanRef(externalPlanId: $productId, metadata: $refs);
+        return new ProviderPlanRef(
+            externalPlanId: $productId,
+            metadata: [
+                'productId' => $productId,
+                'prices' => $priceMap,
+            ]
+        );
+    }
+
+    /**
+     * @param array<int|string, mixed> $pricing
+     * @return array<string,string>
+     */
+    private function mapStripePricesForPlan(string $apiKey, string $productId, array $pricing): array
+    {
+        if ($productId === '') {
+            return [];
+        }
+
+        $pricingIndex = [];
+        foreach ($pricing as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $internalId = (string) ($entry['priceId'] ?? '');
+            if ($internalId === '') {
+                continue;
+            }
+            $pricingIndex[$internalId] = [
+                'amount' => (int) ($entry['amount'] ?? 0),
+                'currency' => \strtolower((string) ($entry['currency'] ?? '')),
+                'interval' => (string) ($entry['interval'] ?? ''),
+            ];
+        }
+
+        $priceMap = [];
+        try {
+            $response = $this->request($apiKey, 'GET', '/prices', [
+                'product' => $productId,
+                'limit' => 100,
+            ]);
+            $data = $this->decodeResponse($response);
+        } catch (\Throwable $_) {
+            return [];
+        }
+
+        $assigned = [];
+        if (isset($data['data']) && \is_array($data['data'])) {
+            foreach ($data['data'] as $price) {
+                if (!\is_array($price)) {
+                    continue;
+                }
+                $providerPriceId = (string) ($price['id'] ?? '');
+                if ($providerPriceId === '') {
+                    continue;
+                }
+                $internalId = (string) ($price['metadata']['internal_price_id'] ?? '');
+                if ($internalId !== '') {
+                    $priceMap[$internalId] = $providerPriceId;
+                    $assigned[$internalId] = true;
+                }
+            }
+
+            foreach ($data['data'] as $price) {
+                if (!\is_array($price)) {
+                    continue;
+                }
+                $providerPriceId = (string) ($price['id'] ?? '');
+                if ($providerPriceId === '') {
+                    continue;
+                }
+                $internalId = (string) ($price['metadata']['internal_price_id'] ?? '');
+                if ($internalId !== '') {
+                    continue;
+                }
+                $amount = (int) ($price['unit_amount'] ?? 0);
+                $currency = \strtolower((string) ($price['currency'] ?? ''));
+                $interval = (string) ($price['recurring']['interval'] ?? '');
+
+                foreach ($pricingIndex as $candidateId => $details) {
+                    if (isset($assigned[$candidateId])) {
+                        continue;
+                    }
+                    if ($details['amount'] === $amount && $details['currency'] === $currency && $details['interval'] === $interval) {
+                        $priceMap[$candidateId] = $providerPriceId;
+                        $assigned[$candidateId] = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $priceMap;
     }
 
     public function updatePlan(array $planData, ProviderPlanRef $reference, ProviderState $state): ProviderPlanRef
@@ -138,63 +253,94 @@ class StripeAdapter implements Adapter
 
         // Reconcile prices: create new prices for provided pricing entries; deactivate orphaned
         $newPricing = (array) ($planData['pricing'] ?? []);
+        $productId = $reference->externalPlanId !== '' ? $reference->externalPlanId : (string) ($reference->metadata['productId'] ?? '');
         $existingPrices = (array) ($reference->metadata['prices'] ?? []);
-
-        // Fetch details for existing price ids
-        $existingMap = []; // key => priceId
-        foreach ($existingPrices as $pid) {
-            if (!$pid) {
-                continue;
-            }
-            $price = $this->request($apiKey, 'GET', '/prices/' . $pid);
-            $priceData = $this->decodeResponse($price);
-            $currency = (string) ($priceData['currency'] ?? '');
-            $interval = (string) ($priceData['recurring']['interval'] ?? '');
-            $amount = (int) ($priceData['unit_amount'] ?? 0);
-            $key = $currency . ':' . $interval . ':' . $amount;
-            $existingMap[$key] = (string) $pid;
+        if (empty($existingPrices) && $productId !== '') {
+            $existingPrices = $this->mapStripePricesForPlan($apiKey, $productId, $newPricing);
         }
 
-        $keptPriceIds = [];
-        $desiredKeys = [];
-        foreach ($newPricing as $entry) {
-            $amount = (int) ($entry['amount'] ?? 0);
-            $currency = (string) ($entry['currency'] ?? ($state->metadata['currency'] ?? 'usd'));
-            $interval = (string) ($entry['interval'] ?? 'month');
-            $key = $currency . ':' . $interval . ':' . $amount;
-            $desiredKeys[$key] = true;
+        $sanitizedExisting = [];
+        $existingDetails = [];
+        foreach ($existingPrices as $internalId => $providerPriceIdRaw) {
+            $providerPriceId = \is_array($providerPriceIdRaw) ? (string) ($providerPriceIdRaw['id'] ?? '') : (string) $providerPriceIdRaw;
+            if ($providerPriceId === '') {
+                continue;
+            }
+            $sanitizedExisting[$internalId] = $providerPriceId;
+            try {
+                $price = $this->request($apiKey, 'GET', '/prices/' . $providerPriceId);
+                $existingDetails[$internalId] = $this->decodeResponse($price);
+            } catch (\Throwable $_) {
+                $existingDetails[$internalId] = null;
+            }
+        }
 
-            if (isset($existingMap[$key])) {
-                // keep current price
-                $keptPriceIds[] = $existingMap[$key];
+        $remainingExisting = $sanitizedExisting;
+        $newMap = [];
+        foreach ($newPricing as $entry) {
+            if (!\is_array($entry)) {
+                continue;
+            }
+            $internalPriceId = (string) ($entry['priceId'] ?? '');
+            if ($internalPriceId === '') {
+                continue;
+            }
+            $amount = (int) ($entry['amount'] ?? 0);
+            $currency = \strtolower((string) ($entry['currency'] ?? ($state->metadata['currency'] ?? 'usd')));
+            $interval = (string) ($entry['interval'] ?? 'month');
+
+            $reuseExisting = false;
+            if (isset($existingDetails[$internalPriceId]) && \is_array($existingDetails[$internalPriceId])) {
+                $current = $existingDetails[$internalPriceId];
+                $currentAmount = (int) ($current['unit_amount'] ?? 0);
+                $currentCurrency = \strtolower((string) ($current['currency'] ?? ''));
+                $currentInterval = (string) ($current['recurring']['interval'] ?? '');
+                if ($currentAmount === $amount && $currentCurrency === $currency && $currentInterval === $interval) {
+                    $newMap[$internalPriceId] = $remainingExisting[$internalPriceId];
+                    unset($remainingExisting[$internalPriceId]);
+                    $reuseExisting = true;
+                }
+            }
+
+            if ($reuseExisting) {
                 continue;
             }
 
-            // create new price
+            if ($productId === '') {
+                throw new \RuntimeException('Stripe product ID missing for plan update');
+            }
+
             $res = $this->request($apiKey, 'POST', '/prices', [
-                'product' => $reference->externalPlanId,
+                'product' => $productId,
                 'unit_amount' => $amount,
                 'currency' => $currency,
                 'recurring' => [ 'interval' => $interval ],
                 'metadata' => [
                     'plan_id' => (string) ($planData['planId'] ?? ''),
-                    'type' => 'payments_plan_price'
+                    'type' => 'payments_plan_price',
+                    'internal_price_id' => $internalPriceId,
                 ]
             ]);
             $resData = $this->decodeResponse($res);
-            $keptPriceIds[] = (string) ($resData['id'] ?? '');
+            $providerPriceId = (string) ($resData['id'] ?? '');
+            if ($providerPriceId !== '') {
+                $newMap[$internalPriceId] = $providerPriceId;
+            }
         }
 
         // Deactivate any existing price not in desired set
-        foreach ($existingMap as $key => $pid) {
-            if (!isset($desiredKeys[$key])) {
-                $this->request($apiKey, 'POST', '/prices/' . $pid, ['active' => 'false']);
+        foreach ($remainingExisting as $providerPriceId) {
+            if ($providerPriceId !== '') {
+                $this->request($apiKey, 'POST', '/prices/' . $providerPriceId, ['active' => 'false']);
             }
         }
 
         return new ProviderPlanRef(
-            externalPlanId: $reference->externalPlanId,
-            metadata: ['prices' => array_values(array_filter($keptPriceIds))]
+            externalPlanId: $productId,
+            metadata: [
+                'productId' => $productId,
+                'prices' => $newMap,
+            ]
         );
     }
 
@@ -202,11 +348,11 @@ class StripeAdapter implements Adapter
     {
         $apiKey = (string) ($state->config['secretKey'] ?? '');
         $meta = $reference->metadata;
-        if (!empty($meta['prices'])) {
-            foreach ($meta['prices'] as $priceId) {
-                if ($priceId) {
-                    $this->request($apiKey, 'POST', '/prices/' . $priceId, ['active' => 'false']);
-                }
+        $priceRefs = (array) ($meta['prices'] ?? []);
+        foreach ($priceRefs as $entry) {
+            $priceId = \is_array($entry) ? (string) ($entry['id'] ?? '') : (string) $entry;
+            if ($priceId !== '') {
+                $this->request($apiKey, 'POST', '/prices/' . $priceId, ['active' => 'false']);
             }
         }
         if (!empty($reference->externalPlanId)) {
@@ -278,16 +424,41 @@ class StripeAdapter implements Adapter
         $apiKey = (string) ($state->config['secretKey'] ?? '');
         $customerId = $this->ensureCustomer($apiKey, $actor);
         $planRefs = (array) ($subscriptionData['planProviders'] ?? []);
-        $priceId = '';
-        if (!empty($planRefs['stripe']['prices'][0] ?? null)) {
-            $priceId = (string) $planRefs['stripe']['prices'][0];
+        $providerEntry = (array) ($planRefs['stripe'] ?? []);
+        $priceMap = (array) ($providerEntry['prices'] ?? []);
+        $desiredInternalPriceId = (string) ($subscriptionData['priceId'] ?? '');
+
+        $providerPriceId = '';
+        if ($desiredInternalPriceId !== '' && isset($priceMap[$desiredInternalPriceId])) {
+            $providerPriceId = (string) $priceMap[$desiredInternalPriceId];
         }
-        if ($priceId === '') {
+
+        if ($providerPriceId === '') {
+            $metadataPrices = (array) (($providerEntry['metadata']['prices'] ?? []) ?: []);
+            if ($desiredInternalPriceId !== '' && isset($metadataPrices[$desiredInternalPriceId])) {
+                $providerPriceId = (string) $metadataPrices[$desiredInternalPriceId];
+            } elseif (!empty($priceMap)) {
+                $first = reset($priceMap);
+                $providerPriceId = (string) $first;
+            } elseif (!empty($metadataPrices)) {
+                $first = reset($metadataPrices);
+                $providerPriceId = (string) $first;
+            }
+        }
+
+        if ($providerPriceId === '' && !empty($providerEntry['prices'])) {
+            $legacy = (array) $providerEntry['prices'];
+            if (\array_is_list($legacy) && isset($legacy[0])) {
+                $providerPriceId = (string) $legacy[0];
+            }
+        }
+
+        if ($providerPriceId === '') {
             return new ProviderSubscriptionRef(externalSubscriptionId: '');
         }
         $resp = $this->request($apiKey, 'POST', '/subscriptions', [
             'customer' => $customerId,
-            'items' => [ [ 'price' => $priceId ] ],
+            'items' => [ [ 'price' => $providerPriceId ] ],
             'payment_behavior' => 'default_incomplete',
             'metadata' => [ 'project_id' => $this->project->getId(), 'actor_id' => $actor->getId() ]
         ]);
@@ -353,7 +524,7 @@ class StripeAdapter implements Adapter
         $priceId = (string) ($planContext['priceId'] ?? '');
         $params = [
             'mode' => 'subscription',
-            'line_items' => [ [ 'price' => $priceId ] ],
+            'line_items' => [ [ 'price' => $priceId, 'quantity' => 1 ] ],
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
             'client_reference_id' => $actor->getId(),
@@ -622,8 +793,8 @@ class StripeAdapter implements Adapter
 
         if ($statusCode >= 400) {
             $responseData = json_decode($responseBody, true);
-            $message = is_array($responseData) && isset($responseData['error']['message']) 
-                ? (string) $responseData['error']['message'] 
+            $message = is_array($responseData) && isset($responseData['error']['message'])
+                ? (string) $responseData['error']['message']
                 : 'Stripe API error';
             throw new \RuntimeException($message, $statusCode);
         }

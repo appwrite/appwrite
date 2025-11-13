@@ -57,7 +57,7 @@ class Update extends Base
             ->param('description', '', new Text(8192, 0), 'Plan description.', true)
             ->param('isDefault', false, new Boolean(), 'Set as default plan for new users.', true)
             ->param('isFree', false, new Boolean(), 'Is the plan free.', true)
-            ->param('pricing', [], new JSONValidator(), 'Pricing configuration array [{amount,currency,interval}]', true)
+            ->param('pricing', [], new JSONValidator(), 'Pricing configuration array [{priceId,amount,currency,interval}]', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -106,6 +106,29 @@ class Update extends Base
         $plan->setAttribute('isDefault', $isDefault);
         $plan->setAttribute('isFree', $isFree);
         if (!empty($pricing)) {
+            $normalizedPricing = [];
+            $seenPriceIds = [];
+            foreach ($pricing as $entry) {
+                if (!is_array($entry)) {
+                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                    $response->json(['message' => 'Invalid pricing entry format']);
+                    return;
+                }
+                $priceId = (string) ($entry['priceId'] ?? '');
+                if ($priceId === '') {
+                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                    $response->json(['message' => 'Each pricing entry must include a priceId']);
+                    return;
+                }
+                if (isset($seenPriceIds[$priceId])) {
+                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                    $response->json(['message' => 'Duplicate priceId detected: ' . $priceId]);
+                    return;
+                }
+                $seenPriceIds[$priceId] = true;
+                $normalizedPricing[] = $entry;
+            }
+            $pricing = $normalizedPricing;
             $plan->setAttribute('pricing', $pricing);
         }
         $plan = $dbForPlatform->updateDocument('payments_plans', $plan->getId(), $plan);

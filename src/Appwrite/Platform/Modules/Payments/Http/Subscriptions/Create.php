@@ -54,6 +54,7 @@ class Create extends Base
             ->param('actorType', 'user', new Text(16), 'Actor type: user or team')
             ->param('actorId', '', new Text(128), 'Actor ID')
             ->param('planId', '', new Text(128), 'Plan ID')
+            ->param('priceId', '', new Text(128), 'Price ID', true)
             ->param('payerUserId', '', new Text(128, 0), 'Payer user ID (for team subscriptions)', true)
             ->param('successUrl', '', new Text(2048), 'Success redirect URL')
             ->param('cancelUrl', '', new Text(2048), 'Cancel redirect URL')
@@ -70,6 +71,7 @@ class Create extends Base
         string $actorType,
         string $actorId,
         string $planId,
+        string $priceId,
         string $payerUserId,
         string $successUrl,
         string $cancelUrl,
@@ -149,6 +151,8 @@ class Create extends Base
         $initialStatus = 'pending';
         $providerData = [];
         $checkoutUrl = null;
+        $selectedPriceId = $priceId !== '' ? $priceId : null;
+        $providerPlanPriceId = '';
 
         if ($primary) {
             $config = (array) ($providers[$primary] ?? []);
@@ -156,43 +160,82 @@ class Create extends Base
             $adapter = $registryPayments->get((string) $primary, $config, $project, $dbForPlatform, $dbForProject);
             $state = new \Appwrite\Payments\Provider\ProviderState((string) $primary, $config, (array) ($config['state'] ?? []));
 
-            // Find the fixed plan price (not metered features)
-            // Plan prices are stored first in the prices array, followed by feature prices
-            $priceIds = (array) ($planProviders[$primary]['prices'] ?? []);
+            $planPricing = array_values((array) ($plan->getAttribute('pricing') ?? []));
+            $providerEntry = (array) ($planProviders[$primary] ?? []);
+            $rawProviderPrices = (array) ($providerEntry['prices'] ?? []);
+            $providerPriceMap = [];
+            if (!empty($rawProviderPrices)) {
+                if (!\array_is_list($rawProviderPrices)) {
+                    foreach ($rawProviderPrices as $internalId => $providerPrice) {
+                        $internalKey = (string) $internalId;
+                        $providerValue = (string) $providerPrice;
+                        if ($internalKey !== '' && $providerValue !== '') {
+                            $providerPriceMap[$internalKey] = $providerValue;
+                        }
+                    }
+                } else {
+                    foreach ($planPricing as $index => $pricingEntry) {
+                        $internalId = (string) ($pricingEntry['priceId'] ?? '');
+                        $providerValue = (string) ($rawProviderPrices[$index] ?? '');
+                        if ($internalId !== '' && $providerValue !== '') {
+                            $providerPriceMap[$internalId] = $providerValue;
+                        }
+                    }
+                }
+            }
+            if (empty($providerPriceMap)) {
+                $metaPrices = (array) (($providerEntry['metadata']['prices'] ?? []) ?: []);
+                foreach ($metaPrices as $internalId => $providerPrice) {
+                    $internalKey = (string) $internalId;
+                    $providerValue = (string) $providerPrice;
+                    if ($internalKey !== '' && $providerValue !== '') {
+                        $providerPriceMap[$internalKey] = $providerValue;
+                    }
+                }
+            }
 
-            // If no prices in plan providers, return error
-            if (empty($priceIds)) {
+            if ($selectedPriceId !== null) {
+                if (!isset($providerPriceMap[$selectedPriceId])) {
+                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                    $response->json(['message' => 'Price ID not configured for provider: ' . $selectedPriceId]);
+                    return;
+                }
+                $providerPlanPriceId = (string) $providerPriceMap[$selectedPriceId];
+            } elseif (!empty($providerPriceMap)) {
+                $selectedPriceId = (string) array_key_first($providerPriceMap);
+                $providerPlanPriceId = (string) $providerPriceMap[$selectedPriceId];
+            }
+
+            if ($providerPlanPriceId === '') {
+                // Legacy fallback: use first available provider price ID even if internal mapping missing
+                $legacyList = (array) ($providerEntry['prices'] ?? []);
+                if (\array_is_list($legacyList)) {
+                    foreach ($legacyList as $legacyPriceId) {
+                        if (!empty($legacyPriceId)) {
+                            $providerPlanPriceId = (string) $legacyPriceId;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ($providerPlanPriceId === '') {
                 $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
                 $response->json(['message' => 'Plan has no prices configured for provider: ' . $primary]);
                 return;
             }
 
-            // Use the first price ID as the plan price
-            // Plan prices are created first and stored first in the array (see StripeAdapter::ensurePlan)
-            $planPriceId = null;
-            foreach ($priceIds as $priceId) {
-                if (!empty($priceId)) {
-                    $planPriceId = $priceId;
-                    break;
-                }
-            }
-
-            if ($planPriceId === null) {
-                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                $response->json(['message' => 'Plan has no valid prices configured for provider: ' . $primary]);
-                return;
-            }
-
             // Create checkout session if we have a price ID and URLs
-            if ($planPriceId && $successUrl !== '' && $cancelUrl !== '') {
+            if ($providerPlanPriceId && $successUrl !== '' && $cancelUrl !== '') {
                 try {
                     $checkoutSession = $adapter->createCheckoutSession($payer, [
-                        'priceId' => $planPriceId
+                        'priceId' => $providerPlanPriceId
                     ], $state, [
                         'successUrl' => $successUrl,
                         'cancelUrl' => $cancelUrl
                     ]);
                     $checkoutUrl = $checkoutSession->url;
+                    error_log('Checkout URL: ' . $checkoutUrl);
                 } catch (\Throwable $e) {
                     // Log error but continue with subscription creation
                     // The subscription can be created without checkout URL for manual payment flows
@@ -203,9 +246,12 @@ class Create extends Base
             try {
                 $subRef = $adapter->ensureSubscription($payer, [
                     'planId' => $planId,
-                    'planProviders' => $planProviders
+                    'planProviders' => $planProviders,
+                    'priceId' => (string) ($selectedPriceId ?? '')
                 ], $state);
                 $providerData = [ (string) $primary => [ 'subscriptionId' => $subRef->externalSubscriptionId ] ];
+                $providerData[(string) $primary]['priceId'] = (string) ($selectedPriceId ?? '');
+                $providerData[(string) $primary]['providerPriceId'] = (string) $providerPlanPriceId;
                 // Use status from provider if available
                 $initialStatus = (string) ($subRef->metadata['status'] ?? 'pending');
             } catch (\Throwable $e) {
@@ -219,6 +265,8 @@ class Create extends Base
             return;
         }
 
+        $resolvedPriceId = (string) ($selectedPriceId ?? '');
+
         $subscription = new Document([
             'subscriptionId' => ID::unique(),
             'projectId' => $project->getId(),
@@ -227,6 +275,7 @@ class Create extends Base
             'actorId' => $actorId,
             'actorInternalId' => $actor->getSequence(),
             'planId' => $planId,
+            'priceId' => $resolvedPriceId,
             'status' => $initialStatus,
             'trialEndsAt' => null,
             'currentPeriodStart' => null,
@@ -243,8 +292,8 @@ class Create extends Base
 
         $queueForEvents
             ->setProject($project)
-            ->setEvent('payments.subscription.[subscriptionId].create')
             ->setParam('subscriptionId', $created->getAttribute('subscriptionId'))
+            ->setEvent('payments.subscription.[subscriptionId].create')
             ->setPayload($created->getArrayCopy());
 
         $responseData = $created->getArrayCopy();
