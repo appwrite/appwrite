@@ -2080,6 +2080,7 @@ App::patch('/v1/projects/:projectId/smtp')
             $mail->SMTPSecure = $secure;
             $mail->SMTPAutoTLS = false;
             $mail->Timeout = 5;
+                        $mail->SMTPAuth = (!empty($username) && !empty($password));
 
             try {
                 $valid = $mail->SmtpConnect();
