@@ -3,10 +3,10 @@
 namespace Appwrite\Platform\Modules\Proxy;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DNS as ValidatorDNS;
 use Appwrite\Platform\Action as PlatformAction;
 use Utopia\Database\Document;
 use Utopia\DNS\Message\Record;
-use Utopia\DNS\Validator\DNS as ValidatorDNS;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
 use Utopia\System\System;
@@ -17,6 +17,18 @@ class Action extends PlatformAction
 {
     public function __construct(protected string $dnsValidatorClass = ValidatorDNS::class)
     {
+    }
+
+    /**
+     * Parse DNS servers from environment variable
+     *
+     * @return array<string>
+     */
+    protected function getDNSServers(): array
+    {
+        $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
+        $servers = \array_map('trim', \explode(',', $dnsEnv));
+        return \array_filter($servers, fn ($server) => !empty($server));
     }
 
     /**
@@ -31,6 +43,7 @@ class Action extends PlatformAction
     public function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
+        $dnsServers = $this->getDNSServers();
 
         $domain = new Domain($rule->getAttribute('domain', ''));
 
@@ -46,7 +59,7 @@ class Action extends PlatformAction
         $caaTarget = System::getEnv('_APP_DOMAIN_TARGET_CAA', '');
         if (!empty($caaTarget)) {
             $validationStart = \microtime(true);
-            $validator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, System::getEnv('_APP_DNS', '8.8.8.8'));
+            $validator = new $dnsValidatorClass($caaTarget, Record::TYPE_CAA, $dnsServers);
             if (!$validator->isValid($domain->get())) {
                 if (!\is_null($log)) {
                     $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
@@ -88,7 +101,7 @@ class Action extends PlatformAction
         $mainValidator = null; // Validator to use for error description
 
         if (!is_null($targetCNAME)) {
-            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, System::getEnv('_APP_DNS', '8.8.8.8'));
+            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
@@ -98,7 +111,7 @@ class Action extends PlatformAction
 
         $targetA = System::getEnv('_APP_DOMAIN_TARGET_A', '');
         if ((new IP(IP::V4))->isValid($targetA)) {
-            $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, System::getEnv('_APP_DNS', '8.8.8.8'));
+            $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
@@ -108,7 +121,7 @@ class Action extends PlatformAction
 
         $targetAAAA = System::getEnv('_APP_DOMAIN_TARGET_AAAA', '');
         if ((new IP(IP::V6))->isValid($targetAAAA)) {
-            $validator = new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, System::getEnv('_APP_DNS', '8.8.8.8'));
+            $validator = new $dnsValidatorClass($targetAAAA, Record::TYPE_AAAA, $dnsServers);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
