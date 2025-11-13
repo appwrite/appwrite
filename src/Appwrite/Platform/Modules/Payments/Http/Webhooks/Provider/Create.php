@@ -7,9 +7,12 @@ use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Validator\UID;
+use Appwrite\Event\Event;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 
 class Create extends Base
 {
@@ -47,12 +50,13 @@ class Create extends Base
             ->inject('registryPayments')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $projectId, Response $response, Request $request, Registry $registryPayments, \Utopia\Database\Database $dbForPlatform, \Utopia\Database\Database $dbForProject)
+    public function action(string $providerId, string $projectId, Response $response, Request $request, Registry $registryPayments, \Utopia\Database\Database $dbForPlatform, \Utopia\Database\Database $dbForProject, Event $queueForEvents)
     {
-        $project = $dbForPlatform->getDocument('projects', $projectId);
+        $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
         // Feature flag: ignore if disabled
         $paymentsCfg = (array) $project->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
@@ -63,7 +67,7 @@ class Create extends Base
         $providers = (array) ($payments['providers'] ?? []);
         $config = (array) ($providers[$providerId] ?? []);
         // Read raw payload and signature
-        $payload = \file_get_contents('php://input') ?: '';
+        $payload = $request->getRawPayload();
         $signature = (string) ($request->getHeader('stripe-signature') ?? '');
         $json = [];
         try {
@@ -74,6 +78,9 @@ class Create extends Base
         $json['_signature'] = $signature;
         $json['_raw'] = $payload;
         $registryPayments->get($providerId, $config, $project, $dbForPlatform, $dbForProject)->handleWebhook($json, new \Appwrite\Payments\Provider\ProviderState($providerId, $config, (array) ($config['state'] ?? [])));
+        $queueForEvents
+            ->setParam('providers', $providerId)
+            ->setParam('providerId', $providerId);
         $response->noContent();
     }
 }

@@ -5,6 +5,7 @@ namespace Appwrite\Payments\Provider;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 class StripeAdapter implements Adapter
@@ -604,47 +605,70 @@ class StripeAdapter implements Adapter
 
         $type = (string) ($payload['type'] ?? '');
         $changes = [];
+
+        // error_log(print_r($state, true));
+        error_log(print_r($this->config, true));
+        $apiKey = $state->config['secretKey'];
+       
+        error_log(print_r($type, true));
         if (str_starts_with($type, 'customer.subscription.')) {
-            /** @var array<string,mixed> $obj */
-            $obj = (array) ($payload['data']['object'] ?? []);
-            $stripeSubId = (string) ($obj['id'] ?? '');
-            $stripeStatus = (string) ($obj['status'] ?? '');
-            $periodStart = isset($obj['current_period_start']) ? date('c', (int) $obj['current_period_start']) : null;
-            $periodEnd = isset($obj['current_period_end']) ? date('c', (int) $obj['current_period_end']) : null;
+            // /** @var array<string,mixed> $obj */
+            // $obj = (array) ($payload['data']['object'] ?? []);
+            // $stripeSubId = (string) ($obj['id'] ?? '');
+            // $stripeStatus = (string) ($obj['status'] ?? '');
+            // $periodStart = isset($obj['current_period_start']) ? date('c', (int) $obj['current_period_start']) : null;
+            // $periodEnd = isset($obj['current_period_end']) ? date('c', (int) $obj['current_period_end']) : null;
 
-            $statusMap = [
-                'active' => 'active',
-                'trialing' => 'trialing',
-                'canceled' => 'canceled',
-                'unpaid' => 'past_due',
-                'past_due' => 'past_due',
-                'incomplete' => 'pending',
-                'incomplete_expired' => 'canceled',
-                'paused' => 'paused',
-            ];
-            $internalStatus = $statusMap[$stripeStatus] ?? 'active';
+            // $statusMap = [
+            //     'active' => 'active',
+            //     'trialing' => 'trialing',
+            //     'canceled' => 'canceled',
+            //     'unpaid' => 'past_due',
+            //     'past_due' => 'past_due',
+            //     'incomplete' => 'pending',
+            //     'incomplete_expired' => 'canceled',
+            //     'paused' => 'paused',
+            // ];
+            // $internalStatus = $statusMap[$stripeStatus] ?? 'active';
 
-            $subs = $this->dbForPlatform->find('payments_subscriptions', [
-                Query::equal('projectId', [$this->project->getId()])
-            ]);
-            foreach ($subs as $sub) {
-                /** @var Document $sub */
-                $providerMap = (array) $sub->getAttribute('providers', []);
-                $prov = (array) ($providerMap['stripe'] ?? []);
-                if ((string) ($prov['subscriptionId'] ?? '') === $stripeSubId) {
-                    $sub->setAttribute('status', $internalStatus);
-                    if ($periodStart) {
-                        $sub->setAttribute('currentPeriodStart', $periodStart);
-                    }
-                    if ($periodEnd) {
-                        $sub->setAttribute('currentPeriodEnd', $periodEnd);
-                    }
-                    $this->dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
-                    $changes['subscription'] = $sub->getId();
-                    $changes['status'] = $internalStatus;
-                    break;
-                }
-            }
+            // $subs = $this->dbForPlatform->find('payments_subscriptions', [
+            //     Query::equal('projectId', [$this->project->getId()])
+            // ]);
+            // foreach ($subs as $sub) {
+            //     /** @var Document $sub */
+            //     $providerMap = (array) $sub->getAttribute('providers', []);
+            //     $prov = (array) ($providerMap['stripe'] ?? []);
+            //     if ((string) ($prov['subscriptionId'] ?? '') === $stripeSubId) {
+            //         $sub->setAttribute('status', $internalStatus);
+            //         if ($periodStart) {
+            //             $sub->setAttribute('currentPeriodStart', $periodStart);
+            //         }
+            //         if ($periodEnd) {
+            //             $sub->setAttribute('currentPeriodEnd', $periodEnd);
+            //         }
+            //         $this->dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
+            //         $changes['subscription'] = $sub->getId();
+            //         $changes['status'] = $internalStatus;
+            //         break;
+            //     }
+            // }
+            // error_log(print_r($payload, true));
+            $stripeSubId = (string) ($payload['data']['object']['id'] ?? '');
+            $response = $this->request($apiKey, 'GET', '/subscriptions/' . $stripeSubId);
+            $subData = $this->decodeResponse($response);
+            error_log("subData: " . print_r($subData, true));
+
+            $sub = Authorization::skip(fn () => $this->dbForPlatform->getDocument('payments_subscriptions', $subData['id']));
+
+            // TODO: Move subscriptionId to a different column called providerSubscriptionId to be able to proceed with this.
+            $sub['status'] = $subData['status'];
+
+            error_log(print_r($sub, true));
+
+            // error_log(print_r($sub, true));
+            Authorization::skip(fn () => $this->dbForPlatform->updateDocument('payments_subscriptions', $sub['$id'], $sub));
+
+            return new ProviderWebhookResult(status: 'ok', changes: $changes);
         }
         if ($type === 'invoice.payment_succeeded' || $type === 'invoice.payment_failed') {
             /** @var array<string,mixed> $obj */
