@@ -819,6 +819,117 @@ App::get('/v1/avatars/screenshots')
         }
     });
 
+App::get('/v1/avatars/photos')
+    ->desc('Get user photo from Gravatar')
+    ->groups(['api', 'avatars'])
+    ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resourceType', 'avatar/photo')
+    ->label('cache.resource', 'photo/{request.userId}/{request.width}/{request.height}/{request.quality}/{request.output}')
+    ->label('sdk', new Method(
+        namespace: 'avatars',
+        group: null,
+        name: 'getPhoto',
+        description: '/docs/references/avatars/get-photo.md',
+        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        type: MethodType::LOCATION,
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ],
+        contentType: ContentType::IMAGE_PNG
+    ))
+    ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('quality', -1, new Range(-1, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.', true)
+    ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->inject('response')
+    ->inject('user')
+    ->action(function (int $width, int $height, int $quality, string $output, Response $response, Document $user) {
+
+        if (!\extension_loaded('imagick')) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
+        }
+
+        $email = $user->getAttribute('email', '');
+        if (empty($email)) {
+            throw new Exception(Exception::USER_NOT_FOUND, 'User email not found');
+        }
+
+        // Use the larger of width/height for Gravatar size parameter
+        $gravatarSize = \max($width, $height);
+        $gravatarSize = \max($gravatarSize, 80); // Minimum size for Gravatar
+
+        // Generate Gravatar URL
+        $emailHash = \md5(\strtolower(\trim($email)));
+        $gravatarUrl = 'https://www.gravatar.com/avatar/' . $emailHash . '?s=' . $gravatarSize . '&d=404';
+
+        $domain = new Domain(\parse_url($gravatarUrl, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $client = new Client();
+        try {
+            $res = $client
+                ->setAllowRedirects(false)
+                ->fetch($gravatarUrl);
+        } catch (\Throwable) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $imageData = null;
+        $isGravatarImage = false;
+
+        if ($res->getStatusCode() === 200) {
+            try {
+                $imageData = $res->getBody();
+                $isGravatarImage = true;
+            } catch (\Throwable $exception) {
+                // Fall through to fallback image
+            }
+        }
+
+        // If no Gravatar image found, use a fallback image
+        if (!$isGravatarImage || empty($imageData)) {
+            $fileLogos = Config::getParam('storage-logos');
+            $fallbackPath = $fileLogos['default_image'];
+            
+            if (!\is_readable($fallbackPath)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Fallback image not readable');
+            }
+            
+            $imageData = \file_get_contents($fallbackPath);
+        }
+
+        try {
+            $image = new Image($imageData);
+        } catch (\Throwable $exception) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
+        }
+
+        $image->crop((int) $width, (int) $height);
+        
+        // Determine output format - replicate storage preview logic
+        $outputs = Config::getParam('storage-outputs');
+        if (empty($output)) {
+            $output = 'png'; // Default to PNG
+        }
+        
+        $data = $image->output($output, $quality);
+        unset($image);
+
+        $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['png'];
+
+        $response
+            ->addHeader('Cache-Control', 'private, max-age=2592000') // 30 days
+            ->setContentType($contentType)
+            ->file($data);
+    });
+
 App::get('/v1/cards/cloud')
     ->desc('Get front Of Cloud Card')
     ->groups(['api', 'avatars'])
