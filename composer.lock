@@ -756,16 +756,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.33.0",
+            "version": "v4.33.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d"
+                "reference": "0cd73ccf0cd26c3e72299cce1ea6144091a57e12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/b50269e23204e5ae859a326ec3d90f09efe3047d",
-                "reference": "b50269e23204e5ae859a326ec3d90f09efe3047d",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/0cd73ccf0cd26c3e72299cce1ea6144091a57e12",
+                "reference": "0cd73ccf0cd26c3e72299cce1ea6144091a57e12",
                 "shasum": ""
             },
             "require": {
@@ -794,9 +794,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.0"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.1"
             },
-            "time": "2025-10-15T20:10:28+00:00"
+            "time": "2025-11-12T21:58:05+00:00"
         },
         {
             "name": "league/csv",
@@ -5383,16 +5383,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.5.3",
+            "version": "1.5.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "1a7a3b89147aa8c1bde5247f8eeb7e4832c6016d"
+                "reference": "958947b6483a79e11c3812f23bb3056199fa4105"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1a7a3b89147aa8c1bde5247f8eeb7e4832c6016d",
-                "reference": "1a7a3b89147aa8c1bde5247f8eeb7e4832c6016d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/958947b6483a79e11c3812f23bb3056199fa4105",
+                "reference": "958947b6483a79e11c3812f23bb3056199fa4105",
                 "shasum": ""
             },
             "require": {
@@ -5428,9 +5428,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.4"
             },
-            "time": "2025-11-10T09:50:41+00:00"
+            "time": "2025-11-12T12:43:42+00:00"
         },
         {
             "name": "doctrine/annotations",

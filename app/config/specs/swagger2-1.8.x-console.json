@@ -13041,6 +13041,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -13067,7 +13068,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -13683,6 +13685,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -13709,7 +13712,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -31058,6 +31062,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -31084,7 +31089,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -31708,6 +31714,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -31734,7 +31741,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
