@@ -4651,6 +4651,727 @@
                 ]
             }
         },
+        "\/avatars\/screenshots": {
+            "get": {
+                "summary": "Get webpage screenshot",
+                "operationId": "avatarsGetScreenshot",
+                "tags": [
+                    "avatars"
+                ],
+                "description": "Use this endpoint to capture a screenshot of any website URL. This endpoint uses a headless browser to render the webpage and capture it as an image.\n\nYou can configure the browser viewport size, theme, user agent, geolocation, permissions, and more. Capture either just the viewport or the full page scroll.\n\nWhen width and height are specified, the image is resized accordingly. If both dimensions are 0, the API provides an image at original size. If dimensions are not specified, the default viewport size is 1280x720px.",
+                "responses": {
+                    "200": {
+                        "description": "Image"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getScreenshot",
+                    "group": null,
+                    "weight": 67,
+                    "cookies": false,
+                    "type": "location",
+                    "demo": "avatars\/get-screenshot.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-screenshot.md",
+                    "rate-limit": 60,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "avatars.read",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": [],
+                        "Session": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Session": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "url",
+                        "description": "Website URL which you want to capture.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "url",
+                            "x-example": "https:\/\/example.com"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "headers",
+                        "description": "HTTP headers to send with the browser request. Defaults to empty.",
+                        "required": false,
+                        "schema": {
+                            "type": "object",
+                            "x-example": "{}",
+                            "default": {}
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "viewportWidth",
+                        "description": "Browser viewport width. Pass an integer between 1 to 1920. Defaults to 1280.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": 1,
+                            "default": 1280
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "viewportHeight",
+                        "description": "Browser viewport height. Pass an integer between 1 to 1080. Defaults to 720.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": 1,
+                            "default": 720
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "scale",
+                        "description": "Browser scale factor. Pass a number between 0.1 to 3. Defaults to 1.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "x-example": 0.1,
+                            "default": 1
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "theme",
+                        "description": "Browser theme. Pass \"light\" or \"dark\". Defaults to \"light\".",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "light",
+                            "enum": [
+                                "light",
+                                "dark"
+                            ],
+                            "x-enum-name": null,
+                            "x-enum-keys": [],
+                            "default": "light"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "userAgent",
+                        "description": "Custom user agent string. Defaults to browser default.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<USER_AGENT>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "fullpage",
+                        "description": "Capture full page scroll. Pass 0 for viewport only, or 1 for full page. Defaults to 0.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": false
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "locale",
+                        "description": "Browser locale (e.g., \"en-US\", \"fr-FR\"). Defaults to browser default.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<LOCALE>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "timezone",
+                        "description": "IANA timezone identifier (e.g., \"America\/New_York\", \"Europe\/London\"). Defaults to browser default.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "africa\/abidjan",
+                            "enum": [
+                                "africa\/abidjan",
+                                "africa\/accra",
+                                "africa\/addis_ababa",
+                                "africa\/algiers",
+                                "africa\/asmara",
+                                "africa\/bamako",
+                                "africa\/bangui",
+                                "africa\/banjul",
+                                "africa\/bissau",
+                                "africa\/blantyre",
+                                "africa\/brazzaville",
+                                "africa\/bujumbura",
+                                "africa\/cairo",
+                                "africa\/casablanca",
+                                "africa\/ceuta",
+                                "africa\/conakry",
+                                "africa\/dakar",
+                                "africa\/dar_es_salaam",
+                                "africa\/djibouti",
+                                "africa\/douala",
+                                "africa\/el_aaiun",
+                                "africa\/freetown",
+                                "africa\/gaborone",
+                                "africa\/harare",
+                                "africa\/johannesburg",
+                                "africa\/juba",
+                                "africa\/kampala",
+                                "africa\/khartoum",
+                                "africa\/kigali",
+                                "africa\/kinshasa",
+                                "africa\/lagos",
+                                "africa\/libreville",
+                                "africa\/lome",
+                                "africa\/luanda",
+                                "africa\/lubumbashi",
+                                "africa\/lusaka",
+                                "africa\/malabo",
+                                "africa\/maputo",
+                                "africa\/maseru",
+                                "africa\/mbabane",
+                                "africa\/mogadishu",
+                                "africa\/monrovia",
+                                "africa\/nairobi",
+                                "africa\/ndjamena",
+                                "africa\/niamey",
+                                "africa\/nouakchott",
+                                "africa\/ouagadougou",
+                                "africa\/porto-novo",
+                                "africa\/sao_tome",
+                                "africa\/tripoli",
+                                "africa\/tunis",
+                                "africa\/windhoek",
+                                "america\/adak",
+                                "america\/anchorage",
+                                "america\/anguilla",
+                                "america\/antigua",
+                                "america\/araguaina",
+                                "america\/argentina\/buenos_aires",
+                                "america\/argentina\/catamarca",
+                                "america\/argentina\/cordoba",
+                                "america\/argentina\/jujuy",
+                                "america\/argentina\/la_rioja",
+                                "america\/argentina\/mendoza",
+                                "america\/argentina\/rio_gallegos",
+                                "america\/argentina\/salta",
+                                "america\/argentina\/san_juan",
+                                "america\/argentina\/san_luis",
+                                "america\/argentina\/tucuman",
+                                "america\/argentina\/ushuaia",
+                                "america\/aruba",
+                                "america\/asuncion",
+                                "america\/atikokan",
+                                "america\/bahia",
+                                "america\/bahia_banderas",
+                                "america\/barbados",
+                                "america\/belem",
+                                "america\/belize",
+                                "america\/blanc-sablon",
+                                "america\/boa_vista",
+                                "america\/bogota",
+                                "america\/boise",
+                                "america\/cambridge_bay",
+                                "america\/campo_grande",
+                                "america\/cancun",
+                                "america\/caracas",
+                                "america\/cayenne",
+                                "america\/cayman",
+                                "america\/chicago",
+                                "america\/chihuahua",
+                                "america\/ciudad_juarez",
+                                "america\/costa_rica",
+                                "america\/coyhaique",
+                                "america\/creston",
+                                "america\/cuiaba",
+                                "america\/curacao",
+                                "america\/danmarkshavn",
+                                "america\/dawson",
+                                "america\/dawson_creek",
+                                "america\/denver",
+                                "america\/detroit",
+                                "america\/dominica",
+                                "america\/edmonton",
+                                "america\/eirunepe",
+                                "america\/el_salvador",
+                                "america\/fort_nelson",
+                                "america\/fortaleza",
+                                "america\/glace_bay",
+                                "america\/goose_bay",
+                                "america\/grand_turk",
+                                "america\/grenada",
+                                "america\/guadeloupe",
+                                "america\/guatemala",
+                                "america\/guayaquil",
+                                "america\/guyana",
+                                "america\/halifax",
+                                "america\/havana",
+                                "america\/hermosillo",
+                                "america\/indiana\/indianapolis",
+                                "america\/indiana\/knox",
+                                "america\/indiana\/marengo",
+                                "america\/indiana\/petersburg",
+                                "america\/indiana\/tell_city",
+                                "america\/indiana\/vevay",
+                                "america\/indiana\/vincennes",
+                                "america\/indiana\/winamac",
+                                "america\/inuvik",
+                                "america\/iqaluit",
+                                "america\/jamaica",
+                                "america\/juneau",
+                                "america\/kentucky\/louisville",
+                                "america\/kentucky\/monticello",
+                                "america\/kralendijk",
+                                "america\/la_paz",
+                                "america\/lima",
+                                "america\/los_angeles",
+                                "america\/lower_princes",
+                                "america\/maceio",
+                                "america\/managua",
+                                "america\/manaus",
+                                "america\/marigot",
+                                "america\/martinique",
+                                "america\/matamoros",
+                                "america\/mazatlan",
+                                "america\/menominee",
+                                "america\/merida",
+                                "america\/metlakatla",
+                                "america\/mexico_city",
+                                "america\/miquelon",
+                                "america\/moncton",
+                                "america\/monterrey",
+                                "america\/montevideo",
+                                "america\/montserrat",
+                                "america\/nassau",
+                                "america\/new_york",
+                                "america\/nome",
+                                "america\/noronha",
+                                "america\/north_dakota\/beulah",
+                                "america\/north_dakota\/center",
+                                "america\/north_dakota\/new_salem",
+                                "america\/nuuk",
+                                "america\/ojinaga",
+                                "america\/panama",
+                                "america\/paramaribo",
+                                "america\/phoenix",
+                                "america\/port-au-prince",
+                                "america\/port_of_spain",
+                                "america\/porto_velho",
+                                "america\/puerto_rico",
+                                "america\/punta_arenas",
+                                "america\/rankin_inlet",
+                                "america\/recife",
+                                "america\/regina",
+                                "america\/resolute",
+                                "america\/rio_branco",
+                                "america\/santarem",
+                                "america\/santiago",
+                                "america\/santo_domingo",
+                                "america\/sao_paulo",
+                                "america\/scoresbysund",
+                                "america\/sitka",
+                                "america\/st_barthelemy",
+                                "america\/st_johns",
+                                "america\/st_kitts",
+                                "america\/st_lucia",
+                                "america\/st_thomas",
+                                "america\/st_vincent",
+                                "america\/swift_current",
+                                "america\/tegucigalpa",
+                                "america\/thule",
+                                "america\/tijuana",
+                                "america\/toronto",
+                                "america\/tortola",
+                                "america\/vancouver",
+                                "america\/whitehorse",
+                                "america\/winnipeg",
+                                "america\/yakutat",
+                                "antarctica\/casey",
+                                "antarctica\/davis",
+                                "antarctica\/dumontdurville",
+                                "antarctica\/macquarie",
+                                "antarctica\/mawson",
+                                "antarctica\/mcmurdo",
+                                "antarctica\/palmer",
+                                "antarctica\/rothera",
+                                "antarctica\/syowa",
+                                "antarctica\/troll",
+                                "antarctica\/vostok",
+                                "arctic\/longyearbyen",
+                                "asia\/aden",
+                                "asia\/almaty",
+                                "asia\/amman",
+                                "asia\/anadyr",
+                                "asia\/aqtau",
+                                "asia\/aqtobe",
+                                "asia\/ashgabat",
+                                "asia\/atyrau",
+                                "asia\/baghdad",
+                                "asia\/bahrain",
+                                "asia\/baku",
+                                "asia\/bangkok",
+                                "asia\/barnaul",
+                                "asia\/beirut",
+                                "asia\/bishkek",
+                                "asia\/brunei",
+                                "asia\/chita",
+                                "asia\/colombo",
+                                "asia\/damascus",
+                                "asia\/dhaka",
+                                "asia\/dili",
+                                "asia\/dubai",
+                                "asia\/dushanbe",
+                                "asia\/famagusta",
+                                "asia\/gaza",
+                                "asia\/hebron",
+                                "asia\/ho_chi_minh",
+                                "asia\/hong_kong",
+                                "asia\/hovd",
+                                "asia\/irkutsk",
+                                "asia\/jakarta",
+                                "asia\/jayapura",
+                                "asia\/jerusalem",
+                                "asia\/kabul",
+                                "asia\/kamchatka",
+                                "asia\/karachi",
+                                "asia\/kathmandu",
+                                "asia\/khandyga",
+                                "asia\/kolkata",
+                                "asia\/krasnoyarsk",
+                                "asia\/kuala_lumpur",
+                                "asia\/kuching",
+                                "asia\/kuwait",
+                                "asia\/macau",
+                                "asia\/magadan",
+                                "asia\/makassar",
+                                "asia\/manila",
+                                "asia\/muscat",
+                                "asia\/nicosia",
+                                "asia\/novokuznetsk",
+                                "asia\/novosibirsk",
+                                "asia\/omsk",
+                                "asia\/oral",
+                                "asia\/phnom_penh",
+                                "asia\/pontianak",
+                                "asia\/pyongyang",
+                                "asia\/qatar",
+                                "asia\/qostanay",
+                                "asia\/qyzylorda",
+                                "asia\/riyadh",
+                                "asia\/sakhalin",
+                                "asia\/samarkand",
+                                "asia\/seoul",
+                                "asia\/shanghai",
+                                "asia\/singapore",
+                                "asia\/srednekolymsk",
+                                "asia\/taipei",
+                                "asia\/tashkent",
+                                "asia\/tbilisi",
+                                "asia\/tehran",
+                                "asia\/thimphu",
+                                "asia\/tokyo",
+                                "asia\/tomsk",
+                                "asia\/ulaanbaatar",
+                                "asia\/urumqi",
+                                "asia\/ust-nera",
+                                "asia\/vientiane",
+                                "asia\/vladivostok",
+                                "asia\/yakutsk",
+                                "asia\/yangon",
+                                "asia\/yekaterinburg",
+                                "asia\/yerevan",
+                                "atlantic\/azores",
+                                "atlantic\/bermuda",
+                                "atlantic\/canary",
+                                "atlantic\/cape_verde",
+                                "atlantic\/faroe",
+                                "atlantic\/madeira",
+                                "atlantic\/reykjavik",
+                                "atlantic\/south_georgia",
+                                "atlantic\/st_helena",
+                                "atlantic\/stanley",
+                                "australia\/adelaide",
+                                "australia\/brisbane",
+                                "australia\/broken_hill",
+                                "australia\/darwin",
+                                "australia\/eucla",
+                                "australia\/hobart",
+                                "australia\/lindeman",
+                                "australia\/lord_howe",
+                                "australia\/melbourne",
+                                "australia\/perth",
+                                "australia\/sydney",
+                                "europe\/amsterdam",
+                                "europe\/andorra",
+                                "europe\/astrakhan",
+                                "europe\/athens",
+                                "europe\/belgrade",
+                                "europe\/berlin",
+                                "europe\/bratislava",
+                                "europe\/brussels",
+                                "europe\/bucharest",
+                                "europe\/budapest",
+                                "europe\/busingen",
+                                "europe\/chisinau",
+                                "europe\/copenhagen",
+                                "europe\/dublin",
+                                "europe\/gibraltar",
+                                "europe\/guernsey",
+                                "europe\/helsinki",
+                                "europe\/isle_of_man",
+                                "europe\/istanbul",
+                                "europe\/jersey",
+                                "europe\/kaliningrad",
+                                "europe\/kirov",
+                                "europe\/kyiv",
+                                "europe\/lisbon",
+                                "europe\/ljubljana",
+                                "europe\/london",
+                                "europe\/luxembourg",
+                                "europe\/madrid",
+                                "europe\/malta",
+                                "europe\/mariehamn",
+                                "europe\/minsk",
+                                "europe\/monaco",
+                                "europe\/moscow",
+                                "europe\/oslo",
+                                "europe\/paris",
+                                "europe\/podgorica",
+                                "europe\/prague",
+                                "europe\/riga",
+                                "europe\/rome",
+                                "europe\/samara",
+                                "europe\/san_marino",
+                                "europe\/sarajevo",
+                                "europe\/saratov",
+                                "europe\/simferopol",
+                                "europe\/skopje",
+                                "europe\/sofia",
+                                "europe\/stockholm",
+                                "europe\/tallinn",
+                                "europe\/tirane",
+                                "europe\/ulyanovsk",
+                                "europe\/vaduz",
+                                "europe\/vatican",
+                                "europe\/vienna",
+                                "europe\/vilnius",
+                                "europe\/volgograd",
+                                "europe\/warsaw",
+                                "europe\/zagreb",
+                                "europe\/zurich",
+                                "indian\/antananarivo",
+                                "indian\/chagos",
+                                "indian\/christmas",
+                                "indian\/cocos",
+                                "indian\/comoro",
+                                "indian\/kerguelen",
+                                "indian\/mahe",
+                                "indian\/maldives",
+                                "indian\/mauritius",
+                                "indian\/mayotte",
+                                "indian\/reunion",
+                                "pacific\/apia",
+                                "pacific\/auckland",
+                                "pacific\/bougainville",
+                                "pacific\/chatham",
+                                "pacific\/chuuk",
+                                "pacific\/easter",
+                                "pacific\/efate",
+                                "pacific\/fakaofo",
+                                "pacific\/fiji",
+                                "pacific\/funafuti",
+                                "pacific\/galapagos",
+                                "pacific\/gambier",
+                                "pacific\/guadalcanal",
+                                "pacific\/guam",
+                                "pacific\/honolulu",
+                                "pacific\/kanton",
+                                "pacific\/kiritimati",
+                                "pacific\/kosrae",
+                                "pacific\/kwajalein",
+                                "pacific\/majuro",
+                                "pacific\/marquesas",
+                                "pacific\/midway",
+                                "pacific\/nauru",
+                                "pacific\/niue",
+                                "pacific\/norfolk",
+                                "pacific\/noumea",
+                                "pacific\/pago_pago",
+                                "pacific\/palau",
+                                "pacific\/pitcairn",
+                                "pacific\/pohnpei",
+                                "pacific\/port_moresby",
+                                "pacific\/rarotonga",
+                                "pacific\/saipan",
+                                "pacific\/tahiti",
+                                "pacific\/tarawa",
+                                "pacific\/tongatapu",
+                                "pacific\/wake",
+                                "pacific\/wallis",
+                                "utc"
+                            ],
+                            "x-enum-name": null,
+                            "x-enum-keys": [],
+                            "default": ""
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "latitude",
+                        "description": "Geolocation latitude. Pass a number between -90 to 90. Defaults to 0.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "x-example": -90,
+                            "default": 0
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "longitude",
+                        "description": "Geolocation longitude. Pass a number between -180 to 180. Defaults to 0.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "x-example": -180,
+                            "default": 0
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "accuracy",
+                        "description": "Geolocation accuracy in meters. Pass a number between 0 to 100000. Defaults to 0.",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "x-example": 0,
+                            "default": 0
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "touch",
+                        "description": "Enable touch support. Pass 0 for no touch, or 1 for touch enabled. Defaults to 0.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": false
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "permissions",
+                        "description": "Browser permissions to grant. Pass an array of permission names like [\"geolocation\", \"camera\", \"microphone\"]. Defaults to empty.",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "sleep",
+                        "description": "Wait time in seconds before taking the screenshot. Pass an integer between 0 to 10. Defaults to 0.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": 0,
+                            "default": 0
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "width",
+                        "description": "Output image width. Pass 0 to use original width, or an integer between 1 to 2000. Defaults to 0 (original width).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": 0,
+                            "default": 0
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "height",
+                        "description": "Output image height. Pass 0 to use original height, or an integer between 1 to 2000. Defaults to 0 (original height).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": 0,
+                            "default": 0
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "quality",
+                        "description": "Screenshot quality. Pass an integer between 0 to 100. Defaults to keep existing image quality.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "x-example": -1,
+                            "default": -1
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "output",
+                        "description": "Output format type (jpeg, jpg, png, gif and webp).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "jpg",
+                            "enum": [
+                                "jpg",
+                                "jpeg",
+                                "png",
+                                "webp",
+                                "heic",
+                                "avif",
+                                "gif"
+                            ],
+                            "x-enum-name": null,
+                            "x-enum-keys": [],
+                            "default": ""
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
         "\/databases": {
             "get": {
                 "summary": "List databases",
@@ -4675,7 +5396,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "databases",
-                    "weight": 319,
+                    "weight": 320,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list.md",
@@ -4793,7 +5514,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "databases",
-                    "weight": 315,
+                    "weight": 316,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create.md",
@@ -4909,7 +5630,7 @@
                 "x-appwrite": {
                     "method": "listTransactions",
                     "group": "transactions",
-                    "weight": 379,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-transactions.md",
@@ -4976,7 +5697,7 @@
                 "x-appwrite": {
                     "method": "createTransaction",
                     "group": "transactions",
-                    "weight": 375,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-transaction.md",
@@ -5046,7 +5767,7 @@
                 "x-appwrite": {
                     "method": "getTransaction",
                     "group": "transactions",
-                    "weight": 376,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-transaction.md",
@@ -5110,7 +5831,7 @@
                 "x-appwrite": {
                     "method": "updateTransaction",
                     "group": "transactions",
-                    "weight": 377,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-transaction.md",
@@ -5188,7 +5909,7 @@
                 "x-appwrite": {
                     "method": "deleteTransaction",
                     "group": "transactions",
-                    "weight": 378,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-transaction.md",
@@ -5254,7 +5975,7 @@
                 "x-appwrite": {
                     "method": "createOperations",
                     "group": "transactions",
-                    "weight": 380,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-operations.md",
@@ -5339,7 +6060,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "databases",
-                    "weight": 316,
+                    "weight": 317,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get.md",
@@ -5432,7 +6153,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "databases",
-                    "weight": 317,
+                    "weight": 318,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update.md",
@@ -5545,7 +6266,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "databases",
-                    "weight": 318,
+                    "weight": 319,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete.md",
@@ -5639,7 +6360,7 @@
                 "x-appwrite": {
                     "method": "listCollections",
                     "group": "collections",
-                    "weight": 327,
+                    "weight": 328,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-collections.md",
@@ -5738,7 +6459,7 @@
                 "x-appwrite": {
                     "method": "createCollection",
                     "group": "collections",
-                    "weight": 323,
+                    "weight": 324,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-collection.md",
@@ -5847,7 +6568,7 @@
                 "x-appwrite": {
                     "method": "getCollection",
                     "group": "collections",
-                    "weight": 324,
+                    "weight": 325,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-collection.md",
@@ -5921,7 +6642,7 @@
                 "x-appwrite": {
                     "method": "updateCollection",
                     "group": "collections",
-                    "weight": 325,
+                    "weight": 326,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-collection.md",
@@ -6025,7 +6746,7 @@
                 "x-appwrite": {
                     "method": "deleteCollection",
                     "group": "collections",
-                    "weight": 326,
+                    "weight": 327,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-collection.md",
@@ -6101,7 +6822,7 @@
                 "x-appwrite": {
                     "method": "listAttributes",
                     "group": "attributes",
-                    "weight": 344,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-attributes.md",
@@ -6201,7 +6922,7 @@
                 "x-appwrite": {
                     "method": "createBooleanAttribute",
                     "group": "attributes",
-                    "weight": 345,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-boolean-attribute.md",
@@ -6312,7 +7033,7 @@
                 "x-appwrite": {
                     "method": "updateBooleanAttribute",
                     "group": "attributes",
-                    "weight": 346,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-boolean-attribute.md",
@@ -6428,7 +7149,7 @@
                 "x-appwrite": {
                     "method": "createDatetimeAttribute",
                     "group": "attributes",
-                    "weight": 347,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-datetime-attribute.md",
@@ -6539,7 +7260,7 @@
                 "x-appwrite": {
                     "method": "updateDatetimeAttribute",
                     "group": "attributes",
-                    "weight": 348,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-datetime-attribute.md",
@@ -6655,7 +7376,7 @@
                 "x-appwrite": {
                     "method": "createEmailAttribute",
                     "group": "attributes",
-                    "weight": 349,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-email-attribute.md",
@@ -6766,7 +7487,7 @@
                 "x-appwrite": {
                     "method": "updateEmailAttribute",
                     "group": "attributes",
-                    "weight": 350,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-email-attribute.md",
@@ -6882,7 +7603,7 @@
                 "x-appwrite": {
                     "method": "createEnumAttribute",
                     "group": "attributes",
-                    "weight": 351,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-enum-attribute.md",
@@ -7002,7 +7723,7 @@
                 "x-appwrite": {
                     "method": "updateEnumAttribute",
                     "group": "attributes",
-                    "weight": 352,
+                    "weight": 353,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-enum-attribute.md",
@@ -7127,7 +7848,7 @@
                 "x-appwrite": {
                     "method": "createFloatAttribute",
                     "group": "attributes",
-                    "weight": 353,
+                    "weight": 354,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-float-attribute.md",
@@ -7248,7 +7969,7 @@
                 "x-appwrite": {
                     "method": "updateFloatAttribute",
                     "group": "attributes",
-                    "weight": 354,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-float-attribute.md",
@@ -7374,7 +8095,7 @@
                 "x-appwrite": {
                     "method": "createIntegerAttribute",
                     "group": "attributes",
-                    "weight": 355,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-integer-attribute.md",
@@ -7495,7 +8216,7 @@
                 "x-appwrite": {
                     "method": "updateIntegerAttribute",
                     "group": "attributes",
-                    "weight": 356,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-integer-attribute.md",
@@ -7621,7 +8342,7 @@
                 "x-appwrite": {
                     "method": "createIpAttribute",
                     "group": "attributes",
-                    "weight": 357,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-ip-attribute.md",
@@ -7732,7 +8453,7 @@
                 "x-appwrite": {
                     "method": "updateIpAttribute",
                     "group": "attributes",
-                    "weight": 358,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-ip-attribute.md",
@@ -7848,7 +8569,7 @@
                 "x-appwrite": {
                     "method": "createLineAttribute",
                     "group": "attributes",
-                    "weight": 359,
+                    "weight": 360,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-line-attribute.md",
@@ -7962,7 +8683,7 @@
                 "x-appwrite": {
                     "method": "updateLineAttribute",
                     "group": "attributes",
-                    "weight": 360,
+                    "weight": 361,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-line-attribute.md",
@@ -8084,7 +8805,7 @@
                 "x-appwrite": {
                     "method": "createPointAttribute",
                     "group": "attributes",
-                    "weight": 361,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-point-attribute.md",
@@ -8198,7 +8919,7 @@
                 "x-appwrite": {
                     "method": "updatePointAttribute",
                     "group": "attributes",
-                    "weight": 362,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-point-attribute.md",
@@ -8320,7 +9041,7 @@
                 "x-appwrite": {
                     "method": "createPolygonAttribute",
                     "group": "attributes",
-                    "weight": 363,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-polygon-attribute.md",
@@ -8434,7 +9155,7 @@
                 "x-appwrite": {
                     "method": "updatePolygonAttribute",
                     "group": "attributes",
-                    "weight": 364,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-polygon-attribute.md",
@@ -8556,7 +9277,7 @@
                 "x-appwrite": {
                     "method": "createRelationshipAttribute",
                     "group": "attributes",
-                    "weight": 365,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-relationship-attribute.md",
@@ -8692,7 +9413,7 @@
                 "x-appwrite": {
                     "method": "createStringAttribute",
                     "group": "attributes",
-                    "weight": 367,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-string-attribute.md",
@@ -8814,7 +9535,7 @@
                 "x-appwrite": {
                     "method": "updateStringAttribute",
                     "group": "attributes",
-                    "weight": 368,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-string-attribute.md",
@@ -8935,7 +9656,7 @@
                 "x-appwrite": {
                     "method": "createUrlAttribute",
                     "group": "attributes",
-                    "weight": 369,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-url-attribute.md",
@@ -9046,7 +9767,7 @@
                 "x-appwrite": {
                     "method": "updateUrlAttribute",
                     "group": "attributes",
-                    "weight": 370,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-url-attribute.md",
@@ -9193,7 +9914,7 @@
                 "x-appwrite": {
                     "method": "getAttribute",
                     "group": "attributes",
-                    "weight": 342,
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-attribute.md",
@@ -9269,7 +9990,7 @@
                 "x-appwrite": {
                     "method": "deleteAttribute",
                     "group": "attributes",
-                    "weight": 343,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-attribute.md",
@@ -9354,7 +10075,7 @@
                 "x-appwrite": {
                     "method": "updateRelationshipAttribute",
                     "group": "attributes",
-                    "weight": 366,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-relationship-attribute.md",
@@ -9467,7 +10188,7 @@
                 "x-appwrite": {
                     "method": "listDocuments",
                     "group": "documents",
-                    "weight": 338,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-documents.md",
@@ -9579,7 +10300,7 @@
                 "x-appwrite": {
                     "method": "createDocument",
                     "group": "documents",
-                    "weight": 330,
+                    "weight": 331,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-document.md",
@@ -9768,7 +10489,7 @@
                 "x-appwrite": {
                     "method": "upsertDocuments",
                     "group": "documents",
-                    "weight": 335,
+                    "weight": 336,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-documents.md",
@@ -9904,7 +10625,7 @@
                 "x-appwrite": {
                     "method": "updateDocuments",
                     "group": "documents",
-                    "weight": 333,
+                    "weight": 334,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-documents.md",
@@ -10008,7 +10729,7 @@
                 "x-appwrite": {
                     "method": "deleteDocuments",
                     "group": "documents",
-                    "weight": 337,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-documents.md",
@@ -10109,7 +10830,7 @@
                 "x-appwrite": {
                     "method": "getDocument",
                     "group": "documents",
-                    "weight": 331,
+                    "weight": 332,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-document.md",
@@ -10220,7 +10941,7 @@
                 "x-appwrite": {
                     "method": "upsertDocument",
                     "group": "documents",
-                    "weight": 334,
+                    "weight": 335,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-document.md",
@@ -10377,7 +11098,7 @@
                 "x-appwrite": {
                     "method": "updateDocument",
                     "group": "documents",
-                    "weight": 332,
+                    "weight": 333,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-document.md",
@@ -10487,7 +11208,7 @@
                 "x-appwrite": {
                     "method": "deleteDocument",
                     "group": "documents",
-                    "weight": 336,
+                    "weight": 337,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-document.md",
@@ -10593,7 +11314,7 @@
                 "x-appwrite": {
                     "method": "decrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 341,
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/decrement-document-attribute.md",
@@ -10719,7 +11440,7 @@
                 "x-appwrite": {
                     "method": "incrementDocumentAttribute",
                     "group": "documents",
-                    "weight": 340,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/increment-document-attribute.md",
@@ -10845,7 +11566,7 @@
                 "x-appwrite": {
                     "method": "listIndexes",
                     "group": "indexes",
-                    "weight": 374,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-indexes.md",
@@ -10943,7 +11664,7 @@
                 "x-appwrite": {
                     "method": "createIndex",
                     "group": "indexes",
-                    "weight": 371,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-index.md",
@@ -11077,7 +11798,7 @@
                 "x-appwrite": {
                     "method": "getIndex",
                     "group": "indexes",
-                    "weight": 372,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-index.md",
@@ -11153,7 +11874,7 @@
                 "x-appwrite": {
                     "method": "deleteIndex",
                     "group": "indexes",
-                    "weight": 373,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-index.md",
@@ -11238,7 +11959,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 455,
+                    "weight": 456,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list.md",
@@ -11323,7 +12044,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 452,
+                    "weight": 453,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create.md",
@@ -11406,6 +12127,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -11432,7 +12154,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -11557,7 +12280,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 457,
+                    "weight": 458,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-runtimes.md",
@@ -11607,7 +12330,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 458,
+                    "weight": 459,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-specifications.md",
@@ -11658,7 +12381,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 453,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get.md",
@@ -11718,7 +12441,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 454,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update.md",
@@ -11808,6 +12531,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -11834,7 +12558,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -11949,7 +12674,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 456,
+                    "weight": 457,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete.md",
@@ -12011,7 +12736,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 461,
+                    "weight": 462,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-function-deployment.md",
@@ -12092,7 +12817,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 462,
+                    "weight": 463,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-deployments.md",
@@ -12187,7 +12912,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 459,
+                    "weight": 460,
                     "cookies": false,
                     "type": "upload",
                     "demo": "functions\/create-deployment.md",
@@ -12284,7 +13009,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 467,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-duplicate-deployment.md",
@@ -12370,7 +13095,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 464,
+                    "weight": 465,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
@@ -12474,7 +13199,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 465,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-vcs-deployment.md",
@@ -12572,7 +13297,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 460,
+                    "weight": 461,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-deployment.md",
@@ -12635,7 +13360,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 463,
+                    "weight": 464,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-deployment.md",
@@ -12700,7 +13425,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 466,
+                    "weight": 467,
                     "cookies": false,
                     "type": "location",
                     "demo": "functions\/get-deployment-download.md",
@@ -12791,7 +13516,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 468,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-deployment-status.md",
@@ -12863,7 +13588,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 471,
+                    "weight": 472,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -12951,7 +13676,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 469,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -13069,7 +13794,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 470,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -13136,7 +13861,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 472,
+                    "weight": 473,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-execution.md",
@@ -13208,7 +13933,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 477,
+                    "weight": 478,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-variables.md",
@@ -13268,7 +13993,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 475,
+                    "weight": 476,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-variable.md",
@@ -13360,7 +14085,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 476,
+                    "weight": 477,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-variable.md",
@@ -13430,7 +14155,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 478,
+                    "weight": 479,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-variable.md",
@@ -13522,7 +14247,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 479,
+                    "weight": 480,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-variable.md",
@@ -13594,7 +14319,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 250,
+                    "weight": 251,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -13648,7 +14373,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 249,
+                    "weight": 250,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -13702,7 +14427,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "health",
-                    "weight": 78,
+                    "weight": 79,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get.md",
@@ -13752,7 +14477,7 @@
                 "x-appwrite": {
                     "method": "getAntivirus",
                     "group": "health",
-                    "weight": 99,
+                    "weight": 100,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-antivirus.md",
@@ -13802,7 +14527,7 @@
                 "x-appwrite": {
                     "method": "getCache",
                     "group": "health",
-                    "weight": 81,
+                    "weight": 82,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-cache.md",
@@ -13852,7 +14577,7 @@
                 "x-appwrite": {
                     "method": "getCertificate",
                     "group": "health",
-                    "weight": 86,
+                    "weight": 87,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-certificate.md",
@@ -13913,7 +14638,7 @@
                 "x-appwrite": {
                     "method": "getDB",
                     "group": "health",
-                    "weight": 80,
+                    "weight": 81,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-db.md",
@@ -13963,7 +14688,7 @@
                 "x-appwrite": {
                     "method": "getPubSub",
                     "group": "health",
-                    "weight": 82,
+                    "weight": 83,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-pub-sub.md",
@@ -14013,7 +14738,7 @@
                 "x-appwrite": {
                     "method": "getQueueBuilds",
                     "group": "queue",
-                    "weight": 88,
+                    "weight": 89,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-builds.md",
@@ -14076,7 +14801,7 @@
                 "x-appwrite": {
                     "method": "getQueueCertificates",
                     "group": "queue",
-                    "weight": 87,
+                    "weight": 88,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-certificates.md",
@@ -14139,7 +14864,7 @@
                 "x-appwrite": {
                     "method": "getQueueDatabases",
                     "group": "queue",
-                    "weight": 89,
+                    "weight": 90,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-databases.md",
@@ -14213,7 +14938,7 @@
                 "x-appwrite": {
                     "method": "getQueueDeletes",
                     "group": "queue",
-                    "weight": 90,
+                    "weight": 91,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-deletes.md",
@@ -14276,7 +15001,7 @@
                 "x-appwrite": {
                     "method": "getFailedJobs",
                     "group": "queue",
-                    "weight": 100,
+                    "weight": 101,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-failed-jobs.md",
@@ -14365,7 +15090,7 @@
                 "x-appwrite": {
                     "method": "getQueueFunctions",
                     "group": "queue",
-                    "weight": 94,
+                    "weight": 95,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-functions.md",
@@ -14428,7 +15153,7 @@
                 "x-appwrite": {
                     "method": "getQueueLogs",
                     "group": "queue",
-                    "weight": 85,
+                    "weight": 86,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-logs.md",
@@ -14491,7 +15216,7 @@
                 "x-appwrite": {
                     "method": "getQueueMails",
                     "group": "queue",
-                    "weight": 91,
+                    "weight": 92,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-mails.md",
@@ -14554,7 +15279,7 @@
                 "x-appwrite": {
                     "method": "getQueueMessaging",
                     "group": "queue",
-                    "weight": 92,
+                    "weight": 93,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-messaging.md",
@@ -14617,7 +15342,7 @@
                 "x-appwrite": {
                     "method": "getQueueMigrations",
                     "group": "queue",
-                    "weight": 93,
+                    "weight": 94,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-migrations.md",
@@ -14680,7 +15405,7 @@
                 "x-appwrite": {
                     "method": "getQueueStatsResources",
                     "group": "queue",
-                    "weight": 95,
+                    "weight": 96,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-stats-resources.md",
@@ -14743,7 +15468,7 @@
                 "x-appwrite": {
                     "method": "getQueueUsage",
                     "group": "queue",
-                    "weight": 96,
+                    "weight": 97,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-usage.md",
@@ -14806,7 +15531,7 @@
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
                     "group": "queue",
-                    "weight": 84,
+                    "weight": 85,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-webhooks.md",
@@ -14869,7 +15594,7 @@
                 "x-appwrite": {
                     "method": "getStorage",
                     "group": "storage",
-                    "weight": 98,
+                    "weight": 99,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-storage.md",
@@ -14919,7 +15644,7 @@
                 "x-appwrite": {
                     "method": "getStorageLocal",
                     "group": "storage",
-                    "weight": 97,
+                    "weight": 98,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-storage-local.md",
@@ -14969,7 +15694,7 @@
                 "x-appwrite": {
                     "method": "getTime",
                     "group": "health",
-                    "weight": 83,
+                    "weight": 84,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-time.md",
@@ -15019,7 +15744,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 70,
+                    "weight": 71,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/get.md",
@@ -15073,7 +15798,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 71,
+                    "weight": 72,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-codes.md",
@@ -15127,7 +15852,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 75,
+                    "weight": 76,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-continents.md",
@@ -15181,7 +15906,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 72,
+                    "weight": 73,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries.md",
@@ -15235,7 +15960,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 73,
+                    "weight": 74,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-eu.md",
@@ -15289,7 +16014,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 74,
+                    "weight": 75,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-phones.md",
@@ -15343,7 +16068,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 76,
+                    "weight": 77,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-currencies.md",
@@ -15397,7 +16122,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 77,
+                    "weight": 78,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-languages.md",
@@ -15451,7 +16176,7 @@
                 "x-appwrite": {
                     "method": "listMessages",
                     "group": "messages",
-                    "weight": 307,
+                    "weight": 308,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-messages.md",
@@ -15539,7 +16264,7 @@
                 "x-appwrite": {
                     "method": "createEmail",
                     "group": "messages",
-                    "weight": 304,
+                    "weight": 305,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-email.md",
@@ -15684,7 +16409,7 @@
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "messages",
-                    "weight": 311,
+                    "weight": 312,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-email.md",
@@ -15831,7 +16556,7 @@
                 "x-appwrite": {
                     "method": "createPush",
                     "group": "messages",
-                    "weight": 306,
+                    "weight": 307,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-push.md",
@@ -16006,7 +16731,7 @@
                 "x-appwrite": {
                     "method": "updatePush",
                     "group": "messages",
-                    "weight": 313,
+                    "weight": 314,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-push.md",
@@ -16185,7 +16910,7 @@
                 "x-appwrite": {
                     "method": "createSms",
                     "group": "messages",
-                    "weight": 305,
+                    "weight": 306,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-sms.md",
@@ -16365,7 +17090,7 @@
                 "x-appwrite": {
                     "method": "updateSms",
                     "group": "messages",
-                    "weight": 312,
+                    "weight": 313,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-sms.md",
@@ -16546,7 +17271,7 @@
                 "x-appwrite": {
                     "method": "getMessage",
                     "group": "messages",
-                    "weight": 310,
+                    "weight": 311,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-message.md",
@@ -16600,7 +17325,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "messages",
-                    "weight": 314,
+                    "weight": 315,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete.md",
@@ -16663,7 +17388,7 @@
                 "x-appwrite": {
                     "method": "listMessageLogs",
                     "group": "logs",
-                    "weight": 308,
+                    "weight": 309,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-message-logs.md",
@@ -16750,7 +17475,7 @@
                 "x-appwrite": {
                     "method": "listTargets",
                     "group": "messages",
-                    "weight": 309,
+                    "weight": 310,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-targets.md",
@@ -16837,7 +17562,7 @@
                 "x-appwrite": {
                     "method": "listProviders",
                     "group": "providers",
-                    "weight": 278,
+                    "weight": 279,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-providers.md",
@@ -16925,7 +17650,7 @@
                 "x-appwrite": {
                     "method": "createApnsProvider",
                     "group": "providers",
-                    "weight": 277,
+                    "weight": 278,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-apns-provider.md",
@@ -17103,7 +17828,7 @@
                 "x-appwrite": {
                     "method": "updateApnsProvider",
                     "group": "providers",
-                    "weight": 291,
+                    "weight": 292,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-apns-provider.md",
@@ -17282,7 +18007,7 @@
                 "x-appwrite": {
                     "method": "createFcmProvider",
                     "group": "providers",
-                    "weight": 276,
+                    "weight": 277,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-fcm-provider.md",
@@ -17432,7 +18157,7 @@
                 "x-appwrite": {
                     "method": "updateFcmProvider",
                     "group": "providers",
-                    "weight": 290,
+                    "weight": 291,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-fcm-provider.md",
@@ -17583,7 +18308,7 @@
                 "x-appwrite": {
                     "method": "createMailgunProvider",
                     "group": "providers",
-                    "weight": 267,
+                    "weight": 268,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-mailgun-provider.md",
@@ -17699,7 +18424,7 @@
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
                     "group": "providers",
-                    "weight": 281,
+                    "weight": 282,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-mailgun-provider.md",
@@ -17818,7 +18543,7 @@
                 "x-appwrite": {
                     "method": "createMsg91Provider",
                     "group": "providers",
-                    "weight": 271,
+                    "weight": 272,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-msg-91-provider.md",
@@ -17914,7 +18639,7 @@
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
                     "group": "providers",
-                    "weight": 285,
+                    "weight": 286,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-msg-91-provider.md",
@@ -18013,7 +18738,7 @@
                 "x-appwrite": {
                     "method": "createResendProvider",
                     "group": "providers",
-                    "weight": 269,
+                    "weight": 270,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-resend-provider.md",
@@ -18119,7 +18844,7 @@
                 "x-appwrite": {
                     "method": "updateResendProvider",
                     "group": "providers",
-                    "weight": 283,
+                    "weight": 284,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-resend-provider.md",
@@ -18228,7 +18953,7 @@
                 "x-appwrite": {
                     "method": "createSendgridProvider",
                     "group": "providers",
-                    "weight": 268,
+                    "weight": 269,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-sendgrid-provider.md",
@@ -18334,7 +19059,7 @@
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
                     "group": "providers",
-                    "weight": 282,
+                    "weight": 283,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-sendgrid-provider.md",
@@ -18443,7 +19168,7 @@
                 "x-appwrite": {
                     "method": "createSmtpProvider",
                     "group": "providers",
-                    "weight": 270,
+                    "weight": 271,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-smtp-provider.md",
@@ -18673,7 +19398,7 @@
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
                     "group": "providers",
-                    "weight": 284,
+                    "weight": 285,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-smtp-provider.md",
@@ -18901,7 +19626,7 @@
                 "x-appwrite": {
                     "method": "createTelesignProvider",
                     "group": "providers",
-                    "weight": 272,
+                    "weight": 273,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-telesign-provider.md",
@@ -18997,7 +19722,7 @@
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
                     "group": "providers",
-                    "weight": 286,
+                    "weight": 287,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-telesign-provider.md",
@@ -19096,7 +19821,7 @@
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
                     "group": "providers",
-                    "weight": 273,
+                    "weight": 274,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-textmagic-provider.md",
@@ -19192,7 +19917,7 @@
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
                     "group": "providers",
-                    "weight": 287,
+                    "weight": 288,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-textmagic-provider.md",
@@ -19291,7 +20016,7 @@
                 "x-appwrite": {
                     "method": "createTwilioProvider",
                     "group": "providers",
-                    "weight": 274,
+                    "weight": 275,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-twilio-provider.md",
@@ -19387,7 +20112,7 @@
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
                     "group": "providers",
-                    "weight": 288,
+                    "weight": 289,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-twilio-provider.md",
@@ -19486,7 +20211,7 @@
                 "x-appwrite": {
                     "method": "createVonageProvider",
                     "group": "providers",
-                    "weight": 275,
+                    "weight": 276,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-vonage-provider.md",
@@ -19582,7 +20307,7 @@
                 "x-appwrite": {
                     "method": "updateVonageProvider",
                     "group": "providers",
-                    "weight": 289,
+                    "weight": 290,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-vonage-provider.md",
@@ -19681,7 +20406,7 @@
                 "x-appwrite": {
                     "method": "getProvider",
                     "group": "providers",
-                    "weight": 280,
+                    "weight": 281,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-provider.md",
@@ -19735,7 +20460,7 @@
                 "x-appwrite": {
                     "method": "deleteProvider",
                     "group": "providers",
-                    "weight": 292,
+                    "weight": 293,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-provider.md",
@@ -19798,7 +20523,7 @@
                 "x-appwrite": {
                     "method": "listProviderLogs",
                     "group": "providers",
-                    "weight": 279,
+                    "weight": 280,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-provider-logs.md",
@@ -19885,7 +20610,7 @@
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
                     "group": "subscribers",
-                    "weight": 301,
+                    "weight": 302,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-subscriber-logs.md",
@@ -19972,7 +20697,7 @@
                 "x-appwrite": {
                     "method": "listTopics",
                     "group": "topics",
-                    "weight": 294,
+                    "weight": 295,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-topics.md",
@@ -20058,7 +20783,7 @@
                 "x-appwrite": {
                     "method": "createTopic",
                     "group": "topics",
-                    "weight": 293,
+                    "weight": 294,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-topic.md",
@@ -20142,7 +20867,7 @@
                 "x-appwrite": {
                     "method": "getTopic",
                     "group": "topics",
-                    "weight": 296,
+                    "weight": 297,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-topic.md",
@@ -20203,7 +20928,7 @@
                 "x-appwrite": {
                     "method": "updateTopic",
                     "group": "topics",
-                    "weight": 297,
+                    "weight": 298,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-topic.md",
@@ -20281,7 +21006,7 @@
                 "x-appwrite": {
                     "method": "deleteTopic",
                     "group": "topics",
-                    "weight": 298,
+                    "weight": 299,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-topic.md",
@@ -20344,7 +21069,7 @@
                 "x-appwrite": {
                     "method": "listTopicLogs",
                     "group": "topics",
-                    "weight": 295,
+                    "weight": 296,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-topic-logs.md",
@@ -20431,7 +21156,7 @@
                 "x-appwrite": {
                     "method": "listSubscribers",
                     "group": "subscribers",
-                    "weight": 300,
+                    "weight": 301,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-subscribers.md",
@@ -20527,7 +21252,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 299,
+                    "weight": 300,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -20619,7 +21344,7 @@
                 "x-appwrite": {
                     "method": "getSubscriber",
                     "group": "subscribers",
-                    "weight": 302,
+                    "weight": 303,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-subscriber.md",
@@ -20683,7 +21408,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 303,
+                    "weight": 304,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -20760,7 +21485,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 484,
+                    "weight": 485,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list.md",
@@ -20845,7 +21570,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 482,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create.md",
@@ -20982,6 +21707,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -21008,7 +21734,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -21096,7 +21823,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 487,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-frameworks.md",
@@ -21146,7 +21873,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 510,
+                    "weight": 511,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -21197,7 +21924,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 483,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get.md",
@@ -21257,7 +21984,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 485,
+                    "weight": 486,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update.md",
@@ -21401,6 +22128,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -21427,7 +22155,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -21504,7 +22233,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 486,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete.md",
@@ -21566,7 +22295,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 493,
+                    "weight": 494,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-site-deployment.md",
@@ -21647,7 +22376,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 492,
+                    "weight": 493,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-deployments.md",
@@ -21742,7 +22471,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 488,
+                    "weight": 489,
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
@@ -21844,7 +22573,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 496,
+                    "weight": 497,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-duplicate-deployment.md",
@@ -21925,7 +22654,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 489,
+                    "weight": 490,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
@@ -22029,7 +22758,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 490,
+                    "weight": 491,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-vcs-deployment.md",
@@ -22128,7 +22857,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 491,
+                    "weight": 492,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-deployment.md",
@@ -22191,7 +22920,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 494,
+                    "weight": 495,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-deployment.md",
@@ -22256,7 +22985,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 495,
+                    "weight": 496,
                     "cookies": false,
                     "type": "location",
                     "demo": "sites\/get-deployment-download.md",
@@ -22347,7 +23076,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 497,
+                    "weight": 498,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-deployment-status.md",
@@ -22419,7 +23148,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 499,
+                    "weight": 500,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -22505,7 +23234,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 498,
+                    "weight": 499,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -22568,7 +23297,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 500,
+                    "weight": 501,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -22640,7 +23369,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 503,
+                    "weight": 504,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -22700,7 +23429,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 501,
+                    "weight": 502,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -22792,7 +23521,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 502,
+                    "weight": 503,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -22862,7 +23591,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 504,
+                    "weight": 505,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -22954,7 +23683,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 505,
+                    "weight": 506,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -23026,7 +23755,7 @@
                 "x-appwrite": {
                     "method": "listBuckets",
                     "group": "buckets",
-                    "weight": 155,
+                    "weight": 156,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-buckets.md",
@@ -23111,7 +23840,7 @@
                 "x-appwrite": {
                     "method": "createBucket",
                     "group": "buckets",
-                    "weight": 154,
+                    "weight": 155,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/create-bucket.md",
@@ -23239,7 +23968,7 @@
                 "x-appwrite": {
                     "method": "getBucket",
                     "group": "buckets",
-                    "weight": 156,
+                    "weight": 157,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket.md",
@@ -23299,7 +24028,7 @@
                 "x-appwrite": {
                     "method": "updateBucket",
                     "group": "buckets",
-                    "weight": 157,
+                    "weight": 158,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-bucket.md",
@@ -23424,7 +24153,7 @@
                 "x-appwrite": {
                     "method": "deleteBucket",
                     "group": "buckets",
-                    "weight": 158,
+                    "weight": 159,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-bucket.md",
@@ -23486,7 +24215,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 160,
+                    "weight": 161,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -23585,7 +24314,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 159,
+                    "weight": 160,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -23685,7 +24414,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 161,
+                    "weight": 162,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -23759,7 +24488,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 166,
+                    "weight": 167,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -23850,7 +24579,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 167,
+                    "weight": 168,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -23919,7 +24648,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 163,
+                    "weight": 164,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -23999,7 +24728,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 162,
+                    "weight": 163,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -24229,7 +24958,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 164,
+                    "weight": 165,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -24316,7 +25045,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "tablesdb",
-                    "weight": 385,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list.md",
@@ -24401,7 +25130,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "tablesdb",
-                    "weight": 381,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create.md",
@@ -24481,7 +25210,7 @@
                 "x-appwrite": {
                     "method": "listTransactions",
                     "group": "transactions",
-                    "weight": 444,
+                    "weight": 445,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-transactions.md",
@@ -24551,7 +25280,7 @@
                 "x-appwrite": {
                     "method": "createTransaction",
                     "group": "transactions",
-                    "weight": 440,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-transaction.md",
@@ -24624,7 +25353,7 @@
                 "x-appwrite": {
                     "method": "getTransaction",
                     "group": "transactions",
-                    "weight": 441,
+                    "weight": 442,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-transaction.md",
@@ -24691,7 +25420,7 @@
                 "x-appwrite": {
                     "method": "updateTransaction",
                     "group": "transactions",
-                    "weight": 442,
+                    "weight": 443,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-transaction.md",
@@ -24772,7 +25501,7 @@
                 "x-appwrite": {
                     "method": "deleteTransaction",
                     "group": "transactions",
-                    "weight": 443,
+                    "weight": 444,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-transaction.md",
@@ -24841,7 +25570,7 @@
                 "x-appwrite": {
                     "method": "createOperations",
                     "group": "transactions",
-                    "weight": 445,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-operations.md",
@@ -24929,7 +25658,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tablesdb",
-                    "weight": 382,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get.md",
@@ -24989,7 +25718,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tablesdb",
-                    "weight": 383,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update.md",
@@ -25066,7 +25795,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tablesdb",
-                    "weight": 384,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete.md",
@@ -25128,7 +25857,7 @@
                 "x-appwrite": {
                     "method": "listTables",
                     "group": "tables",
-                    "weight": 392,
+                    "weight": 393,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-tables.md",
@@ -25226,7 +25955,7 @@
                 "x-appwrite": {
                     "method": "createTable",
                     "group": "tables",
-                    "weight": 388,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-table.md",
@@ -25334,7 +26063,7 @@
                 "x-appwrite": {
                     "method": "getTable",
                     "group": "tables",
-                    "weight": 389,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-table.md",
@@ -25407,7 +26136,7 @@
                 "x-appwrite": {
                     "method": "updateTable",
                     "group": "tables",
-                    "weight": 390,
+                    "weight": 391,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-table.md",
@@ -25510,7 +26239,7 @@
                 "x-appwrite": {
                     "method": "deleteTable",
                     "group": "tables",
-                    "weight": 391,
+                    "weight": 392,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-table.md",
@@ -25585,7 +26314,7 @@
                 "x-appwrite": {
                     "method": "listColumns",
                     "group": "columns",
-                    "weight": 397,
+                    "weight": 398,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-columns.md",
@@ -25684,7 +26413,7 @@
                 "x-appwrite": {
                     "method": "createBooleanColumn",
                     "group": "columns",
-                    "weight": 398,
+                    "weight": 399,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-boolean-column.md",
@@ -25794,7 +26523,7 @@
                 "x-appwrite": {
                     "method": "updateBooleanColumn",
                     "group": "columns",
-                    "weight": 399,
+                    "weight": 400,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-boolean-column.md",
@@ -25909,7 +26638,7 @@
                 "x-appwrite": {
                     "method": "createDatetimeColumn",
                     "group": "columns",
-                    "weight": 400,
+                    "weight": 401,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-datetime-column.md",
@@ -26019,7 +26748,7 @@
                 "x-appwrite": {
                     "method": "updateDatetimeColumn",
                     "group": "columns",
-                    "weight": 401,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-datetime-column.md",
@@ -26134,7 +26863,7 @@
                 "x-appwrite": {
                     "method": "createEmailColumn",
                     "group": "columns",
-                    "weight": 402,
+                    "weight": 403,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-email-column.md",
@@ -26244,7 +26973,7 @@
                 "x-appwrite": {
                     "method": "updateEmailColumn",
                     "group": "columns",
-                    "weight": 403,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-email-column.md",
@@ -26359,7 +27088,7 @@
                 "x-appwrite": {
                     "method": "createEnumColumn",
                     "group": "columns",
-                    "weight": 404,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-enum-column.md",
@@ -26478,7 +27207,7 @@
                 "x-appwrite": {
                     "method": "updateEnumColumn",
                     "group": "columns",
-                    "weight": 405,
+                    "weight": 406,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-enum-column.md",
@@ -26602,7 +27331,7 @@
                 "x-appwrite": {
                     "method": "createFloatColumn",
                     "group": "columns",
-                    "weight": 406,
+                    "weight": 407,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-float-column.md",
@@ -26722,7 +27451,7 @@
                 "x-appwrite": {
                     "method": "updateFloatColumn",
                     "group": "columns",
-                    "weight": 407,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-float-column.md",
@@ -26847,7 +27576,7 @@
                 "x-appwrite": {
                     "method": "createIntegerColumn",
                     "group": "columns",
-                    "weight": 408,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-integer-column.md",
@@ -26967,7 +27696,7 @@
                 "x-appwrite": {
                     "method": "updateIntegerColumn",
                     "group": "columns",
-                    "weight": 409,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-integer-column.md",
@@ -27092,7 +27821,7 @@
                 "x-appwrite": {
                     "method": "createIpColumn",
                     "group": "columns",
-                    "weight": 410,
+                    "weight": 411,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-ip-column.md",
@@ -27202,7 +27931,7 @@
                 "x-appwrite": {
                     "method": "updateIpColumn",
                     "group": "columns",
-                    "weight": 411,
+                    "weight": 412,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-ip-column.md",
@@ -27317,7 +28046,7 @@
                 "x-appwrite": {
                     "method": "createLineColumn",
                     "group": "columns",
-                    "weight": 412,
+                    "weight": 413,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-line-column.md",
@@ -27430,7 +28159,7 @@
                 "x-appwrite": {
                     "method": "updateLineColumn",
                     "group": "columns",
-                    "weight": 413,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-line-column.md",
@@ -27551,7 +28280,7 @@
                 "x-appwrite": {
                     "method": "createPointColumn",
                     "group": "columns",
-                    "weight": 414,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-point-column.md",
@@ -27664,7 +28393,7 @@
                 "x-appwrite": {
                     "method": "updatePointColumn",
                     "group": "columns",
-                    "weight": 415,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-point-column.md",
@@ -27785,7 +28514,7 @@
                 "x-appwrite": {
                     "method": "createPolygonColumn",
                     "group": "columns",
-                    "weight": 416,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-polygon-column.md",
@@ -27898,7 +28627,7 @@
                 "x-appwrite": {
                     "method": "updatePolygonColumn",
                     "group": "columns",
-                    "weight": 417,
+                    "weight": 418,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-polygon-column.md",
@@ -28019,7 +28748,7 @@
                 "x-appwrite": {
                     "method": "createRelationshipColumn",
                     "group": "columns",
-                    "weight": 418,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-relationship-column.md",
@@ -28154,7 +28883,7 @@
                 "x-appwrite": {
                     "method": "createStringColumn",
                     "group": "columns",
-                    "weight": 420,
+                    "weight": 421,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-string-column.md",
@@ -28275,7 +29004,7 @@
                 "x-appwrite": {
                     "method": "updateStringColumn",
                     "group": "columns",
-                    "weight": 421,
+                    "weight": 422,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-string-column.md",
@@ -28395,7 +29124,7 @@
                 "x-appwrite": {
                     "method": "createUrlColumn",
                     "group": "columns",
-                    "weight": 422,
+                    "weight": 423,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-url-column.md",
@@ -28505,7 +29234,7 @@
                 "x-appwrite": {
                     "method": "updateUrlColumn",
                     "group": "columns",
-                    "weight": 423,
+                    "weight": 424,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-url-column.md",
@@ -28651,7 +29380,7 @@
                 "x-appwrite": {
                     "method": "getColumn",
                     "group": "columns",
-                    "weight": 395,
+                    "weight": 396,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-column.md",
@@ -28726,7 +29455,7 @@
                 "x-appwrite": {
                     "method": "deleteColumn",
                     "group": "columns",
-                    "weight": 396,
+                    "weight": 397,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-column.md",
@@ -28810,7 +29539,7 @@
                 "x-appwrite": {
                     "method": "updateRelationshipColumn",
                     "group": "columns",
-                    "weight": 419,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-relationship-column.md",
@@ -28922,7 +29651,7 @@
                 "x-appwrite": {
                     "method": "listIndexes",
                     "group": "indexes",
-                    "weight": 427,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-indexes.md",
@@ -29019,7 +29748,7 @@
                 "x-appwrite": {
                     "method": "createIndex",
                     "group": "indexes",
-                    "weight": 424,
+                    "weight": 425,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-index.md",
@@ -29152,7 +29881,7 @@
                 "x-appwrite": {
                     "method": "getIndex",
                     "group": "indexes",
-                    "weight": 425,
+                    "weight": 426,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-index.md",
@@ -29227,7 +29956,7 @@
                 "x-appwrite": {
                     "method": "deleteIndex",
                     "group": "indexes",
-                    "weight": 426,
+                    "weight": 427,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-index.md",
@@ -29311,7 +30040,7 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 436,
+                    "weight": 437,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-rows.md",
@@ -29422,7 +30151,7 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 428,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-row.md",
@@ -29602,7 +30331,7 @@
                 "x-appwrite": {
                     "method": "upsertRows",
                     "group": "rows",
-                    "weight": 433,
+                    "weight": 434,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-rows.md",
@@ -29733,7 +30462,7 @@
                 "x-appwrite": {
                     "method": "updateRows",
                     "group": "rows",
-                    "weight": 431,
+                    "weight": 432,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-rows.md",
@@ -29836,7 +30565,7 @@
                 "x-appwrite": {
                     "method": "deleteRows",
                     "group": "rows",
-                    "weight": 435,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-rows.md",
@@ -29936,7 +30665,7 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 429,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-row.md",
@@ -30046,7 +30775,7 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 432,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-row.md",
@@ -30194,7 +30923,7 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 430,
+                    "weight": 431,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-row.md",
@@ -30303,7 +31032,7 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 434,
+                    "weight": 435,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-row.md",
@@ -30408,7 +31137,7 @@
                 "x-appwrite": {
                     "method": "decrementRowColumn",
                     "group": "rows",
-                    "weight": 439,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/decrement-row-column.md",
@@ -30533,7 +31262,7 @@
                 "x-appwrite": {
                     "method": "incrementRowColumn",
                     "group": "rows",
-                    "weight": 438,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/increment-row-column.md",
@@ -30658,7 +31387,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 171,
+                    "weight": 172,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list.md",
@@ -30747,7 +31476,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 170,
+                    "weight": 171,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create.md",
@@ -30834,7 +31563,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 172,
+                    "weight": 173,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get.md",
@@ -30898,7 +31627,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 174,
+                    "weight": 175,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-name.md",
@@ -30974,7 +31703,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 176,
+                    "weight": 177,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete.md",
@@ -31040,7 +31769,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 178,
+                    "weight": 179,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list-memberships.md",
@@ -31139,7 +31868,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 177,
+                    "weight": 178,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create-membership.md",
@@ -31252,7 +31981,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 179,
+                    "weight": 180,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-membership.md",
@@ -31326,7 +32055,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 180,
+                    "weight": 181,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership.md",
@@ -31415,7 +32144,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 182,
+                    "weight": 183,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete-membership.md",
@@ -31491,7 +32220,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 181,
+                    "weight": 182,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership-status.md",
@@ -31590,7 +32319,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 173,
+                    "weight": 174,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-prefs.md",
@@ -31652,7 +32381,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 175,
+                    "weight": 176,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-prefs.md",
@@ -31735,7 +32464,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 522,
+                    "weight": 523,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -31830,7 +32559,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 520,
+                    "weight": 521,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -31920,7 +32649,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 521,
+                    "weight": 522,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -31981,7 +32710,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 523,
+                    "weight": 524,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -32052,7 +32781,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 524,
+                    "weight": 525,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",
@@ -32115,7 +32844,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "users",
-                    "weight": 193,
+                    "weight": 194,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list.md",
@@ -32200,7 +32929,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "users",
-                    "weight": 184,
+                    "weight": 185,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create.md",
@@ -32289,7 +33018,7 @@
                 "x-appwrite": {
                     "method": "createArgon2User",
                     "group": "users",
-                    "weight": 187,
+                    "weight": 188,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-argon-2-user.md",
@@ -32375,7 +33104,7 @@
                 "x-appwrite": {
                     "method": "createBcryptUser",
                     "group": "users",
-                    "weight": 185,
+                    "weight": 186,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-bcrypt-user.md",
@@ -32461,7 +33190,7 @@
                 "x-appwrite": {
                     "method": "listIdentities",
                     "group": "identities",
-                    "weight": 201,
+                    "weight": 202,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-identities.md",
@@ -32541,7 +33270,7 @@
                 "x-appwrite": {
                     "method": "deleteIdentity",
                     "group": "identities",
-                    "weight": 224,
+                    "weight": 225,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-identity.md",
@@ -32603,7 +33332,7 @@
                 "x-appwrite": {
                     "method": "createMD5User",
                     "group": "users",
-                    "weight": 186,
+                    "weight": 187,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-md-5-user.md",
@@ -32689,7 +33418,7 @@
                 "x-appwrite": {
                     "method": "createPHPassUser",
                     "group": "users",
-                    "weight": 189,
+                    "weight": 190,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-ph-pass-user.md",
@@ -32775,7 +33504,7 @@
                 "x-appwrite": {
                     "method": "createScryptUser",
                     "group": "users",
-                    "weight": 190,
+                    "weight": 191,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-scrypt-user.md",
@@ -32891,7 +33620,7 @@
                 "x-appwrite": {
                     "method": "createScryptModifiedUser",
                     "group": "users",
-                    "weight": 191,
+                    "weight": 192,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-scrypt-modified-user.md",
@@ -32995,7 +33724,7 @@
                 "x-appwrite": {
                     "method": "createSHAUser",
                     "group": "users",
-                    "weight": 188,
+                    "weight": 189,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-sha-user.md",
@@ -33101,7 +33830,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "users",
-                    "weight": 194,
+                    "weight": 195,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get.md",
@@ -33154,7 +33883,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "users",
-                    "weight": 222,
+                    "weight": 223,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete.md",
@@ -33216,7 +33945,7 @@
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "users",
-                    "weight": 207,
+                    "weight": 208,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-email.md",
@@ -33297,7 +34026,7 @@
                 "x-appwrite": {
                     "method": "createJWT",
                     "group": "sessions",
-                    "weight": 225,
+                    "weight": 226,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-jwt.md",
@@ -33380,7 +34109,7 @@
                 "x-appwrite": {
                     "method": "updateLabels",
                     "group": "users",
-                    "weight": 203,
+                    "weight": 204,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-labels.md",
@@ -33464,7 +34193,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 199,
+                    "weight": 200,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-logs.md",
@@ -33550,7 +34279,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 198,
+                    "weight": 199,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-memberships.md",
@@ -33647,7 +34376,7 @@
                 "x-appwrite": {
                     "method": "updateMfa",
                     "group": "users",
-                    "weight": 212,
+                    "weight": 213,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-mfa.md",
@@ -33781,7 +34510,7 @@
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 217,
+                    "weight": 218,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-mfa-authenticator.md",
@@ -33916,7 +34645,7 @@
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
-                    "weight": 213,
+                    "weight": 214,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-mfa-factors.md",
@@ -34034,7 +34763,7 @@
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 214,
+                    "weight": 215,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get-mfa-recovery-codes.md",
@@ -34150,7 +34879,7 @@
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 216,
+                    "weight": 217,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-mfa-recovery-codes.md",
@@ -34266,7 +34995,7 @@
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 215,
+                    "weight": 216,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-mfa-recovery-codes.md",
@@ -34384,7 +35113,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "users",
-                    "weight": 205,
+                    "weight": 206,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-name.md",
@@ -34465,7 +35194,7 @@
                 "x-appwrite": {
                     "method": "updatePassword",
                     "group": "users",
-                    "weight": 206,
+                    "weight": 207,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-password.md",
@@ -34546,7 +35275,7 @@
                 "x-appwrite": {
                     "method": "updatePhone",
                     "group": "users",
-                    "weight": 208,
+                    "weight": 209,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-phone.md",
@@ -34627,7 +35356,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "users",
-                    "weight": 195,
+                    "weight": 196,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get-prefs.md",
@@ -34687,7 +35416,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "users",
-                    "weight": 210,
+                    "weight": 211,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-prefs.md",
@@ -34768,7 +35497,7 @@
                 "x-appwrite": {
                     "method": "listSessions",
                     "group": "sessions",
-                    "weight": 197,
+                    "weight": 198,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-sessions.md",
@@ -34839,7 +35568,7 @@
                 "x-appwrite": {
                     "method": "createSession",
                     "group": "sessions",
-                    "weight": 218,
+                    "weight": 219,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-session.md",
@@ -34892,7 +35621,7 @@
                 "x-appwrite": {
                     "method": "deleteSessions",
                     "group": "sessions",
-                    "weight": 221,
+                    "weight": 222,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-sessions.md",
@@ -34947,7 +35676,7 @@
                 "x-appwrite": {
                     "method": "deleteSession",
                     "group": "sessions",
-                    "weight": 220,
+                    "weight": 221,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-session.md",
@@ -35019,7 +35748,7 @@
                 "x-appwrite": {
                     "method": "updateStatus",
                     "group": "users",
-                    "weight": 202,
+                    "weight": 203,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-status.md",
@@ -35100,7 +35829,7 @@
                 "x-appwrite": {
                     "method": "listTargets",
                     "group": "targets",
-                    "weight": 200,
+                    "weight": 201,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-targets.md",
@@ -35185,7 +35914,7 @@
                 "x-appwrite": {
                     "method": "createTarget",
                     "group": "targets",
-                    "weight": 192,
+                    "weight": 193,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-target.md",
@@ -35296,7 +36025,7 @@
                 "x-appwrite": {
                     "method": "getTarget",
                     "group": "targets",
-                    "weight": 196,
+                    "weight": 197,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get-target.md",
@@ -35367,7 +36096,7 @@
                 "x-appwrite": {
                     "method": "updateTarget",
                     "group": "targets",
-                    "weight": 211,
+                    "weight": 212,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-target.md",
@@ -35457,7 +36186,7 @@
                 "x-appwrite": {
                     "method": "deleteTarget",
                     "group": "targets",
-                    "weight": 223,
+                    "weight": 224,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-target.md",
@@ -35530,7 +36259,7 @@
                 "x-appwrite": {
                     "method": "createToken",
                     "group": "sessions",
-                    "weight": 219,
+                    "weight": 220,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-token.md",
@@ -35613,7 +36342,7 @@
                 "x-appwrite": {
                     "method": "updateEmailVerification",
                     "group": "users",
-                    "weight": 209,
+                    "weight": 210,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-email-verification.md",
@@ -35694,7 +36423,7 @@
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
                     "group": "users",
-                    "weight": 204,
+                    "weight": 205,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-phone-verification.md",
