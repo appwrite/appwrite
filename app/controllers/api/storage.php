@@ -1477,12 +1477,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->inject('response')
     ->inject('request')
     ->inject('dbForProject')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('mode')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Document $project, string $mode, Device $deviceForFiles) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-
+    ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Database $dbForPlatform, Document $project, string $mode, Device $deviceForFiles) {
         $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
         try {
@@ -1499,15 +1498,19 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
+        // Check if this is an internal/platform file based on JWT flag
+        $isInternal = $decoded['internal'] ?? false;
+        $db = $isInternal ? $dbForPlatform : $dbForProject;
+
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
+        $bucket = Authorization::skip(fn () => $db->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-
+        $file = Authorization::skip(fn () => $db->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
