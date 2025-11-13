@@ -22902,7 +22902,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "Export documents to a CSV file from your Appwrite database. This endpoint allows you to export documents to a CSV file stored in an Appwrite Storage bucket.",
+                "description": "Export documents to a CSV file from your Appwrite database. This endpoint allows you to export documents to a CSV file stored in a secure internal bucket. You'll receive an email with a download link when the export is complete.",
                 "responses": {
                     "202": {
                         "description": "Migration",
@@ -22951,11 +22951,6 @@
                                         "type": "string",
                                         "description": "Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.",
                                         "x-example": "<ID1:ID2>"
-                                    },
-                                    "bucketId": {
-                                        "type": "string",
-                                        "description": "Storage bucket unique ID where the exported CSV will be stored.",
-                                        "x-example": "<BUCKET_ID>"
                                     },
                                     "filename": {
                                         "type": "string",
@@ -23006,7 +23001,6 @@
                                 },
                                 "required": [
                                     "resourceId",
-                                    "bucketId",
                                     "filename"
                                 ]
                             }
