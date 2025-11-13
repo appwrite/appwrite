@@ -8,5 +8,6 @@ X-Appwrite-JWT: <YOUR_JWT>
 
 {
   "value": 0,
-  "min": 0
+  "min": 0,
+  "transactionId": "<TRANSACTION_ID>"
 }

@@ -11,5 +11,6 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->listSessions(
-    userId: '<USER_ID>'
+    userId: '<USER_ID>',
+    total: false // optional
 );

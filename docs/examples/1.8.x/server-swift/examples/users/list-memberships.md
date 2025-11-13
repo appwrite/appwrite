@@ -10,6 +10,7 @@ let users = Users(client)
 let membershipList = try await users.listMemberships(
     userId: "<USER_ID>",
     queries: [], // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 )
 

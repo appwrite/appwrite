@@ -37,8 +37,8 @@ class Create extends BooleanCreate
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/create-boolean-column.md',
                 auth: [AuthType::KEY],
@@ -50,7 +50,7 @@ class Create extends BooleanCreate
                 ]
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/server/tablesdb#tablesDBCreate).')
+            ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Boolean(), 'Default value for column when not provided. Cannot be set when column is required.', true)

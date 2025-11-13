@@ -12,5 +12,6 @@ databases = Databases.new(client)
 result = databases.list_collections(
     database_id: '<DATABASE_ID>',
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

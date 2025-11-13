@@ -11,5 +11,6 @@ users = Users.new(client)
 
 result = users.list_logs(
     user_id: '<USER_ID>',
-    queries: [] # optional
+    queries: [], # optional
+    total: false # optional
 )

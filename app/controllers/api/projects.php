@@ -1234,9 +1234,10 @@ App::get('/v1/projects/:projectId/webhooks')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1251,7 +1252,7 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
-            'total' => count($webhooks),
+            'total' => $includeTotal ? count($webhooks) : 0,
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -1531,9 +1532,10 @@ App::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1548,7 +1550,7 @@ App::get('/v1/projects/:projectId/keys')
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'total' => count($keys),
+            'total' => $includeTotal ? count($keys) : 0,
         ]), Response::MODEL_KEY_LIST);
     });
 
@@ -1756,7 +1758,28 @@ App::post('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Platform::TYPE_WEB, Platform::TYPE_FLUTTER_WEB, Platform::TYPE_FLUTTER_IOS, Platform::TYPE_FLUTTER_ANDROID, Platform::TYPE_FLUTTER_LINUX, Platform::TYPE_FLUTTER_MACOS, Platform::TYPE_FLUTTER_WINDOWS, Platform::TYPE_APPLE_IOS, Platform::TYPE_APPLE_MACOS,  Platform::TYPE_APPLE_WATCHOS, Platform::TYPE_APPLE_TVOS, Platform::TYPE_ANDROID, Platform::TYPE_UNITY, Platform::TYPE_REACT_NATIVE_IOS, Platform::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
+    ->param(
+        'type',
+        null,
+        new WhiteList([
+            Platform::TYPE_WEB,
+            Platform::TYPE_FLUTTER_WEB,
+            Platform::TYPE_FLUTTER_IOS,
+            Platform::TYPE_FLUTTER_ANDROID,
+            Platform::TYPE_FLUTTER_LINUX,
+            Platform::TYPE_FLUTTER_MACOS,
+            Platform::TYPE_FLUTTER_WINDOWS,
+            Platform::TYPE_APPLE_IOS,
+            Platform::TYPE_APPLE_MACOS,
+            Platform::TYPE_APPLE_WATCHOS,
+            Platform::TYPE_APPLE_TVOS,
+            Platform::TYPE_ANDROID,
+            Platform::TYPE_UNITY,
+            Platform::TYPE_REACT_NATIVE_IOS,
+            Platform::TYPE_REACT_NATIVE_ANDROID,
+        ], true),
+        'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.'
+    )
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1813,9 +1836,10 @@ App::get('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1830,7 +1854,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
-            'total' => count($platforms),
+            'total' => $includeTotal ? count($platforms) : 0,
         ]), Response::MODEL_PLATFORM_LIST);
     });
 

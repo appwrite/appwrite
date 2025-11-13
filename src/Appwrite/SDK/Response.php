@@ -2,12 +2,11 @@
 
 namespace Appwrite\SDK;
 
-class Response
+readonly class Response
 {
     /**
      * @param int $code
      * @param string|array $model
-     * @param string $description
      */
     public function __construct(
         private int $code,

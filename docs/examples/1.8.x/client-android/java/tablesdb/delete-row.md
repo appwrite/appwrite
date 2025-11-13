@@ -12,6 +12,7 @@ tablesDB.deleteRow(
     "<DATABASE_ID>", // databaseId 
     "<TABLE_ID>", // tableId 
     "<ROW_ID>", // rowId 
+    "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -41,6 +41,11 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['accessedAt']);
         $this->assertArrayHasKey('targets', $response['body']);
         $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
+        $this->assertArrayNotHasKey('emailCanonical', $response['body']);
+        $this->assertArrayNotHasKey('emailIsFree', $response['body']);
+        $this->assertArrayNotHasKey('emailIsDisposable', $response['body']);
+        $this->assertArrayNotHasKey('emailIsCorporate', $response['body']);
+        $this->assertArrayNotHasKey('emailIsCanonical', $response['body']);
 
         /**
          * Test for FAILURE
@@ -152,6 +157,8 @@ trait AccountBase
 
     public function testEmailOTPSession(): void
     {
+        $isConsoleProject = $this->getProject()['$id'] === 'console';
+
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -182,6 +189,13 @@ trait AccountBase
 
         $this->assertNotEmpty($code);
         $this->assertStringContainsStringIgnoringCase('Use OTP ' . $code . ' to sign in to '. $this->getProject()['name'] . '. Expires in 15 minutes.', $lastEmail['text']);
+
+        // Only Console project has branded logo in email.
+        if ($isConsoleProject) {
+            $this->assertStringContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+        } else {
+            $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
+        }
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',

@@ -10,4 +10,5 @@ Storage storage = Storage(client);
 BucketList result = await storage.listBuckets(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

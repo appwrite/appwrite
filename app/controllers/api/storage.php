@@ -180,9 +180,10 @@ App::get('/v1/storage/buckets')
     ))
     ->param('queries', [], new Buckets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Buckets::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -222,7 +223,7 @@ App::get('/v1/storage/buckets')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $buckets = $dbForProject->find('buckets', $queries);
-            $total = $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         } catch (QueryException $e) {
@@ -785,10 +786,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('queries', [], new Files(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Files::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $bucketId, array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject, string $mode) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -846,10 +848,10 @@ App::get('/v1/storage/buckets/:bucketId/files')
         try {
             if ($fileSecurity && !$valid) {
                 $files = $dbForProject->find('bucket_' . $bucket->getSequence(), $queries);
-                $total = $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT);
+                $total = $includeTotal ? $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT) : 0;
             } else {
                 $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getSequence(), $queries));
-                $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT));
+                $total = $includeTotal ? Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT)) : 0;
             }
         } catch (NotFoundException) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);

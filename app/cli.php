@@ -103,6 +103,11 @@ CLI::setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
+CLI::setResource(
+    'isResourceBlocked',
+    fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
+);
+
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 

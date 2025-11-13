@@ -9,6 +9,7 @@ let users = Users(client)
 
 let targetList = try await users.listTargets(
     userId: "<USER_ID>",
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 )
 
