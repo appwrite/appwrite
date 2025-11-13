@@ -140,8 +140,8 @@ class Create extends CollectionAction
                 attributes:$attributes,
                 indexes:$indexes
             );
-            // Create attribute metadata documents in the attributes table
-            // This is necessary so that indexes can find the attributes when they're created
+            // Create attribute and indexes metadata documents in the attributes and indexes collections
+            // needed for the get and list calls
             $attributeDocs = array_map(function ($attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimensions) {
                 $key = \is_string($attributeConfig['$id']) ? $attributeConfig['$id'] : (string) $attributeConfig['$id'];
                 return new Document([
@@ -165,6 +165,28 @@ class Create extends CollectionAction
                 ]);
             }, $collections['defaultAttributes']);
             $dbForProject->createDocuments('attributes', $attributeDocs);
+
+            $indexDocs = array_map(function ($indexConfig) use ($database, $collection, $databaseId, $collectionId) {
+                $key = \is_string($indexConfig['$id']) ? $indexConfig['$id'] : (string) $indexConfig['$id'];
+
+                return new Document([
+                    '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+                    'key' => $key,
+                    'status' => 'available',
+                    'databaseInternalId' => $database->getSequence(),
+                    'databaseId' => $databaseId,
+                    'collectionInternalId' => $collection->getSequence(),
+                    'collectionId' => $collectionId,
+                    'type' => $indexConfig['type'],
+                    'attributes' => $indexConfig['attributes'] ?? [],
+                    'lengths' => $indexConfig['lengths'] ?? [],
+                    'orders' => $indexConfig['orders'] ?? [],
+                ]);
+            }, $collections['defaultIndexes']);
+
+            if (!empty($indexDocs)) {
+                $dbForProject->createDocuments('indexes', $indexDocs);
+            }
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {

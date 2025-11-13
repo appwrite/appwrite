@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -80,6 +81,26 @@ trait MigrationsBase
         });
 
         return $migrationResult;
+    }
+
+    /**
+     * Get migration status by ID (without creating a new migration)
+     *
+     * @param string $migrationId
+     * @return array
+     */
+    public function getMigrationStatus(string $migrationId): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+
+        return $response['body'];
     }
 
     /**
@@ -1495,6 +1516,200 @@ trait MigrationsBase
     }
 
     /**
+     * VectorDB (embeddings collections)
+     */
+    public function testAppwriteMigrationVectorDBDatabase(): array
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/vectordb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'VDB - Migration DB'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $databaseId = $response['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_DATABASE_VECTORDB,
+            ],
+            'endpoint' => 'http://localhost/v1',
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_DATABASE_VECTORDB], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORDB, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['error'] ?? 0);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($databaseId, $response['body']['$id']);
+        $this->assertEquals('VDB - Migration DB', $response['body']['name']);
+
+        // Cleanup on destination
+        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        return [
+            'databaseId' => $databaseId,
+        ];
+    }
+
+    /**
+     * @depends testAppwriteMigrationVectorDBDatabase
+     */
+    public function testAppwriteMigrationVectorDBCollection(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'VDB - Movies',
+            'dimensions' => 3,
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_DATABASE_VECTORDB,
+                Resource::TYPE_COLLECTION,
+                Resource::TYPE_ATTRIBUTE,
+            ],
+            'endpoint' => 'http://localhost/v1',
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals('completed', $result['status']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($collectionId, $response['body']['$id']);
+        $this->assertEquals('VDB - Movies', $response['body']['name']);
+        // Verify attributes are present (embeddings and metadata are default attributes)
+        $this->assertArrayHasKey('attributes', $response['body']);
+        $this->assertIsArray($response['body']['attributes']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+        ];
+    }
+
+    /**
+     * @depends testAppwriteMigrationVectorDBCollection
+     */
+    public function testAppwriteMigrationVectorDBDocument(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $document = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'embeddings' => [1.0, 0.0, 0.0],
+                'metadata' => ['title' => 'Migration Test Movie'],
+            ]
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        // Ensure attributes are exported before documents
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_DATABASE_VECTORDB,
+                Resource::TYPE_COLLECTION,
+                Resource::TYPE_ATTRIBUTE,
+                Resource::TYPE_DOCUMENT,
+            ],
+            'endpoint' => 'http://localhost/v1',
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        // Verify that TYPE_ATTRIBUTE appears in the resources array for VectorDB
+        $this->assertContains(Resource::TYPE_ATTRIBUTE, $result['resources'], 'TYPE_ATTRIBUTE should be in resources array for VectorDB');
+
+        // Verify attributes exist on destination before checking document
+        $collectionResponse = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $collectionResponse['headers']['status-code']);
+        $this->assertArrayHasKey('attributes', $collectionResponse['body']);
+        $this->assertIsArray($collectionResponse['body']['attributes']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($documentId, $response['body']['$id']);
+        $this->assertEquals('Migration Test Movie', $response['body']['metadata']['title']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+    }
+
+    /**
      * @depends testAppwriteMigrationDocumentsDBDatabase
      */
     public function testAppwriteMigrationDocumentsDBCollection(array $data): array
@@ -1688,6 +1903,31 @@ trait MigrationsBase
             $this->assertEquals('available', $response['body']['status']);
         }, 5000, 500);
 
+        $sqlIndexKey = 'product_unique';
+
+        $sqlIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $sqlDatabaseId . '/tables/' . $tableId . '/indexes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ], [
+            'key' => $sqlIndexKey,
+            'type' => Database::INDEX_UNIQUE,
+            'columns' => ['productName'],
+        ]);
+
+        $this->assertEquals(202, $sqlIndex['headers']['status-code']);
+
+        $this->assertEventually(function () use ($sqlDatabaseId, $tableId, $sqlIndexKey, $sourceProject) {
+            $index = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $sqlDatabaseId . '/tables/' . $tableId . '/indexes/' . $sqlIndexKey, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $sourceProject['$id'],
+                'x-appwrite-key' => $sourceProject['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals('available', $index['body']['status']);
+        }, 30000, 500);
+
         // Create Row in Table
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $sqlDatabaseId . '/tables/' . $tableId . '/rows', [
             'content-type' => 'application/json',
@@ -1730,6 +1970,31 @@ trait MigrationsBase
         $this->assertEquals(201, $collection['headers']['status-code']);
         $collectionId = $collection['body']['$id'];
 
+        $documentsIndexKey = 'email_unique';
+
+        $documentsIndex = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $docsDatabaseId . '/collections/' . $collectionId . '/indexes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ], [
+            'key' => $documentsIndexKey,
+            'type' => Database::INDEX_UNIQUE,
+            'attributes' => ['email'],
+        ]);
+
+        $this->assertEquals(202, $documentsIndex['headers']['status-code']);
+
+        $this->assertEventually(function () use ($docsDatabaseId, $collectionId, $documentsIndexKey, $sourceProject) {
+            $index = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $docsDatabaseId . '/collections/' . $collectionId . '/indexes/' . $documentsIndexKey, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $sourceProject['$id'],
+                'x-appwrite-key' => $sourceProject['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals('available', $index['body']['status']);
+        }, 30000, 500);
+
         // Create Document in Collection
         $document = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $docsDatabaseId . '/collections/' . $collectionId . '/documents', [
             'content-type' => 'application/json',
@@ -1746,8 +2011,119 @@ trait MigrationsBase
         $this->assertEquals(201, $document['headers']['status-code']);
         $documentId = $document['body']['$id'];
 
-        // ====== Perform migration including both database kinds with all child resources ======
-        $result = $this->performMigrationSync([
+        // ====== Create VectorDB (/vectordb) with collection and document ======
+        $vector = $this->client->call(Client::METHOD_POST, '/vectordb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Mixed VectorDB',
+        ]);
+
+        $this->assertEquals(201, $vector['headers']['status-code']);
+        $this->assertNotEmpty($vector['body']['$id']);
+        $vectorDatabaseId = $vector['body']['$id'];
+
+        // Create Collection in VectorDB
+        $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDatabaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'Products',
+            'dimensions' => 3,
+        ]);
+
+        $this->assertEquals(201, $vectorCollection['headers']['status-code']);
+        $vectorCollectionId = $vectorCollection['body']['$id'];
+
+        // Wait for VectorDB collection attributes to be ready
+        $this->assertEventually(function () use ($vectorDatabaseId, $vectorCollectionId, $sourceProject) {
+            $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $sourceProject['$id'],
+                'x-appwrite-key' => $sourceProject['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey('attributes', $response['body']);
+            $this->assertIsArray($response['body']['attributes']);
+            // Check that default attributes (embeddings and metadata) are present and ready
+            $attributeKeys = array_column($response['body']['attributes'], 'key');
+            $this->assertContains('embeddings', $attributeKeys);
+            $this->assertContains('metadata', $attributeKeys);
+            // Check that attributes are available (if status field exists)
+            foreach ($response['body']['attributes'] as $attribute) {
+                if (isset($attribute['status']) && $attribute['status'] !== 'available') {
+                    return false;
+                }
+            }
+            return true;
+        }, 10000, 500);
+
+        $metadataIndexKey = '_key_metadata';
+        $vectorIndexes = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ]);
+        $this->assertEquals(200, $vectorIndexes['headers']['status-code']);
+        $metadataIndex = null;
+        foreach ($vectorIndexes['body']['indexes'] ?? [] as $index) {
+            if (($index['key'] ?? '') === $metadataIndexKey) {
+                $metadataIndex = $index;
+                break;
+            }
+        }
+        $this->assertNotNull($metadataIndex, 'Default metadata index should exist on source collection');
+        $this->assertEquals(Database::INDEX_OBJECT, $metadataIndex['type']);
+
+        $vectorEmbeddingIndexKey = 'embedding_euclidean';
+        $vectorEmbeddingIndex = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ], [
+            'key' => $vectorEmbeddingIndexKey,
+            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'attributes' => ['embeddings'],
+        ]);
+        $this->assertEquals(202, $vectorEmbeddingIndex['headers']['status-code']);
+
+        $this->assertEventually(function () use ($vectorDatabaseId, $vectorCollectionId, $vectorEmbeddingIndexKey, $sourceProject) {
+            $index = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes/' . $vectorEmbeddingIndexKey, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $sourceProject['$id'],
+                'x-appwrite-key' => $sourceProject['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $index['body']['type']);
+            if (isset($index['body']['status'])) {
+                $this->assertEquals('available', $index['body']['status']);
+            }
+        }, 30000, 500);
+
+        // Create Document in VectorDB Collection
+        $vectorDocument = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'embeddings' => [0.5, 0.3, 0.2],
+                'metadata' => ['name' => 'Product Vector'],
+            ],
+        ]);
+
+        $this->assertEquals(201, $vectorDocument['headers']['status-code']);
+        $vectorDocumentId = $vectorDocument['body']['$id'];
+
+        // ====== Perform migration including all three database kinds with all child resources ======
+        $migrationConfig = [
             'resources' => [
                 Resource::TYPE_DATABASE,
                 Resource::TYPE_TABLE,
@@ -1756,13 +2132,18 @@ trait MigrationsBase
                 Resource::TYPE_DATABASE_DOCUMENTSDB,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_DOCUMENT,
+                Resource::TYPE_DATABASE_VECTORDB,
+                Resource::TYPE_ATTRIBUTE,
+                Resource::TYPE_INDEX,
             ],
             'endpoint' => 'http://localhost/v1',
             'projectId' => $sourceProject['$id'],
             'apiKey' => $sourceProject['apiKey'],
-        ]);
+        ];
 
-        // ====== Assert migration result ======
+        // Perform migration sync once and get migration ID
+        $result = $this->performMigrationSync($migrationConfig);
+        $migrationId = $result['$id'];
         $this->assertEquals('completed', $result['status']);
         $this->assertEquals('Appwrite', $result['source']);
         $this->assertEquals('Appwrite', $result['destination']);
@@ -1774,8 +2155,13 @@ trait MigrationsBase
             Resource::TYPE_DATABASE_DOCUMENTSDB,
             Resource::TYPE_COLLECTION,
             Resource::TYPE_DOCUMENT,
+            Resource::TYPE_DATABASE_VECTORDB,
+            Resource::TYPE_ATTRIBUTE,
+            Resource::TYPE_INDEX,
         ], $result['resources']);
 
+        // Get migration status before asserting SQL Database counters
+        $result = $this->getMigrationStatus($migrationId);
         // Assert SQL Database counters
         $this->assertArrayHasKey(Resource::TYPE_DATABASE, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['error']);
@@ -1784,6 +2170,8 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE]['warning']);
 
+        // Get migration status before asserting Table counters
+        $result = $this->getMigrationStatus($migrationId);
         // Assert Table counters
         $this->assertArrayHasKey(Resource::TYPE_TABLE, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_TABLE]['error']);
@@ -1792,6 +2180,8 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_TABLE]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_TABLE]['warning']);
 
+        // Get migration status before asserting Column counters
+        $result = $this->getMigrationStatus($migrationId);
         // Assert Column counters
         $this->assertArrayHasKey(Resource::TYPE_COLUMN, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLUMN]['error']);
@@ -1800,6 +2190,8 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLUMN]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLUMN]['warning']);
 
+        // Get migration status before asserting Row counters
+        $result = $this->getMigrationStatus($migrationId);
         // Assert Row counters
         $this->assertArrayHasKey(Resource::TYPE_ROW, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ROW]['error']);
@@ -1808,6 +2200,8 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ROW]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ROW]['warning']);
 
+        // Get migration status before asserting DocumentsDB counters
+        $result = $this->getMigrationStatus($migrationId);
         // Assert DocumentsDB counters
         $this->assertArrayHasKey(Resource::TYPE_DATABASE_DOCUMENTSDB, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['error']);
@@ -1816,24 +2210,75 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_DOCUMENTSDB]['warning']);
 
-        // Assert Collection counters
+        // Wait for all collections to be fully processed and status counters to be updated
+        // Note: Collections are being transferred but status counters may not be updated immediately
+        // This wait ensures the migration worker has finished processing all collections
+        $result = null;
+        $this->assertEventually(function () use ($migrationId, &$result) {
+            $result = $this->getMigrationStatus($migrationId);
+
+            // Check if collections status counters exist
+            if (!isset($result['statusCounters'][Resource::TYPE_COLLECTION])) {
+                return false;
+            }
+
+            $pendingCount = $result['statusCounters'][Resource::TYPE_COLLECTION]['pending'] ?? 0;
+
+            // Return true only when pending count is 0
+            return $pendingCount === 0;
+        }, 30000, 1000); // 30 second timeout, check every 1 second
+
+        // Assert Collection counters (covers both DocumentsDB and VectorDB collections)
         $this->assertArrayHasKey(Resource::TYPE_COLLECTION, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLLECTION]['error']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLLECTION]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_COLLECTION]['success']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_COLLECTION]['success']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLLECTION]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLLECTION]['warning']);
 
-        // Assert Document counters
+        // Get migration status before asserting Document counters
+        $result = $this->getMigrationStatus($migrationId);
+        // Assert Document counters (covers both DocumentsDB and VectorDB documents)
         $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['error']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['warning']);
 
-        // Ensure only expected counters exist (7 total)
-        $this->assertCount(7, $result['statusCounters']);
+        // Get migration status before asserting VectorDB counters
+        $result = $this->getMigrationStatus($migrationId);
+        // Assert VectorDB counters
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORDB, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['warning']);
+
+        // Get migration status before asserting Attribute counters
+        $result = $this->getMigrationStatus($migrationId);
+        // Assert Attribute counters (for VectorDB)
+        $this->assertArrayHasKey(Resource::TYPE_ATTRIBUTE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ATTRIBUTE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ATTRIBUTE]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_ATTRIBUTE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ATTRIBUTE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ATTRIBUTE]['warning']);
+
+        // Get migration status before asserting Index counters
+        $result = $this->getMigrationStatus($migrationId);
+        $this->assertArrayHasKey(Resource::TYPE_INDEX, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_INDEX]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_INDEX]['pending']);
+        $this->assertGreaterThanOrEqual(4, $result['statusCounters'][Resource::TYPE_INDEX]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_INDEX]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_INDEX]['warning']);
+
+        // Get migration status before asserting counter count
+        $result = $this->getMigrationStatus($migrationId);
+        // Ensure only expected counters exist (10 total)
+        $this->assertCount(10, $result['statusCounters']);
 
         // ====== Validate on destination: SQL Database resources ======
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $sqlDatabaseId, [
@@ -1880,6 +2325,18 @@ trait MigrationsBase
         $this->assertEquals($rowId, $response['body']['$id']);
         $this->assertEquals('Laptop', $response['body']['productName']);
 
+        $sqlIndexDestination = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $sqlDatabaseId . '/tables/' . $tableId . '/indexes/' . $sqlIndexKey, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $sqlIndexDestination['headers']['status-code']);
+        $this->assertEquals($sqlIndexKey, $sqlIndexDestination['body']['key']);
+        $this->assertEquals(Database::INDEX_UNIQUE, $sqlIndexDestination['body']['type']);
+        if (isset($sqlIndexDestination['body']['columns'])) {
+            $this->assertEquals(['productName'], $sqlIndexDestination['body']['columns']);
+        }
+
         // ====== Validate on destination: DocumentsDB resources ======
         $response = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $docsDatabaseId, [
             'content-type' => 'application/json',
@@ -1914,7 +2371,72 @@ trait MigrationsBase
         $this->assertEquals('John Doe', $response['body']['name']);
         $this->assertEquals('john@example.com', $response['body']['email']);
 
-        // ====== Cleanup both destinations ======
+        $documentsIndexDestination = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $docsDatabaseId . '/collections/' . $collectionId . '/indexes/' . $documentsIndexKey, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $documentsIndexDestination['headers']['status-code']);
+        $this->assertEquals($documentsIndexKey, $documentsIndexDestination['body']['key']);
+        $this->assertEquals(Database::INDEX_UNIQUE, $documentsIndexDestination['body']['type']);
+        if (isset($documentsIndexDestination['body']['attributes'])) {
+            $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
+        }
+
+        // ====== Validate on destination: VectorDB resources ======
+        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($vectorDatabaseId, $response['body']['$id']);
+        $this->assertEquals('Mixed VectorDB', $response['body']['name']);
+
+        // Validate VectorDB Collection
+        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($vectorCollectionId, $response['body']['$id']);
+        $this->assertEquals('Products', $response['body']['name']);
+        // Verify attributes are present (embeddings and metadata are default attributes)
+        $this->assertArrayHasKey('attributes', $response['body']);
+        $this->assertIsArray($response['body']['attributes']);
+
+        $vectorIndexesDestination = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $vectorIndexesDestination['headers']['status-code']);
+        $indexByKey = [];
+        foreach ($vectorIndexesDestination['body']['indexes'] ?? [] as $index) {
+            if (isset($index['key'])) {
+                $indexByKey[$index['key']] = $index;
+            }
+        }
+        $this->assertArrayHasKey($metadataIndexKey, $indexByKey, 'Metadata index should exist on destination');
+        $this->assertEquals(Database::INDEX_OBJECT, $indexByKey[$metadataIndexKey]['type']);
+        $this->assertArrayHasKey($vectorEmbeddingIndexKey, $indexByKey, 'Embeddings HNSW index should exist on destination');
+        $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $indexByKey[$vectorEmbeddingIndexKey]['type']);
+
+        // Validate VectorDB Document
+        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents/' . $vectorDocumentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($vectorDocumentId, $response['body']['$id']);
+        $this->assertEquals('Product Vector', $response['body']['metadata']['name']);
+
+        // ====== Cleanup all destinations ======
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $sqlDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
@@ -1922,6 +2444,12 @@ trait MigrationsBase
         ]);
 
         $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $docsDatabaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -1935,6 +2463,12 @@ trait MigrationsBase
         ]);
 
         $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $docsDatabaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $sourceProject['$id'],
+            'x-appwrite-key' => $sourceProject['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],

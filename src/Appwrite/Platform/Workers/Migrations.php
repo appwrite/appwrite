@@ -450,6 +450,7 @@ class Migrations extends Action
     {
         return match ($databaseType) {
             'documentsdb' => $this->project->getAttribute('documentsDatabase'),
+            'vectordb' => $this->project->getAttribute('vectorDatabase'),
             default => $this->project->getAttribute('database'),
         };
     }
