@@ -12176,6 +12176,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -12202,7 +12203,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -12578,6 +12580,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -12604,7 +12607,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -13199,10 +13203,22 @@
                                         "description": "Path to function code in the template repo.",
                                         "x-example": "<ROOT_DIRECTORY>"
                                     },
-                                    "version": {
+                                    "type": {
                                         "type": "string",
-                                        "description": "Version (tag) for the repo linked to the function template.",
-                                        "x-example": "<VERSION>"
+                                        "description": "Type for the reference provided. Can be commit, branch, or tag",
+                                        "x-example": "commit",
+                                        "enum": [
+                                            "commit",
+                                            "branch",
+                                            "tag"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Reference value, can be a commit hash, branch name, or release tag",
+                                        "x-example": "<REFERENCE>"
                                     },
                                     "activate": {
                                         "type": "boolean",
@@ -13214,7 +13230,8 @@
                                     "repository",
                                     "owner",
                                     "rootDirectory",
-                                    "version"
+                                    "type",
+                                    "reference"
                                 ]
                             }
                         }
@@ -21827,6 +21844,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -21853,7 +21871,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -22246,6 +22265,7 @@
                                             "dart-3.3",
                                             "dart-3.5",
                                             "dart-3.8",
+                                            "dart-3.9",
                                             "dotnet-6.0",
                                             "dotnet-7.0",
                                             "dotnet-8.0",
@@ -22272,7 +22292,8 @@
                                             "flutter-3.24",
                                             "flutter-3.27",
                                             "flutter-3.29",
-                                            "flutter-3.32"
+                                            "flutter-3.32",
+                                            "flutter-3.35"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -22830,10 +22851,22 @@
                                         "description": "Path to site code in the template repo.",
                                         "x-example": "<ROOT_DIRECTORY>"
                                     },
-                                    "version": {
+                                    "type": {
                                         "type": "string",
-                                        "description": "Version (tag) for the repo linked to the site template.",
-                                        "x-example": "<VERSION>"
+                                        "description": "Type for the reference provided. Can be commit, branch, or tag",
+                                        "x-example": "branch",
+                                        "enum": [
+                                            "branch",
+                                            "commit",
+                                            "tag"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Reference value, can be a commit hash, branch name, or release tag",
+                                        "x-example": "<REFERENCE>"
                                     },
                                     "activate": {
                                         "type": "boolean",
@@ -22845,7 +22878,8 @@
                                     "repository",
                                     "owner",
                                     "rootDirectory",
-                                    "version"
+                                    "type",
+                                    "reference"
                                 ]
                             }
                         }
