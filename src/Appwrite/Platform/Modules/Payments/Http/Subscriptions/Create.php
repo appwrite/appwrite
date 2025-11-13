@@ -243,13 +243,14 @@ class Create extends Base
             }
 
             // Create or ensure subscription exists in provider
+            $subRef = null;
             try {
                 $subRef = $adapter->ensureSubscription($payer, [
                     'planId' => $planId,
                     'planProviders' => $planProviders,
                     'priceId' => (string) ($selectedPriceId ?? '')
                 ], $state);
-                $providerData = [ (string) $primary => [ 'subscriptionId' => $subRef->externalSubscriptionId ] ];
+                $providerData = [ (string) $primary => [ 'providerSubscriptionId' => $subRef->externalSubscriptionId ] ];
                 $providerData[(string) $primary]['priceId'] = (string) ($selectedPriceId ?? '');
                 $providerData[(string) $primary]['providerPriceId'] = (string) $providerPlanPriceId;
                 // Use status from provider if available
@@ -269,6 +270,7 @@ class Create extends Base
 
         $subscription = new Document([
             'subscriptionId' => ID::unique(),
+            'providerSubscriptionId' => $subRef->externalSubscriptionId,
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
             'actorType' => $actorType,

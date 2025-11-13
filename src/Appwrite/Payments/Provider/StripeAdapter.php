@@ -658,7 +658,15 @@ class StripeAdapter implements Adapter
             $subData = $this->decodeResponse($response);
             error_log("subData: " . print_r($subData, true));
 
-            $sub = Authorization::skip(fn () => $this->dbForPlatform->getDocument('payments_subscriptions', $subData['id']));
+            error_log("stripeSubId: " . $stripeSubId);
+
+            // PROBLEM: Always returns null, figure out why.
+            $sub = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
+                Query::equal("providerSubscriptionId", [$stripeSubId]),
+            ]));
+
+            
+            error_log("sub final: " . print_r($sub, true));
 
             // TODO: Move subscriptionId to a different column called providerSubscriptionId to be able to proceed with this.
             $sub['status'] = $subData['status'];
