@@ -27,7 +27,7 @@ class XList extends Base
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/payments/subscriptions')
+            ->setHttpPath('/v1/payments/subscriptions/search')
             ->groups(['api', 'payments'])
             ->desc('List subscriptions')
             ->label('scope', 'payments.read')

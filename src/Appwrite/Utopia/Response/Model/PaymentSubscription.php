@@ -57,6 +57,18 @@ class PaymentSubscription extends Model
                 'description' => 'Embedded plan model.',
                 'default' => new \stdClass(),
                 'example' => new \stdClass(),
+            ])
+            ->addRule('features', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Feature quotas for the subscribed plan.',
+                'default' => [],
+                'example' => [],
+            ])
+            ->addRule('subscription', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Raw subscription document data.',
+                'default' => new \stdClass(),
+                'example' => new \stdClass(),
             ]);
     }
 
