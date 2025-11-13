@@ -329,7 +329,31 @@ trait SitesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
+
         return $template;
+    }
+
+    protected function helperGetLatestCommit(string $owner, string $repository): ?string
+    {
+        $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'User-Agent: Appwrite',
+            'Accept: application/vnd.github.v3+json'
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            $commitData = json_decode($response, true);
+            if (isset($commitData['sha'])) {
+                return $commitData['sha'];
+            }
+        }
+
+        return null;
     }
 
     protected function deleteSite(string $siteId): mixed
