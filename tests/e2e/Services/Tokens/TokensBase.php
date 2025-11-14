@@ -94,7 +94,7 @@ trait TokensBase
         $this->assertEquals(401, $failedPreview['body']['code']);
         $this->assertEquals(401, $failedPreview['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedPreview['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedPreview['body']['message']);
+        $this->assertEquals('No permissions provided for action \'read\'', $failedPreview['body']['message']);
 
         // Extended file preview. Should fail as an anonymous user with no form of any access to the file.
         $failedCustomPreview = $this->client->call(
@@ -113,7 +113,7 @@ trait TokensBase
         $this->assertEquals(401, $failedCustomPreview['body']['code']);
         $this->assertEquals(401, $failedCustomPreview['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedCustomPreview['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedCustomPreview['body']['message']);
+        $this->assertEquals('No permissions provided for action \'read\'', $failedCustomPreview['body']['message']);
 
         // File view. Should fail as an anonymous user with no form of any access to the file.
         $failedView = $this->client->call(
@@ -124,7 +124,7 @@ trait TokensBase
         $this->assertEquals(401, $failedView['body']['code']);
         $this->assertEquals(401, $failedView['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedView['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedView['body']['message']);
+        $this->assertEquals('No permissions provided for action \'read\'', $failedView['body']['message']);
 
         // File download. Should fail as an anonymous user with no form of any access to the file.
         $failedDownload = $this->client->call(
@@ -135,7 +135,7 @@ trait TokensBase
         $this->assertEquals(401, $failedDownload['body']['code']);
         $this->assertEquals(401, $failedDownload['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedDownload['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedDownload['body']['message']);
+        $this->assertEquals('No permissions provided for action \'read\'', $failedDownload['body']['message']);
 
         return $data;
     }

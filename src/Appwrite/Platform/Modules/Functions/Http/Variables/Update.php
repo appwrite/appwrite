@@ -62,6 +62,7 @@ class Update extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -73,7 +74,8 @@ class Update extends Base
         ?bool $secret,
         Response $response,
         Database $dbForProject,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -110,7 +112,7 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     }

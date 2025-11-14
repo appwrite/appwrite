@@ -72,6 +72,7 @@ class Upsert extends DocumentUpsert
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

@@ -40,8 +40,6 @@ Config::setParam('runtimes', (new Runtimes('v5'))->getAll(supported: false));
 // require controllers after overwriting runtimes
 require_once __DIR__ . '/controllers/general.php';
 
-Authorization::disable();
-
 CLI::setResource('register', fn () => $register);
 
 CLI::setResource('cache', function ($pools) {
@@ -59,7 +57,13 @@ CLI::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-CLI::setResource('dbForPlatform', function ($pools, $cache) {
+CLI::setResource('authorization', function () {
+    $authorization = new Authorization();
+    $authorization->disable();
+    return $authorization;
+}, []);
+
+CLI::setResource('dbForPlatform', function ($pools, $cache, $authorization) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -73,6 +77,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
             $dbForPlatform = new Database($adapter, $cache);
 
             $dbForPlatform
+                ->setAuthorization($authorization)
                 ->setNamespace('_console')
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', 'console');
@@ -97,7 +102,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
     }
 
     return $dbForPlatform;
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'authorization']);
 
 CLI::setResource('console', function () {
     return new Document(Config::getParam('console'));
@@ -108,10 +113,10 @@ CLI::setResource(
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
 );
 
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, $authorization) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -144,6 +149,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
+
         $databases[$dsn->getHost()] = $database;
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -160,17 +166,18 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
         }
 
         $database
+            ->setAuthorization($authorization)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
         return $database;
     };
-}, ['pools', 'dbForPlatform', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache', 'authorization']);
 
-CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+CLI::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
 
-    return function (?Document $project = null) use ($pools, $cache, $database) {
+    return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant((int)$project->getSequence());
             return $database;
@@ -180,6 +187,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database = new Database($adapter, $cache);
 
         $database
+            ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
@@ -192,7 +200,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         return $database;
     };
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'authorization']);
 CLI::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
