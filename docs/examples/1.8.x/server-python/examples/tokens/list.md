@@ -11,5 +11,6 @@ tokens = Tokens(client)
 result = tokens.list(
     bucket_id = '<BUCKET_ID>',
     file_id = '<FILE_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

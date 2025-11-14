@@ -12,5 +12,6 @@ val tokens = Tokens(client)
 val response = tokens.list(
     bucketId = "<BUCKET_ID>",
     fileId = "<FILE_ID>",
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    total = false // optional
 )

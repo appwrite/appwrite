@@ -11,5 +11,6 @@ messaging = Messaging.new(client)
 
 result = messaging.list_provider_logs(
     provider_id: '<PROVIDER_ID>',
-    queries: [] # optional
+    queries: [], # optional
+    total: false # optional
 )

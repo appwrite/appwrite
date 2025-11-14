@@ -264,11 +264,20 @@ class Swagger2 extends Format
                     }
 
                     foreach ($methodObj->getResponses() as $response) {
-                        /** @var Response $response */
-                        if (\is_array($response->getModel())) {
+                        /** @var Response|array $response */
+                        $responseModel = $response->getModel();
+                        if (\is_array($responseModel)) {
+                            foreach ($responseModel as $modelName) {
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $modelName) {
+                                        $usedModels[] = $modelName;
+                                        break;
+                                    }
+                                }
+                            }
                             $additionalMethod['responses'][] = [
                                 'code' => $response->getCode(),
-                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
+                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $responseModel)
                             ];
                         } else {
                             $responseData = [
@@ -277,7 +286,13 @@ class Swagger2 extends Format
 
                             // lets not assume stuff here!
                             if ($response->getCode() !== 204) {
-                                $responseData['model'] = '#/definitions/' . $response->getModel();
+                                $responseData['model'] = '#/definitions/' . $responseModel;
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $responseModel) {
+                                        $usedModels[] = $responseModel;
+                                        break;
+                                    }
+                                }
                             }
 
                             $additionalMethod['responses'][] = $responseData;

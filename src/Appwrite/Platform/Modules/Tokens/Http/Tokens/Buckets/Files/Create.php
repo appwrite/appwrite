@@ -61,7 +61,7 @@ class Create extends Action
         ))
         ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
         ->param('fileId', '', new UID(), 'File unique ID.')
-        ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
+        ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
@@ -70,7 +70,6 @@ class Create extends Action
 
     public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents): void
     {
-
         /**
          * @var Document $bucket
          * @var Document $file

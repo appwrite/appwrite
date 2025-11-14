@@ -11,4 +11,5 @@ DeploymentList result = await functions.listDeployments(
     functionId: '<FUNCTION_ID>',
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

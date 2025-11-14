@@ -16,4 +16,5 @@ service := account.New(client)
 
 response, error := service.ListLogs(
     account.WithListLogsQueries([]interface{}{}),
+    account.WithListLogsTotal(false),
 )

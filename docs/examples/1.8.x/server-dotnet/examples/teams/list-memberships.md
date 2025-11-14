@@ -12,5 +12,6 @@ Teams teams = new Teams(client);
 MembershipList result = await teams.ListMemberships(
     teamId: "<TEAM_ID>",
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

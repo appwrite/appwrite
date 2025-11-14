@@ -12,5 +12,6 @@ Users users = new Users(client);
 MembershipList result = await users.ListMemberships(
     userId: "<USER_ID>",
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

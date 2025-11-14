@@ -10,4 +10,5 @@ Messaging messaging = Messaging(client);
 LogList result = await messaging.listProviderLogs(
     providerId: '<PROVIDER_ID>',
     queries: [], // (optional)
+    total: false, // (optional)
 );

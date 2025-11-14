@@ -25,6 +25,13 @@ trait MessagingBase
                 'apiKey' => 'my-apikey',
                 'from' => 'sender-email@my-domain.com',
             ],
+            'resend' => [
+                'providerId' => ID::unique(),
+                'name' => 'Resend1',
+                'apiKey' => 'my-apikey',
+                'fromName' => 'Sender Name',
+                'fromEmail' => 'sender-email@my-domain.com',
+            ],
             'mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
@@ -132,6 +139,10 @@ trait MessagingBase
                 'name' => 'Sengrid2',
                 'apiKey' => 'my-apikey',
             ],
+            'resend' => [
+                'name' => 'Resend2',
+                'apiKey' => 'my-apikey',
+            ],
             'mailgun' => [
                 'name' => 'Mailgun2',
                 'apiKey' => 'my-apikey',
@@ -210,7 +221,7 @@ trait MessagingBase
             $providers[$index] = $response['body'];
         }
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/mailgun/' . $providers[1]['$id'], [
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/mailgun/' . $providers[2]['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -226,7 +237,7 @@ trait MessagingBase
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
 
-        $providers[1] = $response['body'];
+        $providers[2] = $response['body'];
 
         return $providers;
     }
@@ -269,7 +280,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(11, \count($response['body']['providers']));
+        $this->assertEquals(12, \count($response['body']['providers']));
 
         return $providers;
     }
@@ -632,6 +643,24 @@ trait MessagingBase
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals(1, $response['body']['total']);
         }
+
+        /**
+         * Test for SUCCESS with total=false
+         */
+        $subscribersWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $subscribersWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($subscribersWithIncludeTotalFalse['body']);
+        $this->assertIsArray($subscribersWithIncludeTotalFalse['body']['subscribers']);
+        $this->assertIsInt($subscribersWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $subscribersWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($subscribersWithIncludeTotalFalse['body']['subscribers']));
 
         return $data;
     }

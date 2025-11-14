@@ -18,4 +18,5 @@ response, error := service.ListAttributes(
     "<DATABASE_ID>",
     "<COLLECTION_ID>",
     databases.WithListAttributesQueries([]interface{}{}),
+    databases.WithListAttributesTotal(false),
 )

@@ -8,7 +8,8 @@ const teams = new Teams(client);
 
 const result = await teams.list({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

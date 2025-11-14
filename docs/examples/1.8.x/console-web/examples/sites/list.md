@@ -8,7 +8,8 @@ const sites = new Sites(client);
 
 const result = await sites.list({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

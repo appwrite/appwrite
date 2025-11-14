@@ -12,6 +12,7 @@ teams.listMemberships(
     "<TEAM_ID>", // teamId 
     listOf(), // queries (optional)
     "<SEARCH>", // search (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

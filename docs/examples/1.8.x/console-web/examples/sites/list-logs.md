@@ -8,7 +8,8 @@ const sites = new Sites(client);
 
 const result = await sites.listLogs({
     siteId: '<SITE_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 });
 
 console.log(result);

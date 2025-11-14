@@ -12,5 +12,6 @@ val messaging = Messaging(client)
 val response = messaging.listSubscribers(
     topicId = "<TOPIC_ID>",
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )

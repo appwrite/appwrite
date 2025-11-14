@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Health;
-use Appwrite\Enums\;
+use Appwrite\Enums\Name;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -12,6 +12,6 @@ $client = (new Client())
 $health = new Health($client);
 
 $result = $health->getFailedJobs(
-    name: ::V1DATABASE(),
+    name: Name::V1DATABASE(),
     threshold: null // optional
 );

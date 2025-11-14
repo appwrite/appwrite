@@ -9,7 +9,8 @@ const tokens = new Tokens(client);
 const result = await tokens.list({
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 });
 
 console.log(result);

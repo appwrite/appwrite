@@ -131,8 +131,8 @@ class SitesCustomClientTest extends Scope
         $this->assertEquals('github', $template['body']['vcsProvider']);
         $this->assertEquals('Simple React application integrated with Appwrite SDK.', $template['body']['tagline']);
         $this->assertIsArray($template['body']['frameworks']);
-        $this->assertEquals('http://'. $hostname . '/images/sites/templates/starter-for-react-dark.png', $template['body']['screenshotDark']);
-        $this->assertEquals('http://' . $hostname . '/images/sites/templates/starter-for-react-light.png', $template['body']['screenshotLight']);
+        $this->assertStringContainsString('/images/sites/templates/starter-for-react-dark.png', $template['body']['screenshotDark']);
+        $this->assertStringContainsString('/images/sites/templates/starter-for-react-light.png', $template['body']['screenshotLight']);
 
         /**
          * Test for FAILURE

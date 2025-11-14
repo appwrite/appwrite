@@ -12,5 +12,6 @@ $messaging = new Messaging($client);
 
 $result = $messaging->listTopics(
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

@@ -12,5 +12,6 @@ Databases databases = new Databases(client);
 IndexList result = await databases.ListIndexes(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    total: false // optional
 );

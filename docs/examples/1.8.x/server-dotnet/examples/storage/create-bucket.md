@@ -13,7 +13,7 @@ Storage storage = new Storage(client);
 Bucket result = await storage.CreateBucket(
     bucketId: "<BUCKET_ID>",
     name: "<NAME>",
-    permissions: ["read("any")"], // optional
+    permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     fileSecurity: false, // optional
     enabled: false, // optional
     maximumFileSize: 1, // optional

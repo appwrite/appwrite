@@ -149,6 +149,7 @@ class Update extends Action
                     ]));
 
                     $state = [];
+                    $collections = [];
 
                     foreach ($operations as $operation) {
                         $databaseInternalId = $operation['databaseInternalId'];
@@ -158,6 +159,21 @@ class Update extends Action
                         $createdAt = new \DateTime($operation['$createdAt']);
                         $action = $operation['action'];
                         $data = $operation['data'];
+
+                        if ($data instanceof Document) {
+                            $data = $data->getArrayCopy();
+                        }
+
+                        if (!isset($collections[$collectionId])) {
+                            $collections[$collectionId] = Authorization::skip(
+                                fn () => $dbForProject->getCollection($collectionId)
+                            );
+                        }
+                        $collection = $collections[$collectionId];
+
+                        if (\is_array($data) && !empty($data)) {
+                            $data = $this->parseOperators($data, $collection);
+                        }
 
                         if ($action === 'delete' && $documentId && empty($data)) {
                             $doc = $dbForProject->getDocument($collectionId, $documentId);
@@ -170,10 +186,6 @@ class Update extends Action
                         if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
                             $totalOperations++;
                             $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + 1;
-                        }
-
-                        if ($data instanceof Document) {
-                            $data = $data->getArrayCopy();
                         }
 
                         switch ($action) {

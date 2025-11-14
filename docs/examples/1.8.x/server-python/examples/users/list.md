@@ -10,5 +10,6 @@ users = Users(client)
 
 result = users.list(
     queries = [], # optional
-    search = '<SEARCH>' # optional
+    search = '<SEARCH>', # optional
+    total = False # optional
 )

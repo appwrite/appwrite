@@ -48,13 +48,18 @@ class SDKs extends Action
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
             ->param('release', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we create releases?', optional: true)
             ->param('commit', null, new Nullable(new WhiteList(['yes', 'no'])), 'Actually create releases (yes) or dry-run (no)?', optional: true)
+            ->param('sdks', null, new Nullable(new Text(256)), 'Selected SDKs', optional: true)
             ->callback($this->action(...));
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit): void
+    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
-        $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
-        $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        if (!$sdks) {
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
+            $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        } else {
+            $sdks = explode(',', $sdks);
+        }
         $version ??= Console::confirm('Choose an Appwrite version');
 
         $createRelease = ($release === 'yes');
@@ -104,12 +109,12 @@ class SDKs extends Action
 
         $platforms = Config::getParam('platforms');
         foreach ($platforms as $key => $platform) {
-            if ($selectedPlatform !== $key && $selectedPlatform !== '*') {
+            if ($selectedPlatform !== $key && $selectedPlatform !== '*' && ($sdks === null)) {
                 continue;
             }
 
             foreach ($platform['sdks'] as $language) {
-                if ($selectedSDK !== $language['key'] && $selectedSDK !== '*') {
+                if ($selectedSDK !== $language['key'] && $selectedSDK !== '*' && ($sdks === null || !\in_array($language['key'], $sdks))) {
                     continue;
                 }
 
@@ -422,16 +427,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
                         git init && \
+                        git config core.ignorecase false && \
+                        git config pull.rebase false && \
                         git remote add origin ' . $gitUrl . ' && \
                         git fetch origin && \
-                        git checkout ' . $repoBranch . ' || git checkout -b ' . $repoBranch . ' && \
+                        (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
                         git pull origin ' . $repoBranch . ' && \
-                        git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
-                        git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
-                        git pull origin ' . $gitBranch . ' && \
-                        find . -mindepth 1 ! -path "./.git*" -delete && \
+                        (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
+                        (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
+                        git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true && \
+                        (test -d .github && cp -r .github /tmp/.github-backup-$$ || true) && \
+                        git rm -rf --cached . && \
+                        git clean -fdx -e .git -e .github && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
-                        git add . && \
+                        (test -d /tmp/.github-backup-$$ && cp -r /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
+                        git add -A && \
                         git commit -m "' . $message . '" && \
                         git push -u origin ' . $gitBranch . '
                     ');
@@ -472,38 +482,60 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             $errorMessage = implode("\n", $prOutput);
                             if (strpos($errorMessage, 'already exists') !== false) {
                                 Console::warning("Pull request already exists for {$language['name']} SDK, updating title and body...");
-
-                                $updateCommand = 'cd ' . $target . ' && \
-                                    gh pr edit "' . $gitBranch . '" \
+                                $prNumberCommand = 'cd ' . $target . ' && \
+                                    gh pr list \
                                     --repo "' . $repoName . '" \
-                                    --title "' . $prTitle . '" \
-                                    --body "' . $prBody . '" \
+                                    --head "' . $gitBranch . '" \
+                                    --json number \
+                                    --jq ".[0].number" \
                                     2>&1';
 
-                                $updateOutput = [];
-                                $updateReturnCode = 0;
-                                \exec($updateCommand, $updateOutput, $updateReturnCode);
+                                $prNumberOutput = [];
+                                $prNumberReturnCode = 0;
+                                \exec($prNumberCommand, $prNumberOutput, $prNumberReturnCode);
 
-                                if ($updateReturnCode === 0) {
-                                    Console::success("Successfully updated pull request for {$language['name']} SDK");
+                                if ($prNumberReturnCode === 0 && !empty($prNumberOutput[0])) {
+                                    $prNumber = trim($prNumberOutput[0]);
 
-                                    $prUrlCommand = 'cd ' . $target . ' && \
-                                        gh pr view "' . $gitBranch . '" \
-                                        --repo "' . $repoName . '" \
-                                        --json url \
-                                        --jq .url \
+                                    // Use API directly to update PR to avoid deprecated projectCards field
+                                    $updateCommand = 'cd ' . $target . ' && \
+                                        gh api \
+                                        --method PATCH \
+                                        -H "Accept: application/vnd.github+json" \
+                                        -H "X-GitHub-Api-Version: 2022-11-28" \
+                                        /repos/' . $repoName . '/pulls/' . $prNumber . ' \
+                                        -f title="' . $prTitle . '" \
+                                        -f body="' . $prBody . '" \
                                         2>&1';
 
-                                    $prUrlOutput = [];
-                                    $prUrlReturnCode = 0;
-                                    \exec($prUrlCommand, $prUrlOutput, $prUrlReturnCode);
+                                    $updateOutput = [];
+                                    $updateReturnCode = 0;
+                                    \exec($updateCommand, $updateOutput, $updateReturnCode);
 
-                                    if ($prUrlReturnCode === 0 && !empty($prUrlOutput)) {
-                                        $prUrls[$language['name']] = $prUrlOutput[0];
+                                    if ($updateReturnCode === 0) {
+                                        Console::success("Successfully updated pull request for {$language['name']} SDK");
+
+                                        $prUrlCommand = 'cd ' . $target . ' && \
+                                            gh pr list \
+                                            --repo "' . $repoName . '" \
+                                            --head "' . $gitBranch . '" \
+                                            --json url \
+                                            --jq ".[0].url" \
+                                            2>&1';
+
+                                        $prUrlOutput = [];
+                                        $prUrlReturnCode = 0;
+                                        \exec($prUrlCommand, $prUrlOutput, $prUrlReturnCode);
+
+                                        if ($prUrlReturnCode === 0 && !empty($prUrlOutput)) {
+                                            $prUrls[$language['name']] = trim($prUrlOutput[0]);
+                                        }
+                                    } else {
+                                        $updateErrorMessage = implode("\n", $updateOutput);
+                                        Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
                                     }
                                 } else {
-                                    $updateErrorMessage = implode("\n", $updateOutput);
-                                    Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
+                                    Console::error("Failed to get PR number for {$language['name']} SDK");
                                 }
                             } else {
                                 Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);

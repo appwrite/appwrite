@@ -10,4 +10,5 @@ Messaging messaging = Messaging(client);
 LogList result = await messaging.listMessageLogs(
     messageId: '<MESSAGE_ID>',
     queries: [], // (optional)
+    total: false, // (optional)
 );

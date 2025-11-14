@@ -11,5 +11,6 @@ val functions = Functions(client)
 
 val response = functions.list(
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )

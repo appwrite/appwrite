@@ -13,5 +13,6 @@ RowList result = await tablesDB.ListRows(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     queries: new List<string>(), // optional
-    transactionId: "<TRANSACTION_ID>" // optional
+    transactionId: "<TRANSACTION_ID>", // optional
+    total: false // optional
 );

@@ -10,7 +10,8 @@ const result = await tablesDB.listRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     queries: [], // optional
-    transactionId: '<TRANSACTION_ID>' // optional
+    transactionId: '<TRANSACTION_ID>', // optional
+    total: false // optional
 });
 
 console.log(result);

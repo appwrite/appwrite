@@ -10,5 +10,6 @@ messaging = Messaging(client)
 
 result = messaging.list_messages(
     queries = [], # optional
-    search = '<SEARCH>' # optional
+    search = '<SEARCH>', # optional
+    total = False # optional
 )

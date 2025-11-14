@@ -1,5 +1,10 @@
 # Change log
 
+## 0.18.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
 ## 0.17.1
 
 * Add transaction support for Databases and TablesDB
