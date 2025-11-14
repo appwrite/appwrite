@@ -2,11 +2,11 @@
 
 namespace Tests\E2E\Services\Databases\TablesDB\Transactions;
 
-use Appwrite\Operator;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Operator;
 use Utopia\Database\Query;
 
 trait TransactionsBase
@@ -5646,7 +5646,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'items' => Operator::arrayRemove('item2')
+                'items' => Operator::arrayRemove('item2')->toString()
             ]
         ]);
 
@@ -5659,7 +5659,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'items' => Operator::arrayInsert(2, 'newItem')
+                'items' => Operator::arrayInsert(2, 'newItem')->toString()
             ]
         ]);
 
@@ -5774,7 +5774,7 @@ trait TransactionsBase
                     'tableId' => $tableId,
                     'rowId' => 'doc1',
                     'data' => [
-                        'tags' => Operator::arrayRemove('javascript')
+                        'tags' => Operator::arrayRemove('javascript')->toString()
                     ]
                 ],
                 [
@@ -5783,7 +5783,7 @@ trait TransactionsBase
                     'tableId' => $tableId,
                     'rowId' => 'doc1',
                     'data' => [
-                        'tags' => Operator::arrayAppend(['go', 'rust'])
+                        'tags' => Operator::arrayAppend(['go', 'rust'])->toString()
                     ]
                 ]
             ]
@@ -5906,7 +5906,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'list1' => Operator::arrayPrepend(['z'])
+                'list1' => Operator::arrayPrepend(['z'])->toString()
             ]
         ]);
 
@@ -5917,7 +5917,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'list2' => Operator::arrayAppend(['w'])
+                'list2' => Operator::arrayAppend(['w'])->toString()
             ]
         ]);
 
@@ -5928,7 +5928,7 @@ trait TransactionsBase
         ], $this->getHeaders()), [
             'transactionId' => $transactionId,
             'data' => [
-                'list3' => Operator::arrayRemove('3')
+                'list3' => Operator::arrayRemove('3')->toString()
             ]
         ]);
 
