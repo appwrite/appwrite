@@ -743,10 +743,10 @@ class Deletes extends Action
         Console::info("Deleting CSV export files older than " . $oneWeekAgo);
 
         $this->deleteByGroup('bucket_' . $bucket->getSequence(), [
-            Query::select([...$this->selects, '$createdAt', 'filename', 'path']),
+            Query::select([...$this->selects, '$createdAt', 'name', 'path']),
             Query::equal('bucketId', ['default']),
-            Query::endsWith('filename', ['.csv']),
             Query::createdBefore($oneWeekAgo),
+            Query::endsWith('name', ['.csv']),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {
