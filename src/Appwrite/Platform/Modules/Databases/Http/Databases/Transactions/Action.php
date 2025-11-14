@@ -2,16 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Utopia\Platform\Action as UtopiaAction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * The current API context (either 'table' or 'collection').
      */
     private ?string $context = COLLECTIONS;
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = TABLES;

@@ -1,5 +1,9 @@
 # Change Log
 
+## 11.1.1
+
+* Fix duplicate `enums` during type generation by prefixing them with table name. For example, `enum MyEnum` will now be generated as `enum MyTableMyEnum` to avoid conflicts.
+
 ## 11.1.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance

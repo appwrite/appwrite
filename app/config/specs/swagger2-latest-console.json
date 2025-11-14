@@ -7168,6 +7168,7 @@
                                     "description": "An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -7350,6 +7351,7 @@
                                     "description": "An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -7625,7 +7627,8 @@
                                     "type": "boolean",
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -7743,7 +7746,8 @@
                                     "type": "string",
                                     "description": "New attribute key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -7965,7 +7969,8 @@
                                     "type": "string",
                                     "description": "New attribute key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -8069,7 +8074,8 @@
                                     "type": "string",
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -8187,7 +8193,8 @@
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -8300,7 +8307,8 @@
                                     "type": "string",
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": "<DEFAULT>"
+                                    "x-example": "<DEFAULT>",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -8428,7 +8436,8 @@
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -8533,19 +8542,22 @@
                                     "type": "number",
                                     "description": "Minimum value.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "number",
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -8656,13 +8668,15 @@
                                     "type": "number",
                                     "description": "Minimum value.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "number",
@@ -8675,7 +8689,8 @@
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -8779,19 +8794,22 @@
                                     "type": "integer",
                                     "description": "Minimum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "integer",
                                     "description": "Maximum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "integer",
                                     "description": "Default value. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -8902,13 +8920,15 @@
                                     "type": "integer",
                                     "description": "Minimum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "integer",
                                     "description": "Maximum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "integer",
@@ -8921,7 +8941,8 @@
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -9025,7 +9046,8 @@
                                     "type": "string",
                                     "description": "Default value. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -9143,7 +9165,8 @@
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -9360,7 +9383,8 @@
                                     "type": "string",
                                     "description": "New attribute key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -9576,7 +9600,8 @@
                                     "type": "string",
                                     "description": "New attribute key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -9792,7 +9817,8 @@
                                     "type": "string",
                                     "description": "New attribute key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -9909,13 +9935,15 @@
                                     "type": "string",
                                     "description": "Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "twoWayKey": {
                                     "type": "string",
                                     "description": "Two Way Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "onDelete": {
                                     "type": "string",
@@ -10038,7 +10066,8 @@
                                     "type": "string",
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": "<DEFAULT>"
+                                    "x-example": "<DEFAULT>",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -10163,13 +10192,15 @@
                                     "type": "integer",
                                     "description": "Maximum size of the string attribute.",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "x-nullable": true
                                 },
                                 "newKey": {
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -10273,7 +10304,8 @@
                                     "type": "string",
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -10391,7 +10423,8 @@
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -10679,13 +10712,15 @@
                                         "setNull"
                                     ],
                                     "x-enum-name": "RelationMutate",
-                                    "x-enum-keys": []
+                                    "x-enum-keys": [],
+                                    "x-nullable": true
                                 },
                                 "newKey": {
                                     "type": "string",
                                     "description": "New Attribute Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -10955,6 +10990,7 @@
                                     "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -10972,7 +11008,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -11101,7 +11138,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -11206,7 +11244,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -11302,7 +11341,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -11542,6 +11582,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -11550,7 +11591,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -11656,6 +11698,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -11664,7 +11707,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -11755,7 +11799,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -11957,13 +12002,15 @@
                                     "type": "number",
                                     "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -12075,13 +12122,15 @@
                                     "type": "number",
                                     "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -13041,6 +13090,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -13067,7 +13117,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -13683,6 +13734,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -13709,7 +13761,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -14302,11 +14355,24 @@
                                     "default": null,
                                     "x-example": "<ROOT_DIRECTORY>"
                                 },
-                                "version": {
+                                "type": {
                                     "type": "string",
-                                    "description": "Version (tag) for the repo linked to the function template.",
+                                    "description": "Type for the reference provided. Can be commit, branch, or tag",
                                     "default": null,
-                                    "x-example": "<VERSION>"
+                                    "x-example": "commit",
+                                    "enum": [
+                                        "commit",
+                                        "branch",
+                                        "tag"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
+                                },
+                                "reference": {
+                                    "type": "string",
+                                    "description": "Reference value, can be a commit hash, branch name, or release tag",
+                                    "default": null,
+                                    "x-example": "<REFERENCE>"
                                 },
                                 "activate": {
                                     "type": "boolean",
@@ -14319,7 +14385,8 @@
                                 "repository",
                                 "owner",
                                 "rootDirectory",
-                                "version"
+                                "type",
+                                "reference"
                             ]
                         }
                     }
@@ -14896,7 +14963,8 @@
                                     "type": "string",
                                     "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
                                     "default": null,
-                                    "x-example": "<SCHEDULED_AT>"
+                                    "x-example": "<SCHEDULED_AT>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -15409,13 +15477,15 @@
                                     "type": "string",
                                     "description": "Variable value. Max length: 8192 chars.",
                                     "default": null,
-                                    "x-example": "<VALUE>"
+                                    "x-example": "<VALUE>",
+                                    "x-nullable": true
                                 },
                                 "secret": {
                                     "type": "boolean",
                                     "description": "Secret variables can be updated or deleted, but only functions can read them during build and runtime.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -17532,7 +17602,8 @@
                                     "type": "string",
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -17615,6 +17686,7 @@
                                     "description": "List of Topic IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17624,6 +17696,7 @@
                                     "description": "List of User IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17633,6 +17706,7 @@
                                     "description": "List of Targets IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17641,31 +17715,36 @@
                                     "type": "string",
                                     "description": "Email Subject.",
                                     "default": null,
-                                    "x-example": "<SUBJECT>"
+                                    "x-example": "<SUBJECT>",
+                                    "x-nullable": true
                                 },
                                 "content": {
                                     "type": "string",
                                     "description": "Email Content.",
                                     "default": null,
-                                    "x-example": "<CONTENT>"
+                                    "x-example": "<CONTENT>",
+                                    "x-nullable": true
                                 },
                                 "draft": {
                                     "type": "boolean",
                                     "description": "Is message a draft",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "html": {
                                     "type": "boolean",
                                     "description": "Is content of type HTML",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "cc": {
                                     "type": "array",
                                     "description": "Array of target IDs to be added as CC.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17675,6 +17754,7 @@
                                     "description": "Array of target IDs to be added as BCC.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17683,13 +17763,15 @@
                                     "type": "string",
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "attachments": {
                                     "type": "array",
                                     "description": "Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17806,7 +17888,8 @@
                                     "type": "object",
                                     "description": "Additional key-value pair data for push notification.",
                                     "default": {},
-                                    "x-example": "{}"
+                                    "x-example": "{}",
+                                    "x-nullable": true
                                 },
                                 "action": {
                                     "type": "string",
@@ -17860,7 +17943,8 @@
                                     "type": "string",
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "contentAvailable": {
                                     "type": "boolean",
@@ -17965,6 +18049,7 @@
                                     "description": "List of Topic IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17974,6 +18059,7 @@
                                     "description": "List of User IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17983,6 +18069,7 @@
                                     "description": "List of Targets IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -17991,85 +18078,99 @@
                                     "type": "string",
                                     "description": "Title for push notification.",
                                     "default": null,
-                                    "x-example": "<TITLE>"
+                                    "x-example": "<TITLE>",
+                                    "x-nullable": true
                                 },
                                 "body": {
                                     "type": "string",
                                     "description": "Body for push notification.",
                                     "default": null,
-                                    "x-example": "<BODY>"
+                                    "x-example": "<BODY>",
+                                    "x-nullable": true
                                 },
                                 "data": {
                                     "type": "object",
                                     "description": "Additional Data for push notification.",
                                     "default": {},
-                                    "x-example": "{}"
+                                    "x-example": "{}",
+                                    "x-nullable": true
                                 },
                                 "action": {
                                     "type": "string",
                                     "description": "Action for push notification.",
                                     "default": null,
-                                    "x-example": "<ACTION>"
+                                    "x-example": "<ACTION>",
+                                    "x-nullable": true
                                 },
                                 "image": {
                                     "type": "string",
                                     "description": "Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.",
                                     "default": null,
-                                    "x-example": "<ID1:ID2>"
+                                    "x-example": "<ID1:ID2>",
+                                    "x-nullable": true
                                 },
                                 "icon": {
                                     "type": "string",
                                     "description": "Icon for push notification. Available only for Android and Web platforms.",
                                     "default": null,
-                                    "x-example": "<ICON>"
+                                    "x-example": "<ICON>",
+                                    "x-nullable": true
                                 },
                                 "sound": {
                                     "type": "string",
                                     "description": "Sound for push notification. Available only for Android and iOS platforms.",
                                     "default": null,
-                                    "x-example": "<SOUND>"
+                                    "x-example": "<SOUND>",
+                                    "x-nullable": true
                                 },
                                 "color": {
                                     "type": "string",
                                     "description": "Color for push notification. Available only for Android platforms.",
                                     "default": null,
-                                    "x-example": "<COLOR>"
+                                    "x-example": "<COLOR>",
+                                    "x-nullable": true
                                 },
                                 "tag": {
                                     "type": "string",
                                     "description": "Tag for push notification. Available only for Android platforms.",
                                     "default": null,
-                                    "x-example": "<TAG>"
+                                    "x-example": "<TAG>",
+                                    "x-nullable": true
                                 },
                                 "badge": {
                                     "type": "integer",
                                     "description": "Badge for push notification. Available only for iOS platforms.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "draft": {
                                     "type": "boolean",
                                     "description": "Is message a draft",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "scheduledAt": {
                                     "type": "string",
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "contentAvailable": {
                                     "type": "boolean",
                                     "description": "If set to true, the notification will be delivered in the background. Available only for iOS Platform.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "critical": {
                                     "type": "boolean",
                                     "description": "If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "priority": {
                                     "type": "string",
@@ -18081,7 +18182,8 @@
                                         "high"
                                     ],
                                     "x-enum-name": "MessagePriority",
-                                    "x-enum-keys": []
+                                    "x-enum-keys": [],
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -18263,7 +18365,8 @@
                                     "type": "string",
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -18411,6 +18514,7 @@
                                     "description": "List of Topic IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -18420,6 +18524,7 @@
                                     "description": "List of User IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -18429,6 +18534,7 @@
                                     "description": "List of Targets IDs.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -18437,19 +18543,22 @@
                                     "type": "string",
                                     "description": "Email Content.",
                                     "default": null,
-                                    "x-example": "<CONTENT>"
+                                    "x-example": "<CONTENT>",
+                                    "x-nullable": true
                                 },
                                 "draft": {
                                     "type": "boolean",
                                     "description": "Is message a draft",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "scheduledAt": {
                                     "type": "string",
                                     "description": "Scheduled delivery time for message in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -18989,7 +19098,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -19144,7 +19254,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "authKey": {
                                     "type": "string",
@@ -19174,7 +19285,8 @@
                                     "type": "boolean",
                                     "description": "Use APNS sandbox environment.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -19317,13 +19429,15 @@
                                     "type": "object",
                                     "description": "FCM service account JSON.",
                                     "default": {},
-                                    "x-example": "{}"
+                                    "x-example": "{}",
+                                    "x-nullable": true
                                 },
                                 "enabled": {
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -19470,13 +19584,15 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "serviceAccountJSON": {
                                     "type": "object",
                                     "description": "FCM service account JSON.",
                                     "default": {},
-                                    "x-example": "{}"
+                                    "x-example": "{}",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -19569,7 +19685,8 @@
                                     "type": "boolean",
                                     "description": "Set as EU region.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "fromName": {
                                     "type": "string",
@@ -19599,7 +19716,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -19698,13 +19816,15 @@
                                     "type": "boolean",
                                     "description": "Set as EU region.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "enabled": {
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "fromName": {
                                     "type": "string",
@@ -19827,7 +19947,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -19914,7 +20035,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "templateId": {
                                     "type": "string",
@@ -20043,7 +20165,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -20130,7 +20253,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "apiKey": {
                                     "type": "string",
@@ -20271,7 +20395,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -20358,7 +20483,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "apiKey": {
                                     "type": "string",
@@ -20626,7 +20752,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -20800,7 +20927,8 @@
                                     "type": "integer",
                                     "description": "SMTP port.",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "x-nullable": true
                                 },
                                 "username": {
                                     "type": "string",
@@ -20831,7 +20959,8 @@
                                     "type": "boolean",
                                     "description": "Enable SMTP AutoTLS feature.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "mailer": {
                                     "type": "string",
@@ -20867,7 +20996,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -20966,7 +21096,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -21053,7 +21184,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "customerId": {
                                     "type": "string",
@@ -21170,7 +21302,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -21257,7 +21390,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "username": {
                                     "type": "string",
@@ -21374,7 +21508,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -21461,7 +21596,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "accountSid": {
                                     "type": "string",
@@ -21578,7 +21714,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -21665,7 +21802,8 @@
                                     "type": "boolean",
                                     "description": "Set as enabled.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "apiKey": {
                                     "type": "string",
@@ -22265,13 +22403,15 @@
                                     "type": "string",
                                     "description": "Topic Name.",
                                     "default": null,
-                                    "x-example": "<NAME>"
+                                    "x-example": "<NAME>",
+                                    "x-nullable": true
                                 },
                                 "subscribe": {
                                     "type": "array",
                                     "description": "An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https:\/\/appwrite.io\/docs\/permissions#permission-roles). Maximum of 100 roles are allowed, each 64 characters long.",
                                     "default": null,
                                     "x-example": "[\"any\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -23001,7 +23141,7 @@
                 "tags": [
                     "migrations"
                 ],
-                "description": "Export documents to a CSV file from your Appwrite database. This endpoint allows you to export documents to a CSV file stored in an Appwrite Storage bucket.",
+                "description": "Export documents to a CSV file from your Appwrite database. This endpoint allows you to export documents to a CSV file stored in a secure internal bucket. You'll receive an email with a download link when the export is complete.",
                 "responses": {
                     "202": {
                         "description": "Migration",
@@ -23048,12 +23188,6 @@
                                     "description": "Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.",
                                     "default": null,
                                     "x-example": "<ID1:ID2>"
-                                },
-                                "bucketId": {
-                                    "type": "string",
-                                    "description": "Storage bucket unique ID where the exported CSV will be stored.",
-                                    "default": null,
-                                    "x-example": "<BUCKET_ID>"
                                 },
                                 "filename": {
                                     "type": "string",
@@ -23112,7 +23246,6 @@
                             },
                             "required": [
                                 "resourceId",
-                                "bucketId",
                                 "filename"
                             ]
                         }
@@ -24332,13 +24465,15 @@
                                     "type": "string",
                                     "description": "Variable value. Max length: 8192 chars.",
                                     "default": null,
-                                    "x-example": "<VALUE>"
+                                    "x-example": "<VALUE>",
+                                    "x-nullable": true
                                 },
                                 "secret": {
                                     "type": "boolean",
                                     "description": "Secret variables can be updated or deleted, but only projects can read them during build and runtime.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -26651,6 +26786,7 @@
                                     "description": "Key scopes list. Maximum of 100 scopes are allowed.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -26659,7 +26795,8 @@
                                     "type": "string",
                                     "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -26817,6 +26954,7 @@
                                     "description": "Key scopes list. Maximum of 100 events are allowed.",
                                     "default": null,
                                     "x-example": null,
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -26825,7 +26963,8 @@
                                     "type": "string",
                                     "description": "Expiration time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -27015,19 +27154,22 @@
                                     "type": "string",
                                     "description": "Provider app ID. Max length: 256 chars.",
                                     "default": null,
-                                    "x-example": "<APP_ID>"
+                                    "x-example": "<APP_ID>",
+                                    "x-nullable": true
                                 },
                                 "secret": {
                                     "type": "string",
                                     "description": "Provider secret key. Max length: 512 chars.",
                                     "default": null,
-                                    "x-example": "<SECRET>"
+                                    "x-example": "<SECRET>",
+                                    "x-nullable": true
                                 },
                                 "enabled": {
                                     "type": "boolean",
                                     "description": "Provider status. Set to 'false' to disable new session creation.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -31058,6 +31200,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -31084,7 +31227,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -31708,6 +31852,7 @@
                                         "dart-3.3",
                                         "dart-3.5",
                                         "dart-3.8",
+                                        "dart-3.9",
                                         "dotnet-6.0",
                                         "dotnet-7.0",
                                         "dotnet-8.0",
@@ -31734,7 +31879,8 @@
                                         "flutter-3.24",
                                         "flutter-3.27",
                                         "flutter-3.29",
-                                        "flutter-3.32"
+                                        "flutter-3.32",
+                                        "flutter-3.35"
                                     ],
                                     "x-enum-name": null,
                                     "x-enum-keys": []
@@ -32284,11 +32430,24 @@
                                     "default": null,
                                     "x-example": "<ROOT_DIRECTORY>"
                                 },
-                                "version": {
+                                "type": {
                                     "type": "string",
-                                    "description": "Version (tag) for the repo linked to the site template.",
+                                    "description": "Type for the reference provided. Can be commit, branch, or tag",
                                     "default": null,
-                                    "x-example": "<VERSION>"
+                                    "x-example": "branch",
+                                    "enum": [
+                                        "branch",
+                                        "commit",
+                                        "tag"
+                                    ],
+                                    "x-enum-name": null,
+                                    "x-enum-keys": []
+                                },
+                                "reference": {
+                                    "type": "string",
+                                    "description": "Reference value, can be a commit hash, branch name, or release tag",
+                                    "default": null,
+                                    "x-example": "<REFERENCE>"
                                 },
                                 "activate": {
                                     "type": "boolean",
@@ -32301,7 +32460,8 @@
                                 "repository",
                                 "owner",
                                 "rootDirectory",
-                                "version"
+                                "type",
+                                "reference"
                             ]
                         }
                     }
@@ -33273,13 +33433,15 @@
                                     "type": "string",
                                     "description": "Variable value. Max length: 8192 chars.",
                                     "default": null,
-                                    "x-example": "<VALUE>"
+                                    "x-example": "<VALUE>",
+                                    "x-nullable": true
                                 },
                                 "secret": {
                                     "type": "boolean",
                                     "description": "Secret variables can be updated or deleted, but only sites can read them during build and runtime.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -33504,6 +33666,7 @@
                                     "description": "An array of permission strings. By default, no user is granted with any permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -33702,6 +33865,7 @@
                                     "description": "An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -34146,13 +34310,15 @@
                                     "type": "string",
                                     "description": "Name of the file",
                                     "default": null,
-                                    "x-example": "<NAME>"
+                                    "x-example": "<NAME>",
+                                    "x-nullable": true
                                 },
                                 "permissions": {
                                     "type": "array",
                                     "description": "An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -35796,6 +35962,7 @@
                                     "description": "An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -35976,6 +36143,7 @@
                                     "description": "An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -36248,7 +36416,8 @@
                                     "type": "boolean",
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": false
+                                    "x-example": false,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -36365,7 +36534,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -36585,7 +36755,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -36688,7 +36859,8 @@
                                     "type": "string",
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -36805,7 +36977,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -36917,7 +37090,8 @@
                                     "type": "string",
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": "<DEFAULT>"
+                                    "x-example": "<DEFAULT>",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -37044,7 +37218,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -37148,19 +37323,22 @@
                                     "type": "number",
                                     "description": "Minimum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "number",
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -37270,13 +37448,15 @@
                                     "type": "number",
                                     "description": "Minimum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "number",
@@ -37289,7 +37469,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -37392,19 +37573,22 @@
                                     "type": "integer",
                                     "description": "Minimum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "integer",
                                     "description": "Maximum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "integer",
                                     "description": "Default value. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -37514,13 +37698,15 @@
                                     "type": "integer",
                                     "description": "Minimum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "max": {
                                     "type": "integer",
                                     "description": "Maximum value",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "default": {
                                     "type": "integer",
@@ -37533,7 +37719,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -37636,7 +37823,8 @@
                                     "type": "string",
                                     "description": "Default value. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -37753,7 +37941,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -37968,7 +38157,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -38182,7 +38372,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -38396,7 +38587,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -38512,13 +38704,15 @@
                                     "type": "string",
                                     "description": "Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "twoWayKey": {
                                     "type": "string",
                                     "description": "Two Way Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "onDelete": {
                                     "type": "string",
@@ -38640,7 +38834,8 @@
                                     "type": "string",
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": "<DEFAULT>"
+                                    "x-example": "<DEFAULT>",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -38764,13 +38959,15 @@
                                     "type": "integer",
                                     "description": "Maximum size of the string column.",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "x-nullable": true
                                 },
                                 "newKey": {
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -38873,7 +39070,8 @@
                                     "type": "string",
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "x-nullable": true
                                 },
                                 "array": {
                                     "type": "boolean",
@@ -38990,7 +39188,8 @@
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -39275,13 +39474,15 @@
                                         "setNull"
                                     ],
                                     "x-enum-name": "RelationMutate",
-                                    "x-enum-keys": []
+                                    "x-enum-keys": [],
+                                    "x-nullable": true
                                 },
                                 "newKey": {
                                     "type": "string",
                                     "description": "New Column Key.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -39993,6 +40194,7 @@
                                     "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -40010,7 +40212,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -40134,7 +40337,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -40238,7 +40442,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -40333,7 +40538,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -40566,6 +40772,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -40574,7 +40781,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -40676,6 +40884,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -40684,7 +40893,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -40774,7 +40984,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -40974,13 +41185,15 @@
                                     "type": "number",
                                     "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -41091,13 +41304,15 @@
                                     "type": "number",
                                     "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -42915,13 +43130,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "x-nullable": true
                                 },
                                 "phone": {
                                     "type": "string",
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": null,
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "x-nullable": true
                                 },
                                 "password": {
                                     "type": "string",
