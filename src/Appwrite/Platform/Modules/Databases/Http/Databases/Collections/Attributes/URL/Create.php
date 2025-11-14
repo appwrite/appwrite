@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\URL;
 
 class Create extends Action
@@ -64,7 +65,7 @@ class Create extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+            ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')

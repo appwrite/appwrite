@@ -66,7 +66,7 @@ class Update extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, fn (Database $dbForProject) => new Nullable(new DatetimeValidator($dbForProject->getAdapter()->getMinDateTime(), $dbForProject->getAdapter()->getMaxDateTime())), 'Default value for attribute when not provided. Cannot be set when attribute is required.', injections: ['dbForProject'])
-            ->param('newKey', null, new Key(), 'New attribute key.', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New attribute key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

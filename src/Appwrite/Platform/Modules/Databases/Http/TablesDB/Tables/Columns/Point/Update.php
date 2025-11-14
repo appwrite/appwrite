@@ -59,7 +59,7 @@ class Update extends PointUpdate
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POINT)), 'Default value for column when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when column is required.', true)
-            ->param('newKey', null, new Key(), 'New Column Key.', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

@@ -309,20 +309,23 @@ class Builds extends Action
                 // Non-VCS + Template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
-                $templateVersion = $template->getAttribute('version', '');
+                $templateReferenceType = $template->getAttribute('referenceType', '');
+                $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateVersion)) {
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateReferenceType) && !empty($templateReferenceValue)) {
                     $stdout = '';
                     $stderr = '';
 
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '-template';
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
+
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
+
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {

@@ -66,7 +66,7 @@ class Update extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POINT)), 'Default value for attribute when not provided, array of two numbers [longitude, latitude], representing a single coordinate. Cannot be set when attribute is required.', true)
-            ->param('newKey', null, new Key(), 'New attribute key.', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New attribute key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

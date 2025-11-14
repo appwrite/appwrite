@@ -236,7 +236,9 @@ App::init()
     ->inject('authorization')
     ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
-
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted' && str_starts_with($route->getPath(), '/v1/backups')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database Backups are available on Appwrite Cloud');
+        }
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
