@@ -153,6 +153,8 @@ class Increment extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually incrementing
             $groupId = $this->getGroupId();
             $mockDocument = new Document([

@@ -151,6 +151,8 @@ class Delete extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually deleting documents
             $response->dynamic(new Document([
                 $this->getSDKGroup() => [],
