@@ -1187,6 +1187,7 @@ App::error()
         $file = $error->getFile();
         $line = $error->getLine();
         $trace = $error->getTrace();
+        $trace = $error->getTrace();
 
         if (php_sapi_name() === 'cli') {
             Console::error('[Error] Timestamp: ' . date('c', time()));

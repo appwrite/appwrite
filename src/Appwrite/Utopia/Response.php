@@ -25,11 +25,13 @@ use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeObject;
 use Appwrite\Utopia\Response\Model\AttributePoint;
 use Appwrite\Utopia\Response\Model\AttributePolygon;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
 use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeURL;
+use Appwrite\Utopia\Response\Model\AttributeVector;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
@@ -61,6 +63,7 @@ use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
+use Appwrite\Utopia\Response\Model\Embedding;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -142,6 +145,7 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
+use Appwrite\Utopia\Response\Model\VectorDBCollection;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
@@ -186,6 +190,10 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_VECTORDB_COLLECTION = 'vectordbCollection';
+    public const MODEL_VECTORDB_COLLECTION_LIST = 'vectordbCollectionList';
+    public const MODEL_EMBEDDING = 'embedding';
+    public const MODEL_EMBEDDING_LIST = 'embeddingList';
     public const MODEL_TABLE = 'table';
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
@@ -213,6 +221,8 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
     public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
     public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
+    public const MODEL_ATTRIBUTE_OBJECT = 'attributeObject';
+    public const MODEL_ATTRIBUTE_VECTOR = 'attributeVector';
 
     // Database Columns
     public const MODEL_COLUMN = 'column';
@@ -438,6 +448,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Tables List', self::MODEL_TABLE_LIST, 'tables', self::MODEL_TABLE))
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('VectorDB Collections List', self::MODEL_VECTORDB_COLLECTION_LIST, 'collections', self::MODEL_VECTORDB_COLLECTION))
             ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Column Indexes List', self::MODEL_COLUMN_INDEX_LIST, 'indexes', self::MODEL_COLUMN_INDEX))
@@ -488,10 +499,13 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
             ->setModel(new BaseList('VCS Content List', self::MODEL_VCS_CONTENT_LIST, 'contents', self::MODEL_VCS_CONTENT))
+            ->setModel(new BaseList('Embedding list', self::MODEL_EMBEDDING_LIST, 'embeddings', self::MODEL_EMBEDDING))
             // Entities
             ->setModel(new Database())
+            ->setModel(new Embedding())
             // Collection API Models
             ->setModel(new Collection())
+            ->setModel(new VectorDBCollection())
             ->setModel(new Attribute())
             ->setModel(new AttributeList())
             ->setModel(new AttributeString())
@@ -507,6 +521,8 @@ class Response extends SwooleResponse
             ->setModel(new AttributePoint())
             ->setModel(new AttributeLine())
             ->setModel(new AttributePolygon())
+            ->setModel(new AttributeObject())
+            ->setModel(new AttributeVector())
             // Table API Models
             ->setModel(new Table())
             ->setModel(new Column())
@@ -865,7 +881,11 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
+            ->send((function (array $payload) {
+                $func = 'yaml_emit';
+                $encoding = \defined('YAML_UTF8_ENCODING') ? \constant('YAML_UTF8_ENCODING') : 0;
+                return \call_user_func($func, $payload, $encoding);
+            })($data));
     }
 
     /**
