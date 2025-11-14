@@ -6400,6 +6400,7 @@
                                     "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -6417,7 +6418,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -6657,6 +6659,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -6665,7 +6668,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             },
                             "required": [
@@ -6771,6 +6775,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -6779,7 +6784,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -6870,7 +6876,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -6982,13 +6989,15 @@
                                     "type": "number",
                                     "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -7100,13 +7109,15 @@
                                     "type": "number",
                                     "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -7305,7 +7316,8 @@
                                     "type": "string",
                                     "description": "Scheduled execution time in [ISO 8601](https:\/\/www.iso.org\/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.",
                                     "default": null,
-                                    "x-example": "<SCHEDULED_AT>"
+                                    "x-example": "<SCHEDULED_AT>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -8417,13 +8429,15 @@
                                     "type": "string",
                                     "description": "Name of the file",
                                     "default": null,
-                                    "x-example": "<NAME>"
+                                    "x-example": "<NAME>",
+                                    "x-nullable": true
                                 },
                                 "permissions": {
                                     "type": "array",
                                     "description": "An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -9516,6 +9530,7 @@
                                     "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -9533,7 +9548,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -9766,6 +9782,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -9774,7 +9791,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -9876,6 +9894,7 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
+                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
                                     }
@@ -9884,7 +9903,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -9974,7 +9994,8 @@
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -10085,13 +10106,15 @@
                                     "type": "number",
                                     "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -10202,13 +10225,15 @@
                                     "type": "number",
                                     "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
                                     "description": "Transaction ID for staging the operation.",
                                     "default": null,
-                                    "x-example": "<TRANSACTION_ID>"
+                                    "x-example": "<TRANSACTION_ID>",
+                                    "x-nullable": true
                                 }
                             }
                         }
