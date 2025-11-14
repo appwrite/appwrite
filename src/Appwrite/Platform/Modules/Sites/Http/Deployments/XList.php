@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -17,12 +17,11 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-class XList extends Base
+class XList extends Action
 {
     use HTTP;
 

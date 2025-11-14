@@ -38,6 +38,8 @@ class Maintenance extends Action
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
+        $intervalRuleVerification = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL_RULE_VERIFICATION', '60'); // 1 minute
+
         $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
@@ -59,44 +61,52 @@ class Maintenance extends Action
 
         Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
 
-        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
-            $time = DatabaseDateTime::now();
+        \go(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates, $delay) {
+            Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
+                $time = DatabaseDateTime::now();
 
-            Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
+                Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
 
-            // Iterate through project only if it was accessed in last 30 days
-            $dateInterval  = DateInterval::createFromDateString('30 days');
-            $before30days = (new DateTime())->sub($dateInterval);
+                // Iterate through project only if it was accessed in last 30 days
+                $dateInterval  = DateInterval::createFromDateString('30 days');
+                $before30days = (new DateTime())->sub($dateInterval);
 
-            $dbForPlatform->foreach(
-                'projects',
-                function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
-                    $queueForDeletes
-                        ->setType(DELETE_TYPE_MAINTENANCE)
-                        ->setProject($project)
-                        ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                        ->trigger();
-                },
-                [
-                    Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                    Query::limit(100),
-                    Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                    Query::orderAsc('teamInternalId'),
-                ]
-            );
+                $dbForPlatform->foreach(
+                    'projects',
+                    function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
+                        $queueForDeletes
+                            ->setType(DELETE_TYPE_MAINTENANCE)
+                            ->setProject($project)
+                            ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                            ->trigger();
+                    },
+                    [
+                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                        Query::limit(100),
+                        Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
+                        Query::orderAsc('teamInternalId'),
+                    ]
+                );
 
-            $queueForDeletes
-                ->setType(DELETE_TYPE_MAINTENANCE)
-                ->setProject($console)
-                ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
-                ->trigger();
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_MAINTENANCE)
+                    ->setProject($console)
+                    ->setUsageRetentionHourlyDateTime(DatabaseDateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                    ->trigger();
 
-            $this->notifyDeleteConnections($queueForDeletes);
-            $this->renewCertificates($dbForPlatform, $queueForCertificates);
-            $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
-            $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-            $this->notifyDeleteCSVExports($queueForDeletes);
-        }, $interval, $delay);
+                $this->notifyDeleteConnections($queueForDeletes);
+                $this->renewCertificates($dbForPlatform, $queueForCertificates);
+                $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
+                $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
+                $this->notifyDeleteCSVExports($queueForDeletes);
+            }, $interval, $delay);
+        });
+
+        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalRuleVerification) {
+            Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
+                $this->checkRuleVerification($dbForPlatform, $queueForCertificates);
+            }, $intervalRuleVerification);
+        });
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void
@@ -105,6 +115,38 @@ class Maintenance extends Action
             ->setType(DELETE_TYPE_REALTIME)
             ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -60))
             ->trigger();
+    }
+
+    private function checkRuleVerification(Database $dbForPlatform, Certificate $queueForCertificate): void
+    {
+        $time = DatabaseDateTime::now();
+
+        $oldestToCheck = new DateTime('-3 days');
+
+        $rules = $dbForPlatform->find('rules', [
+            Query::createdAfter(DatabaseDateTime::format($oldestToCheck)), // max 3 days old
+            Query::equal('status', [RULE_STATUS_VERIFICATION_FAILED]), // not verified yet
+            Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
+            Query::limit(30), // Reasonable pagination limit, processable within a minute
+        ]);
+
+        if (\count($rules) > 0) {
+            Console::info("[{$time}] Found " . \count($rules) . " rules for verification, scheduling jobs.");
+
+            foreach ($rules as $rule) {
+                $queueForCertificate
+                    ->setDomain(new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]))
+                    ->setAction(Certificate::ACTION_VERIFICATION)
+                    ->trigger();
+            }
+        } else {
+            // Silenced because interval makes it too often
+            // Console::log("[{$time}] No rules for checking verification status.");
+        }
     }
 
     private function notifyDeleteCSVExports(Delete $queueForDeletes): void
@@ -145,8 +187,10 @@ class Maintenance extends Action
 
                 $queueForCertificate
                     ->setDomain(new Document([
-                        'domain' => $certificate->getAttribute('domain')
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                     ]))
+                    ->setAction(Certificate::ACTION_GENERATION)
                     ->trigger();
             }
         } else {

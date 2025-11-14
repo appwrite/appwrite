@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Sites\Http\Sites\Deployment;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -14,10 +14,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 

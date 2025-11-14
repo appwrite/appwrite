@@ -9,7 +9,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -29,7 +29,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Request;
 use Utopia\System\System;
@@ -40,7 +39,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-class Create extends Base
+class Create extends Action
 {
     use HTTP;
 
@@ -371,7 +370,7 @@ class Create extends Base
                         'projectId' => $project->getId(),
                         'projectInternalId' => $project->getSequence(),
                         'domain' => $domain,
-                        'status' => 'verified',
+                        'status' => RULE_STATUS_SUCCESSFUL,
                         'type' => 'deployment',
                         'trigger' => 'manual',
                         'deploymentId' => !isset($deployment) || $deployment->isEmpty() ? '' : $deployment->getId(),
