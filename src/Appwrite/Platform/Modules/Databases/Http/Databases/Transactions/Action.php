@@ -12,7 +12,7 @@ abstract class Action extends DatabasesAction
     private ?string $context = COLLECTIONS;
     private ?string $databaseType = TABLESDB;
 
-    protected function getDatabaseType(): string
+    public function getDatabaseType(): string
     {
         return $this->databaseType;
     }
