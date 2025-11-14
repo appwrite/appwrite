@@ -18,6 +18,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 
 class Create extends Action
@@ -65,9 +66,9 @@ class Create extends Action
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('min', null, new FloatValidator(), 'Minimum value.', true)
-            ->param('max', null, new FloatValidator(), 'Maximum value.', true)
-            ->param('default', null, new FloatValidator(), 'Default value. Cannot be set when required.', true)
+            ->param('min', null, new Nullable(new FloatValidator()), 'Minimum value.', true)
+            ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value.', true)
+            ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')

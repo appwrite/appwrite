@@ -8,6 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let sessionList = try await users.listSessions(
-    userId: "<USER_ID>"
+    userId: "<USER_ID>",
+    total: false // optional
 )
 

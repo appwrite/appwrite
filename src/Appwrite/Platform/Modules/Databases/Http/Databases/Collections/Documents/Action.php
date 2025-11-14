@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action as AppwriteAction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-abstract class Action extends AppwriteAction
+abstract class Action extends DatabasesAction
 {
     /**
      * @var string|null The current context (either 'row' or 'document')
@@ -21,7 +21,7 @@ abstract class Action extends AppwriteAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): AppwriteAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;

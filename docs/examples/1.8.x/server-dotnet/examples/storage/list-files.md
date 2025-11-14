@@ -12,5 +12,6 @@ Storage storage = new Storage(client);
 FileList result = await storage.ListFiles(
     bucketId: "<BUCKET_ID>",
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Utopia\Platform\Action as UtopiaAction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 
-abstract class Action extends UtopiaAction
+abstract class Action extends DatabasesAction
 {
     /**
      * The current API context (either 'table' or 'collection').
@@ -12,12 +12,12 @@ abstract class Action extends UtopiaAction
     private ?string $context = COLLECTIONS;
     private ?string $databaseType = TABLESDB;
 
-    protected function getDatabaseType(): string
+    public function getDatabaseType(): string
     {
         return $this->databaseType;
     }
 
-    public function setHttpPath(string $path): UtopiaAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         switch (true) {
             // TODO: set the getDatabaseType() from each database group instead of path matching

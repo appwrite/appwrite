@@ -9,6 +9,7 @@ let teams = Teams(client)
 let membershipList = try await teams.listMemberships(
     teamId: "<TEAM_ID>",
     queries: [], // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 )
 

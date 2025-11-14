@@ -13,6 +13,7 @@ databases.listDocuments(
     "<COLLECTION_ID>", // collectionId 
     listOf(), // queries (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

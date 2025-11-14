@@ -9,4 +9,5 @@ Users users = Users(client);
 
 SessionList result = await users.listSessions(
     userId: '<USER_ID>',
+    total: false, // (optional)
 );

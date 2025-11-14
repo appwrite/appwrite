@@ -9,7 +9,8 @@ const databases = new Databases(client);
 const result = await databases.listCollections({
     databaseId: '<DATABASE_ID>',
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

@@ -11,5 +11,6 @@ sites = Sites(client)
 result = sites.list_deployments(
     site_id = '<SITE_ID>',
     queries = [], # optional
-    search = '<SEARCH>' # optional
+    search = '<SEARCH>', # optional
+    total = False # optional
 )
