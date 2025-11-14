@@ -179,6 +179,9 @@ class Deletes extends Action
             case DELETE_TYPE_SESSION_TARGETS:
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
                 break;
+            case DELETE_TYPE_CSV_EXPORTS:
+                $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
+                break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -718,6 +721,41 @@ class Deletes extends Action
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForProject);
+    }
+
+    /**
+     * @param Database $dbForPlatform
+     * @param Device $deviceForFiles
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteOldCSVExports(Database $dbForPlatform, Device $deviceForFiles): void
+    {
+        $bucket = $dbForPlatform->getDocument('buckets', 'default');
+
+        if ($bucket->isEmpty()) {
+            Console::warning('Default bucket not found, skipping CSV export cleanup');
+            return;
+        }
+
+        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7); // 1 week
+
+        Console::info("Deleting CSV export files older than " . $oneWeekAgo);
+
+        $this->deleteByGroup('bucket_' . $bucket->getSequence(), [
+            Query::select([...$this->selects, '$createdAt', 'filename', 'path']),
+            Query::equal('bucketId', ['default']),
+            Query::endsWith('filename', ['.csv']),
+            Query::createdBefore($oneWeekAgo),
+            Query::orderDesc('$createdAt'),
+            Query::orderDesc(),
+        ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {
+            $path = $file->getAttribute('path');
+            if ($deviceForFiles->exists($path)) {
+                $deviceForFiles->delete($path);
+                Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
+            }
+        });
     }
 
     /**
