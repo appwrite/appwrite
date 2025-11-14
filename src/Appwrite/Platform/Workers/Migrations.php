@@ -546,7 +546,7 @@ class Migrations extends Action
      *
      * @param bool $success Whether the export was successful
      * @param Document $project
-     * @param string $user The user who triggered the operation
+     * @param Document $user The user who triggered the operation
      * @param array $options Migration options
      * @param Mail $queueForMails
      * @param string $downloadUrl Download URL for successful exports
