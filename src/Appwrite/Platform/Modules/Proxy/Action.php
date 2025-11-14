@@ -20,18 +20,6 @@ class Action extends PlatformAction
     }
 
     /**
-     * Parse DNS servers from environment variable
-     *
-     * @return array<string>
-     */
-    protected function getDNSServers(): array
-    {
-        $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
-        $servers = \array_map('trim', \explode(',', $dnsEnv));
-        return \array_filter($servers, fn ($server) => !empty($server));
-    }
-
-    /**
      * Verify or re-verify a rule
      *
      * @param Document $rule Rule to verify
@@ -43,7 +31,9 @@ class Action extends PlatformAction
     public function verifyRule(Document $rule, ?Log $log = null, ?string $verificationDomainAPI = null, ?string $verificationDomainFunction = null): void
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
-        $dnsServers = $this->getDNSServers();
+        $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
+        $servers = \array_map('trim', \explode(',', $dnsEnv));
+        $dnsServers = \array_filter($servers, fn ($server) => !empty($server));
 
         $domain = new Domain($rule->getAttribute('domain', ''));
 

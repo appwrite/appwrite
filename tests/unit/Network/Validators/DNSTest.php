@@ -10,7 +10,7 @@ class DNSTest extends TestCase
 {
     public function testSingleDNSServer(): void
     {
-        $validator = new DNS('appwrite.io', Record::TYPE_CNAME, '8.8.8.8');
+        $validator = new DNS('appwrite.io', Record::TYPE_CNAME, ['8.8.8.8']);
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
