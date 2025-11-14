@@ -9,5 +9,6 @@ const users = new sdk.Users(client);
 
 const result = await users.listIdentities({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });

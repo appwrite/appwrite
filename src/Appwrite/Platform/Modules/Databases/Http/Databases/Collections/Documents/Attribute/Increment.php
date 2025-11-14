@@ -25,6 +25,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Numeric;
 
 class Increment extends Action
@@ -77,8 +78,8 @@ class Increment extends Action
             ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
             ->param('attribute', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute key.', false, ['dbForProject'])
             ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
-            ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('max', null, new Nullable(new Numeric()), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -152,6 +153,8 @@ class Increment extends Action
                     1
                 );
             });
+
+            $queueForEvents->reset();
 
             // Return successful response without actually incrementing
             $groupId = $this->getGroupId();

@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.10.4 AS final
+FROM appwrite/base:0.10.5 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -27,8 +27,6 @@ RUN \
   if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
   fi
-
-RUN apk add libwebp
 
 WORKDIR /usr/src/code
 
@@ -100,6 +98,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 # Enable Extensions
 RUN if [ "$DEBUG" = "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
 RUN if [ "$DEBUG" = "true" ]; then mkdir -p /tmp/xdebug; fi
+RUN if [ "$DEBUG" = "true" ]; then apk add --update --no-cache openssh-client github-cli; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20230831/xdebug.so; fi
 

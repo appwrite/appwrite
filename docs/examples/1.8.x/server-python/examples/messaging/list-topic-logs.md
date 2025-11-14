@@ -10,5 +10,6 @@ messaging = Messaging(client)
 
 result = messaging.list_topic_logs(
     topic_id = '<TOPIC_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

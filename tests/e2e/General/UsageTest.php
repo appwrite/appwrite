@@ -29,6 +29,7 @@ class UsageTest extends Scope
         FunctionsBase::createVariable insteadof SitesBase;
         FunctionsBase::getVariable insteadof SitesBase;
         FunctionsBase::listVariables insteadof SitesBase;
+        FunctionsBase::helperGetLatestCommit insteadof SitesBase;
         FunctionsBase::updateVariable insteadof SitesBase;
         FunctionsBase::deleteVariable insteadof SitesBase;
         FunctionsBase::getDeployment insteadof SitesBase;

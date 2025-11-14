@@ -54,7 +54,20 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         };
 
         if (array_key_exists($replace, $params)) {
-            $label = \str_replace($find, $params[$replace], $label);
+            $replacement = $params[$replace];
+            // Convert to string if it's not already a string
+            if (!is_string($replacement)) {
+                if (is_array($replacement)) {
+                    $replacement = json_encode($replacement);
+                } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
+                    $replacement = (string)$replacement;
+                } elseif (is_scalar($replacement)) {
+                    $replacement = (string)$replacement;
+                } else {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
+                }
+            }
+            $label = \str_replace($find, $replacement, $label);
         }
     }
     return $label;
@@ -221,7 +234,9 @@ App::init()
     ->inject('apiKey')
     ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
         $route = $utopia->getRoute();
-
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted' && str_starts_with($route->getPath(), '/v1/backups')) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database Backups are available on Appwrite Cloud');
+        }
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
@@ -582,6 +597,10 @@ App::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
+                $usageMetric = $route->getLabel('usage.metric', null);
+                if ($usageMetric === METRIC_AVATARS_SCREENSHOTS_GENERATED) {
+                    $queueForStatsUsage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
+                }
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
