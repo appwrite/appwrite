@@ -108,7 +108,9 @@ class Update extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $data = $this->parseOperators($data, $collection);
+        if ($transactionId === null) {
+            $data = $this->parseOperators($data, $collection);
+        }
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
@@ -174,6 +176,8 @@ class Update extends Action
                     'operations',
                 );
             });
+
+            $queueForEvents->reset();
 
             // Return successful response without actually updating documents
             $response->dynamic(new Document([

@@ -120,7 +120,9 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $data = $this->parseOperators($data, $collection);
+        if ($transactionId === null) {
+            $data = $this->parseOperators($data, $collection);
+        }
 
         $allowedPermissions = [
             Database::PERMISSION_READ,
@@ -303,6 +305,8 @@ class Upsert extends Action
                     1
                 );
             });
+
+            $queueForEvents->reset();
 
             // Return successful response without actually upserting document
             $groupId = $this->getGroupId();

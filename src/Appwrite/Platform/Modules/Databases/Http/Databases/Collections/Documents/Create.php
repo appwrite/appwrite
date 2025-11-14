@@ -419,6 +419,8 @@ class Create extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually creating documents
             if ($isBulk) {
                 $response->dynamic(new Document([

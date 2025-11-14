@@ -1475,13 +1475,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->inject('response')
     ->inject('request')
     ->inject('dbForProject')
+    ->inject('dbForPlatform')
     ->inject('project')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('authorization')
-    ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Document $project, string $mode, Device $deviceForFiles, Authorization $authorization) {
-        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-
+    ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Database $dbForPlatform, Document $project, string $mode, Device $deviceForFiles, Authorization $authorization) {
         $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
         try {
@@ -1498,15 +1497,18 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
+        $isInternal = $decoded['internal'] ?? false;
+        $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
+
         $isAPIKey = Auth::isAppUser($authorization->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
@@ -1514,7 +1516,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
         $mimes = Config::getParam('storage-mimes');
 
         $path = $file->getAttribute('path', '');
-
         if (!$deviceForFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }

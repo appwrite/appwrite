@@ -462,7 +462,6 @@ App::post('/v1/migrations/csv/exports')
         ]
     ))
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.')
-    ->param('bucketId', '', new UID(), 'Storage bucket unique ID where the exported CSV will be stored.')
     ->param('filename', '', new Text(255), 'The name of the file to be created for the export, excluding the .csv extension.')
     ->param('columns', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.', true)
     ->param('queries', [], new ArrayList(new Text(0)), 'Array of query strings generated using the Query class provided by the SDK to filter documents to export. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -474,13 +473,13 @@ App::post('/v1/migrations/csv/exports')
     ->inject('user')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('dbForPlatform')
     ->inject('authorization')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
     ->action(function (
         string $resourceId,
-        string $bucketId,
         string $filename,
         array $columns,
         array $queries,
@@ -492,6 +491,7 @@ App::post('/v1/migrations/csv/exports')
         Document $user,
         Response $response,
         Database $dbForProject,
+        Database $dbForPlatform,
         Authorization $authorization,
         Document $project,
         Event $queueForEvents,
@@ -503,7 +503,7 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
         if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
@@ -549,7 +549,7 @@ App::post('/v1/migrations/csv/exports')
             'resourceData' => '{}',
             'errors' => [],
             'options' => [
-                'bucketId' => $bucketId,
+                'bucketId' => 'default', // Always use internal bucket
                 'filename' => $filename,
                 'columns' => $columns,
                 'queries' => $queries,
