@@ -414,7 +414,7 @@ class Migrations extends Action
                 $source?->success();
 
                 if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails);
+                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $authorization);
                 }
             }
         }
