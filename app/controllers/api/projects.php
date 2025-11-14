@@ -52,6 +52,65 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
+function getDatabaseDSN(string $databasetype, $region): string
+{
+    $databases = [];
+    $databaseKeys = [];
+    /**
+     * @var string|null $databaseOverride
+    */
+    $databaseOverride = '';
+    $dbScheme = '';
+    switch ($databasetype) {
+        case 'documentsDatabase':
+            $databases = Config::getParam('pools-documentsdb', []);
+            $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
+            $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
+            $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+            break;
+        default:
+            // legacy/tablesdb
+            $databases = Config::getParam('pools-database', []);
+            $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
+            $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
+            $dbScheme = System::getEnv('_APP_DB_HOST', 'mysql');
+            break;
+    }
+
+    if ($region !== 'default') {
+        $keys = explode(',', $databaseKeys);
+        $databases = array_filter($keys, function ($value) use ($region) {
+            return str_contains($value, $region);
+        });
+    }
+
+    $index = \array_search($databaseOverride, $databases);
+    if ($index !== false) {
+        $dsn = $databases[$index];
+    } else {
+        $dsn = $databases[array_rand($databases)];
+    }
+
+    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+    if (\in_array($dsn, $sharedTables)) {
+        $schema = 'appwrite';
+        $database = 'appwrite';
+        $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+        $dsn = $schema . '://' . $dsn . '?database=' . $database;
+
+        if (!empty($namespace)) {
+            $dsn .= '&namespace=' . $namespace;
+        }
+    }
+    try {
+        // for validation
+        new DSN($dsn);
+    } catch (\InvalidArgumentException) {
+        $dsn = $dbScheme.'://' . $dsn;
+    }
+    return $dsn;
+}
+
 App::init()
     ->groups(['projects'])
     ->inject('project')
@@ -82,7 +141,7 @@ App::post('/v1/projects')
     ))
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
-    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team unique ID.', false, ['dbForProject'])
     ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
@@ -139,37 +198,7 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $databases = Config::getParam('pools-database', []);
-
-        if ($region !== 'default') {
-            $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-            $keys = explode(',', $databaseKeys);
-            $databases = array_filter($keys, function ($value) use ($region) {
-                return str_contains($value, $region);
-            });
-        }
-
-        $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
-        $index = \array_search($databaseOverride, $databases);
-        if ($index !== false) {
-            $dsn = $databases[$index];
-        } else {
-            $dsn = $databases[array_rand($databases)];
-        }
-
-        // TODO: Temporary until all projects are using shared tables.
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-        if (\in_array($dsn, $sharedTables)) {
-            $schema = 'appwrite';
-            $database = 'appwrite';
-            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-            $dsn = $schema . '://' . $dsn . '?database=' . $database;
-
-            if (!empty($namespace)) {
-                $dsn .= '&namespace=' . $namespace;
-            }
-        }
+        $dsn = getDatabaseDSN('databases', $region);
 
         try {
             $project = $dbForPlatform->createDocument('projects', new Document([
@@ -204,6 +233,7 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
+                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region)
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
@@ -319,7 +349,7 @@ App::get('/v1/projects/:projectId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
@@ -352,7 +382,7 @@ App::patch('/v1/projects/:projectId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
@@ -406,8 +436,8 @@ App::patch('/v1/projects/:projectId/team')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('teamId', '', new UID(), 'Team ID of the team to transfer project to.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID of the team to transfer project to.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $teamId, Response $response, Database $dbForPlatform) {
@@ -481,7 +511,7 @@ App::patch('/v1/projects/:projectId/service')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
@@ -519,7 +549,7 @@ App::patch('/v1/projects/:projectId/service/all')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -579,7 +609,7 @@ App::patch('/v1/projects/:projectId/api')
             ]
         )
     ])
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('api', '', new WhiteList(array_keys(Config::getParam('apis')), true), 'API name.')
     ->param('status', null, new Boolean(), 'API status.')
     ->inject('response')
@@ -636,7 +666,7 @@ App::patch('/v1/projects/:projectId/api/all')
             ]
         )
     ])
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('status', null, new Boolean(), 'API status.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -677,7 +707,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'Provider Name')
     ->param('appId', null, new Nullable(new Text(256)), 'Provider app ID. Max length: 256 chars.', true)
     ->param('secret', null, new Nullable(new text(512)), 'Provider secret key. Max length: 512 chars.', true)
@@ -728,7 +758,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('alerts', false, new Boolean(true), 'Set to true to enable session emails.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -766,7 +796,7 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('userName', true, new Boolean(true), 'Set to true to show userName to members of a team.')
     ->param('userEmail', true, new Boolean(true), 'Set to true to show email to members of a team.')
     ->param('mfa', true, new Boolean(true), 'Set to true to show mfa to members of a team.')
@@ -808,7 +838,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('limit', false, new Range(0, APP_LIMIT_USERS), 'Set the max number of users allowed in this project. Use 0 for unlimited.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -846,7 +876,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('duration', 31536000, new Range(0, 31536000), 'Project session length in seconds. Max length: 31536000 seconds.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -884,7 +914,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
@@ -925,7 +955,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('limit', 0, new Range(0, APP_LIMIT_USER_PASSWORD_HISTORY), 'Set the max number of passwords to store in user history. User can\'t choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is' . APP_LIMIT_USER_PASSWORD_HISTORY . '. Default value is 0')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -963,7 +993,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('enabled', false, new Boolean(false), 'Set whether or not to enable checking user\'s password against most commonly used passwords. Default is false.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1001,7 +1031,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('enabled', false, new Boolean(false), 'Set whether or not to check a password for similarity with personal data. Default is false.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1039,7 +1069,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of users allowed in this project. Value allowed is between 1-' . APP_LIMIT_USER_SESSIONS_MAX . '. Default is ' . APP_LIMIT_USER_SESSIONS_DEFAULT)
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1077,7 +1107,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('numbers', '', new ArrayList(new MockNumber(), 10), 'An array of mock numbers and their corresponding verification codes (OTPs). Each number should be a valid E.164 formatted phone number. Maximum of 10 numbers are allowed.')
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1126,7 +1156,7 @@ App::delete('/v1/projects/:projectId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForPlatform')
@@ -1169,7 +1199,7 @@ App::post('/v1/projects/:projectId/webhooks')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
@@ -1234,7 +1264,7 @@ App::get('/v1/projects/:projectId/webhooks')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1274,8 +1304,8 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('webhookId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Webhook unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForPlatform) {
@@ -1315,8 +1345,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('webhookId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Webhook unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
@@ -1381,8 +1411,8 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('webhookId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Webhook unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForPlatform) {
@@ -1428,8 +1458,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('webhookId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Webhook unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForPlatform) {
@@ -1475,7 +1505,7 @@ App::post('/v1/projects/:projectId/keys')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
@@ -1532,7 +1562,7 @@ App::get('/v1/projects/:projectId/keys')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1572,8 +1602,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('keyId', '', new UID(), 'Key unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForPlatform) {
@@ -1613,8 +1643,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('keyId', '', new UID(), 'Key unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
@@ -1667,8 +1697,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('keyId', '', new UID(), 'Key unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForPlatform) {
@@ -1714,7 +1744,7 @@ App::post('/v1/projects/:projectId/jwts')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for JWT key. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
@@ -1758,7 +1788,7 @@ App::post('/v1/projects/:projectId/platforms')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param(
         'type',
         null,
@@ -1836,7 +1866,7 @@ App::get('/v1/projects/:projectId/platforms')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1876,8 +1906,8 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('platformId', '', new UID(), 'Platform unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('platformId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Platform unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForPlatform) {
@@ -1917,8 +1947,8 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('platformId', '', new UID(), 'Platform unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('platformId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Platform unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1974,8 +2004,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('platformId', '', new UID(), 'Platform unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    ->param('platformId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Platform unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForPlatform) {
@@ -2040,7 +2070,7 @@ App::patch('/v1/projects/:projectId/smtp')
             ]
         )
     ])
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
     ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
     ->param('senderEmail', '', new Email(), 'Email of the sender', true)
@@ -2156,7 +2186,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
             ]
         )
     ])
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
     ->param('senderName', System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
     ->param('senderEmail', System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), new Email(), 'Email of the sender')
@@ -2250,7 +2280,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
             ]
         )
     ])
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
@@ -2298,7 +2328,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
@@ -2416,7 +2446,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
             ]
         )
     ])
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('message', '', new Text(0), 'Template message')
@@ -2463,7 +2493,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('subject', '', new Text(255), 'Email Subject')
@@ -2541,7 +2571,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
             contentType: ContentType::JSON
         )
     ])
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
@@ -2592,7 +2622,7 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
@@ -2644,7 +2674,7 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
             )
         ]
     ))
-    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('enabled', false, new Boolean(), 'Update authentication session invalidation status. Use this endpoint to enable or disable session invalidation on password change')
     ->inject('response')
     ->inject('dbForPlatform')

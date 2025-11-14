@@ -1596,13 +1596,6 @@ return [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_fulltext_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
@@ -1828,13 +1821,6 @@ return [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2105,14 +2091,8 @@ return [
                 'filters' => ['topicSearch'],
             ],
         ],
+
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
