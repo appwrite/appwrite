@@ -15,6 +15,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -55,8 +56,8 @@ class Update extends Action
             ->param('functionId', '', new UID(), 'Function unique ID.', false)
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-            ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
-            ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
+            ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
+            ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')

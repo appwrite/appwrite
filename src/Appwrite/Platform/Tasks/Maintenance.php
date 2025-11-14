@@ -98,6 +98,7 @@ class Maintenance extends Action
                 $this->renewCertificates($dbForPlatform, $queueForCertificates);
                 $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
                 $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
+                $this->notifyDeleteCSVExports($queueForDeletes);
             }, $interval, $delay);
         });
 
@@ -146,6 +147,13 @@ class Maintenance extends Action
             // Silenced because interval makes it too often
             // Console::log("[{$time}] No rules for checking verification status.");
         }
+    }
+
+    private function notifyDeleteCSVExports(Delete $queueForDeletes): void
+    {
+        $queueForDeletes
+            ->setType(DELETE_TYPE_CSV_EXPORTS)
+            ->trigger();
     }
 
     private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void

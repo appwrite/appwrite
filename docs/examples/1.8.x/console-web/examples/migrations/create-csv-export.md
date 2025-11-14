@@ -8,7 +8,6 @@ const migrations = new Migrations(client);
 
 const result = await migrations.createCSVExport({
     resourceId: '<ID1:ID2>',
-    bucketId: '<BUCKET_ID>',
     filename: '<FILENAME>',
     columns: [], // optional
     queries: [], // optional
