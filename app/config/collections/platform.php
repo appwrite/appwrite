@@ -1186,7 +1186,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('verificationLogs'),
+                '$id' => ID::custom('logs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 65535,

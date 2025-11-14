@@ -167,7 +167,7 @@ class Create extends Action
                 $this->verifyRule($rule, $log);
                 $rule->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
             } catch (Exception $err) {
-                $rule->setAttribute('verificationLogs', $err->getMessage());
+                $rule->setAttribute('logs', $err->getMessage());
             }
         }
 
@@ -187,6 +187,22 @@ class Create extends Action
         }
 
         $queueForEvents->setParam('ruleId', $rule->getId());
+
+        $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+
+        // Merge logs: priority to certificate logs if both have values, otherwise use whichever is not empty
+        $ruleLogs = $rule->getAttribute('logs', '');
+        $certificateLogs = $certificate->getAttribute('logs', '');
+        $logs = '';
+        if (!empty($certificateLogs) && !empty($ruleLogs)) {
+            $logs = $certificateLogs; // Certificate logs have priority
+        } elseif (!empty($certificateLogs)) {
+            $logs = $certificateLogs;
+        } elseif (!empty($ruleLogs)) {
+            $logs = $ruleLogs;
+        }
+        $rule->setAttribute('logs', $logs);
+        $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

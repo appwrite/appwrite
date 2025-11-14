@@ -581,7 +581,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createSiteRule('stage-site.webapp.com', $siteId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_GENERATING_CERTIFICATE, $rule['body']['status']);
-        $this->assertEmpty($rule['body']['verificationLogs']);
+        $this->assertEmpty($rule['body']['logs']);
         $this->assertNotEmpty($rule['body']['$id']);
         $ruleId = $rule['body']['$id'];
 
@@ -589,7 +589,7 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(200, $rule['headers']['status-code']);
         $this->assertEquals($ruleId, $rule['body']['$id']);
         $this->assertEquals(RULE_STATUS_GENERATING_CERTIFICATE, $rule['body']['status']);
-        $this->assertEmpty($rule['body']['verificationLogs']);
+        $this->assertEmpty($rule['body']['logs']);
 
         $this->cleanupRule($rule['body']['$id']);
         $this->cleanupSite($siteId);
@@ -601,13 +601,13 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createFunctionRule('stage-function.webapp.com', $functionId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_GENERATING_CERTIFICATE, $rule['body']['status']);
-        $this->assertEmpty($rule['body']['verificationLogs']);
+        $this->assertEmpty($rule['body']['logs']);
         $this->cleanupRule($rule['body']['$id']);
 
         $rule = $this->createAPIRule('stage-site.webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $rule['body']['status']);
-        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['verificationLogs']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
         $this->cleanupRule($rule['body']['$id']);
 
         $this->cleanupFunction($functionId);
@@ -616,7 +616,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('wrong-a-webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $rule['body']['status']);
-        $this->assertStringContainsString('is missing CNAME record', $rule['body']['verificationLogs']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
 
         $ruleId = $rule['body']['$id'];
         $rule = $this->updateRuleVerification($ruleId);
@@ -633,7 +633,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_GENERATING_CERTIFICATE, $rule['body']['status']);
-        $this->assertEmpty($rule['body']['verificationLogs']);
+        $this->assertEmpty($rule['body']['logs']);
 
         $this->cleanupRule($rule['body']['$id']);
 
@@ -641,7 +641,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('stage.webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_GENERATING_CERTIFICATE, $rule['body']['status']);
-        $this->assertEmpty($rule['body']['verificationLogs']);
+        $this->assertEmpty($rule['body']['logs']);
 
         $this->cleanupRule($rule['body']['$id']);
 
@@ -649,7 +649,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('stage-missing-cname.webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $rule['body']['status']);
-        $this->assertStringContainsString('is missing CNAME record', $rule['body']['verificationLogs']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
 
         $ruleId = $rule['body']['$id'];
         $rule = $this->updateRuleVerification($ruleId);
@@ -666,7 +666,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('stage-wrong-cname.webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $rule['body']['status']);
-        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['verificationLogs']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
 
         $ruleId = $rule['body']['$id'];
         $rule = $this->updateRuleVerification($ruleId);
@@ -683,7 +683,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('stage-wrong-caa.webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $rule['body']['status']);
-        $this->assertStringContainsString('has incorrect CAA value', $rule['body']['verificationLogs']);
+        $this->assertStringContainsString('has incorrect CAA value', $rule['body']['logs']);
 
         $ruleId = $rule['body']['$id'];
         $rule = $this->updateRuleVerification($ruleId);
@@ -700,7 +700,7 @@ class ProxyCustomServerTest extends Scope
         $rule = $this->createAPIRule('stage-correct-caa.webapp.com');
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_GENERATING_CERTIFICATE, $rule['body']['status']);
-        $this->assertEmpty($rule['body']['verificationLogs']);
+        $this->assertEmpty($rule['body']['logs']);
 
         $this->cleanupRule($rule['body']['$id']);
     }
@@ -712,23 +712,23 @@ class ProxyCustomServerTest extends Scope
 
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $rule['body']['status']);
-        $this->assertNotEmpty($rule['body']['verificationLogs']);
+        $this->assertNotEmpty($rule['body']['logs']);
 
         $ruleId = $rule['body']['$id'];
         $initialUpdatedAt = $rule['body']['$updatedAt'];
-        $initialVerificationLogs = $rule['body']['verificationLogs'];
+        $initiallogs = $rule['body']['logs'];
 
         sleep(1);
 
         $updatedRule = $this->updateRuleVerification($ruleId);
 
         $this->assertEquals(400, $updatedRule['headers']['status-code']);
-        $this->assertStringContainsString($initialVerificationLogs, $updatedRule['body']['message']);
+        $this->assertStringContainsString($initiallogs, $updatedRule['body']['message']);
 
         $ruleAfterUpdate = $this->getRule($ruleId);
         $this->assertEquals(200, $ruleAfterUpdate['headers']['status-code']);
         $this->assertEquals(RULE_STATUS_VERIFICATION_FAILED, $ruleAfterUpdate['body']['status']);
-        $this->assertEquals($initialVerificationLogs, $ruleAfterUpdate['body']['verificationLogs']);
+        $this->assertEquals($initiallogs, $ruleAfterUpdate['body']['logs']);
         $this->assertNotEquals($initialUpdatedAt, $ruleAfterUpdate['body']['$updatedAt']);
 
         $initialTime = new \DateTime($initialUpdatedAt);

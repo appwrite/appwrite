@@ -90,11 +90,11 @@ class Update extends Action
 
         try {
             $this->verifyRule($rule, $log);
-            $updates->setAttribute('verificationLogs', '');
+            $updates->setAttribute('logs', '');
         } catch (Exception $err) {
             $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
-                'verificationLogs' => $err->getMessage(),
+                'logs' => $err->getMessage(),
             ]));
             throw $err;
         }
@@ -113,7 +113,19 @@ class Update extends Action
 
         // Fill response model
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
-        $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+
+        // Merge logs: priority to certificate logs if both have values, otherwise use whichever is not empty
+        $ruleLogs = $rule->getAttribute('logs', '');
+        $certificateLogs = $certificate->getAttribute('logs', '');
+        $logs = '';
+        if (!empty($certificateLogs) && !empty($ruleLogs)) {
+            $logs = $certificateLogs;
+        } elseif (!empty($certificateLogs)) {
+            $logs = $certificateLogs;
+        } elseif (!empty($ruleLogs)) {
+            $logs = $ruleLogs;
+        }
+        $rule->setAttribute('logs', $logs);
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
 
         $certificateHasUpdatedAt = $certificate->getUpdatedAt() !== null;

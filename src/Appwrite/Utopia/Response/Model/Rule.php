@@ -89,17 +89,11 @@ class Rule extends Model
                 'default' => '',
                 'example' => RULE_STATUS_SUCCESSFUL,
             ])
-            ->addRule('verificationLogs', [
-                'type' => self::TYPE_STRING,
-                'description' => 'DNS verification logs. This contains error from last verification attempt.',
-                'default' => '',
-                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
-            ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate generation logs. This will return an empty string if generation did not run, or succeeded.',
+                'description' => 'Logs from rule verification or certificate generation. Priority: certificate logs if both have values, otherwise whichever is not empty.',
                 'default' => '',
-                'example' => 'HTTP challegne failed.',
+                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
             ])
             ->addRule('renewAt', [
                 'type' => self::TYPE_DATETIME,

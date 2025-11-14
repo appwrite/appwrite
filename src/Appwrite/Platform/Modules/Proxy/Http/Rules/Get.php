@@ -66,7 +66,19 @@ class Get extends Action
 
         // Fill response model
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
-        $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+
+        // Merge logs: priority to certificate logs if both have values, otherwise use whichever is not empty
+        $ruleLogs = $rule->getAttribute('logs', '');
+        $certificateLogs = $certificate->getAttribute('logs', '');
+        $logs = '';
+        if (!empty($certificateLogs) && !empty($ruleLogs)) {
+            $logs = $certificateLogs; // Certificate logs have priority
+        } elseif (!empty($certificateLogs)) {
+            $logs = $certificateLogs;
+        } elseif (!empty($ruleLogs)) {
+            $logs = $ruleLogs;
+        }
+        $rule->setAttribute('logs', $logs);
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
 
         $certificateHasUpdatedAt = $certificate->getUpdatedAt() !== null;

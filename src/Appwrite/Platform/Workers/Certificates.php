@@ -157,14 +157,14 @@ class Certificates extends Action
         try {
             $this->validateDomain($rule, $isMainDomain, $log, $verificationDomainAPI, $verificationDomainFunction);
             $updates
-                ->setAttribute('verificationLogs', '')
+                ->setAttribute('logs', '')
                 ->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
 
             Console::success('Verification succeeded.');
             $success = true;
         } catch (ExtendException $err) {
             Console::warning('Verification failed: ' . $err->getMessage());
-            $updates->setAttribute('verificationLogs', $err->getMessage());
+            $updates->setAttribute('logs', $err->getMessage());
         }
 
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
