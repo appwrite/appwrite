@@ -861,6 +861,9 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotNull($siteId);
 
+        $rule = $this->createRule($siteId, \uniqid() . '.myapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
         $deployment = $this->createDeployment($siteId, [
             'siteId' => $siteId,
             'code' => $this->packageSite('static-single-file'),
@@ -871,6 +874,10 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertEquals('waiting', $deployment['body']['status']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
+
+        $rule = $this->getRule($rule['body']['$id']);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
@@ -1563,6 +1570,9 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
+        $rule = $this->createRule($siteId, \uniqid() . '.myapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
         $deployment = $this->createTemplateDeployment($siteId, [
             'repository' => $template['providerRepositoryId'],
             'owner' => $template['providerOwner'],
@@ -1573,6 +1583,10 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
+
+        $rule = $this->getRule($rule['body']['$id']);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
 
         $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);

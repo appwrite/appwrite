@@ -450,4 +450,27 @@ trait SitesBase
 
         return $specifications;
     }
+
+    protected function createRule(string $siteId, string $domain): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'siteId' => $siteId,
+            'domain' => $domain,
+        ]);
+
+        return $rule;
+    }
+
+    protected function getRule(string $ruleId): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $rule;
+    }
 }

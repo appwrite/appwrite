@@ -14,6 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Query;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -334,5 +335,34 @@ class Base extends Action
             ->setTemplate($template);
 
         return $deployment;
+    }
+
+    /**
+     * Update manual rule for new site deployment.
+     * In case of fresh site, deployment ID will be empty in the rules, so we need to update it here.
+     *
+     * @param \Utopia\Database\Document $project
+     * @param \Utopia\Database\Document $site
+     * @param \Utopia\Database\Document $deployment
+     * @param \Utopia\Database\Database $dbForPlatform
+     * @return void
+     */
+    public function updateManualRuleForNewSiteDeployment(Document $project, Document $site, Document $deployment, Database $dbForPlatform)
+    {
+        $queries = [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('type', ['deployment']),
+            Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
+            Query::equal('deploymentResourceType', ['site']),
+            Query::equal('trigger', ['manual']),
+        ];
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform) {
+            if (empty($rule->getAttribute('deploymentId', ''))) {
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                ])));
+            }
+        }, $queries);
     }
 }

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -31,7 +32,7 @@ use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-class Create extends Action
+class Create extends Base
 {
     use HTTP;
 
@@ -363,6 +364,8 @@ class Create extends Action
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
             }
         }
+
+        $this->updateManualRuleForNewSiteDeployment($project, $site, $deployment, $dbForPlatform);
 
         $metadata = null;
 
