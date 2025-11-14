@@ -40,6 +40,7 @@ class Auth
     public const USER_ROLE_ADMIN = 'admin';
     public const USER_ROLE_DEVELOPER = 'developer';
     public const USER_ROLE_OWNER = 'owner';
+    public const USER_ROLE_MEMBER = 'member';
     public const USER_ROLE_APPS = 'apps';
     public const USER_ROLE_SYSTEM = 'system';
 
@@ -478,19 +479,18 @@ class Auth
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {
-            if (!isset($node['confirm']) || !$node['confirm']) {
+            if (!isset($node['confirm']) || !$node['confirm'] || !isset($node['$id']) || !isset($node['teamId'])) {
                 continue;
             }
+            $roles[] = Role::member($node['$id'])->toString();
+            $projectRoles = \array_filter($node['roles'] ?? [], fn ($role) => str_starts_with($role, Roles::ROLE_PROJECT));
 
-            if (isset($node['$id']) && isset($node['teamId'])) {
+            if (!empty($projectRoles)) {
+                $roles[] = Role::team($node['teamId'], Auth::USER_ROLE_MEMBER)->toString();
+                $roles = \array_merge($roles, $projectRoles);
+            } else {
                 $roles[] = Role::team($node['teamId'])->toString();
-                $roles[] = Role::member($node['$id'])->toString();
-
-                if (isset($node['roles'])) {
-                    foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                        $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
-                    }
-                }
+                $roles = \array_merge($roles, \array_map(fn ($role) => Role::team($node['teamId'], $role)->toString(), $node['roles'] ?? []));
             }
         }
 
