@@ -166,7 +166,7 @@ class Update extends Action
                         }
 
                         if (!isset($collections[$collectionId])) {
-                            $collections[$collectionId] = Authorization::skip(
+                            $collections[$collectionId] = $authorization->skip(
                                 fn () => $dbForProject->getCollection($collectionId)
                             );
                         }
