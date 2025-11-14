@@ -29,6 +29,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Roles;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -334,6 +335,8 @@ App::init()
 
             $scopes = []; // Reset scope if admin
             foreach ($adminRoles as $role) {
+                $role = Role::parse($role);
+                $role = $role->getRole() === Roles::ROLE_PROJECT ? $role->getDimension() : $role->getRole();
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
             }
 

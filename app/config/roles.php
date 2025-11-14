@@ -128,6 +128,10 @@ return [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
+    Auth::USER_ROLE_MEMBER => [
+        'label' => 'Member',
+        'scopes' => \array_merge($member),
+    ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],
