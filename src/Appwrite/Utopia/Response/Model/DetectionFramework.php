@@ -3,12 +3,13 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 
-class DetectionFramework extends Model
+class DetectionFramework extends Detection
 {
     public function __construct()
     {
+        parent::__construct();
+
         $this
             ->addRule('framework', [
                 'type' => self::TYPE_STRING,
@@ -33,13 +34,6 @@ class DetectionFramework extends Model
                 'description' => 'Site Output Directory',
                 'default' => '',
                 'example' => 'dist',
-            ])
-            ->addRule('variables', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Environment variables found in .env files',
-                'default' => [],
-                'array' => true,
-                'example' => ['PORT', 'NODE_ENV'],
             ]);
     }
 

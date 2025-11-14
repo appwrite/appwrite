@@ -966,14 +966,14 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         }
 
         $wg = new WaitGroup();
-        $envNames = [];
+        $envs = [];
         foreach ($files as $file) {
             if (!(\str_starts_with($file, '.env'))) {
                 continue;
             }
 
             $wg->add();
-            go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envNames) {
+            go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
                 try {
                     $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
                     $envFile = $contentResponse['content'] ?? '';
@@ -982,8 +982,9 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                     foreach ($envLines as $line) {
                         $parts = \explode('=', $line, 2);
                         $envName = \trim($parts[0] ?? '');
+                        $envValue = \trim($parts[1] ?? '');
                         if (!empty($envName)) {
-                            $envNames[] = $envName;
+                            $envs[$envName] = $envValue;
                         }
                     }
                 } finally {
@@ -993,7 +994,15 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         }
         $wg->wait();
 
-        $output->setAttribute('variables', \array_unique($envNames));
+        $variables = [];
+        foreach ($envs as $key => $value) {
+            $variables[] = [
+                'name' => $key,
+                'value' => $value,
+            ];
+        }
+
+        $output->setAttribute('variables', $variables);
 
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     });
@@ -1171,14 +1180,14 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 }
 
                 $wg = new WaitGroup();
-                $envNames = [];
+                $envs = [];
                 foreach ($files as $file) {
                     if (!(\str_starts_with($file, '.env'))) {
                         continue;
                     }
 
                     $wg->add();
-                    go(function () use ($github, $repo, $file, $wg, &$envNames) {
+                    go(function () use ($github, $repo, $file, $wg, &$envs) {
                         try {
                             $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], $file);
                             $envFile = $contentResponse['content'] ?? '';
@@ -1187,8 +1196,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                             foreach ($envLines as $line) {
                                 $parts = \explode('=', $line, 2);
                                 $envName = \trim($parts[0] ?? '');
+                                $envValue = \trim($parts[1] ?? '');
                                 if (!empty($envName)) {
-                                    $envNames[] = $envName;
+                                    $envs[$envName] = $envValue;
                                 }
                             }
                         } finally {
@@ -1198,7 +1208,13 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 }
                 $wg->wait();
 
-                $repo['variables'] = \array_unique($envNames);
+                $repo['variables'] = [];
+                foreach ($envs as $key => $value) {
+                    $repo['variables'][] = [
+                        'name' => $key,
+                        'value' => $value,
+                    ];
+                }
 
                 return $repo;
             };

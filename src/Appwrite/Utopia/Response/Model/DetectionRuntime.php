@@ -3,12 +3,13 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 
-class DetectionRuntime extends Model
+class DetectionRuntime extends Detection
 {
     public function __construct()
     {
+        parent::__construct();
+
         $this
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
@@ -27,13 +28,6 @@ class DetectionRuntime extends Model
                 'description' => 'Function install and build commands',
                 'default' => '',
                 'example' => 'npm install && npm run build',
-            ])
-            ->addRule('variables', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Environment variables found in .env files',
-                'default' => [],
-                'array' => true,
-                'example' => ['PORT', 'NODE_ENV'],
             ]);
     }
 
