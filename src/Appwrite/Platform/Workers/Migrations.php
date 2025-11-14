@@ -11,12 +11,15 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
@@ -223,7 +226,7 @@ class Migrations extends Action
     }
 
     /**
-     * @throws Authorization
+     * @throws AuthorizationException
      * @throws Structure
      * @throws Conflict
      * @throws \Utopia\Database\Exception
@@ -282,7 +285,7 @@ class Migrations extends Action
     }
 
     /**
-     * @throws Authorization
+     * @throws AuthorizationException
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
@@ -421,7 +424,7 @@ class Migrations extends Action
      * @param Document $migration
      * @param Mail $queueForMails
      * @return void
-     * @throws Authorization
+     * @throws AuthorizationException
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Exception
@@ -432,13 +435,20 @@ class Migrations extends Action
         Mail $queueForMails
     ): void {
         $options = $migration->getAttribute('options', []);
-        $bucketId = $options['bucketId'] ?? null;
+        $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
         $userInternalId = $options['userInternalId'] ?? '';
+        $user = $this->dbForPlatform->findOne('users', [
+            Query::equal('$sequence', [$userInternalId])
+        ]);
 
-        $bucket = $this->dbForProject->getDocument('buckets', $bucketId);
+        if ($user->isEmpty()) {
+            throw new \Exception('User ' . $userInternalId . ' not found');
+        }
+
+        $bucket = Authorization::skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty()) {
-            throw new \Exception("Bucket not found: $bucketId");
+            throw new \Exception('Bucket not found');
         }
 
         $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . '.csv');
@@ -469,7 +479,7 @@ class Migrations extends Action
                 $this->sendCSVEmail(
                     success: false,
                     project: $project,
-                    userInternalId: $userInternalId,
+                    user: $user,
                     options: $options,
                     queueForMails: $queueForMails,
                     sizeMB: $sizeMB
@@ -479,9 +489,11 @@ class Migrations extends Action
             }
         }
 
-        $this->dbForProject->createDocument('bucket_' . $bucket->getSequence(), new Document([
+        $this->dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), new Document([
             '$id' => $fileId,
-            '$permissions' => [],
+            '$permissions' => [
+                Permission::read(Role::user($user->getId())),
+            ],
             'bucketId' => $bucket->getId(),
             'bucketInternalId' => $bucket->getSequence(),
             'name' => $filename,
@@ -511,6 +523,7 @@ class Migrations extends Action
             'bucketId' => $bucketId,
             'fileId' => $fileId,
             'projectId' => $project->getId(),
+            'internal' => true,
         ]);
 
         // Generate download URL with JWT
@@ -521,7 +534,7 @@ class Migrations extends Action
         $this->sendCSVEmail(
             success: true,
             project: $project,
-            userInternalId: $userInternalId,
+            user: $user,
             options: $options,
             queueForMails: $queueForMails,
             downloadUrl: $downloadUrl
@@ -533,7 +546,7 @@ class Migrations extends Action
      *
      * @param bool $success Whether the export was successful
      * @param Document $project
-     * @param string $userInternalId Internal ID of the user
+     * @param Document $user The user who triggered the operation
      * @param array $options Migration options
      * @param Mail $queueForMails
      * @param string $downloadUrl Download URL for successful exports
@@ -544,7 +557,7 @@ class Migrations extends Action
     protected function sendCSVEmail(
         bool $success,
         Document $project,
-        string $userInternalId,
+        Document $user,
         array $options,
         Mail $queueForMails,
         string $downloadUrl = '',
@@ -554,12 +567,8 @@ class Migrations extends Action
             return;
         }
 
-        $user = $this->dbForPlatform->findOne('users', [
-            Query::equal('$sequence', [$userInternalId])
-        ]);
-
         if ($user->isEmpty()) {
-            Console::warning("User not found for CSV export notification: $userInternalId");
+            Console::warning("User not found for CSV export notification: {$user->getInternalId()}");
             return;
         }
 
