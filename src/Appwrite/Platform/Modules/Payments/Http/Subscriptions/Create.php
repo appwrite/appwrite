@@ -265,11 +265,15 @@ class Create extends Base
                 $response->json(['message' => 'Checkout session did not return an id']);
                 return;
             }
+            $providerCustomerId = (string) ($checkoutSession->metadata['customerId'] ?? '');
             $providerEntryData = [
                 'priceId' => (string) ($selectedPriceId ?? ''),
                 'providerPriceId' => (string) $providerPlanPriceId,
                 'providerCheckoutId' => $providerCheckoutId,
             ];
+            if ($providerCustomerId !== '') {
+                $providerEntryData['providerCustomerId'] = $providerCustomerId;
+            }
             $initialStatus = 'pending';
 
             $providerData[$providerKey] = $providerEntryData;

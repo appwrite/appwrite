@@ -458,6 +458,7 @@ class StripeAdapter implements Adapter
         $successUrl = (string) ($options['successUrl'] ?? '');
         $cancelUrl = (string) ($options['cancelUrl'] ?? '');
         $priceId = (string) ($planContext['priceId'] ?? '');
+        $customerId = $this->ensureCustomer($apiKey, $actor);
         $params = [
             'mode' => 'subscription',
             'line_items' => [ [ 'price' => $priceId, 'quantity' => 1 ] ],
@@ -466,14 +467,18 @@ class StripeAdapter implements Adapter
             'client_reference_id' => $actor->getId(),
             'metadata' => [ 'project_id' => $this->project->getId(), 'actor_id' => $actor->getId() ]
         ];
+        if ($customerId !== '') {
+            $params['customer'] = $customerId;
+        }
         $sessionResponse = $this->request($apiKey, 'POST', '/checkout/sessions', $params);
         $sessionData = $this->decodeResponse($sessionResponse);
+        $resolvedCustomerId = (string) ($sessionData['customer'] ?? $customerId);
         return new ProviderCheckoutSession(
             url: (string) ($sessionData['url'] ?? ''),
             metadata: [
                 'id' => (string) ($sessionData['id'] ?? ''),
                 'subscriptionId' => (string) ($sessionData['subscription'] ?? ''),
-                'customerId' => (string) ($sessionData['customer'] ?? ''),
+                'customerId' => $resolvedCustomerId,
             ]
         );
     }
@@ -575,12 +580,20 @@ class StripeAdapter implements Adapter
                     ]);
                     $sessionsData = $this->decodeResponse($sessionsResponse);
                     $sessionId = (string) ($sessionsData['data'][0]['id'] ?? '');
+                    $sessionCustomerId = (string) ($sessionsData['data'][0]['customer'] ?? '');
                     if ($sessionId !== '') {
                         $subscription = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
                             Query::equal('providerCheckoutId', [$sessionId]),
                         ]));
                         if ($subscription instanceof Document && !$subscription->isEmpty()) {
                             $subscription->setAttribute('providerSubscriptionId', $stripeSubId);
+                            if ($sessionCustomerId !== '') {
+                                $providers = (array) $subscription->getAttribute('providers', []);
+                                $providerEntry = (array) ($providers['stripe'] ?? []);
+                                $providerEntry['providerCustomerId'] = $sessionCustomerId;
+                                $providers['stripe'] = $providerEntry;
+                                $subscription->setAttribute('providers', $providers);
+                            }
                         }
                     }
                 } catch (\Throwable $_) {
@@ -610,6 +623,10 @@ class StripeAdapter implements Adapter
             $providers = (array) $subscription->getAttribute('providers', []);
             $providerEntry = (array) ($providers['stripe'] ?? []);
             $providerEntry['providerSubscriptionId'] = $stripeSubId;
+            $stripeCustomerId = (string) ($subData['customer'] ?? '');
+            if ($stripeCustomerId !== '') {
+                $providerEntry['providerCustomerId'] = $stripeCustomerId;
+            }
             $providers['stripe'] = $providerEntry;
 
             $subscription->setAttribute('status', $internalStatus);
