@@ -567,7 +567,7 @@ class StripeAdapter implements Adapter
                 Query::equal('providerSubscriptionId', [$stripeSubId]),
             ]));
 
-            if ((!$subscription instanceof Document || $subscription->isEmpty()) && $type === 'customer.subscription.created') {
+            if ((!$subscription instanceof Document || $subscription->isEmpty())) {
                 try {
                     $sessionsResponse = $this->request($apiKey, 'GET', '/checkout/sessions', [
                         'subscription' => $stripeSubId,
@@ -579,6 +579,9 @@ class StripeAdapter implements Adapter
                         $subscription = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
                             Query::equal('providerCheckoutId', [$sessionId]),
                         ]));
+                        if ($subscription instanceof Document && !$subscription->isEmpty()) {
+                            $subscription->setAttribute('providerSubscriptionId', $stripeSubId);
+                        }
                     }
                 } catch (\Throwable $_) {
                     $subscription = null;
@@ -610,6 +613,7 @@ class StripeAdapter implements Adapter
             $providers['stripe'] = $providerEntry;
 
             $subscription->setAttribute('status', $internalStatus);
+            $subscription->setAttribute('providerSubscriptionId', $stripeSubId);
             if ($periodStart) {
                 $subscription->setAttribute('currentPeriodStart', $periodStart);
             }
