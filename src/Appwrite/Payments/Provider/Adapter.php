@@ -20,8 +20,6 @@ interface Adapter
 
     public function deleteFeature(ProviderFeatureRef $feature, ProviderPlanRef $plan, ProviderState $state): void;
 
-    public function ensureSubscription(Document $actor, array $subscriptionData, ProviderState $state): ProviderSubscriptionRef;
-
     public function updateSubscription(ProviderSubscriptionRef $subscription, array $changes, ProviderState $state): ProviderSubscriptionRef;
 
     public function cancelSubscription(ProviderSubscriptionRef $subscription, bool $atPeriodEnd, ProviderState $state): ProviderSubscriptionRef;

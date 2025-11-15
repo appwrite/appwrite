@@ -420,71 +420,6 @@ class StripeAdapter implements Adapter
         // Stripe meters typically continue to exist; no deletion API needed for now
     }
 
-    public function ensureSubscription(Document $actor, array $subscriptionData, ProviderState $state): ProviderSubscriptionRef
-    {
-        $apiKey = (string) ($state->config['secretKey'] ?? '');
-        $customerId = $this->ensureCustomer($apiKey, $actor);
-        $planRefs = (array) ($subscriptionData['planProviders'] ?? []);
-        $providerEntry = (array) ($planRefs['stripe'] ?? []);
-        $priceMap = (array) ($providerEntry['prices'] ?? []);
-        $desiredInternalPriceId = (string) ($subscriptionData['priceId'] ?? '');
-
-        $providerPriceId = '';
-        if ($desiredInternalPriceId !== '' && isset($priceMap[$desiredInternalPriceId])) {
-            $providerPriceId = (string) $priceMap[$desiredInternalPriceId];
-        }
-
-        if ($providerPriceId === '') {
-            $metadataPrices = (array) (($providerEntry['metadata']['prices'] ?? []) ?: []);
-            if ($desiredInternalPriceId !== '' && isset($metadataPrices[$desiredInternalPriceId])) {
-                $providerPriceId = (string) $metadataPrices[$desiredInternalPriceId];
-            } elseif (!empty($priceMap)) {
-                $first = reset($priceMap);
-                $providerPriceId = (string) $first;
-            } elseif (!empty($metadataPrices)) {
-                $first = reset($metadataPrices);
-                $providerPriceId = (string) $first;
-            }
-        }
-
-        if ($providerPriceId === '' && !empty($providerEntry['prices'])) {
-            $legacy = (array) $providerEntry['prices'];
-            if (\array_is_list($legacy) && isset($legacy[0])) {
-                $providerPriceId = (string) $legacy[0];
-            }
-        }
-
-        if ($providerPriceId === '') {
-            return new ProviderSubscriptionRef(externalSubscriptionId: '');
-        }
-        $resp = $this->request($apiKey, 'POST', '/subscriptions', [
-            'customer' => $customerId,
-            'items' => [ [ 'price' => $providerPriceId ] ],
-            'payment_behavior' => 'default_incomplete',
-            'metadata' => [ 'project_id' => $this->project->getId(), 'actor_id' => $actor->getId() ]
-        ]);
-        $respData = $this->decodeResponse($resp);
-
-        // Map Stripe status to internal status
-        $stripeStatus = (string) ($respData['status'] ?? 'incomplete');
-        $statusMap = [
-            'active' => 'active',
-            'trialing' => 'trialing',
-            'canceled' => 'canceled',
-            'unpaid' => 'past_due',
-            'past_due' => 'past_due',
-            'incomplete' => 'pending',
-            'incomplete_expired' => 'canceled',
-            'paused' => 'paused',
-        ];
-        $internalStatus = $statusMap[$stripeStatus] ?? 'pending';
-
-        return new ProviderSubscriptionRef(
-            externalSubscriptionId: (string) ($respData['id'] ?? ''),
-            metadata: ['status' => $internalStatus]
-        );
-    }
-
     public function updateSubscription(ProviderSubscriptionRef $subscription, array $changes, ProviderState $state): ProviderSubscriptionRef
     {
         $apiKey = (string) ($state->config['secretKey'] ?? '');
@@ -533,7 +468,14 @@ class StripeAdapter implements Adapter
         ];
         $sessionResponse = $this->request($apiKey, 'POST', '/checkout/sessions', $params);
         $sessionData = $this->decodeResponse($sessionResponse);
-        return new ProviderCheckoutSession(url: (string) ($sessionData['url'] ?? ''));
+        return new ProviderCheckoutSession(
+            url: (string) ($sessionData['url'] ?? ''),
+            metadata: [
+                'id' => (string) ($sessionData['id'] ?? ''),
+                'subscriptionId' => (string) ($sessionData['subscription'] ?? ''),
+                'customerId' => (string) ($sessionData['customer'] ?? ''),
+            ]
+        );
     }
 
     public function createPortalSession(Document $actor, ProviderState $state, array $options = []): ProviderPortalSession
@@ -605,98 +547,81 @@ class StripeAdapter implements Adapter
 
         $type = (string) ($payload['type'] ?? '');
         $changes = [];
+        $apiKey = (string) ($state->config['secretKey'] ?? '');
 
-        // error_log(print_r($state, true));
-        error_log(print_r($this->config, true));
-        $apiKey = $state->config['secretKey'];
-       
-        error_log(print_r($type, true));
         if (str_starts_with($type, 'customer.subscription.')) {
-            // /** @var array<string,mixed> $obj */
-            // $obj = (array) ($payload['data']['object'] ?? []);
-            // $stripeSubId = (string) ($obj['id'] ?? '');
-            // $stripeStatus = (string) ($obj['status'] ?? '');
-            // $periodStart = isset($obj['current_period_start']) ? date('c', (int) $obj['current_period_start']) : null;
-            // $periodEnd = isset($obj['current_period_end']) ? date('c', (int) $obj['current_period_end']) : null;
-
-            // $statusMap = [
-            //     'active' => 'active',
-            //     'trialing' => 'trialing',
-            //     'canceled' => 'canceled',
-            //     'unpaid' => 'past_due',
-            //     'past_due' => 'past_due',
-            //     'incomplete' => 'pending',
-            //     'incomplete_expired' => 'canceled',
-            //     'paused' => 'paused',
-            // ];
-            // $internalStatus = $statusMap[$stripeStatus] ?? 'active';
-
-            // $subs = $this->dbForPlatform->find('payments_subscriptions', [
-            //     Query::equal('projectId', [$this->project->getId()])
-            // ]);
-            // foreach ($subs as $sub) {
-            //     /** @var Document $sub */
-            //     $providerMap = (array) $sub->getAttribute('providers', []);
-            //     $prov = (array) ($providerMap['stripe'] ?? []);
-            //     if ((string) ($prov['subscriptionId'] ?? '') === $stripeSubId) {
-            //         $sub->setAttribute('status', $internalStatus);
-            //         if ($periodStart) {
-            //             $sub->setAttribute('currentPeriodStart', $periodStart);
-            //         }
-            //         if ($periodEnd) {
-            //             $sub->setAttribute('currentPeriodEnd', $periodEnd);
-            //         }
-            //         $this->dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
-            //         $changes['subscription'] = $sub->getId();
-            //         $changes['status'] = $internalStatus;
-            //         break;
-            //     }
-            // }
-            // error_log(print_r($payload, true));
             $stripeSubId = (string) ($payload['data']['object']['id'] ?? '');
-            $response = $this->request($apiKey, 'GET', '/subscriptions/' . $stripeSubId);
-            $subData = $this->decodeResponse($response);
-            error_log("subData: " . print_r($subData, true));
+            if ($stripeSubId === '') {
+                return new ProviderWebhookResult(status: 'ignored', changes: []);
+            }
 
-            error_log("stripeSubId: " . $stripeSubId);
+            try {
+                $response = $this->request($apiKey, 'GET', '/subscriptions/' . $stripeSubId);
+                $subData = $this->decodeResponse($response);
+            } catch (\Throwable $e) {
+                return new ProviderWebhookResult(status: 'error', changes: ['error' => $e->getMessage()]);
+            }
 
-            // PROBLEM: Always returns null, figure out why.
-            $sub = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
-                Query::equal("providerSubscriptionId", [$stripeSubId]),
+            /** @var Document|null $subscription */
+            $subscription = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
+                Query::equal('providerSubscriptionId', [$stripeSubId]),
             ]));
 
-            
-            error_log("sub final: " . print_r($sub, true));
-
-            // TODO: Move subscriptionId to a different column called providerSubscriptionId to be able to proceed with this.
-            $sub['status'] = $subData['status'];
-
-            error_log(print_r($sub, true));
-
-            // error_log(print_r($sub, true));
-            Authorization::skip(fn () => $this->dbForPlatform->updateDocument('payments_subscriptions', $sub['$id'], $sub));
-
-            return new ProviderWebhookResult(status: 'ok', changes: $changes);
-        }
-        if ($type === 'invoice.payment_succeeded' || $type === 'invoice.payment_failed') {
-            /** @var array<string,mixed> $obj */
-            $obj = (array) ($payload['data']['object'] ?? []);
-            $stripeSubId = (string) ($obj['subscription'] ?? '');
-            $internalStatus = $type === 'invoice.payment_succeeded' ? 'active' : 'past_due';
-            $subs = $this->dbForPlatform->find('payments_subscriptions', [
-                Query::equal('projectId', [$this->project->getId()])
-            ]);
-            foreach ($subs as $sub) {
-                /** @var Document $sub */
-                $prov = (array) ((array) $sub->getAttribute('providers', []))['stripe'] ?? [];
-                if ((string) ($prov['subscriptionId'] ?? '') === $stripeSubId) {
-                    $sub->setAttribute('status', $internalStatus);
-                    $this->dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
-                    $changes['subscription'] = $sub->getId();
-                    $changes['status'] = $internalStatus;
-                    break;
+            if ((!$subscription instanceof Document || $subscription->isEmpty()) && $type === 'customer.subscription.created') {
+                try {
+                    $sessionsResponse = $this->request($apiKey, 'GET', '/checkout/sessions', [
+                        'subscription' => $stripeSubId,
+                        'limit' => 1,
+                    ]);
+                    $sessionsData = $this->decodeResponse($sessionsResponse);
+                    $sessionId = (string) ($sessionsData['data'][0]['id'] ?? '');
+                    if ($sessionId !== '') {
+                        $subscription = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
+                            Query::equal('providerCheckoutId', [$sessionId]),
+                        ]));
+                    }
+                } catch (\Throwable $_) {
+                    $subscription = null;
                 }
             }
+
+            if (!$subscription instanceof Document || $subscription->isEmpty()) {
+                return new ProviderWebhookResult(status: 'not_found', changes: []);
+            }
+
+            $stripeStatus = strtolower((string) ($subData['status'] ?? ''));
+            $statusMap = [
+                'active' => 'active',
+                'trialing' => 'trialing',
+                'canceled' => 'canceled',
+                'unpaid' => 'past_due',
+                'past_due' => 'past_due',
+                'incomplete' => 'pending',
+                'incomplete_expired' => 'canceled',
+                'paused' => 'paused',
+            ];
+            $internalStatus = $statusMap[$stripeStatus] ?? 'active';
+            $periodStart = isset($subData['current_period_start']) ? date('c', (int) $subData['current_period_start']) : null;
+            $periodEnd = isset($subData['current_period_end']) ? date('c', (int) $subData['current_period_end']) : null;
+
+            $providers = (array) $subscription->getAttribute('providers', []);
+            $providerEntry = (array) ($providers['stripe'] ?? []);
+            $providerEntry['providerSubscriptionId'] = $stripeSubId;
+            $providers['stripe'] = $providerEntry;
+
+            $subscription->setAttribute('status', $internalStatus);
+            if ($periodStart) {
+                $subscription->setAttribute('currentPeriodStart', $periodStart);
+            }
+            if ($periodEnd) {
+                $subscription->setAttribute('currentPeriodEnd', $periodEnd);
+            }
+            $subscription->setAttribute('providers', $providers);
+
+            Authorization::skip(fn () => $this->dbForPlatform->updateDocument('payments_subscriptions', $subscription->getId(), $subscription));
+            $changes['subscription'] = $subscription->getId();
+            $changes['status'] = $internalStatus;
+            return new ProviderWebhookResult(status: 'ok', changes: $changes);
         }
 
         return new ProviderWebhookResult(status: 'ok', changes: $changes);

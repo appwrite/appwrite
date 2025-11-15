@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
 use Appwrite\Event\Event;
 use Appwrite\Payments\Provider\Registry;
+use Appwrite\Payments\Provider\StripeAdapter;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -150,6 +151,8 @@ class Create extends Base
         $primary = array_key_first($providers);
         $initialStatus = 'pending';
         $providerData = [];
+        $providerSubscriptionId = null;
+        $providerCheckoutId = null;
         $checkoutUrl = null;
         $selectedPriceId = $priceId !== '' ? $priceId : null;
         $providerPlanPriceId = '';
@@ -225,41 +228,51 @@ class Create extends Base
                 return;
             }
 
-            // Create checkout session if we have a price ID and URLs
-            if ($providerPlanPriceId && $successUrl !== '' && $cancelUrl !== '') {
-                try {
-                    $checkoutSession = $adapter->createCheckoutSession($payer, [
-                        'priceId' => $providerPlanPriceId
-                    ], $state, [
-                        'successUrl' => $successUrl,
-                        'cancelUrl' => $cancelUrl
-                    ]);
-                    $checkoutUrl = $checkoutSession->url;
-                    error_log('Checkout URL: ' . $checkoutUrl);
-                } catch (\Throwable $e) {
-                    // Log error but continue with subscription creation
-                    // The subscription can be created without checkout URL for manual payment flows
-                }
-            }
+            $providerKey = (string) $primary;
+            $providerEntryData = [];
+            $providerSubscriptionId = null;
+            $providerCheckoutId = null;
 
-            // Create or ensure subscription exists in provider
-            $subRef = null;
-            try {
-                $subRef = $adapter->ensureSubscription($payer, [
-                    'planId' => $planId,
-                    'planProviders' => $planProviders,
-                    'priceId' => (string) ($selectedPriceId ?? '')
-                ], $state);
-                $providerData = [ (string) $primary => [ 'providerSubscriptionId' => $subRef->externalSubscriptionId ] ];
-                $providerData[(string) $primary]['priceId'] = (string) ($selectedPriceId ?? '');
-                $providerData[(string) $primary]['providerPriceId'] = (string) $providerPlanPriceId;
-                // Use status from provider if available
-                $initialStatus = (string) ($subRef->metadata['status'] ?? 'pending');
-            } catch (\Throwable $e) {
-                $response->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR);
-                $response->json(['message' => 'Failed to create subscription: ' . $e->getMessage()]);
+            if (!$adapter instanceof StripeAdapter) {
+                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                $response->json(['message' => 'Unsupported payment provider: ' . $providerKey]);
                 return;
             }
+
+            if ($successUrl === '' || $cancelUrl === '') {
+                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+                $response->json(['message' => 'successUrl and cancelUrl are required.']);
+                return;
+            }
+
+            try {
+                $checkoutSession = $adapter->createCheckoutSession($payer, [
+                    'priceId' => $providerPlanPriceId
+                ], $state, [
+                    'successUrl' => $successUrl,
+                    'cancelUrl' => $cancelUrl
+                ]);
+            } catch (\Throwable $e) {
+                $response->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR);
+                $response->json(['message' => 'Failed to create checkout session: ' . $e->getMessage()]);
+                return;
+            }
+
+            $checkoutUrl = $checkoutSession->url;
+            $providerCheckoutId = (string) ($checkoutSession->metadata['id'] ?? '');
+            if ($providerCheckoutId === '') {
+                $response->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR);
+                $response->json(['message' => 'Checkout session did not return an id']);
+                return;
+            }
+            $providerEntryData = [
+                'priceId' => (string) ($selectedPriceId ?? ''),
+                'providerPriceId' => (string) $providerPlanPriceId,
+                'providerCheckoutId' => $providerCheckoutId,
+            ];
+            $initialStatus = 'pending';
+
+            $providerData[$providerKey] = $providerEntryData;
         } else {
             $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
             $response->json(['message' => 'No payment provider configured for this project']);
@@ -270,7 +283,8 @@ class Create extends Base
 
         $subscription = new Document([
             'subscriptionId' => ID::unique(),
-            'providerSubscriptionId' => $subRef->externalSubscriptionId,
+            'providerSubscriptionId' => $providerSubscriptionId,
+            'providerCheckoutId' => $providerCheckoutId,
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
             'actorType' => $actorType,
