@@ -423,6 +423,7 @@ class FunctionsCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment is still building", $response['body']);
+        $this->assertStringContainsString("The page will update after the build completes.", $response['body']);
 
         $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -703,6 +704,7 @@ class FunctionsCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment is still building", $response['body']);
+        $this->assertStringContainsString('The page will update after the build completes.', $response['body']);
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
@@ -2435,9 +2437,9 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('Deployment is still building', $response['body']);
+        $this->assertStringContainsString('The page will update after the build completes.', $response['body']);
 
         // canceled deployment
         $deployment = $this->createDeployment($functionId, [
@@ -2457,9 +2459,9 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('Deployment build canceled', $response['body']);
+        $this->assertStringContainsString('This build was canceled and won\'t be deployed.', $response['body']);
 
         $this->cleanupFunction($functionId);
     }
