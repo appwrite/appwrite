@@ -346,7 +346,7 @@ class Base extends Action
      * In case of first deployment, deployment ID will be empty in the rules, so we need to update it here.
      *
      * @param \Utopia\Database\Document $project
-     * @param \Utopia\Database\Document $site
+     * @param \Utopia\Database\Document $resource
      * @param \Utopia\Database\Document $deployment
      * @param \Utopia\Database\Database $dbForPlatform
      * @return void
