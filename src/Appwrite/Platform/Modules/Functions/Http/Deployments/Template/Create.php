@@ -116,6 +116,7 @@ class Create extends Base
                 project: $project,
                 installation: $installation,
                 dbForProject: $dbForProject,
+                dbForPlatform: $dbForPlatform,
                 queueForBuilds: $queueForBuilds,
                 template: $template,
                 github: $github,
@@ -156,6 +157,9 @@ class Create extends Base
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);
+
+
+        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

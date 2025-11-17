@@ -409,4 +409,27 @@ trait FunctionsBase
 
         return $specifications;
     }
+
+    protected function createFunctionRule(string $functionId, string $domain): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => $functionId,
+            'domain' => $domain,
+        ]);
+
+        return $rule;
+    }
+
+    protected function getFunctionRule(string $ruleId): mixed
+    {
+        $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $rule;
+    }
 }

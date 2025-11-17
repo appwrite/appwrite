@@ -451,7 +451,7 @@ trait SitesBase
         return $specifications;
     }
 
-    protected function createRule(string $siteId, string $domain): mixed
+    protected function createSiteRule(string $siteId, string $domain): mixed
     {
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
@@ -464,7 +464,7 @@ trait SitesBase
         return $rule;
     }
 
-    protected function getRule(string $ruleId): mixed
+    protected function getSiteRule(string $ruleId): mixed
     {
         $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
             'content-type' => 'application/json',

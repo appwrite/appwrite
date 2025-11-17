@@ -311,6 +311,7 @@ class Create extends Base
                     project: $project,
                     installation: $installation,
                     dbForProject: $dbForProject,
+                    dbForPlatform: $dbForPlatform,
                     queueForBuilds: $queueForBuilds,
                     template: $template,
                     github: $github,

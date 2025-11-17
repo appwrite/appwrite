@@ -13,8 +13,8 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -53,7 +53,7 @@ class Base extends Action
         return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -133,6 +133,8 @@ class Base extends Action
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);
+
+        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -328,7 +330,7 @@ class Base extends Action
             }
         }
 
-        $this->updateManualRuleForNewSiteDeployment($project, $site, $deployment, $dbForPlatform);
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -340,8 +342,8 @@ class Base extends Action
     }
 
     /**
-     * Update manual rule for new site deployment.
-     * In case of fresh site, deployment ID will be empty in the rules, so we need to update it here.
+     * Update empty manual rule for deployment.
+     * In case of first deployment, deployment ID will be empty in the rules, so we need to update it here.
      *
      * @param \Utopia\Database\Document $project
      * @param \Utopia\Database\Document $site
@@ -349,22 +351,20 @@ class Base extends Action
      * @param \Utopia\Database\Database $dbForPlatform
      * @return void
      */
-    public function updateManualRuleForNewSiteDeployment(Document $project, Document $site, Document $deployment, Database $dbForPlatform)
+    public function updateEmptyManualRule(Document $project, Document $resource, Document $deployment, Database $dbForPlatform)
     {
         $queries = [
             Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            Query::equal('deploymentId', ['']),
             Query::equal('type', ['deployment']),
-            Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
-            Query::equal('deploymentResourceType', ['site']),
             Query::equal('trigger', ['manual']),
         ];
         $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform) {
-            if (empty($rule->getAttribute('deploymentId', ''))) {
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                    'deploymentId' => $deployment->getId(),
-                    'deploymentInternalId' => $deployment->getSequence(),
-                ])));
-            }
+            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ])));
         }, $queries);
     }
 }

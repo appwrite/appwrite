@@ -14,6 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -392,6 +393,10 @@ class FunctionsCustomServerTest extends Scope
 
         $functionId = $function['body']['$id'] ?? '';
 
+        $domain = ID::unique() . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $rule = $this->createFunctionRule($functionId, $domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
         $deployment = $this->createTemplateDeployment(
             $functionId,
             [
@@ -406,6 +411,17 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
+
+        $rule = $this->getFunctionRule($rule['body']['$id']);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment is still building", $response['body']);
 
         $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -524,6 +540,10 @@ class FunctionsCustomServerTest extends Scope
          */
         $functionId = $data['functionId'];
 
+        $domain = ID::unique() . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $rule = $this->createFunctionRule($functionId, $domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true
@@ -534,6 +554,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('waiting', $deployment['body']['status']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.js', $deployment['body']['entrypoint']);
+
+        $rule = $this->getFunctionRule($rule['body']['$id']);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment is still building", $response['body']);
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 

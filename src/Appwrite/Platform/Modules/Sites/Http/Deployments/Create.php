@@ -365,7 +365,7 @@ class Create extends Base
             }
         }
 
-        $this->updateManualRuleForNewSiteDeployment($project, $site, $deployment, $dbForPlatform);
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform);
 
         $metadata = null;
 
