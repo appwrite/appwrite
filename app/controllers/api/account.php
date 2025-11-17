@@ -36,7 +36,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\PhoneNumberUtil;
-use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
@@ -232,7 +231,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'factors' => [$factor],
-            'countryCode' => ($geoRecord) ? \strtolower($geoRecord['country']['iso_code']) : '--',
+            'countryCode' => $geoRecord['countryCode'],
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $detector->getOS(),
@@ -962,7 +961,7 @@ App::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
-                'countryCode' => ($geoRecord) ? \strtolower($geoRecord['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord['countryCode'],
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1124,7 +1123,7 @@ App::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
-                'countryCode' => ($geoRecord) ? \strtolower($geoRecord['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord['countryCode'],
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1799,7 +1798,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
-                'countryCode' => ($geoRecord) ? \strtolower($geoRecord['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord['countryCode'],
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -2935,14 +2934,8 @@ App::get('/v1/account/logs')
                 $detector->getDevice()
             ));
 
-
-            if ($geoRecord) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($geoRecord['country']['iso_code']), false) ? \strtolower($geoRecord['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($geoRecord['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'];
+            $output[$i]['countryName'] = $geoRecord['countryName'];
         }
 
         $response->dynamic(new Document([

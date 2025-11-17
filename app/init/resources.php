@@ -689,7 +689,7 @@ App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale 
 
     $client = new Client();
     $client->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_GEO_SECRET'));
-    
+
     $client->setBaseUrl('http://appwrite-geo/v1');
 
     $record = null;

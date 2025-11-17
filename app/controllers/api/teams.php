@@ -24,7 +24,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\PhoneNumberUtil;
-use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
@@ -1201,9 +1200,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, array $geoRecord, Event $queueForEvents) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -1255,7 +1254,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             Authorization::setRole(Role::user($user->getId())->toString());
 
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $record = $geodb->get($request->getIP());
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = Auth::tokenGenerator();
@@ -1274,7 +1272,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord['countryCode'],
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -1452,8 +1450,8 @@ App::get('/v1/teams/:teamId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1511,15 +1509,8 @@ App::get('/v1/teams/:teamId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'];
+            $output[$i]['countryName'] = $geoRecord['countryName'];
         }
         $response->dynamic(new Document([
             'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,

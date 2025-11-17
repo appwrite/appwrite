@@ -11,7 +11,6 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -72,11 +71,11 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('locale')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, array $geoRecord): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -146,15 +145,8 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'];
+            $output[$i]['countryName'] = $geoRecord['countryName'];
         }
 
         $response->dynamic(new Document([

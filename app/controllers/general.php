@@ -31,7 +31,6 @@ use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
 use Appwrite\Utopia\View;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -57,7 +56,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey)
 {
     $host = $request->getHostname() ?? '';
     if (!empty($previewHostname)) {
@@ -379,14 +378,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-user-jwt'] = '';
 
         if (!empty($ip)) {
-            $record = $geodb->get($ip);
-
-            if ($record) {
+            if ($geoRecord) {
                 $eu = Config::getParam('locale-eu');
 
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
+                $headers['x-appwrite-country-code'] = $geoRecord['countryCode'] ?? '';
+                $headers['x-appwrite-continent-code'] = $geoRecord['continentCode'] ?? '';
+                $headers['x-appwrite-continent-eu'] = (\in_array($geoRecord['countryCode'], $eu)) ? 'true' : 'false';
             }
         }
 
@@ -852,7 +849,7 @@ App::init()
     ->inject('locale')
     ->inject('localeCodes')
     ->inject('platforms')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
@@ -864,7 +861,7 @@ App::init()
     ->inject('apiKey')
     ->inject('httpReferrer')
     ->inject('httpReferrerSafe')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $platforms, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $platforms, array $geoRecord, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe) {
         /*
         * Appwrite Router
         */
@@ -872,7 +869,7 @@ App::init()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geoRecord, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1123,13 +1120,13 @@ App::options()
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('executor')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('project')
     ->inject('devKey')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey) {
         /*
         * Appwrite Router
         */
@@ -1137,7 +1134,7 @@ App::options()
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geoRecord, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1441,11 +1438,11 @@ App::get('/robots.txt')
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('executor')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
         $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
@@ -1454,7 +1451,7 @@ App::get('/robots.txt')
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geoRecord, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1475,11 +1472,11 @@ App::get('/humans.txt')
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('executor')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('isResourceBlocked')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey) {
         $host = $request->getHostname() ?? '';
         $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
@@ -1488,7 +1485,7 @@ App::get('/humans.txt')
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geoRecord, $isResourceBlocked, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }

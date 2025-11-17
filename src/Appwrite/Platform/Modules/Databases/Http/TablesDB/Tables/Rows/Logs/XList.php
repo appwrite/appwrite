@@ -50,7 +50,7 @@ class XList extends DocumentLogXList
             ->inject('response')
             ->inject('dbForProject')
             ->inject('locale')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->callback($this->action(...));
     }
 }

@@ -24,7 +24,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
@@ -1141,8 +1140,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1198,15 +1197,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'];
+            $output[$i]['countryName'] = $geoRecord['countryName'];
         }
 
         $response->dynamic(new Document([
@@ -2548,8 +2540,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2606,15 +2598,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'];
+            $output[$i]['countryName'] = $geoRecord['countryName'];
         }
 
         $response->dynamic(new Document([
@@ -2971,8 +2956,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -3029,15 +3014,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'];
+            $output[$i]['countryName'] = $geoRecord['countryName'];
         }
 
         $response->dynamic(new Document([
@@ -3771,8 +3749,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('geoRecord')
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3829,15 +3807,9 @@ App::get('/v1/messaging/messages/:messageId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
+            $output[$i]['countryCode'] = $geoRecord['countryCode'];
+            $output[$i]['countryName'] = $geoRecord['countryName'];
 
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
         }
 
         $response->dynamic(new Document([
