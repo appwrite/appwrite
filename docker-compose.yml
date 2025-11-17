@@ -961,6 +961,14 @@ services:
     image: appwrite/browser:0.3.1
     networks:
       - appwrite
+  
+  appwrite-geo:
+    container_name: appwrite-geo
+    image: appwrite/geo:0.1.0
+    networks:
+      - appwrite
+    environment:
+      - GEO_SECRET=$_APP_GEO_SECRET
 
   openruntimes-executor:
     container_name: openruntimes-executor
