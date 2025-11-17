@@ -2,6 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Functions;
+use Appwrite\Enums\ExecutionMethod;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
