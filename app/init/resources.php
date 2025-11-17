@@ -25,6 +25,7 @@ use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
+use MaxMind\Db\Reader;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -695,6 +696,10 @@ App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale 
     $record = null;
     try {
         $record = $client->fetch("/ips/{$ip}", Client::METHOD_GET);
+        if ($record->getStatusCode() !== 200) {
+            $error = $record->json();
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $error['message'] ?? 'Failed to fetch geo data');
+        }
         $record = $record->json();
     } catch (Throwable $th) {
         Console::error($th->getMessage());
