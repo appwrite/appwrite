@@ -435,6 +435,7 @@ class FunctionsCustomServerTest extends Scope
         }, 50000, 500);
 
         // Verify deployment sizes
+        $deployment = $this->getDeployment($functionId, $deploymentId);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertGreaterThan(0, $deployment['body']['buildSize']);
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
