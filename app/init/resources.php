@@ -724,7 +724,7 @@ App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale 
     $currency = null;
     if (!empty($record)) {
         $output['countryCode'] = $record['countryCode'];
-        $output['country'] = $locale->getText('countries.' . strtolower($record['countryCode']), $locale->getText('locale.country.unknown'));
+        $output['countryName'] = $locale->getText('countries.' . strtolower($record['countryCode']), $locale->getText('locale.country.unknown'));
         $output['continent'] = $locale->getText('continents.' . strtolower($record['continentCode']), $locale->getText('locale.country.unknown'));
         $output['continentCode'] = $record['continentCode'];
         $output['eu'] = (\in_array($record['countryCode'], $eu)) ? true : false;
@@ -738,7 +738,7 @@ App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale 
         $output['currency'] = $currency;
     } else {
         $output['countryCode'] = '--';
-        $output['country'] = $locale->getText('locale.country.unknown');
+        $output['countryName'] = $locale->getText('locale.country.unknown');
         $output['continent'] = $locale->getText('locale.country.unknown');
         $output['continentCode'] = '--';
         $output['eu'] = false;
