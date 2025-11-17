@@ -14,6 +14,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -963,6 +964,46 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
             }
         }
+
+        $wg = new WaitGroup();
+        $envs = [];
+        foreach ($files as $file) {
+            if (!(\str_starts_with($file, '.env'))) {
+                continue;
+            }
+
+            $wg->add();
+            go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
+                try {
+                    $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
+                    $envFile = $contentResponse['content'] ?? '';
+
+                    $envLines = \explode("\n", $envFile);
+                    foreach ($envLines as $line) {
+                        $parts = \explode('=', $line, 2);
+                        $envName = \trim($parts[0] ?? '');
+                        $envValue = \trim($parts[1] ?? '');
+                        if (!empty($envName)) {
+                            $envs[$envName] = $envValue;
+                        }
+                    }
+                } finally {
+                    $wg->done();
+                }
+            });
+        }
+        $wg->wait();
+
+        $variables = [];
+        foreach ($envs as $key => $value) {
+            $variables[] = [
+                'name' => $key,
+                'value' => $value,
+            ];
+        }
+
+        $output->setAttribute('variables', $variables);
+
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     });
 
@@ -1137,6 +1178,44 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                         $repo['runtime'] = $runtimeWithVersion ?? '';
                     }
                 }
+
+                $wg = new WaitGroup();
+                $envs = [];
+                foreach ($files as $file) {
+                    if (!(\str_starts_with($file, '.env'))) {
+                        continue;
+                    }
+
+                    $wg->add();
+                    go(function () use ($github, $repo, $file, $wg, &$envs) {
+                        try {
+                            $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], $file);
+                            $envFile = $contentResponse['content'] ?? '';
+
+                            $envLines = \explode("\n", $envFile);
+                            foreach ($envLines as $line) {
+                                $parts = \explode('=', $line, 2);
+                                $envName = \trim($parts[0] ?? '');
+                                $envValue = \trim($parts[1] ?? '');
+                                if (!empty($envName)) {
+                                    $envs[$envName] = $envValue;
+                                }
+                            }
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+                $wg->wait();
+
+                $repo['variables'] = [];
+                foreach ($envs as $key => $value) {
+                    $repo['variables'][] = [
+                        'name' => $key,
+                        'value' => $value,
+                    ];
+                }
+
                 return $repo;
             };
         }, $repos));
