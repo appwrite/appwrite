@@ -712,10 +712,10 @@ App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale 
         $dbRecord = $geodb->get($ip);
         if ($dbRecord) {
             $record = [];
-            $record['countryCode'] = $dbRecord['country']['iso_code'];
-            $record['country'] = $dbRecord['country']['names'];
-            $record['continent'] = $dbRecord['continent']['names'];
-            $record['continentCode'] = $dbRecord['continent']['code'];
+            $record['countryCode'] = $dbRecord['country']['iso_code'] ?? '--';
+            $record['country'] = $dbRecord['country']['names'] ?? [];
+            $record['continent'] = $dbRecord['continent']['names'] ?? [];
+            $record['continentCode'] = $dbRecord['continent']['code'] ?? '--';
         }
     }
 
