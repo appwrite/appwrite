@@ -2443,6 +2443,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('The page will update after the build completes.', $response['body']);
 
         // canceled deployment
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Error Pages',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'commands' => 'cd non-existing-directory',
+            'execute' => ['any']
+        ]);
+        $domain = $this->setupFunctionDomain($functionId);
+        $proxyClient->setEndpoint('http://' . $domain);
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true
