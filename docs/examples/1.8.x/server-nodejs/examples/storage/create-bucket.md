@@ -17,5 +17,6 @@ const result = await storage.createBucket({
     allowedFileExtensions: [], // optional
     compression: sdk..None, // optional
     encryption: false, // optional
-    antivirus: false // optional
+    antivirus: false, // optional
+    transformations: false // optional
 });

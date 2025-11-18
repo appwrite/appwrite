@@ -21,5 +21,6 @@ val response = storage.updateBucket(
     allowedFileExtensions = listOf(), // optional
     compression = "none", // optional
     encryption = false, // optional
-    antivirus = false // optional
+    antivirus = false, // optional
+    transformations = false // optional
 )
