@@ -695,6 +695,11 @@ App::setResource('geodb', function ($register) {
 
 App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale $locale) {
     $ip = $request->getIp();
+
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+        Console::warning("Invalid IP address: {$ip}");
+        $ip = '0.0.0.0'; // Use fallback IP
+    }
     $eu = Config::getParam('locale-eu');
     $currencies = Config::getParam('locale-currencies');
 
