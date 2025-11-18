@@ -980,14 +980,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         /* @type Document $bucket */
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAppUser = Auth::isAppUser($authorization->getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$bucket->getAttribute('transformations', true) && !$isAppUser && !$isPrivilegedUser) {
+        if (!$bucket->getAttribute('transformations', true) && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED);
         }
 
