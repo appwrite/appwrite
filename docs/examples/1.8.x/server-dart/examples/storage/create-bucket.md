@@ -20,4 +20,5 @@ Bucket result = await storage.createBucket(
     compression: .none, // (optional)
     encryption: false, // (optional)
     antivirus: false, // (optional)
+    transformations: false, // (optional)
 );

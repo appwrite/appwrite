@@ -78,6 +78,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('gitHub')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -96,7 +97,8 @@ class Create extends Action
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github
+        GitHub $github,
+        Authorization $authorization
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -129,6 +131,7 @@ class Create extends Action
                 template: $template,
                 github: $github,
                 activate: $activate,
+                authorization: $authorization,
             );
 
             $queueForEvents
@@ -187,7 +190,7 @@ class Create extends Action
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),

@@ -74,20 +74,21 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
     {
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
         }
@@ -115,7 +116,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -161,7 +162,8 @@ class XList extends Action
                 document: $document,
                 dbForProject: $dbForProject,
                 collectionsCache: $collectionsCache,
-                operations: $operations,
+                authorization: $authorization,
+                operations: $operations
             );
         }
 

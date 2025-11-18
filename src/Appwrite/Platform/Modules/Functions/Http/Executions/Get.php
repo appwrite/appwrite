@@ -51,6 +51,7 @@ class Get extends Action
             ->param('executionId', '', new UID(), 'Execution ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -58,12 +59,13 @@ class Get extends Action
         string $functionId,
         string $executionId,
         Response $response,
-        Database $dbForProject
+        Database $dbForProject,
+        Authorization $authorization
     ) {
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);

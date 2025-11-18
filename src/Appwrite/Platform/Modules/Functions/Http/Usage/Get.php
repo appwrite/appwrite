@@ -54,10 +54,11 @@ class Get extends Action
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $functionId, string $range, Response $response, Database $dbForProject)
+    public function action(string $functionId, string $range, Response $response, Database $dbForProject, Authorization $authorization)
     {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -82,7 +83,7 @@ class Get extends Action
             str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_FAILED),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

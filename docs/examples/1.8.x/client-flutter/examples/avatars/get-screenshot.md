@@ -7,7 +7,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 // Downloading file
-UInt8List bytes = await avatars.getScreenshot(
+Uint8List bytes = await avatars.getScreenshot(
     url: 'https://example.com',
     headers: {}, // optional
     viewportWidth: 1, // optional

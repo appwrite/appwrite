@@ -59,6 +59,7 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -67,12 +68,13 @@ class XList extends Action
         array $queries,
         bool $includeTotal,
         Response $response,
-        Database $dbForProject
+        Database $dbForProject,
+        Authorization $authorization
     ) {
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);

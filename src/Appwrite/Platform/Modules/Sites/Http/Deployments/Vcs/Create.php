@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
@@ -71,6 +72,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('gitHub')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -86,7 +88,8 @@ class Create extends Action
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github
+        GitHub $github,
+        Authorization $authorization
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -109,6 +112,7 @@ class Create extends Action
             template: $template,
             github: $github,
             activate: $activate,
+            authorization: $authorization,
             reference: $reference,
             referenceType: $type
         );

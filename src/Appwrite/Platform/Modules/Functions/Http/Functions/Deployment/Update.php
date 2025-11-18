@@ -61,6 +61,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -71,7 +72,8 @@ class Update extends Action
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -100,7 +102,7 @@ class Update extends Action
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queries = [
             Query::equal('trigger', ['manual']),
@@ -111,12 +113,12 @@ class Update extends Action
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
+        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $authorization) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getSequence());
 
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
         }, $queries));
 
         $queueForEvents

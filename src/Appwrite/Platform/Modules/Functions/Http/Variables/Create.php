@@ -64,6 +64,7 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -75,7 +76,8 @@ class Create extends Action
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Document $project
+        Document $project,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -118,7 +120,7 @@ class Create extends Action
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
