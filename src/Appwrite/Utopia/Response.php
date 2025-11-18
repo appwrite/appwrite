@@ -59,6 +59,7 @@ use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
+use Appwrite\Utopia\Response\Model\DetectionVariable;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
@@ -316,6 +317,7 @@ class Response extends SwooleResponse
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
+    public const MODEL_DETECTION_VARIABLE = 'detectionVariable';
     public const MODEL_DETECTION_RUNTIME = 'detectionRuntime';
     public const MODEL_VCS_CONTENT = 'vcsContent';
     public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
@@ -563,6 +565,7 @@ class Response extends SwooleResponse
             ->setModel(new ProviderRepositoryRuntime())
             ->setModel(new DetectionFramework())
             ->setModel(new DetectionRuntime())
+            ->setModel(new DetectionVariable())
             ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())
@@ -809,7 +812,7 @@ class Response extends SwooleResponse
             }
 
             if ($rule['sensitive']) {
-                $roles = Authorization::getRoles();
+                $roles = $this->authorization->getRoles() ?? [];
                 $isPrivilegedUser = Auth::isPrivilegedUser($roles);
                 $isAppUser = Auth::isAppUser($roles);
 
@@ -976,5 +979,12 @@ class Response extends SwooleResponse
         } finally {
             self::$showSensitive = false;
         }
+    }
+
+    private ?Authorization $authorization = null;
+
+    public function setAuthorization(Authorization $authorization): void
+    {
+        $this->authorization = $authorization;
     }
 }

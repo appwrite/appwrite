@@ -55,10 +55,11 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user): void
+    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user, Authorization $authorization): void
     {
         $permissions = [];
         if (!empty($user->getId())) {
@@ -73,7 +74,7 @@ class Create extends Action
             }
         }
 
-        $transaction = Authorization::skip(fn () => $dbForProject->createDocument('transactions', new Document([
+        $transaction = $authorization->skip(fn () => $dbForProject->createDocument('transactions', new Document([
             '$id' => ID::unique(),
             '$permissions' => $permissions,
             'status' => 'pending',
