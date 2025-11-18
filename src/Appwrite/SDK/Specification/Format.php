@@ -534,9 +534,12 @@ abstract class Format
                 break;
             case 'project':
                 switch ($method) {
-                    case 'getUsage':
-                        // Range Enum Keys
-                        return ['One Hour', 'One Day'];
+                    default:
+                        if (str_starts_with($method, 'getUsage')) {
+                            // Range Enum Keys
+                            return ['One Hour', 'One Day'];
+                        }
+                        break;
                 }
                 break;
         }
