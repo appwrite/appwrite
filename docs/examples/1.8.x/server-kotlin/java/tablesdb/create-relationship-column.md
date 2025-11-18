@@ -2,6 +2,7 @@ import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.TablesDB;
 import io.appwrite.enums.RelationshipType;
+import io.appwrite.enums.RelationMutate;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint

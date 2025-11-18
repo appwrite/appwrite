@@ -1,6 +1,8 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Storage;
+import io.appwrite.enums.ImageGravity;
+import io.appwrite.enums.ImageFormat;
 
 Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint

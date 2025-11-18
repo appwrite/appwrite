@@ -1,6 +1,7 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Enums
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -12,7 +13,7 @@ functions = Functions.new(client)
 result = functions.update(
     function_id: '<FUNCTION_ID>',
     name: '<NAME>',
-    runtime: ::NODE_14_5, # optional
+    runtime: Runtime::NODE_14_5, # optional
     execute: ["any"], # optional
     events: [], # optional
     schedule: '', # optional
