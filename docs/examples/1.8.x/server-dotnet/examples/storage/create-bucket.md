@@ -18,7 +18,7 @@ Bucket result = await storage.CreateBucket(
     enabled: false, // optional
     maximumFileSize: 1, // optional
     allowedFileExtensions: new List<string>(), // optional
-    compression: .None, // optional
+    compression: Compression.None, // optional
     encryption: false, // optional
     antivirus: false // optional
 );

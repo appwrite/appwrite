@@ -7,7 +7,7 @@ Client client = Client()
 
 Avatars avatars = Avatars(client);
 
-UInt8List result = await avatars.getFlag(
+Uint8List result = await avatars.getFlag(
     code: Flag.afghanistan,
     width: 0, // (optional)
     height: 0, // (optional)
