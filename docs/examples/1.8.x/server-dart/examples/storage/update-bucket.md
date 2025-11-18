@@ -20,4 +20,5 @@ Bucket result = await storage.updateBucket(
     compression: .none, // (optional)
     encryption: false, // (optional)
     antivirus: false, // (optional)
+    transformations: false, // (optional)
 );

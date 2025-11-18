@@ -21,5 +21,6 @@ result = storage.update_bucket(
     allowed_file_extensions: [], # optional
     compression: ::NONE, # optional
     encryption: false, # optional
-    antivirus: false # optional
+    antivirus: false, # optional
+    transformations: false # optional
 )

@@ -22,6 +22,7 @@ storage.updateBucket(
     .NONE, // compression (optional)
     false, // encryption (optional)
     false, // antivirus (optional)
+    false, // transformations (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
