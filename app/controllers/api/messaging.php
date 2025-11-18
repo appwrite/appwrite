@@ -1199,8 +1199,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([
@@ -2601,8 +2601,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([
@@ -3016,8 +3016,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([
@@ -3812,8 +3812,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
 
         }
 

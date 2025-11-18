@@ -22,7 +22,6 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends Action

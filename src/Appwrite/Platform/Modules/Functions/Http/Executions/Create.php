@@ -239,7 +239,7 @@ class Create extends Base
 
                 $headers['x-appwrite-country-code'] = $geoRecord['countryCode'] ?? '';
                 $headers['x-appwrite-continent-code'] = $geoRecord['continentCode'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($geoRecord['countryCode'], $eu)) ? 'true' : 'false';
+                $headers['x-appwrite-continent-eu'] = (\in_array(($geoRecord['countryCode'] ?? ''), $eu)) ? 'true' : 'false';
             }
         }
 

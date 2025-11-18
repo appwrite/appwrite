@@ -1275,7 +1275,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
-                'countryCode' => $geoRecord['countryCode'],
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -1513,8 +1513,8 @@ App::get('/v1/teams/:teamId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
         $response->dynamic(new Document([
             'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,

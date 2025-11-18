@@ -1803,7 +1803,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
-                'countryCode' => $geoRecord['countryCode'],
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -2944,8 +2944,8 @@ App::get('/v1/account/logs')
                 $detector->getDevice()
             ));
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([

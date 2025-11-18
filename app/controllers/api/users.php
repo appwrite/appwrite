@@ -969,8 +969,8 @@ App::get('/v1/users/:userId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([
@@ -2210,7 +2210,7 @@ App::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
-                'countryCode' => $geoRecord['countryCode'],
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => $expire,
             ],
             $detector->getOS(),
