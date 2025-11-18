@@ -44,13 +44,13 @@ class Specs extends Action
     }
 
     protected function getFormatInstance(string $format, array $arguments)
-      {
-          return match ($format) {
-              'swagger2' => new Swagger2(...$arguments),
-              'open-api3' => new OpenAPI3(...$arguments),
-              default => throw new Exception('Format not found: ' . $format)
-          };
-      }
+    {
+        return match ($format) {
+            'swagger2' => new Swagger2(...$arguments),
+            'open-api3' => new OpenAPI3(...$arguments),
+            default => throw new Exception('Format not found: ' . $format)
+        };
+    }
 
     public function __construct()
     {
