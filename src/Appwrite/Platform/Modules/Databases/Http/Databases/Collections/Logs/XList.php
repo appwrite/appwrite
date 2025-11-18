@@ -141,8 +141,8 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel'] ?? null
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'];
-            $output[$i]['countryName'] = $geoRecord['countryName'];
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([
