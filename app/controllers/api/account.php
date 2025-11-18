@@ -1126,7 +1126,7 @@ App::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
-                'countryCode' => $geoRecord['countryCode'],
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
