@@ -1,6 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
+import io.appwrite.enums.Runtime;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +13,7 @@ Functions functions = new Functions(client);
 functions.update(
     "<FUNCTION_ID>", // functionId
     "<NAME>", // name
-    .NODE_14_5, // runtime (optional)
+    Runtime.NODE_14_5, // runtime (optional)
     listOf("any"), // execute (optional)
     listOf(), // events (optional)
     "", // schedule (optional)

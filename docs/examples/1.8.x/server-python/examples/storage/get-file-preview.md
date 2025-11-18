@@ -1,5 +1,7 @@
 from appwrite.client import Client
 from appwrite.services.storage import Storage
+from appwrite.enums import ImageGravity
+from appwrite.enums import ImageFormat
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
