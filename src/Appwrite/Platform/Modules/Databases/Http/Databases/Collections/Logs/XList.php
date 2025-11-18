@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use DeviceDetector\DeviceDetector as Detector;
-use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -23,7 +22,6 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
 use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends Action
@@ -70,13 +68,12 @@ class XList extends Action
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('locale')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, array $geoRecord, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -142,15 +139,8 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel'] ?? null
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([

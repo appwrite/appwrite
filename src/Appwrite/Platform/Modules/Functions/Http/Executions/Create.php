@@ -17,7 +17,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -93,7 +92,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('queueForFunctions')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->inject('executor')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -116,7 +115,7 @@ class Create extends Base
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
-        Reader $geodb,
+        array $geoRecord,
         Executor $executor,
         Authorization $authorization
     ) {
@@ -235,14 +234,12 @@ class Create extends Base
         $headers['x-appwrite-client-ip'] = $ip;
 
         if (!empty($ip)) {
-            $record = $geodb->get($ip);
-
-            if ($record) {
+            if ($geoRecord) {
                 $eu = Config::getParam('locale-eu');
 
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
+                $headers['x-appwrite-country-code'] = $geoRecord['countryCode'] ?? '';
+                $headers['x-appwrite-continent-code'] = $geoRecord['continentCode'] ?? '';
+                $headers['x-appwrite-continent-eu'] = (\in_array(($geoRecord['countryCode'] ?? ''), $eu)) ? 'true' : 'false';
             }
         }
 
@@ -252,8 +249,6 @@ class Create extends Base
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
-
-
 
         $status = $async ? 'waiting' : 'processing';
 

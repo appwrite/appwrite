@@ -5,7 +5,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -31,42 +30,9 @@ App::get('/v1/locale')
     ->inject('request')
     ->inject('response')
     ->inject('locale')
-    ->inject('geodb')
-    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
-        $eu = Config::getParam('locale-eu');
-        $currencies = Config::getParam('locale-currencies');
-        $output = [];
-        $ip = $request->getIP();
-
-        $output['ip'] = $ip;
-
-        $currency = null;
-
-        $record = $geodb->get($ip);
-
-        if ($record) {
-            $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
-            $output['continentCode'] = $record['continent']['code'];
-            $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
-
-            foreach ($currencies as $code => $element) {
-                if (isset($element['locations']) && isset($element['code']) && \in_array($record['country']['iso_code'], $element['locations'])) {
-                    $currency = $element['code'];
-                }
-            }
-
-            $output['currency'] = $currency;
-        } else {
-            $output['countryCode'] = '--';
-            $output['country'] = $locale->getText('locale.country.unknown');
-            $output['continent'] = $locale->getText('locale.country.unknown');
-            $output['continentCode'] = '--';
-            $output['eu'] = false;
-            $output['currency'] = $currency;
-        }
-
+    ->inject('geoRecord')
+    ->action(function (Request $request, Response $response, Locale $locale, array $geoRecord) {
+        $output = $geoRecord;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 

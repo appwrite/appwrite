@@ -36,7 +36,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\PhoneNumberUtil;
-use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
@@ -192,7 +191,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 ;
 
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, array $geoRecord, Event $queueForEvents, Mail $queueForMails, Authorization $authorization) {
 
     /** @var Utopia\Database\Document $user */
     $userFromRequest = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -211,7 +210,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
-    $record = $geodb->get($request->getIP());
     $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
     $factor = (match ($verifiedToken->getAttribute('type')) {
@@ -233,7 +231,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'factors' => [$factor],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'countryCode' => $geoRecord['countryCode'] ?? '',
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $detector->getOS(),
@@ -926,12 +924,12 @@ App::post('/v1/account/sessions/email')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('hooks')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Authorization $authorization) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, array $geoRecord, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -953,7 +951,6 @@ App::post('/v1/account/sessions/email')
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $session = new Document(array_merge(
             [
@@ -966,7 +963,7 @@ App::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1064,10 +1061,10 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('authorization')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, array $geoRecord, Event $queueForEvents, Authorization $authorization) {
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
@@ -1117,7 +1114,6 @@ App::post('/v1/account/sessions/anonymous')
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
         $session = new Document(array_merge(
@@ -1130,7 +1126,7 @@ App::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['anonymous'],
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
@@ -1208,7 +1204,7 @@ App::post('/v1/account/sessions/token')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('authorization')
@@ -1402,10 +1398,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, array $platforms, Document $devKey, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, array $platforms, Document $devKey, Document $user, Database $dbForProject, array $geoRecord, Event $queueForEvents, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1792,7 +1788,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             // If the `token` param is not set, we persist the session in a cookie
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $record = $geodb->get($request->getIP());
             $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
             $session = new Document(array_merge([
@@ -1808,7 +1803,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => [TYPE::EMAIL, 'oauth2'], // include a special oauth2 factor to bypass MFA checks
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -2550,7 +2545,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('authorization')
@@ -2592,7 +2587,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('authorization')
@@ -2914,9 +2909,9 @@ App::get('/v1/account/logs')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->inject('geodb')
+    ->inject('geoRecord')
     ->inject('dbForProject')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, array $geoRecord, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -2949,15 +2944,8 @@ App::get('/v1/account/logs')
                 $detector->getDevice()
             ));
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
+            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
         }
 
         $response->dynamic(new Document([

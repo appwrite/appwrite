@@ -213,6 +213,7 @@ services:
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
+      - _APP_GEO_SECRET=$_APP_GEO_SECRET
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -961,6 +962,14 @@ services:
     image: appwrite/browser:0.3.1
     networks:
       - appwrite
+  
+  appwrite-geo:
+    container_name: appwrite-geo
+    image: appwrite/geo:0.1.0
+    networks:
+      - appwrite
+    environment:
+      - GEO_SECRET=$_APP_GEO_SECRET
 
   openruntimes-executor:
     container_name: openruntimes-executor
