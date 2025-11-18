@@ -2376,6 +2376,107 @@ trait DatabasesBase
     }
 
     /**
+     * @depends testCreateDocument
+     */
+    public function testListDocumentsWithCache(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        // useCache=true + select queries
+        $documents1 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['title', 'releaseYear', '$id'])->toString(),
+                Query::orderAsc('releaseYear')->toString(),
+            ],
+            'useCache' => true,
+            'ttl' => 60,
+        ]);
+
+        $this->assertEquals(200, $documents1['headers']['status-code']);
+        $this->assertCount(3, $documents1['body']['documents']);
+        $this->assertEquals(1944, $documents1['body']['documents'][0]['releaseYear']);
+        $this->assertEquals(2017, $documents1['body']['documents'][1]['releaseYear']);
+        $this->assertEquals(2019, $documents1['body']['documents'][2]['releaseYear']);
+
+        $this->assertArrayHasKey('title', $documents1['body']['documents'][0]);
+        $this->assertArrayHasKey('releaseYear', $documents1['body']['documents'][0]);
+        $this->assertArrayHasKey('$id', $documents1['body']['documents'][0]);
+
+        // First request should be MISS
+        $this->assertArrayHasKey('X-Appwrite-Cache-Documents', $documents1['headers']);
+        $this->assertEquals('miss', $documents1['headers']['X-Appwrite-Cache-Documents']);
+        $this->assertArrayHasKey('X-Appwrite-Cache-Documents-Total', $documents1['headers']);
+        $this->assertEquals('miss', $documents1['headers']['X-Appwrite-Cache-Documents-Total']);
+
+        // Should return cached results
+        $documents2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['title', 'releaseYear', '$id'])->toString(),
+                Query::orderAsc('releaseYear')->toString(),
+            ],
+            'useCache' => true,
+            'ttl' => 60,
+        ]);
+
+        $this->assertEquals(200, $documents2['headers']['status-code']);
+        $this->assertCount(3, $documents2['body']['documents']);
+
+        // Cached results match the first request
+        $this->assertEquals($documents1['body']['documents'][0]['$id'], $documents2['body']['documents'][0]['$id']);
+        $this->assertEquals($documents1['body']['documents'][0]['title'], $documents2['body']['documents'][0]['title']);
+        $this->assertEquals($documents1['body']['documents'][0]['releaseYear'], $documents2['body']['documents'][0]['releaseYear']);
+
+        // Second request should  hit cache
+        $this->assertArrayHasKey('X-Appwrite-Cache-Documents', $documents2['headers']);
+        $this->assertEquals('hit', $documents2['headers']['X-Appwrite-Cache-Documents']);
+        $this->assertArrayHasKey('X-Appwrite-Cache-Documents-Total', $documents2['headers']);
+        $this->assertEquals('hit', $documents2['headers']['X-Appwrite-Cache-Documents-Total']);
+
+        // useCache=false - should still work and no cache headers
+        $documents3 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['title', 'releaseYear', '$id'])->toString(),
+                Query::orderAsc('releaseYear')->toString(),
+            ],
+            'useCache' => false,
+        ]);
+
+        $this->assertEquals(200, $documents3['headers']['status-code']);
+        $this->assertCount(3, $documents3['body']['documents']);
+        $this->assertEquals(1944, $documents3['body']['documents'][0]['releaseYear']);
+
+        // Verify cache headers are not present when useCache=false
+        $this->assertArrayNotHasKey('X-Appwrite-Cache-Documents', $documents3['headers']);
+        $this->assertArrayNotHasKey('X-Appwrite-Cache-Documents-Total', $documents3['headers']);
+
+        // Test with total=false
+        $documents4 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['title', 'releaseYear', '$id'])->toString(),
+                Query::orderAsc('releaseYear')->toString(),
+            ],
+            'useCache' => true,
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $documents4['headers']['status-code']);
+        $this->assertEquals(0, $documents4['body']['total']);
+        $this->assertCount(3, $documents4['body']['documents']);
+    }
+
+    /**
      * @depends testListDocuments
      */
     public function testGetDocument(array $data): void

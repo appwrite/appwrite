@@ -24,6 +24,7 @@ use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class XList extends Action
@@ -70,25 +71,26 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->param('useCache', false, new Boolean(true), 'Opt-in to cached responses for select queries. Disabled by default.', true)
+            ->param('ttl', 60, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, bool $useCache, int $ttl, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState): void
     {
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException());
         }
@@ -116,7 +118,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -135,9 +137,62 @@ class XList extends Action
                 $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
                 $total = $includeTotal ? $transactionState->countDocuments($collectionTableId, $transactionId, $queries) : 0;
             } elseif (! empty($selectQueries)) {
-                // has selects, allow relationship on documents
-                $documents = $dbForProject->find($collectionTableId, $queries);
-                $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+
+                if ($useCache) {
+                    $serializedQueries = [];
+                    foreach ($queries as $query) {
+                        $serializedQueries[] = $query instanceof Query ? $query->toArray() : $query;
+                    }
+
+                    $hostname = $dbForProject->getAdapter()->getHostname();
+                    $cacheKeyBase = \sprintf(
+                        '%s-cache-%s:%s:%s:collection:%s:%s',
+                        $dbForProject->cacheName,
+                        $hostname ?? '',
+                        $dbForProject->getNamespace(),
+                        $dbForProject->getTenant(),
+                        $collectionId,
+                        \md5(\implode($serializedQueries))
+                    );
+
+                    $documentsCacheKey = $cacheKeyBase . ':documents';
+                    $totalCacheKey = $cacheKeyBase . ':total';
+
+                    $documentsCacheHit = $totalDocumentsCacheHit = false;
+
+                    $cachedDocuments = $dbForProject->cache->load($documentsCacheKey, $ttl);
+                    if ($cachedDocuments !== null && $cachedDocuments !== false) {
+                        $documents = $cachedDocuments;
+                        $documentsCacheHit = true;
+                    } else {
+                        $documents = $dbForProject->find($collectionTableId, $queries);
+                        $dbForProject->cache->save($documentsCacheKey, $documents, $ttl);
+                    }
+
+                    $response->addHeader('X-Appwrite-Cache-Documents', $documentsCacheHit ? 'hit' : 'miss');
+
+
+                    if ($includeTotal) {
+                        $cachedTotal = $dbForProject->cache->load($totalCacheKey, $ttl);
+                        if ($cachedTotal !== null && $cachedTotal !== false) {
+                            $total = $cachedTotal;
+                            $totalDocumentsCacheHit = true;
+                        } else {
+                            $total = $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                            $dbForProject->cache->save($totalCacheKey, $total, $ttl);
+                        }
+                    } else {
+                        $total = 0;
+                    }
+
+                    $response->addHeader('X-Appwrite-Cache-Documents-Total', $totalDocumentsCacheHit ? 'hit' : 'miss');
+
+                } else {
+                    // has selects, allow relationship on documents
+                    $documents = $dbForProject->find($collectionTableId, $queries);
+                    $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                }
+
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
@@ -162,14 +217,16 @@ class XList extends Action
                 document: $document,
                 dbForProject: $dbForProject,
                 collectionsCache: $collectionsCache,
-                authorization: $authorization,
-                operations: $operations
+                operations: $operations,
             );
         }
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+
+
+
 
         $response->dynamic(new Document([
             'total' => $total,
