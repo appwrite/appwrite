@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -67,11 +68,12 @@ class Update extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-            ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER), 'Maximum size of the string attribute.', true)
-            ->param('newKey', null, new Key(), 'New Attribute Key.', true)
+            ->param('size', null, new Nullable(new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER)), 'Maximum size of the string attribute.', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New Attribute Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -85,7 +87,8 @@ class Update extends Action
         ?string        $newKey,
         UtopiaResponse $response,
         Database       $dbForProject,
-        Event          $queueForEvents
+        Event          $queueForEvents,
+        Authorization  $authorization
     ): void {
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
@@ -93,6 +96,7 @@ class Update extends Action
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
+            authorization: $authorization,
             type: Database::VAR_STRING,
             size: $size,
             default: $default,

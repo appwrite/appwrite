@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Numeric;
 
 class Decrement extends DecrementDocumentAttribute
@@ -59,13 +60,14 @@ class Decrement extends DecrementDocumentAttribute
             ->param('rowId', '', new UID(), 'Row ID.')
             ->param('column', '', new Key(), 'Column key.')
             ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true)
-            ->param('min', null, new Numeric(), 'Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.', true)
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('min', null, new Nullable(new Numeric()), 'Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

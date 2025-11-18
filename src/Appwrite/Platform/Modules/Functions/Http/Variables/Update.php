@@ -16,6 +16,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -56,11 +57,12 @@ class Update extends Base
             ->param('functionId', '', new UID(), 'Function unique ID.', false)
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-            ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
-            ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
+            ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
+            ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -72,7 +74,8 @@ class Update extends Base
         ?bool $secret,
         Response $response,
         Database $dbForProject,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -109,7 +112,7 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     }

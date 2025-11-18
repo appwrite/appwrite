@@ -4,13 +4,12 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action as AppwriteAction;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Operator;
 use Utopia\Database\Validator\Authorization;
 
-abstract class Action extends AppwriteAction
+abstract class Action extends DatabasesAction
 {
     /**
      * @var string|null The current context (either 'row' or 'document')
@@ -22,7 +21,7 @@ abstract class Action extends AppwriteAction
      */
     abstract protected function getResponseModel(): string;
 
-    public function setHttpPath(string $path): AppwriteAction
+    public function setHttpPath(string $path): DatabasesAction
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
@@ -259,9 +258,9 @@ abstract class Action extends AppwriteAction
         Document $collection,
         Document $document,
         Database $dbForProject,
-
         /* options */
         array &$collectionsCache,
+        Authorization $authorization,
         ?int &$operations = null,
     ): bool {
 
@@ -298,7 +297,7 @@ abstract class Action extends AppwriteAction
             $relatedCollectionId = $relationship->getAttribute('relatedCollection');
 
             if (!isset($collectionsCache[$relatedCollectionId])) {
-                $relatedCollectionDoc = Authorization::skip(
+                $relatedCollectionDoc = $authorization->skip(
                     fn () => $dbForProject->getDocument(
                         'database_' . $database->getSequence(),
                         $relatedCollectionId
@@ -324,7 +323,8 @@ abstract class Action extends AppwriteAction
                         document: $relation,
                         dbForProject: $dbForProject,
                         collectionsCache: $collectionsCache,
-                        operations: $operations
+                        operations: $operations,
+                        authorization: $authorization
                     );
                 }
             }
@@ -337,53 +337,6 @@ abstract class Action extends AppwriteAction
         }
 
         return true;
-    }
-
-    /**
-     * Parse operator strings in data array and convert them to Operator objects.
-     *
-     * @param array $data The data array that may contain operator JSON strings
-     * @param Document $collection The collection document to check for relationship attributes
-     * @return array The data array with operators converted to Operator objects
-     * @throws Exception If an operator string is invalid
-     */
-    protected function parseOperators(array $data, Document $collection): array
-    {
-        $relationshipKeys = [];
-        foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
-                $relationshipKeys[$attribute->getAttribute('key')] = true;
-            }
-        }
-
-        foreach ($data as $key => $value) {
-            if (\str_starts_with($key, '$')) {
-                continue;
-            }
-
-            if (isset($relationshipKeys[$key])) {
-                continue;
-            }
-
-            if (\is_string($value)) {
-                $decoded = \json_decode($value, true);
-
-                if (
-                    \is_array($decoded) &&
-                    isset($decoded['method']) &&
-                    \is_string($decoded['method']) &&
-                    Operator::isMethod($decoded['method'])
-                ) {
-                    try {
-                        $data[$key] = Operator::parse($value);
-                    } catch (\Exception $e) {
-                        throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
-                    }
-                }
-            }
-        }
-
-        return $data;
     }
 
     /**

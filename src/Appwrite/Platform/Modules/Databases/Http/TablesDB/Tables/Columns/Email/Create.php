@@ -12,6 +12,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 
 class Create extends EmailCreate
 {
@@ -54,12 +55,13 @@ class Create extends EmailCreate
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Email(), 'Default value for column when not provided. Cannot be set when column is required.', true)
+            ->param('default', null, new Nullable(new Email()), 'Default value for column when not provided. Cannot be set when column is required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

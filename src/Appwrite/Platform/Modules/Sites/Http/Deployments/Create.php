@@ -29,6 +29,7 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -71,9 +72,9 @@ class Create extends Action
                 packaging: true,
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('installCommand', null, new Text(8192, 0), 'Install Commands.', true)
-            ->param('buildCommand', null, new Text(8192, 0), 'Build Commands.', true)
-            ->param('outputDirectory', null, new Text(8192, 0), 'Output Directory.', true)
+            ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
+            ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
+            ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
             ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
             ->inject('request')
@@ -86,6 +87,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -105,7 +107,8 @@ class Create extends Action
         Device $deviceForSites,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -274,7 +277,7 @@ class Create extends Action
                 // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                 $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -339,7 +342,7 @@ class Create extends Action
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

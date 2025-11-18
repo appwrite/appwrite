@@ -36,6 +36,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
@@ -49,6 +50,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -80,12 +82,12 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
-    ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
+    ->param('isEuRegion', null, new Nullable(new Boolean()), 'Set as EU region.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -177,7 +179,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -259,7 +261,7 @@ App::post('/v1/messaging/providers/resend')
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -366,7 +368,7 @@ App::post('/v1/messaging/providers/smtp')
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -453,7 +455,7 @@ App::post('/v1/messaging/providers/msg91')
     ->param('templateId', '', new Text(0), 'Msg91 template ID', true)
     ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 auth key.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -536,7 +538,7 @@ App::post('/v1/messaging/providers/telesign')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
     ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -620,7 +622,7 @@ App::post('/v1/messaging/providers/textmagic')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -704,7 +706,7 @@ App::post('/v1/messaging/providers/twilio')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -788,7 +790,7 @@ App::post('/v1/messaging/providers/vonage')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -888,8 +890,8 @@ App::post('/v1/messaging/providers/fcm')
     ])
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -982,7 +984,7 @@ App::post('/v1/messaging/providers/apns')
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
     ->param('sandbox', false, new Boolean(), 'Use APNS sandbox environment.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -1069,8 +1071,9 @@ App::get('/v1/messaging/providers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -1096,7 +1099,7 @@ App::get('/v1/messaging/providers')
             }
 
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -1270,8 +1273,8 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
-    ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('isEuRegion', null, new Nullable(new Boolean()), 'Set as EU region.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
@@ -1381,7 +1384,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
@@ -1479,7 +1482,7 @@ App::patch('/v1/messaging/providers/resend/:providerId')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Resend API key.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
@@ -1597,17 +1600,17 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
-    ->param('port', null, new Range(1, 65535), 'SMTP port.', true)
+    ->param('port', null, new Nullable(new Range(1, 65535)), 'SMTP port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
-    ->param('autoTLS', null, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
+    ->param('autoTLS', null, new Nullable(new Boolean()), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -1725,7 +1728,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('templateId', '', new Text(0), 'Msg91 template ID.', true)
     ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 auth key.', true)
@@ -1812,7 +1815,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
     ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -1901,7 +1904,7 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -1990,7 +1993,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -2079,7 +2082,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ))
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -2187,8 +2190,8 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ])
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2282,12 +2285,12 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ])
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
-    ->param('sandbox', null, new Boolean(), 'Use APNS sandbox environment.', true)
+    ->param('sandbox', null, new Nullable(new Boolean()), 'Use APNS sandbox environment.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2476,8 +2479,9 @@ App::get('/v1/messaging/topics')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2503,7 +2507,7 @@ App::get('/v1/messaging/topics')
             }
 
             $topicId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2676,8 +2680,8 @@ App::patch('/v1/messaging/topics/:topicId')
         ]
     ))
     ->param('topicId', '', new UID(), 'Topic ID.')
-    ->param('name', null, new Text(128), 'Topic Name.', true)
-    ->param('subscribe', null, new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
+    ->param('name', null, new Nullable(new Text(128)), 'Topic Name.', true)
+    ->param('subscribe', null, new Nullable(new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2779,29 +2783,27 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->param('targetId', '', new UID(), 'Target ID. The target ID to link to the specified Topic ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
-
-        $validator = new Authorization('subscribe');
-
-        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$authorization->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2834,7 +2836,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2879,8 +2881,9 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2891,7 +2894,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2914,7 +2917,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             }
 
             $subscriberId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2928,10 +2931,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
-            return function () use ($subscriber, $dbForProject) {
-                $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
+            return function () use ($subscriber, $dbForProject, $authorization) {
+                $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -3066,9 +3069,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Authorization $authorization, Response $response) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3080,8 +3084,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -3117,9 +3121,10 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3142,7 +3147,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -3190,7 +3195,7 @@ App::post('/v1/messaging/messages/email')
     ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -3363,7 +3368,7 @@ App::post('/v1/messaging/messages/sms')
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
-    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -3486,7 +3491,7 @@ App::post('/v1/messaging/messages/push')
     ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('data', null, new JSON(), 'Additional key-value pair data for push notification.', true)
+    ->param('data', null, new Nullable(new JSON()), 'Additional key-value pair data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
     ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
@@ -3495,7 +3500,7 @@ App::post('/v1/messaging/messages/push')
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', -1, new Integer(), 'Badge for push notification. Available only for iOS Platform.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
-    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
     ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
     ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true)
@@ -3699,8 +3704,9 @@ App::get('/v1/messaging/messages')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3726,7 +3732,7 @@ App::get('/v1/messaging/messages')
             }
 
             $messageId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
@@ -3981,17 +3987,17 @@ App::patch('/v1/messaging/messages/email/:messageId')
         ]
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('subject', null, new Text(998), 'Email Subject.', true)
-    ->param('content', null, new Text(64230), 'Email Content.', true)
-    ->param('draft', null, new Boolean(), 'Is message a draft', true)
-    ->param('html', null, new Boolean(), 'Is content of type HTML', true)
-    ->param('cc', null, new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
-    ->param('bcc', null, new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
-    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
-    ->param('attachments', null, new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
+    ->param('topics', null, new Nullable(new ArrayList(new UID())), 'List of Topic IDs.', true)
+    ->param('users', null, new Nullable(new ArrayList(new UID())), 'List of User IDs.', true)
+    ->param('targets', null, new Nullable(new ArrayList(new UID())), 'List of Targets IDs.', true)
+    ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
+    ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
+    ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
+    ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
+    ->param('cc', null, new Nullable(new ArrayList(new UID())), 'Array of target IDs to be added as CC.', true)
+    ->param('bcc', null, new Nullable(new ArrayList(new UID())), 'Array of target IDs to be added as BCC.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -4207,12 +4213,12 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         )
     ])
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('content', null, new Text(64230), 'Email Content.', true)
-    ->param('draft', null, new Boolean(), 'Is message a draft', true)
-    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('topics', null, new Nullable(new ArrayList(new UID())), 'List of Topic IDs.', true)
+    ->param('users', null, new Nullable(new ArrayList(new UID())), 'List of User IDs.', true)
+    ->param('targets', null, new Nullable(new ArrayList(new UID())), 'List of Targets IDs.', true)
+    ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
+    ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -4369,24 +4375,24 @@ App::patch('/v1/messaging/messages/push/:messageId')
         ]
     ))
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('title', null, new Text(256), 'Title for push notification.', true)
-    ->param('body', null, new Text(64230), 'Body for push notification.', true)
-    ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
-    ->param('action', null, new Text(256), 'Action for push notification.', true)
-    ->param('image', null, new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
-    ->param('icon', null, new Text(256), 'Icon for push notification. Available only for Android and Web platforms.', true)
-    ->param('sound', null, new Text(256), 'Sound for push notification. Available only for Android and iOS platforms.', true)
-    ->param('color', null, new Text(256), 'Color for push notification. Available only for Android platforms.', true)
-    ->param('tag', null, new Text(256), 'Tag for push notification. Available only for Android platforms.', true)
-    ->param('badge', null, new Integer(), 'Badge for push notification. Available only for iOS platforms.', true)
-    ->param('draft', null, new Boolean(), 'Is message a draft', true)
-    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
-    ->param('contentAvailable', null, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
-    ->param('critical', null, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
-    ->param('priority', null, new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
+    ->param('topics', null, new Nullable(new ArrayList(new UID())), 'List of Topic IDs.', true)
+    ->param('users', null, new Nullable(new ArrayList(new UID())), 'List of User IDs.', true)
+    ->param('targets', null, new Nullable(new ArrayList(new UID())), 'List of Targets IDs.', true)
+    ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
+    ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
+    ->param('data', null, new Nullable(new JSON()), 'Additional Data for push notification.', true)
+    ->param('action', null, new Nullable(new Text(256)), 'Action for push notification.', true)
+    ->param('image', null, new Nullable(new CompoundUID()), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
+    ->param('icon', null, new Nullable(new Text(256)), 'Icon for push notification. Available only for Android and Web platforms.', true)
+    ->param('sound', null, new Nullable(new Text(256)), 'Sound for push notification. Available only for Android and iOS platforms.', true)
+    ->param('color', null, new Nullable(new Text(256)), 'Color for push notification. Available only for Android platforms.', true)
+    ->param('tag', null, new Nullable(new Text(256)), 'Tag for push notification. Available only for Android platforms.', true)
+    ->param('badge', null, new Nullable(new Integer()), 'Badge for push notification. Available only for iOS platforms.', true)
+    ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('contentAvailable', null, new Nullable(new Boolean()), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
+    ->param('critical', null, new Nullable(new Boolean()), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
+    ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
