@@ -69,13 +69,12 @@ class XList extends Action
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('locale')
             ->inject('geoRecord')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, array $geoRecord, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, array $geoRecord, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
