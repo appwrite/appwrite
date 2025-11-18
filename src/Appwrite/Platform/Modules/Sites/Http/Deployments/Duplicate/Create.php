@@ -171,7 +171,9 @@ class Create extends Action
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($site)
-            ->setDeployment($deployment);
+            ->setDeployment($deployment)
+            ->setProject($project)
+            ->trigger();
 
         $queueForEvents
             ->setParam('siteId', $site->getId())

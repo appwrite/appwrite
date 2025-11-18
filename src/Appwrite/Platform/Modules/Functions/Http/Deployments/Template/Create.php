@@ -51,7 +51,7 @@ class Create extends Base
                 name: 'createTemplateDeployment',
                 description: <<<EOT
                 Create a deployment based on a template.
-                
+
                 Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/products/functions/templates) to find the template details.
                 EOT,
                 auth: [AuthType::KEY],
@@ -174,7 +174,9 @@ class Create extends Base
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
             ->setDeployment($deployment)
-            ->setTemplate($template);
+            ->setTemplate($template)
+            ->setProject($project)
+            ->trigger();
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

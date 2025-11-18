@@ -357,7 +357,9 @@ class Create extends Base
                     ->setType(BUILD_TYPE_DEPLOYMENT)
                     ->setResource($function)
                     ->setDeployment($deployment)
-                    ->setTemplate($template);
+                    ->setTemplate($template)
+                    ->setProject($project)
+                    ->trigger();
             }
 
             $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
