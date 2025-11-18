@@ -17,7 +17,7 @@ use Appwrite\Vcs\Comment;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Adapters\PHP as ConfigPHP;
+use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
 use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
@@ -980,7 +980,7 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                     $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
                     $envFile = $contentResponse['content'] ?? '';
 
-                    $configAdapter = new ConfigPHP();
+                    $configAdapter = new ConfigDotenv();
                     try {
                         $envObject = $configAdapter->parse($envFile);
                         foreach ($envObject as $envName => $envValue) {
@@ -1194,7 +1194,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                             $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], $file);
                             $envFile = $contentResponse['content'] ?? '';
 
-                            $configAdapter = new ConfigPHP();
+                            $configAdapter = new ConfigDotenv();
                             try {
                                 $envObject = $configAdapter->parse($envFile);
                                 foreach ($envObject as $envName => $envValue) {
