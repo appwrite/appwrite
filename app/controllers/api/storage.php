@@ -87,10 +87,11 @@ App::post('/v1/storage/buckets')
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD], true), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ',  [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, bool $transformations, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -143,6 +144,7 @@ App::post('/v1/storage/buckets')
                 'compression' => $compression,
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
+                'transformations' => $transformations,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
@@ -300,10 +302,11 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD], true), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
+    ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, ?string $compression, ?bool $encryption, bool $antivirus, bool $transformations, Response $response, Database $dbForProject, Event $queueForEvents) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -317,6 +320,7 @@ App::put('/v1/storage/buckets/:bucketId')
         $encryption ??= $bucket->getAttribute('encryption', true);
         $antivirus ??= $bucket->getAttribute('antivirus', true);
         $compression ??= $bucket->getAttribute('compression', Compression::NONE);
+        $transformations ??= $bucket->getAttribute('transformations', true);
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
@@ -330,7 +334,8 @@ App::put('/v1/storage/buckets/:bucketId')
             ->setAttribute('enabled', $enabled)
             ->setAttribute('encryption', $encryption)
             ->setAttribute('compression', $compression)
-            ->setAttribute('antivirus', $antivirus));
+            ->setAttribute('antivirus', $antivirus)
+            ->setAttribute('transformations', $transformations));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 
@@ -980,6 +985,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        if (!$bucket->getAttribute('transformations', true) && !$isAPIKey && !$isPrivilegedUser) {
+            throw new Exception(Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED);
         }
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();

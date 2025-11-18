@@ -4,7 +4,8 @@ mutation {
         repository: "<REPOSITORY>",
         owner: "<OWNER>",
         rootDirectory: "<ROOT_DIRECTORY>",
-        version: "<VERSION>",
+        type: "branch",
+        reference: "<REFERENCE>",
         activate: false
     ) {
         _id
