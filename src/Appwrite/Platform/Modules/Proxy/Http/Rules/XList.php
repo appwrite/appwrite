@@ -125,18 +125,6 @@ class XList extends Action
             }
             $rule->setAttribute('logs', $logs);
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
-
-            $certificateHasUpdatedAt = $certificate->getUpdatedAt() !== null;
-            $ruleHasUpdatedAt = $rule->getUpdatedAt() !== null;
-            if ($certificateHasUpdatedAt) {
-                if ($ruleHasUpdatedAt) {
-                    if (new \DateTime($certificate->getUpdatedAt()) > new \DateTime($rule->getUpdatedAt())) {
-                        $rule->setAttribute('$updatedAt', $certificate->getUpdatedAt());
-                    }
-                } else {
-                    $rule->setAttribute('$updatedAt', $certificate->getUpdatedAt());
-                }
-            }
         }
 
         $response->dynamic(new Document([

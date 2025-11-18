@@ -508,7 +508,8 @@ class Certificates extends Action
 
             $updates
                 ->setAttribute('certificateId', $certificateId)
-                ->setAttribute('status', $status);
+                ->setAttribute('status', $status)
+                ->setAttribute('$updatedAt', DateTime::now());
 
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
