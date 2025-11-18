@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3b502f78f5e31f2ea7b4c69e3301283a",
+    "content-hash": "1042498bc589543427184b001fef3a1e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3745,24 +3745,26 @@
         },
         {
             "name": "utopia-php/config",
-            "version": "0.2.2",
+            "version": "dev-feat-config-adapters",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/config.git",
-                "reference": "a3d7bc0312d7150d5e04b1362dc34b2b136908cc"
+                "reference": "02232da489a94576be0d8fb63c326003ccb6e337"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/config/zipball/a3d7bc0312d7150d5e04b1362dc34b2b136908cc",
-                "reference": "a3d7bc0312d7150d5e04b1362dc34b2b136908cc",
+                "url": "https://api.github.com/repos/utopia-php/config/zipball/02232da489a94576be0d8fb63c326003ccb6e337",
+                "reference": "02232da489a94576be0d8fb63c326003ccb6e337",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.3"
+                "ext-yaml": "*",
+                "php": ">=8.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -3774,12 +3776,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple Config library to managing application config variables",
             "keywords": [
                 "config",
@@ -3790,9 +3786,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/config/issues",
-                "source": "https://github.com/utopia-php/config/tree/0.2.2"
+                "source": "https://github.com/utopia-php/config/tree/feat-config-adapters"
             },
-            "time": "2020-10-24T09:49:09+00:00"
+            "time": "2025-11-18T14:59:26+00:00"
         },
         {
             "name": "utopia-php/console",
@@ -4212,16 +4208,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.29",
+            "version": "0.33.30",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "6e63939fdb33b847f92839499cd6e8df626c278d"
+                "reference": "07cf699a7c47bd1a03b4da1812f1719a66b3c924"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/6e63939fdb33b847f92839499cd6e8df626c278d",
-                "reference": "6e63939fdb33b847f92839499cd6e8df626c278d",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/07cf699a7c47bd1a03b4da1812f1719a66b3c924",
+                "reference": "07cf699a7c47bd1a03b4da1812f1719a66b3c924",
                 "shasum": ""
             },
             "require": {
@@ -4253,9 +4249,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.29"
+                "source": "https://github.com/utopia-php/http/tree/0.33.30"
             },
-            "time": "2025-11-14T06:33:29+00:00"
+            "time": "2025-11-18T12:18:00+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8895,9 +8891,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/config",
+            "version": "dev-feat-config-adapters",
+            "alias": "1.0.0",
+            "alias_normalized": "1.0.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/config": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8921,5 +8926,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

@@ -50,7 +50,7 @@
         "utopia-php/audit": "1.*",
         "utopia-php/cache": "0.13.*",
         "utopia-php/cli": "0.15.*",
-        "utopia-php/config": "0.2.*",
+        "utopia-php/config": "dev-feat-config-adapters as 1.0.0",
         "utopia-php/database": "4.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "0.9.*",
