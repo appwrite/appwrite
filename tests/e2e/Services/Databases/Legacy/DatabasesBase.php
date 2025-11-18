@@ -2406,10 +2406,10 @@ trait DatabasesBase
         $this->assertArrayHasKey('$id', $documents1['body']['documents'][0]);
 
         // First request should be MISS
-        $this->assertArrayHasKey('X-Appwrite-Cache-Documents', $documents1['headers']);
-        $this->assertEquals('miss', $documents1['headers']['X-Appwrite-Cache-Documents']);
-        $this->assertArrayHasKey('X-Appwrite-Cache-Documents-Total', $documents1['headers']);
-        $this->assertEquals('miss', $documents1['headers']['X-Appwrite-Cache-Documents-Total']);
+        $this->assertArrayHasKey('x-appwrite-cache-documents', $documents1['headers']);
+        $this->assertEquals('miss', $documents1['headers']['x-appwrite-cache-documents']);
+        $this->assertArrayHasKey('x-appwrite-cache-documents-total', $documents1['headers']);
+        $this->assertEquals('miss', $documents1['headers']['x-appwrite-cache-documents-total']);
 
         // Should return cached results
         $documents2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -2433,10 +2433,10 @@ trait DatabasesBase
         $this->assertEquals($documents1['body']['documents'][0]['releaseYear'], $documents2['body']['documents'][0]['releaseYear']);
 
         // Second request should  hit cache
-        $this->assertArrayHasKey('X-Appwrite-Cache-Documents', $documents2['headers']);
-        $this->assertEquals('hit', $documents2['headers']['X-Appwrite-Cache-Documents']);
-        $this->assertArrayHasKey('X-Appwrite-Cache-Documents-Total', $documents2['headers']);
-        $this->assertEquals('hit', $documents2['headers']['X-Appwrite-Cache-Documents-Total']);
+        $this->assertArrayHasKey('x-appwrite-cache-documents', $documents2['headers']);
+        $this->assertEquals('hit', $documents2['headers']['x-appwrite-cache-documents']);
+        $this->assertArrayHasKey('x-appwrite-cache-documents-total', $documents2['headers']);
+        $this->assertEquals('hit', $documents2['headers']['x-appwrite-cache-documents-total']);
 
         // useCache=false - should still work and no cache headers
         $documents3 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -2455,8 +2455,8 @@ trait DatabasesBase
         $this->assertEquals(1944, $documents3['body']['documents'][0]['releaseYear']);
 
         // Verify cache headers are not present when useCache=false
-        $this->assertArrayNotHasKey('X-Appwrite-Cache-Documents', $documents3['headers']);
-        $this->assertArrayNotHasKey('X-Appwrite-Cache-Documents-Total', $documents3['headers']);
+        $this->assertArrayNotHasKey('x-appwrite-cache-documents', $documents3['headers']);
+        $this->assertArrayNotHasKey('x-appwrite-cache-documents-total', $documents3['headers']);
 
         // Test with total=false
         $documents4 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([

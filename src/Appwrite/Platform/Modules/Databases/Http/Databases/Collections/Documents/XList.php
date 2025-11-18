@@ -153,7 +153,7 @@ class XList extends Action
                         $dbForProject->getNamespace(),
                         $dbForProject->getTenant(),
                         $collectionId,
-                        \md5(\implode($serializedQueries))
+                        \md5(\json_encode($serializedQueries))
                     );
 
                     $documentsCacheKey = $cacheKeyBase . ':documents';
@@ -162,12 +162,21 @@ class XList extends Action
                     $documentsCacheHit = $totalDocumentsCacheHit = false;
 
                     $cachedDocuments = $dbForProject->cache->load($documentsCacheKey, $ttl);
-                    if ($cachedDocuments !== null && $cachedDocuments !== false) {
-                        $documents = $cachedDocuments;
+                    if ($cachedDocuments !== null &&
+                        $cachedDocuments !== false &&
+                      \is_array($cachedDocuments)) {
+                        $documents = \array_map(function ($doc){
+                            return new Document($doc);
+                        }, $cachedDocuments);
                         $documentsCacheHit = true;
                     } else {
                         $documents = $dbForProject->find($collectionTableId, $queries);
-                        $dbForProject->cache->save($documentsCacheKey, $documents, $ttl);
+                        
+                        // Convert Document objects to arrays for caching
+                        $documentsArray = \array_map(function ($doc) {
+                            return $doc->getArrayCopy();
+                        }, $documents);
+                        $dbForProject->cache->save($documentsCacheKey, $documentsArray);
                     }
 
                     $response->addHeader('X-Appwrite-Cache-Documents', $documentsCacheHit ? 'hit' : 'miss');
@@ -180,7 +189,7 @@ class XList extends Action
                             $totalDocumentsCacheHit = true;
                         } else {
                             $total = $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                            $dbForProject->cache->save($totalCacheKey, $total, $ttl);
+                            $dbForProject->cache->save($totalCacheKey, $total);
                         }
                     } else {
                         $total = 0;
