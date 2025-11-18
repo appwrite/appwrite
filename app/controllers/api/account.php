@@ -231,7 +231,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'factors' => [$factor],
-            'countryCode' => $geoRecord['countryCode'],
+            'countryCode' => $geoRecord['countryCode'] ?? '',
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $detector->getOS(),
