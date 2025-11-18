@@ -2708,6 +2708,12 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($siteId);
 
         $domain = $this->setupSiteDomain($siteId);
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
 
         // test canceled deployment error page
         $deployment = $this->createDeployment($siteId, [

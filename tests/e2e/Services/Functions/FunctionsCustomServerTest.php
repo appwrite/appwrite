@@ -2426,6 +2426,12 @@ class FunctionsCustomServerTest extends Scope
         $domain = $this->setupFunctionDomain($functionId);
         $proxyClient->setEndpoint('http://' . $domain);
 
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
+
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true

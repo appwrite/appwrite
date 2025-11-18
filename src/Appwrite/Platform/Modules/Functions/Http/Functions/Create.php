@@ -305,6 +305,7 @@ class Create extends Base
                 $template = new Document();
 
                 $installation = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId'));
+                // TODO: Is this still needed? Can this be removed?
                 $deployment = $this->redeployVcsFunction(
                     request: $request,
                     function: $function,

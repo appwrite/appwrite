@@ -351,11 +351,14 @@ class Base extends Action
      * @param \Utopia\Database\Database $dbForPlatform
      * @return void
      */
-    public function updateEmptyManualRule(Document $project, Document $resource, Document $deployment, Database $dbForPlatform)
+    public static function updateEmptyManualRule(Document $project, Document $resource, Document $deployment, Database $dbForPlatform)
     {
+        $resourceType = $resource->getCollection() === 'sites' ? 'site' : 'function';
+
         $queries = [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            Query::equal('deploymentResourceType', [$resourceType]),
             Query::equal('deploymentId', ['']),
             Query::equal('type', ['deployment']),
             Query::equal('trigger', ['manual']),
