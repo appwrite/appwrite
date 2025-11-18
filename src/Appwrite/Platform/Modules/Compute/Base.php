@@ -137,7 +137,9 @@ class Base extends Action
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
             ->setDeployment($deployment)
-            ->setTemplate($template);
+            ->setTemplate($template)
+            ->setProject($project)
+            ->trigger();
 
         return $deployment;
     }
@@ -331,7 +333,9 @@ class Base extends Action
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($site)
             ->setDeployment($deployment)
-            ->setTemplate($template);
+            ->setTemplate($template)
+            ->setProject($project)
+            ->trigger();
 
         return $deployment;
     }

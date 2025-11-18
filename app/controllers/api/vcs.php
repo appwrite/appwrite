@@ -499,17 +499,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($resource)
                 ->setDeployment($deployment)
-                ->setProject($project); // set the project because it won't be set for git deployments
-
-            $queueForBuilds->trigger(); // must trigger here so that we create a build for each function/site
+                ->setProject($project)
+                ->trigger();
 
             //TODO: Add event?
         } catch (Throwable $e) {
             $errors[] = $e->getMessage();
         }
     }
-
-    $queueForBuilds->reset(); // prevent shutdown hook from triggering again
 
     if (!empty($errors)) {
         throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));

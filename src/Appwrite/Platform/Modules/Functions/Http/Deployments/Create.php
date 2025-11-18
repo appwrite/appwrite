@@ -265,7 +265,9 @@ class Create extends Action
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment);
+                ->setDeployment($deployment)
+                ->setProject($project)
+                ->trigger();
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([

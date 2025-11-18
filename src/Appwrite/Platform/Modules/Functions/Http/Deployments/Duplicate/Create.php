@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -57,6 +58,7 @@ class Create extends Action
             ->param('functionId', '', new UID(), 'Function ID.')
             ->param('deploymentId', '', new UID(), 'Deployment ID.')
             ->param('buildId', '', new UID(), 'Build unique ID.', true) // added as optional param for backward compatibility
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -69,6 +71,7 @@ class Create extends Action
         string $functionId,
         string $deploymentId,
         string $buildId,
+        Document $project,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
@@ -123,7 +126,9 @@ class Create extends Action
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
-            ->setDeployment($deployment);
+            ->setDeployment($deployment)
+            ->setProject($project)
+            ->trigger();
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

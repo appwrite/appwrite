@@ -4,7 +4,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
-use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -439,7 +438,6 @@ App::init()
     ->inject('queueForAudits')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
-    ->inject('queueForBuilds')
     ->inject('queueForStatsUsage')
     ->inject('dbForProject')
     ->inject('timelimit')
@@ -450,7 +448,7 @@ App::init()
     ->inject('devKey')
     ->inject('telemetry')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, Authorization $authorization) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, Authorization $authorization) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -556,7 +554,6 @@ App::init()
 
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
-        $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
 
         // Clone the queues, to prevent events triggered by the database listener
@@ -737,14 +734,13 @@ App::shutdown()
     ->inject('queueForStatsUsage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
-    ->inject('queueForBuilds')
     ->inject('queueForMessaging')
     ->inject('queueForFunctions')
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -838,10 +834,6 @@ App::shutdown()
 
         if (!empty($queueForDatabase->getType())) {
             $queueForDatabase->trigger();
-        }
-
-        if (!empty($queueForBuilds->getType())) {
-            $queueForBuilds->trigger();
         }
 
         if (!empty($queueForMessaging->getType())) {
