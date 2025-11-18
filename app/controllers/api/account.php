@@ -963,7 +963,7 @@ App::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['password'],
-                'countryCode' => $geoRecord['countryCode'],
+                'countryCode' => $geoRecord['countryCode'] ?? '',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
