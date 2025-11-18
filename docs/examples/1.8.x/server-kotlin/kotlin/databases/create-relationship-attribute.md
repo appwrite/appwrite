@@ -2,6 +2,7 @@ import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
 import io.appwrite.enums.RelationshipType
+import io.appwrite.enums.RelationMutate
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint

@@ -15,7 +15,7 @@ const result = await storage.createBucket({
     enabled: false, // optional
     maximumFileSize: 1, // optional
     allowedFileExtensions: [], // optional
-    compression: sdk..None, // optional
+    compression: sdk.Compression.None, // optional
     encryption: false, // optional
     antivirus: false, // optional
     transformations: false // optional
