@@ -104,6 +104,7 @@ class Create extends Action
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'entrypoint' => $function->getAttribute('entrypoint'),
             'buildCommands' => $function->getAttribute('commands', ''),
+            'startCommand' => $function->getAttribute('startCommand', ''),
             'buildStartedAt' => null,
             'buildEndedAt' => null,
             'buildDuration' => null,

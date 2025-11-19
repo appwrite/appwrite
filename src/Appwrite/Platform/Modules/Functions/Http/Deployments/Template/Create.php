@@ -154,6 +154,7 @@ class Create extends Base
             'resourceType' => 'functions',
             'entrypoint' => $function->getAttribute('entrypoint', ''),
             'buildCommands' => $function->getAttribute('commands', ''),
+            'startCommand' => $function->getAttribute('startCommand', ''),
             'providerRepositoryName' => $repository,
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,

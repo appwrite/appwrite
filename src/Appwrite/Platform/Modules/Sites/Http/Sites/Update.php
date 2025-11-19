@@ -73,6 +73,7 @@ class Update extends Base
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
+            ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
@@ -109,6 +110,7 @@ class Update extends Base
         int $timeout,
         string $installCommand,
         string $buildCommand,
+        string $startCommand,
         string $outputDirectory,
         string $buildRuntime,
         string $adapter,
@@ -254,6 +256,7 @@ class Update extends Base
             'timeout' => $timeout,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
+            'startCommand' => $startCommand,
             'outputDirectory' => $outputDirectory,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
