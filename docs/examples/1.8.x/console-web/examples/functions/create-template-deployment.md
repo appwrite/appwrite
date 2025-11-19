@@ -1,4 +1,4 @@
-import { Client, Functions } from "@appwrite.io/console";
+import { Client, Functions,  } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,7 +11,8 @@ const result = await functions.createTemplateDeployment({
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    version: '<VERSION>',
+    type: .Commit,
+    reference: '<REFERENCE>',
     activate: false // optional
 });
 

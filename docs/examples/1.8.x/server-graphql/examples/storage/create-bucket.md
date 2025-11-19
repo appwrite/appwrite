@@ -9,7 +9,8 @@ mutation {
         allowedFileExtensions: [],
         compression: "none",
         encryption: false,
-        antivirus: false
+        antivirus: false,
+        transformations: false
     ) {
         _id
         _createdAt
@@ -23,5 +24,6 @@ mutation {
         compression
         encryption
         antivirus
+        transformations
     }
 }

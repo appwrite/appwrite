@@ -7,17 +7,17 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 // Downloading file
-UInt8List bytes = await avatars.getScreenshot(
+Uint8List bytes = await avatars.getScreenshot(
     url: 'https://example.com',
     headers: {}, // optional
     viewportWidth: 1, // optional
     viewportHeight: 1, // optional
     scale: 0.1, // optional
-    theme: .light, // optional
+    theme: Theme.light, // optional
     userAgent: '<USER_AGENT>', // optional
     fullpage: false, // optional
     locale: '<LOCALE>', // optional
-    timezone: .africaAbidjan, // optional
+    timezone: Timezone.africaAbidjan, // optional
     latitude: -90, // optional
     longitude: -180, // optional
     accuracy: 0, // optional
@@ -27,7 +27,7 @@ UInt8List bytes = await avatars.getScreenshot(
     width: 0, // optional
     height: 0, // optional
     quality: -1, // optional
-    output: .jpg, // optional
+    output: Output.jpg, // optional
 )
 
 final file = File('path_to_file/filename.ext');
@@ -41,11 +41,11 @@ FutureBuilder(
     viewportWidth:1 , // optional
     viewportHeight:1 , // optional
     scale:0.1 , // optional
-    theme: .light, // optional
+    theme: Theme.light, // optional
     userAgent:'<USER_AGENT>' , // optional
     fullpage:false , // optional
     locale:'<LOCALE>' , // optional
-    timezone: .africaAbidjan, // optional
+    timezone: Timezone.africaAbidjan, // optional
     latitude:-90 , // optional
     longitude:-180 , // optional
     accuracy:0 , // optional
@@ -55,7 +55,7 @@ FutureBuilder(
     width:0 , // optional
     height:0 , // optional
     quality:-1 , // optional
-    output: .jpg, // optional
+    output: Output.jpg, // optional
 ), // Works for both public file and private file, for private files you need to be logged in
     builder: (context, snapshot) {
       return snapshot.hasData && snapshot.data != null

@@ -10,15 +10,15 @@ const sites = new sdk.Sites(client);
 const result = await sites.create({
     siteId: '<SITE_ID>',
     name: '<NAME>',
-    framework: sdk..Analog,
-    buildRuntime: sdk..Node145,
+    framework: sdk.Framework.Analog,
+    buildRuntime: sdk.BuildRuntime.Node145,
     enabled: false, // optional
     logging: false, // optional
     timeout: 1, // optional
     installCommand: '<INSTALL_COMMAND>', // optional
     buildCommand: '<BUILD_COMMAND>', // optional
     outputDirectory: '<OUTPUT_DIRECTORY>', // optional
-    adapter: sdk..Static, // optional
+    adapter: sdk.Adapter.Static, // optional
     installationId: '<INSTALLATION_ID>', // optional
     fallbackFile: '<FALLBACK_FILE>', // optional
     providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional

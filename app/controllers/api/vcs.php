@@ -14,9 +14,12 @@ use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
+use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -963,6 +966,46 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
             }
         }
+
+        $wg = new WaitGroup();
+        $envs = [];
+        foreach ($files as $file) {
+            if (!(\str_starts_with($file, '.env'))) {
+                continue;
+            }
+
+            $wg->add();
+            go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
+                try {
+                    $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
+                    $envFile = $contentResponse['content'] ?? '';
+
+                    $configAdapter = new ConfigDotenv();
+                    try {
+                        $envObject = $configAdapter->parse($envFile);
+                        foreach ($envObject as $envName => $envValue) {
+                            $envs[$envName] = $envValue;
+                        }
+                    } catch (Parse $err) {
+                        // Silence error, so rest of endpoint can return
+                    }
+                } finally {
+                    $wg->done();
+                }
+            });
+        }
+        $wg->wait();
+
+        $variables = [];
+        foreach ($envs as $key => $value) {
+            $variables[] = [
+                'name' => $key,
+                'value' => $value,
+            ];
+        }
+
+        $output->setAttribute('variables', $variables);
+
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     });
 
@@ -1137,6 +1180,44 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                         $repo['runtime'] = $runtimeWithVersion ?? '';
                     }
                 }
+
+                $wg = new WaitGroup();
+                $envs = [];
+                foreach ($files as $file) {
+                    if (!(\str_starts_with($file, '.env'))) {
+                        continue;
+                    }
+
+                    $wg->add();
+                    go(function () use ($github, $repo, $file, $wg, &$envs) {
+                        try {
+                            $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], $file);
+                            $envFile = $contentResponse['content'] ?? '';
+
+                            $configAdapter = new ConfigDotenv();
+                            try {
+                                $envObject = $configAdapter->parse($envFile);
+                                foreach ($envObject as $envName => $envValue) {
+                                    $envs[$envName] = $envValue;
+                                }
+                            } catch (Parse) {
+                                // Silence error, so rest of endpoint can return
+                            }
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+                $wg->wait();
+
+                $repo['variables'] = [];
+                foreach ($envs as $key => $value) {
+                    $repo['variables'][] = [
+                        'name' => $key,
+                        'value' => $value,
+                    ];
+                }
+
                 return $repo;
             };
         }, $repos));

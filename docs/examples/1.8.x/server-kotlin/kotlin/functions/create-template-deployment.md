@@ -1,6 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
+import io.appwrite.enums.Type
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,6 +15,7 @@ val response = functions.createTemplateDeployment(
     repository = "<REPOSITORY>",
     owner = "<OWNER>",
     rootDirectory = "<ROOT_DIRECTORY>",
-    version = "<VERSION>",
+    type =  .COMMIT,
+    reference = "<REFERENCE>",
     activate = false // optional
 )

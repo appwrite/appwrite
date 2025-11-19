@@ -51,8 +51,10 @@ class DNSTest extends TestCase
     #[Retry(count: 5)]
     public function testCAA(): void
     {
-        $certainly = new DNS('certainly.com', Record::TYPE_CAA, 'ns1.digitalocean.com');
-        $letsencrypt = new DNS('letsencrypt.org', Record::TYPE_CAA, 'ns1.digitalocean.com');
+        $digitalOceanIp = '172.64.52.210'; // ping ns1.digitalocean.com
+
+        $certainly = new DNS('certainly.com', Record::TYPE_CAA, $digitalOceanIp);
+        $letsencrypt = new DNS('letsencrypt.org', Record::TYPE_CAA, $digitalOceanIp);
 
         // No CAA record succeeds on main domain & subdomains for any issuer
         $this->assertEquals($certainly->isValid('caa.appwrite.org'), true);
