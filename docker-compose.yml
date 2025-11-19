@@ -1089,6 +1089,19 @@ services:
       - "9503:1080"
     networks:
       - appwrite
+      - gateway
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.services.appwrite_maildev.loadbalancer.server.port=1080"
+      - "traefik.http.routers.appwrite_maildev_http.entrypoints=appwrite_web"
+      - "traefik.http.routers.appwrite_maildev_http.rule=Host(`mail.localhost`)"
+      - "traefik.http.routers.appwrite_maildev_http.service=appwrite_maildev"
+      - "traefik.http.routers.appwrite_maildev_https.entrypoints=appwrite_websecure"
+      - "traefik.http.routers.appwrite_maildev_https.rule=Host(`mail.localhost`)"
+      - "traefik.http.routers.appwrite_maildev_https.service=appwrite_maildev"
+      - "traefik.http.routers.appwrite_maildev_https.tls=true"
 
   request-catcher-webhook: # used mainly for dev tests (mock HTTP webhook)
     image: appwrite/requestcatcher:1.0.0
@@ -1117,14 +1130,40 @@ services:
       - 9506:8080
     networks:
       - appwrite
+      - gateway
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.services.appwrite_adminer.loadbalancer.server.port=8080"
+      - "traefik.http.routers.appwrite_adminer_http.entrypoints=appwrite_web"
+      - "traefik.http.routers.appwrite_adminer_http.rule=Host(`mysql.localhost`)"
+      - "traefik.http.routers.appwrite_adminer_http.service=appwrite_adminer"
+      - "traefik.http.routers.appwrite_adminer_https.entrypoints=appwrite_websecure"
+      - "traefik.http.routers.appwrite_adminer_https.rule=Host(`mysql.localhost`)"
+      - "traefik.http.routers.appwrite_adminer_https.service=appwrite_adminer"
+      - "traefik.http.routers.appwrite_adminer_https.tls=true"
 
   redis-insight:
     image: redis/redisinsight:latest
     restart: unless-stopped
     networks:
       - appwrite
+      - gateway
     environment:
       - REDIS_HOSTS=redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.services.appwrite_redisinsight.loadbalancer.server.port=5540"
+      - "traefik.http.routers.appwrite_redisinsight_http.entrypoints=appwrite_web"
+      - "traefik.http.routers.appwrite_redisinsight_http.rule=Host(`redis.localhost`)"
+      - "traefik.http.routers.appwrite_redisinsight_http.service=appwrite_redisinsight"
+      - "traefik.http.routers.appwrite_redisinsight_https.entrypoints=appwrite_websecure"
+      - "traefik.http.routers.appwrite_redisinsight_https.rule=Host(`redis.localhost`)"
+      - "traefik.http.routers.appwrite_redisinsight_https.service=appwrite_redisinsight"
+      - "traefik.http.routers.appwrite_redisinsight_https.tls=true"
     ports:
       - "8081:5540"
 
