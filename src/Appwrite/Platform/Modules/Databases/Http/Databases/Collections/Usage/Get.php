@@ -63,11 +63,10 @@ class Get extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
+    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
@@ -84,7 +83,7 @@ class Get extends Action
             str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

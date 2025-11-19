@@ -8,6 +8,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 /**
@@ -44,7 +45,6 @@ class StatsResources extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForStatsResources')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -61,7 +61,9 @@ class StatsResources extends Action
 
         $interval = (int) System::getEnv('_APP_STATS_RESOURCES_INTERVAL', '3600');
 
-        Console::loop(function () use ($queue, $dbForPlatform) {
+        Console::loop(function () use ($queue) {
+            Authorization::disable();
+            Authorization::setDefaultStatus(false);
 
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'));
             /**

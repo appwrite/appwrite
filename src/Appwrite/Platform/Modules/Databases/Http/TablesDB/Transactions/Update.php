@@ -60,7 +60,6 @@ class Update extends TransactionsUpdate
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

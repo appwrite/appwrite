@@ -453,11 +453,11 @@ class Auth
      * @param Document $user
      * @return array<string>
      */
-    public static function getRoles(Document $user, Authorization $authorization): array
+    public static function getRoles(Document $user): array
     {
         $roles = [];
 
-        if (!self::isPrivilegedUser($authorization->getRoles()) && !self::isAppUser($authorization->getRoles())) {
+        if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
                 $roles[] = Role::user($user->getId())->toString();
                 $roles[] = Role::users()->toString();
