@@ -17,7 +17,9 @@ use Appwrite\Vcs\Comment;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
+use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -978,14 +980,14 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                     $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
                     $envFile = $contentResponse['content'] ?? '';
 
-                    $envLines = \explode("\n", $envFile);
-                    foreach ($envLines as $line) {
-                        $parts = \explode('=', $line, 2);
-                        $envName = \trim($parts[0] ?? '');
-                        $envValue = \trim($parts[1] ?? '');
-                        if (!empty($envName)) {
+                    $configAdapter = new ConfigDotenv();
+                    try {
+                        $envObject = $configAdapter->parse($envFile);
+                        foreach ($envObject as $envName => $envValue) {
                             $envs[$envName] = $envValue;
                         }
+                    } catch (Parse $err) {
+                        // Silence error, so rest of endpoint can return
                     }
                 } finally {
                     $wg->done();
@@ -1192,14 +1194,14 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                             $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], $file);
                             $envFile = $contentResponse['content'] ?? '';
 
-                            $envLines = \explode("\n", $envFile);
-                            foreach ($envLines as $line) {
-                                $parts = \explode('=', $line, 2);
-                                $envName = \trim($parts[0] ?? '');
-                                $envValue = \trim($parts[1] ?? '');
-                                if (!empty($envName)) {
+                            $configAdapter = new ConfigDotenv();
+                            try {
+                                $envObject = $configAdapter->parse($envFile);
+                                foreach ($envObject as $envName => $envValue) {
                                     $envs[$envName] = $envValue;
                                 }
+                            } catch (Parse) {
+                                // Silence error, so rest of endpoint can return
                             }
                         } finally {
                             $wg->done();
