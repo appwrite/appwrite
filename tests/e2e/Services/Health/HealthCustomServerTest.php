@@ -40,6 +40,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
         $this->assertIsInt($response['body']['statuses'][0]['ping']);

@@ -61,7 +61,6 @@ class Delete extends IndexDelete
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

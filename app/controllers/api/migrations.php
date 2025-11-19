@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -335,19 +334,26 @@ App::post('/v1/migrations/csv/imports')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->inject('authorization')
     ->inject('project')
     ->inject('deviceForFiles')
     ->inject('deviceForMigrations')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, bool $internalFile, Response $response, Database $dbForProject, Database $dbForPlatform, Authorization $authorization, Document $project, Device $deviceForFiles, Device $deviceForMigrations, Event $queueForEvents, Migration $queueForMigrations) {
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
-        if ($internalFile && !$isPrivilegedUser) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-        $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
+    ->action(function (
+        string $bucketId,
+        string $fileId,
+        string $resourceId,
+        bool $internalFile,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $project,
+        Device $deviceForFiles,
+        Device $deviceForMigrations,
+        Event $queueForEvents,
+        Migration $queueForMigrations
+    ) {
+        $bucket = Authorization::skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
             }
@@ -358,7 +364,7 @@ App::post('/v1/migrations/csv/imports')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        $file = Authorization::skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
@@ -474,7 +480,6 @@ App::post('/v1/migrations/csv/exports')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->inject('authorization')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
@@ -492,7 +497,6 @@ App::post('/v1/migrations/csv/exports')
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Authorization $authorization,
         Document $project,
         Event $queueForEvents,
         Migration $queueForMigrations
@@ -503,7 +507,7 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
+        $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
         if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
@@ -516,12 +520,12 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }

@@ -99,6 +99,8 @@ abstract class Migration
 
     public function __construct()
     {
+        Authorization::disable();
+        Authorization::setDefaultStatus(false);
 
         $this->collections = Config::getParam('collections', []);
 
@@ -126,16 +128,12 @@ abstract class Migration
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
-        Authorization $authorization,
         ?callable $getProjectDB = null
     ): self {
         $this->project = $project;
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->getProjectDB = $getProjectDB;
-
-        $authorization->disable();
-        $authorization->setDefaultStatus(false);
 
         return $this;
     }

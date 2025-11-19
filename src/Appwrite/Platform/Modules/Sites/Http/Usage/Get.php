@@ -55,7 +55,6 @@ class Get extends Base
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -63,8 +62,7 @@ class Get extends Base
         string $siteId,
         string $range,
         Response $response,
-        Database $dbForProject,
-        Authorization $authorization
+        Database $dbForProject
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -93,7 +91,7 @@ class Get extends Base
 
         ];
 
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
