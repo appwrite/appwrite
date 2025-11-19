@@ -1082,7 +1082,7 @@ services:
   # GraphQl Explorer - A nice UI for exploring GraphQL API
 
   maildev: # used mainly for dev tests
-    image: appwrite/mailcatcher:1.0.0
+    image: appwrite/mailcatcher:1.1.1
     container_name: appwrite-mailcatcher
     <<: *x-logging
     ports:
