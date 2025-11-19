@@ -142,7 +142,7 @@ class Func extends Model
             ])
             ->addRule('startCommand', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Custom command to use when starting site runtime.',
+                'description' => 'Custom command to use when starting function runtime.',
                 'default' => '',
                 'example' => 'node custom-server.mjs',
             ])

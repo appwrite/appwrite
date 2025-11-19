@@ -2966,8 +2966,6 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($deploymentId);
 
-        \var_dump($domain);
-
         $domain = $this->getSiteDomain($siteId);
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);

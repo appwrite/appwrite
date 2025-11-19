@@ -228,6 +228,7 @@ class Update extends Base
             $site->getAttribute('name') !== $name ||
             $site->getAttribute('buildCommand') !== $buildCommand ||
             $site->getAttribute('installCommand') !== $installCommand ||
+            $site->getAttribute('startCommand') !== $startCommand ||
             $site->getAttribute('outputDirectory') !== $outputDirectory ||
             $site->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
             $site->getAttribute('framework') !== $framework
