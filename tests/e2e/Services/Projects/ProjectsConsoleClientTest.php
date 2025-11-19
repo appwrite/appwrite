@@ -5120,431 +5120,213 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * Devkeys Tests ends here ------------------------------------------------
      */
-    public function testListProjectsForProjectSpecificPermissions(): void
+    public function testPerProjectPermissionsForListProjects(): void
     {
-        // Create team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Project Test',
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertEquals('Project Test', $team['body']['name']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $teamId = $team['body']['$id'];
-
-        // Create project A
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
             'projectId' => ID::unique(),
             'name' => 'Project Test A',
-            'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test A', $response['body']['name']);
-        $this->assertEquals($teamId, $response['body']['teamId']);
-
-        $projectIdA = $response['body']['$id'];
-
-        // Create project B
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $teamId);
+        $projectIdB = $this->setupProject([
             'projectId' => ID::unique(),
             'name' => 'Project Test B',
-            'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
+        ], $teamId, false);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test B', $response['body']['name']);
-        $this->assertEquals($teamId, $response['body']['teamId']);
-
-        $projectIdB = $response['body']['$id'];
-
-        $userEmailA = uniqid() . 'friend@localhost.test';
-        $userEmailB = uniqid() . 'friend@localhost.test';
-        $userEmailC = uniqid() . 'friend@localhost.test';
-        $userNameA = 'Friend User A';
-        $userNameB = 'Friend User B';
-        $userNameC = 'Friend User C';
-
-        // Create membership for user A (has only project A access)
+        $projectAUserEmail = 'projecta-' . ID::unique() . '-owner@localhost.test';
+        $projectAUserName = 'Project A - owner';
+        $projectBUserEmail = 'projectb-' . ID::unique() . '-owner@localhost.test';
+        $projectBUserName = 'Project B - owner';
         $this->setupUserMembership([
             'teamId' => $teamId,
-            'email' => $userEmailA,
-            'name' => $userNameA,
+            'email' => $projectAUserEmail,
+            'name' => $projectAUserName,
             'roles' => ['member', Role::project($projectIdA, 'owner')->toString()],
         ]);
-
-        // Create membership for user B (has only project B access)
         $this->setupUserMembership([
             'teamId' => $teamId,
-            'email' => $userEmailB,
-            'name' => $userNameB,
+            'email' => $projectBUserEmail,
+            'name' => $projectBUserName,
             'roles' => ['member', Role::project($projectIdB, 'owner')->toString()],
         ]);
 
-        // Create membership for user C (has access to whole team)
-        $this->setupUserMembership([
-            'teamId' => $teamId,
-            'email' => $userEmailC,
-            'name' => $userNameC,
-            'roles' => ['owner'],
-        ]);
+        $users = [
+            ['email' => $projectAUserEmail, 'name' => $projectAUserName, 'role' => 'owner', 'projectId' => $projectIdA],
+            ['email' => $projectBUserEmail, 'name' => $projectBUserName, 'role' => 'owner', 'projectId' => $projectIdB],
+        ];
 
-        // List projects for user A (should only see project A)
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => $userEmailA,
-            'password' => 'password',
-        ]);
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
-        $response = $this->client->call(Client::METHOD_GET, '/projects', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ]);
+        foreach ($users as $user) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $user['email'],
+                'password' => 'password',
+            ]);
+            $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']['projects']);
+            $response = $this->client->call(Client::METHOD_GET, '/projects', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+            ]);
 
-        // List projects for user B (should only see project B)
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => $userEmailB,
-            'password' => 'password',
-        ]);
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
-        $response = $this->client->call(Client::METHOD_GET, '/projects', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']['projects']);
-
-        // List projects for user C (should see all projects)
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => $userEmailC,
-            'password' => 'password',
-        ]);
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
-        $response = $this->client->call(Client::METHOD_GET, '/projects', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(2, $response['body']['projects']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']);
+            $this->assertCount(1, $response['body']['projects']);
+            $this->assertEquals($user['projectId'], $response['body']['projects'][0]['$id']);
+        }
     }
 
-    public function testUpdateProjectForProjectSpecificPermissions(): void
+    public function testPerProjectPermissionsForUpdateProject(): void
     {
-        // Create team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Project Test',
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertEquals('Project Test', $team['body']['name']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $teamId = $team['body']['$id'];
-
-        // Create project A
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
             'projectId' => ID::unique(),
             'name' => 'Project Test A',
-            'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test A', $response['body']['name']);
-        $this->assertEquals($teamId, $response['body']['teamId']);
-
-        $projectIdA = $response['body']['$id'];
-
-        // Create project B
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $teamId);
+        $projectIdB = $this->setupProject([
             'projectId' => ID::unique(),
             'name' => 'Project Test B',
-            'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
+        ], $teamId, false);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test B', $response['body']['name']);
-        $this->assertEquals($teamId, $response['body']['teamId']);
-
-        $projectIdB = $response['body']['$id'];
-
-        $userEmailA = uniqid() . 'friend@localhost.test';
-        $userEmailB = uniqid() . 'friend@localhost.test';
-        $userEmailC = uniqid() . 'friend@localhost.test';
-        $userNameA = 'Friend User A';
-        $userNameB = 'Friend User B';
-        $userNameC = 'Friend User C';
-
-        // Create membership for user A (has only project A access)
+        $projectAUserEmail = 'projecta-' . ID::unique() . '-owner@localhost.test';
+        $projectAUserName = 'Project A - owner';
+        $projectBUserEmail = 'projectb-' . ID::unique() . '-owner@localhost.test';
+        $projectBUserName = 'Project B - owner';
         $this->setupUserMembership([
             'teamId' => $teamId,
-            'email' => $userEmailA,
-            'name' => $userNameA,
+            'email' => $projectAUserEmail,
+            'name' => $projectAUserName,
             'roles' => ['member', Role::project($projectIdA, 'owner')->toString()],
         ]);
-
-        // Create membership for user B (has only project B access)
         $this->setupUserMembership([
             'teamId' => $teamId,
-            'email' => $userEmailB,
-            'name' => $userNameB,
+            'email' => $projectBUserEmail,
+            'name' => $projectBUserName,
             'roles' => ['member', Role::project($projectIdB, 'owner')->toString()],
         ]);
 
-        // Create membership for user C (has access to whole team)
-        $this->setupUserMembership([
-            'teamId' => $teamId,
-            'email' => $userEmailC,
-            'name' => $userNameC,
-            'roles' => ['owner'],
-        ]);
+        $users = [
+            ['email' => $projectAUserEmail, 'name' => $projectAUserName, 'role' => 'owner', 'projectId' => $projectIdA],
+            ['email' => $projectBUserEmail, 'name' => $projectBUserName, 'role' => 'owner', 'projectId' => $projectIdB],
+        ];
 
-        // Success: Update project A for user A (has owner role for project)
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => $userEmailA,
-            'password' => 'password',
-        ]);
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+        foreach ($users as $user) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $user['email'],
+                'password' => 'password',
+            ]);
+            $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectIdA, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ], [
-            'name' => 'Project Test A - 2',
-        ]);
+            $accessibleProjectId = $user['projectId'] === $projectIdA ? $projectIdA : $projectIdB;
+            $inaccessibleProjectId = $user['projectId'] === $projectIdA ? $projectIdB : $projectIdA;
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Project Test A - 2', $response['body']['name']);
+            $updatedProjectName = 'Updated Project Name ' . ID::unique();
 
-        // Failure: Update project B for user A (has no role for project)
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectIdB, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ], [
-            'name' => 'Project Test B - 2',
-        ]);
+            // Success: User should be able to update the project they have membership for.
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $accessibleProjectId, [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+            ], [
+                'name' => $updatedProjectName,
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']);
+            $this->assertEquals($updatedProjectName, $response['body']['name']);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+            // Failure: User should not be able to update the project they do not have membership for.
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $inaccessibleProjectId, [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+            ], [
+                'name' => $updatedProjectName,
+            ]);
 
-        // Success: Update project B for user C (has owner role for team)
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => $userEmailC,
-            'password' => 'password',
-        ]);
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectIdB, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ], [
-            'name' => 'Project Test B - 2',
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Project Test B - 2', $response['body']['name']);
+            $this->assertEquals(404, $response['headers']['status-code']);
+        }
     }
 
-    public function testDeleteProjectForProjectSpecificPermissions(): void
+    public function testPerProjectPermissionsForDeleteProject(): void
     {
-        // Create team
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Project Test',
-        ]);
-
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertEquals('Project Test', $team['body']['name']);
-        $this->assertNotEmpty($team['body']['$id']);
-
-        $teamId = $team['body']['$id'];
-
-        // Create project A
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
             'projectId' => ID::unique(),
             'name' => 'Project Test A',
-            'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test A', $response['body']['name']);
-        $this->assertEquals($teamId, $response['body']['teamId']);
-
-        $projectIdA = $response['body']['$id'];
-
-        // Create project B
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $teamId);
+        $projectIdB = $this->setupProject([
             'projectId' => ID::unique(),
             'name' => 'Project Test B',
-            'teamId' => $teamId,
             'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
+        ], $teamId, false);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test B', $response['body']['name']);
-        $this->assertEquals($teamId, $response['body']['teamId']);
-
-        $projectIdB = $response['body']['$id'];
-
-        $userEmailA = uniqid() . 'friend@localhost.test';
-        $userEmailB = uniqid() . 'friend@localhost.test';
-        $userEmailC = uniqid() . 'friend@localhost.test';
-        $userNameA = 'Friend User A';
-        $userNameB = 'Friend User B';
-        $userNameC = 'Friend User C';
-
-        // Create membership for user A (has only project A access)
+        $projectAUserEmail = 'projecta-' . ID::unique() . '-owner@localhost.test';
+        $projectAUserName = 'Project A - owner';
+        $projectBUserEmail = 'projectb-' . ID::unique() . '-owner@localhost.test';
+        $projectBUserName = 'Project B - owner';
         $this->setupUserMembership([
             'teamId' => $teamId,
-            'email' => $userEmailA,
-            'name' => $userNameA,
+            'email' => $projectAUserEmail,
+            'name' => $projectAUserName,
             'roles' => ['member', Role::project($projectIdA, 'owner')->toString()],
         ]);
-
-        // Create membership for user B (has only project B access)
         $this->setupUserMembership([
             'teamId' => $teamId,
-            'email' => $userEmailB,
-            'name' => $userNameB,
+            'email' => $projectBUserEmail,
+            'name' => $projectBUserName,
             'roles' => ['member', Role::project($projectIdB, 'owner')->toString()],
         ]);
 
-        // Create membership for user C (has access to whole team)
-        $this->setupUserMembership([
-            'teamId' => $teamId,
-            'email' => $userEmailC,
-            'name' => $userNameC,
-            'roles' => ['owner'],
-        ]);
+        $users = [
+            ['email' => $projectAUserEmail, 'name' => $projectAUserName, 'role' => 'owner', 'projectId' => $projectIdA, 'otherProjectId' => $projectIdB],
+            ['email' => $projectBUserEmail, 'name' => $projectBUserName, 'role' => 'owner', 'projectId' => $projectIdB],
+        ];
 
-        // Success: Delete project A for user A (has owner role for project)
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => $userEmailA,
-            'password' => 'password',
-        ]);
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+        foreach ($users as $user) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $user['email'],
+                'password' => 'password',
+            ]);
+            $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectIdA, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ]);
+            // Success: User should be able to delete the project they have membership for.
+            $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $user['projectId'], [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+            ]);
+            $this->assertEquals(204, $response['headers']['status-code']);
 
-        $this->assertEquals(204, $response['headers']['status-code']);
+            if (!empty($user['otherProjectId'])) {
+                // Failure: User should not be able to delete the project they do not have membership for.
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $user['otherProjectId'], [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ]);
 
-        // Failure: Delete project B for user A (has no role for project)
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectIdB, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        // Success: Delete project B for user C (has owner role for team)
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => $userEmailC,
-            'password' => 'password',
-        ]);
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectIdB, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
-        ]);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
+                $this->assertEquals(404, $response['headers']['status-code']);
+            }
+        }
     }
 }

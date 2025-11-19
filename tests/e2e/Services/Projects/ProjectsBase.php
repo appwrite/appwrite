@@ -7,24 +7,26 @@ use Utopia\Database\Helpers\ID;
 
 trait ProjectsBase
 {
-    protected function setupProject(mixed $params): string
+    protected function setupProject(mixed $params, string $teamId = null, bool $newTeam = true): string
     {
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Project Test',
-        ]);
+        if ($newTeam) {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'teamId' => $teamId ?? ID::unique(),
+                'name' => 'Project Test',
+            ]);
 
-        $this->assertEquals(201, $team['headers']['status-code'], 'Setup team failed with status code: ' . $team['headers']['status-code'] . ' and response: ' . json_encode($team['body'], JSON_PRETTY_PRINT));
+            $this->assertEquals(201, $team['headers']['status-code'], 'Setup team failed with status code: ' . $team['headers']['status-code'] . ' and response: ' . json_encode($team['body'], JSON_PRETTY_PRINT));
+        }
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             ...$params,
-            'teamId' => $team['body']['$id'],
+            'teamId' => $teamId,
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code'], 'Setup project failed with status code: ' . $project['headers']['status-code'] . ' and response: ' . json_encode($project['body'], JSON_PRETTY_PRINT));

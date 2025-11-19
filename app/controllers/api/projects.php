@@ -190,9 +190,7 @@ App::post('/v1/projects')
                     Permission::read(Role::project($projectIdentifierForRole, 'editor')),
                     Permission::read(Role::project($projectIdentifierForRole, 'analyst')),
                     Permission::update(Role::project($projectIdentifierForRole, 'owner')),
-                    Permission::update(Role::project($projectIdentifierForRole, 'developer')),
                     Permission::delete(Role::project($projectIdentifierForRole, 'owner')),
-                    Permission::delete(Role::project($projectIdentifierForRole, 'developer')),
                 ],
                 'name' => $name,
                 'teamInternalId' => $team->getSequence(),
@@ -436,12 +434,23 @@ App::patch('/v1/projects/:projectId/team')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        $teamIdentifierForRole = ID::custom($teamId);
+        $projectIdentifierForRole = ID::custom($projectId);
+
         $permissions = [
-            Permission::read(Role::team(ID::custom($teamId))),
-            Permission::update(Role::team(ID::custom($teamId), 'owner')),
-            Permission::update(Role::team(ID::custom($teamId), 'developer')),
-            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            // Team-level permissions
+            Permission::read(Role::team($teamIdentifierForRole)),
+            Permission::update(Role::team($teamIdentifierForRole, 'owner')),
+            Permission::update(Role::team($teamIdentifierForRole, 'developer')),
+            Permission::delete(Role::team($teamIdentifierForRole, 'owner')),
+            Permission::delete(Role::team($teamIdentifierForRole, 'developer')),
+            // Project-specific permissions
+            Permission::read(Role::project($projectIdentifierForRole, 'owner')),
+            Permission::read(Role::project($projectIdentifierForRole, 'developer')),
+            Permission::read(Role::project($projectIdentifierForRole, 'editor')),
+            Permission::read(Role::project($projectIdentifierForRole, 'analyst')),
+            Permission::update(Role::project($projectIdentifierForRole, 'owner')),
+            Permission::delete(Role::project($projectIdentifierForRole, 'owner')),
         ];
 
         $project
