@@ -46,4 +46,93 @@ trait ProjectsBase
             'secret' => $devKey['body']['secret'],
         ];
     }
+
+    protected function setupUserMembership(mixed $params): array
+    {
+        // Create membership
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $params['teamId'] . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $params['email'],
+            'name' => $params['name'],
+            'roles' => $params['roles'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEquals($params['name'], $response['body']['userName']);
+        $this->assertEquals($params['email'], $response['body']['userEmail']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(count($params['roles']), $response['body']['roles']);
+        $this->assertEquals(false, $response['body']['confirm']);
+
+        $userId = $response['body']['userId'];
+        $membershipId = $response['body']['$id'];
+
+
+        $lastEmail = $this->getLastEmail();
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $userId = $tokens['userId'];
+        $secret = $tokens['secret'];
+
+        // Confirm membership
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $membershipId . '/status', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'secret' => $secret,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(count($params['roles']), $response['body']['roles']);
+        $this->assertEquals(true, $response['body']['confirm']);
+
+        // Simulate password recovery flow to reset password for the created user (useful when creating session for this user)
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $params['email'],
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+
+        $lastEmail = $this->getLastEmail();
+        $this->assertEquals($params['email'], $lastEmail['to'][0]['address']);
+        $this->assertEquals($params['name'], $lastEmail['to'][0]['name']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
+
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $secret = $tokens['secret'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        return [
+            'userId' => $userId,
+            'membershipId' => $membershipId,
+        ];
+    }
 }

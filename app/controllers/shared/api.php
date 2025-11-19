@@ -334,13 +334,19 @@ App::init()
             }
 
             $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $role = Role::parse($role);
-                $role = $role->getRole() === Roles::ROLE_PROJECT ? $role->getDimension() : $role->getRole();
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            $hasProjectSpecificPermissions = false;
+            foreach ($adminRoles as $adminRole) {
+                $adminRole = Role::parse($adminRole);
+                if ($adminRole->getRole() === Roles::ROLE_PROJECT) {
+                    $hasProjectSpecificPermissions = true;
+                    $adminRole = $adminRole->getDimension();
+                } else {
+                    $adminRole = $adminRole->getRole();
+                }
+                $scopes = \array_merge($scopes, $roles[$adminRole]['scopes']);
             }
 
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            Authorization::setDefaultStatus($hasProjectSpecificPermissions);  // Cancel security segmentation for admin users.
         }
 
         $scopes = \array_unique($scopes);
