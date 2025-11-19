@@ -5,8 +5,6 @@ use Utopia\Config\Config;
 
 require_once __DIR__ . '/../config/storage/resource_limits.php';
 
-$configAdapter = new PHP();
-
 Config::load('template-runtimes', __DIR__ . '/../config/template-runtimes.php', new PHP());
 Config::load('events', __DIR__ . '/../config/events.php', new PHP());
 Config::load('auth', __DIR__ . '/../config/auth.php', new PHP());
