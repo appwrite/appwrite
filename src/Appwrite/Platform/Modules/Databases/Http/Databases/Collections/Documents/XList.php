@@ -91,6 +91,9 @@ class XList extends Action
 
         try {
             $queries = Query::parseQueries($queries);
+            
+            // Enforce query limits to prevent UI freezes when rendering large datasets
+            $this->enforceLimits($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
@@ -171,5 +174,51 @@ class XList extends Action
             // rows or documents
             $this->getSDKGroup() => $documents,
         ]), $this->getResponseModel());
+    }
+
+    /**
+     * Enforce query limits to prevent excessive data loading
+     * 
+     * This method ensures that:
+     * 1. If no limit is specified, apply the default limit
+     * 2. If a limit exceeds the maximum allowed, cap it
+     * 3. Prevent memory exhaustion and UI freezes in the console
+     * 
+     * @param Query[] $queries Reference to queries array
+     * @return void
+     */
+    private function enforceLimits(array &$queries): void
+    {
+        $limitQuery = null;
+        $limitIndex = null;
+        
+        // Find existing limit query
+        foreach ($queries as $index => $query) {
+            if ($query->getMethod() === Query::TYPE_LIMIT) {
+                $limitQuery = $query;
+                $limitIndex = $index;
+                break;
+            }
+        }
+        
+        if ($limitQuery === null) {
+            // No limit specified, add default to prevent loading all documents
+            $queries[] = Query::limit(APP_LIMIT_LIST_DEFAULT);
+        } else {
+            // Limit specified, cap it to maximum to prevent UI freezes
+            $requestedLimit = $limitQuery->getValue();
+            
+            if ($requestedLimit > APP_LIMIT_LIST_MAX) {
+                // Log the capping for monitoring purposes
+                \error_log(\sprintf(
+                    'Document limit capped from %d to %d for collection to prevent UI freeze',
+                    $requestedLimit,
+                    APP_LIMIT_LIST_MAX
+                ));
+                
+                // Replace with capped limit
+                $queries[$limitIndex] = Query::limit(APP_LIMIT_LIST_MAX);
+            }
+        }
     }
 }
