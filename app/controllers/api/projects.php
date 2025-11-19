@@ -1498,7 +1498,7 @@ App::post('/v1/projects/:projectId/keys')
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
-            'expire' => $expire,
+            'expire' => $expire ?? null,
             'sdks' => [],
             'accessedAt' => null,
             'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
@@ -1637,7 +1637,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $key
             ->setAttribute('name', $name)
             ->setAttribute('scopes', $scopes)
-            ->setAttribute('expire', $expire);
+            ->setAttribute('expire', $expire ?? null);
 
         $dbForPlatform->updateDocument('keys', $key->getId(), $key);
 

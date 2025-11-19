@@ -844,7 +844,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
 
     // check expiration
     $expire = $key->getAttribute('expire');
-    if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+    if ($expire !== null && !empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
         return new Document([]);
     }
 

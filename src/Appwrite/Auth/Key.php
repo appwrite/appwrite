@@ -178,7 +178,7 @@ class Key
                 }
 
                 $expire = $key->getAttribute('expire');
-                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                if ($expire !== null && !empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
                     $expired = true;
                 }
 
