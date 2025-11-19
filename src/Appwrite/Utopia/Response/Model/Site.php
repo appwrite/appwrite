@@ -125,6 +125,12 @@ class Site extends Model
                 'default' => '',
                 'example' => 'npm run build',
             ])
+            ->addRule('startCommand', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Custom command to use when starting site runtime.',
+                'default' => '',
+                'example' => 'node custom-server.mjs',
+            ])
             ->addRule('outputDirectory', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The directory where the site build output is located.',
