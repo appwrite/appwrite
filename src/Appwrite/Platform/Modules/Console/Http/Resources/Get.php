@@ -59,7 +59,6 @@ class Get extends Action
             ->param('type', '', new WhiteList(['rules']), 'Resource type.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -67,8 +66,7 @@ class Get extends Action
         string $value,
         string $type,
         Response $response,
-        Database $dbForPlatform,
-        Authorization $authorization
+        Database $dbForPlatform
     ) {
         if ($type === 'rules') {
             $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
@@ -126,7 +124,7 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
             }
 
-            $document = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$value]),
             ]));
 

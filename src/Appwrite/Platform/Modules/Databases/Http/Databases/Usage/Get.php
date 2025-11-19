@@ -59,11 +59,10 @@ class Get extends Action
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
+    public function action(string $databaseId, string $range, UtopiaResponse $response, Database $dbForProject): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -82,7 +81,7 @@ class Get extends Action
             str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES)
         ];
 
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

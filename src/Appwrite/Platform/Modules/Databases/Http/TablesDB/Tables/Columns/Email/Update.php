@@ -62,7 +62,6 @@ class Update extends EmailUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 }
