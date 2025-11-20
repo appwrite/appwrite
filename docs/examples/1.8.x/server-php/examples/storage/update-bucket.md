@@ -23,5 +23,6 @@ $result = $storage->updateBucket(
     allowedFileExtensions: [], // optional
     compression: Compression::NONE(), // optional
     encryption: false, // optional
-    antivirus: false // optional
+    antivirus: false, // optional
+    transformations: false // optional
 );

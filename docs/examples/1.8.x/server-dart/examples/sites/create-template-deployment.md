@@ -12,6 +12,7 @@ Deployment result = await sites.createTemplateDeployment(
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    version: '<VERSION>',
+    type: .branch,
+    reference: '<REFERENCE>',
     activate: false, // (optional)
 );

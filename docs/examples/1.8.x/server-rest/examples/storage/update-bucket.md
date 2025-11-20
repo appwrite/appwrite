@@ -14,5 +14,6 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "allowedFileExtensions": [],
   "compression": "none",
   "encryption": false,
-  "antivirus": false
+  "antivirus": false,
+  "transformations": false
 }

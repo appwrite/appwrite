@@ -1,4 +1,4 @@
-import { Client, Health,  } from "@appwrite.io/console";
+import { Client, Health, Name } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -7,7 +7,7 @@ const client = new Client()
 const health = new Health(client);
 
 const result = await health.getFailedJobs({
-    name: .V1Database,
+    name: Name.V1Database,
     threshold: null // optional
 });
 

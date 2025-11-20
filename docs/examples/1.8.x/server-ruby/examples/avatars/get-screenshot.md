@@ -1,6 +1,7 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Enums
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -15,11 +16,11 @@ result = avatars.get_screenshot(
     viewport_width: 1, # optional
     viewport_height: 1, # optional
     scale: 0.1, # optional
-    theme: ::LIGHT, # optional
+    theme: Theme::LIGHT, # optional
     user_agent: '<USER_AGENT>', # optional
     fullpage: false, # optional
     locale: '<LOCALE>', # optional
-    timezone: ::AFRICA_ABIDJAN, # optional
+    timezone: Timezone::AFRICA_ABIDJAN, # optional
     latitude: -90, # optional
     longitude: -180, # optional
     accuracy: 0, # optional
@@ -29,5 +30,5 @@ result = avatars.get_screenshot(
     width: 0, # optional
     height: 0, # optional
     quality: -1, # optional
-    output: ::JPG # optional
+    output: Output::JPG # optional
 )

@@ -13,11 +13,11 @@ const result = await avatars.getScreenshot({
     viewportWidth: 1, // optional
     viewportHeight: 1, // optional
     scale: 0.1, // optional
-    theme: sdk..Light, // optional
+    theme: sdk.Theme.Light, // optional
     userAgent: '<USER_AGENT>', // optional
     fullpage: false, // optional
     locale: '<LOCALE>', // optional
-    timezone: sdk..AfricaAbidjan, // optional
+    timezone: sdk.Timezone.AfricaAbidjan, // optional
     latitude: -90, // optional
     longitude: -180, // optional
     accuracy: 0, // optional
@@ -27,5 +27,5 @@ const result = await avatars.getScreenshot({
     width: 0, // optional
     height: 0, // optional
     quality: -1, // optional
-    output: sdk..Jpg // optional
+    output: sdk.Output.Jpg // optional
 });

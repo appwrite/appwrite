@@ -7,17 +7,17 @@ Client client = Client()
 
 Avatars avatars = Avatars(client);
 
-UInt8List result = await avatars.getScreenshot(
+Uint8List result = await avatars.getScreenshot(
     url: 'https://example.com',
     headers: {}, // (optional)
     viewportWidth: 1, // (optional)
     viewportHeight: 1, // (optional)
     scale: 0.1, // (optional)
-    theme: .light, // (optional)
+    theme: Theme.light, // (optional)
     userAgent: '<USER_AGENT>', // (optional)
     fullpage: false, // (optional)
     locale: '<LOCALE>', // (optional)
-    timezone: .africaAbidjan, // (optional)
+    timezone: Timezone.africaAbidjan, // (optional)
     latitude: -90, // (optional)
     longitude: -180, // (optional)
     accuracy: 0, // (optional)
@@ -27,5 +27,5 @@ UInt8List result = await avatars.getScreenshot(
     width: 0, // (optional)
     height: 0, // (optional)
     quality: -1, // (optional)
-    output: .jpg, // (optional)
+    output: Output.jpg, // (optional)
 );

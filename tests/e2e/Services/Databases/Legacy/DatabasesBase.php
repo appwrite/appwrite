@@ -3160,6 +3160,9 @@ trait DatabasesBase
 
     public function testOperators(): void
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -3408,6 +3411,9 @@ trait DatabasesBase
 
     public function testBulkOperators(): void
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',

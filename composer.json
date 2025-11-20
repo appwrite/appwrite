@@ -52,7 +52,7 @@
         "utopia-php/audit": "1.0.*",
         "utopia-php/cache": "0.13.*",
         "utopia-php/cli": "0.15.*",
-        "utopia-php/config": "0.2.*",
+        "utopia-php/config": "1.*.*",
         "utopia-php/database": "3.*",
         "utopia-php/agents": "0.*",
         "utopia-php/detector": "0.2.*",
