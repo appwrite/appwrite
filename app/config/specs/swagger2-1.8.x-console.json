@@ -14366,7 +14366,7 @@
                                         "branch",
                                         "tag"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "TemplateReferenceType",
                                     "x-enum-keys": []
                                 },
                                 "reference": {
@@ -32441,7 +32441,7 @@
                                         "commit",
                                         "tag"
                                     ],
-                                    "x-enum-name": null,
+                                    "x-enum-name": "TemplateReferenceType",
                                     "x-enum-keys": []
                                 },
                                 "reference": {
