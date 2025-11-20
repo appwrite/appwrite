@@ -2977,12 +2977,11 @@ class SitesCustomServerTest extends Scope
             'adapter' => 'ssr',
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
-            'buildCommand' => 'npm run build',
+            'buildCommand' => 'npm run build && echo $APPWRITE_SITE_MEMORY:$APPWRITE_SITE_CPUS',
             'installCommand' => 'npm install',
             'fallbackFile' => '',
             'buildSpecification' => Specification::S_2VCPU_2GB,
             'runtimeSpecification' => Specification::S_1VCPU_1GB,
-            'commands' => 'echo $APPWRITE_FUNCTION_MEMORY:$APPWRITE_FUNCTION_CPUS',
         ]);
 
         $this->assertEquals(201, $site['headers']['status-code']);
@@ -2992,6 +2991,8 @@ class SitesCustomServerTest extends Scope
 
         $siteId = $site['body']['$id'] ?? '';
 
+        $domain = $this->setupSiteDomain($siteId);
+
         $deploymentId = $this->setupDeployment($siteId, [
             'code' => $this->packageSite('astro'),
             'activate' => true
@@ -2999,19 +3000,20 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
-            $this->assertTrue(str_contains($deployment['body']['buildLogs'], '2048:2'));
+            \var_dump($deployment['body']['buildLogs']);
+            $this->assertStringContainsString('2048:2', $deployment['body']['buildLogs']);
         }, 10000, 500);
 
-        // Check if the function specifications are correctly set in executions
-        // TODO: Finish
-        $execution = $this->createExecution($functionId);
+        // Check if the sites specifications are correctly set in executions
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertNotEmpty($execution['body']['$id']);
+        $response = $proxyClient->call(Client::METHOD_GET, '/specs');
 
-        $executionResponse = json_decode($execution['body']['responseBody'], true);
-        $this->assertEquals('1024', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
-        $this->assertEquals('1', $executionResponse['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('1024', $response['body']['APPWRITE_SITE_MEMORY']);
+        $this->assertEquals('1', $response['body']['APPWRITE_SITE_CPUS']);
 
         $this->cleanupSite($siteId);
     }

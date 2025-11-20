@@ -173,7 +173,6 @@ class Site extends Model
                 'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
                 'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])
-            // TODO: Response filter
             ->addRule('buildRuntime', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site build runtime.',

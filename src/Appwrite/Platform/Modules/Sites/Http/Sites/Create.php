@@ -90,7 +90,6 @@ class Create extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the function SSR executions.', true, ['plan'])
-            // TODO: Request filter
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
