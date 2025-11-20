@@ -1378,6 +1378,256 @@ trait MigrationsBase
     }
 
     /**
+     * Import VectorDB documents from CSV
+     */
+    public function testImportVectordbCSV(): void
+    {
+        $databaseId = null;
+        $collectionId = null;
+        $bucketId = null;
+
+        try {
+            $database = $this->client->call(Client::METHOD_POST, '/vectordb', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'databaseId' => ID::unique(),
+                'name' => 'Vector CSV Import DB'
+            ]);
+
+            $this->assertEquals(201, $database['headers']['status-code']);
+            $databaseId = $database['body']['$id'];
+
+            $collection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'collectionId' => ID::unique(),
+                'name' => 'Vector CSV Import Collection',
+                'dimensions' => 3,
+                'documentSecurity' => true,
+            ]);
+
+            $this->assertEquals(201, $collection['headers']['status-code']);
+            $collectionId = $collection['body']['$id'];
+
+            $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'bucketId' => ID::unique(),
+                'name' => 'Vector CSV Bucket',
+                'maximumFileSize' => 2000000,
+                'allowedFileExtensions' => ['csv'],
+            ]);
+
+            $this->assertEquals(201, $bucket['headers']['status-code']);
+            $bucketId = $bucket['body']['$id'];
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/vectordb-documents.csv'), 'text/csv', 'vectordb-documents.csv'),
+            ]);
+
+            $this->assertEquals(201, $file['headers']['status-code']);
+            $fileId = $file['body']['$id'];
+
+            $migration = $this->performCsvMigration([
+                'fileId' => $fileId,
+                'bucketId' => $bucketId,
+                'resourceId' => $databaseId . ':' . $collectionId,
+            ]);
+
+            $this->assertEquals(202, $migration['headers']['status-code']);
+
+            $this->assertEventually(function () use ($migration) {
+                $migrationId = $migration['body']['$id'];
+                $status = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+
+                $this->assertEquals(200, $status['headers']['status-code']);
+                $this->assertEquals('finished', $status['body']['stage']);
+                $this->assertEquals('completed', $status['body']['status']);
+                $this->assertContains(Resource::TYPE_DOCUMENT, $status['body']['resources']);
+                $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $status['body']['statusCounters']);
+                $this->assertEquals(2, $status['body']['statusCounters'][Resource::TYPE_DOCUMENT]['success']);
+
+                return true;
+            }, 60_000, 500);
+
+            $documents = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [
+                    Query::limit(10)->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $documents['headers']['status-code']);
+            $this->assertEquals(2, $documents['body']['total']);
+
+            $titles = array_map(fn ($doc) => $doc['metadata']['title'] ?? null, $documents['body']['documents']);
+            $this->assertContains('Vector Alpha', $titles);
+            $this->assertContains('Vector Beta', $titles);
+        } finally {
+            if ($bucketId) {
+                $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+
+            if ($databaseId) {
+                $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Export VectorDB documents to CSV
+     */
+    public function testExportVectordbCSV(): void
+    {
+        $databaseId = null;
+
+        try {
+            $database = $this->client->call(Client::METHOD_POST, '/vectordb', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'databaseId' => ID::unique(),
+                'name' => 'Vector CSV Export DB',
+            ]);
+
+            $this->assertEquals(201, $database['headers']['status-code']);
+            $databaseId = $database['body']['$id'];
+
+            $collection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'collectionId' => ID::unique(),
+                'name' => 'Vector CSV Export Collection',
+                'dimensions' => 3,
+                'documentSecurity' => true,
+            ]);
+
+            $this->assertEquals(201, $collection['headers']['status-code']);
+            $collectionId = $collection['body']['$id'];
+
+            $documentsPayload = [
+                [
+                    'documentId' => ID::unique(),
+                    'data' => [
+                        'embeddings' => [0.11, 0.22, 0.33],
+                        'metadata' => ['title' => 'Vector Sample One', 'category' => 'alpha'],
+                    ],
+                ],
+                [
+                    'documentId' => ID::unique(),
+                    'data' => [
+                        'embeddings' => [0.44, 0.55, 0.66],
+                        'metadata' => ['title' => 'Vector Sample Two', 'category' => 'beta'],
+                    ],
+                ],
+            ];
+
+            foreach ($documentsPayload as $payload) {
+                $response = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], $payload);
+
+                $this->assertEquals(201, $response['headers']['status-code']);
+            }
+
+            $filename = 'vectordb-export-' . ID::unique();
+            $migration = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'resourceId' => $databaseId . ':' . $collectionId,
+                'filename' => $filename,
+                'columns' => [],
+                'queries' => [],
+                'delimiter' => ',',
+                'enclosure' => '"',
+                'escape' => '\\',
+                'header' => true,
+                'notify' => true,
+            ]);
+
+            $this->assertEquals(202, $migration['headers']['status-code']);
+
+            $migrationId = $migration['body']['$id'];
+            $this->assertEventually(function () use ($migrationId) {
+                $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('finished', $response['body']['stage']);
+                $this->assertEquals('completed', $response['body']['status']);
+
+                return true;
+            }, 30_000, 500);
+
+            $lastEmail = $this->getLastEmail();
+            $this->assertNotEmpty($lastEmail);
+            $this->assertEquals('Your CSV export is ready', $lastEmail['subject']);
+
+            \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $lastEmail['html'], $matches);
+            $this->assertNotEmpty($matches[1], 'Download URL not found in email');
+            $downloadUrl = html_entity_decode($matches[1]);
+
+            $components = \parse_url($downloadUrl);
+            $this->assertNotEmpty($components);
+            \parse_str($components['query'] ?? '', $queryParams);
+            $this->assertArrayHasKey('jwt', $queryParams);
+            $this->assertArrayHasKey('project', $queryParams);
+
+            $path = \str_replace('/v1', '', $components['path']);
+            $downloadResponse = $this->client->call(Client::METHOD_GET, $path . '?project=' . $queryParams['project'] . '&jwt=' . $queryParams['jwt']);
+            $this->assertEquals(200, $downloadResponse['headers']['status-code']);
+
+            $csvData = $downloadResponse['body'];
+            $this->assertStringContainsString('Vector Sample One', $csvData);
+            $this->assertStringContainsString('Vector Sample Two', $csvData);
+            $this->assertStringContainsString('[0.11,0.22,0.33]', $csvData);
+        } finally {
+            if ($databaseId) {
+                $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+            }
+        }
+    }
+
+    /**
     * DocumentsDB (schemaless)
     */
     public function testAppwriteMigrationDocumentsDBDatabase(): array

@@ -47,7 +47,8 @@ function getDatabaseTransferResourceServices(string $databaseType)
 {
     return match($databaseType) {
         DATABASE_LEGACY_TYPE,
-        DATABASE_TABLESDB_TYPE => Transfer::GROUP_DATABASES_TABLES_DB
+        DATABASE_TABLESDB_TYPE => Transfer::GROUP_DATABASES_TABLES_DB,
+        DATABASE_VECTORDB_TYPE => Transfer::GROUP_DATABASES_VECTOR_DB
     };
 }
 

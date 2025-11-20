@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33efc5db38812c8c9257d0e398948685",
+    "content-hash": "bdd11652978ebab653ca17a00074343d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4509,12 +4509,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "105b48dcf2bc8a1a969497813f3d7d06231770e6"
+                "reference": "bcd7bcb634dea60485c16648e68ed7a255315560"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/105b48dcf2bc8a1a969497813f3d7d06231770e6",
-                "reference": "105b48dcf2bc8a1a969497813f3d7d06231770e6",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/bcd7bcb634dea60485c16648e68ed7a255315560",
+                "reference": "bcd7bcb634dea60485c16648e68ed7a255315560",
                 "shasum": ""
             },
             "require": {
