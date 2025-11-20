@@ -269,7 +269,7 @@ abstract class Format
                     case 'createTemplateDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'TemplateDeploymentType';
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }
@@ -298,7 +298,7 @@ abstract class Format
                     case 'createTemplateDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'TemplateDeploymentType';
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }

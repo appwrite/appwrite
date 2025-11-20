@@ -13182,7 +13182,7 @@
                                         "branch",
                                         "tag"
                                     ],
-                                    "x-enum-name": "TemplateDeploymentType",
+                                    "x-enum-name": "TemplateReferenceType",
                                     "x-enum-keys": []
                                 },
                                 "reference": {
@@ -23014,7 +23014,7 @@
                                         "commit",
                                         "tag"
                                     ],
-                                    "x-enum-name": "TemplateDeploymentType",
+                                    "x-enum-name": "TemplateReferenceType",
                                     "x-enum-keys": []
                                 },
                                 "reference": {
