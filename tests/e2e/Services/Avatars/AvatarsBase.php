@@ -1293,4 +1293,87 @@ trait AvatarsBase
 
         return [];
     }
+
+    public function testGetPhoto(): array
+    {
+        /**
+         * Test for SUCCESS - Note: This test may fail if the test user doesn't have a Gravatar image
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photos', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'width' => 200,
+            'height' => 200,
+        ]);
+
+        // Gravatar returns 404 if no image is found for the email
+        if ($response['headers']['status-code'] === 404) {
+            $this->markTestSkipped('Test user does not have a Gravatar image');
+        }
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        // Test with different output format
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photos', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'width' => 100,
+            'height' => 100,
+            'quality' => 80,
+            'output' => 'jpeg',
+        ]);
+
+        // Gravatar returns 404 if no image is found for the email
+        if ($response['headers']['status-code'] === 404) {
+            $this->markTestSkipped('Test user does not have a Gravatar image');
+        }
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('image/', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        /**
+         * Test for FAILURE - Invalid width parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photos', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'width' => 3000, // Too high (max 2000)
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid height parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photos', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'height' => 3000, // Too high (max 2000)
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid quality parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photos', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'quality' => 150, // Too high (max 100)
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - Invalid output parameter
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photos', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'output' => 'invalid-format', // Invalid format
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return [];
+    }
 }
