@@ -246,7 +246,7 @@ class Update extends Base
             $specsChanged = false;
             if ($function->getAttribute('runtimeSpecification') !== $runtimeSpecification) {
                 $specsChanged = true;
-            } elseif ($function->getAttribute('buildbuildSpecification') !== $buildSpecification) {
+            } elseif ($function->getAttribute('buildSpecification') !== $buildSpecification) {
                 $specsChanged = true;
             }
 

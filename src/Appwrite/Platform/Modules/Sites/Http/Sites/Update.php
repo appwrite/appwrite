@@ -244,7 +244,7 @@ class Update extends Base
             $specsChanged = false;
             if ($site->getAttribute('runtimeSpecification') !== $runtimeSpecification) {
                 $specsChanged = true;
-            } elseif ($site->getAttribute('buildbuildSpecification') !== $buildSpecification) {
+            } elseif ($site->getAttribute('buildSpecification') !== $buildSpecification) {
                 $specsChanged = true;
             }
 
