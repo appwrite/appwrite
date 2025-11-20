@@ -12,5 +12,6 @@ Tokens tokens = new Tokens(client);
 ResourceTokenList result = await tokens.List(
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
-    queries: new List<string>() // optional
+    queries: new List<string>(), // optional
+    total: false // optional
 );

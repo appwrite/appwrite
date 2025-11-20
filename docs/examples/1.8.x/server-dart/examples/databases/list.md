@@ -10,4 +10,5 @@ Databases databases = Databases(client);
 DatabaseList result = await databases.list(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

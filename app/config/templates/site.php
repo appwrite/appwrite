@@ -9,6 +9,11 @@ use Utopia\System\System;
 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 $hostname = System::getEnv('_APP_DOMAIN', '');
 
+// Temporary fix until we can set _APP_DOMAIN to "localhost" instead of "traefik"
+if (System::getEnv('_APP_ENV', 'development') === 'development') {
+    $hostname = 'localhost';
+}
+
 $url = $protocol . '://' . $hostname;
 
 class UseCases
@@ -19,6 +24,7 @@ class UseCases
     public const ECOMMERCE = 'ecommerce';
     public const DOCUMENTATION = 'documentation';
     public const BLOG = 'blog';
+    public const AI = 'artificial intelligence';
 }
 
 const TEMPLATE_FRAMEWORKS = [
@@ -78,7 +84,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => '',
         'buildCommand' => 'flutter build web',
         'outputDirectory' => './build/web',
-        'buildRuntime' => 'flutter-3.29',
+        'buildRuntime' => 'flutter-3.35',
         'adapter' => 'static',
         'fallbackFile' => '',
     ],
@@ -110,6 +116,16 @@ const TEMPLATE_FRAMEWORKS = [
         'adapter' => 'static',
         'outputDirectory' => './dist',
         'fallbackFile' => '+not-found.html',
+    ],
+    'TANSTACK_START' => [
+        'key' => 'tanstack-start',
+        'name' => 'TanStack Start',
+        'installCommand' => 'npm install',
+        'buildCommand' => 'npm run build',
+        'outputDirectory' => './dist',
+        'buildRuntime' => 'node-22',
+        'adapter' => 'ssr',
+        'fallbackFile' => '',
     ],
     'ANGULAR' => [
         'key' => 'angular',
@@ -951,6 +967,50 @@ return [
         ]
     ],
     [
+        'key' => 'starter-for-tanstack-start',
+        'name' => 'TanStack Start starter',
+        'useCases' => [UseCases::STARTER],
+        'tagline' => 'Simple TanStack Start application integrated with Appwrite SDK.',
+        'score' => 9, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'screenshotDark' => $url . '/images/sites/templates/starter-for-tanstack-start-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/starter-for-tanstack-start-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'starter-for-tanstack-start',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.1.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_NAME',
+                'description' => 'Your Appwrite project name',
+                'value' => '{projectName}',
+                'placeholder' => '{projectName}',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
         'key' => 'starter-for-nuxt',
         'name' => 'Nuxt starter',
         'useCases' => [UseCases::STARTER],
@@ -1328,6 +1388,25 @@ return [
         'variables' => [],
     ],
     [
+        'key' => 'playground-for-tanstack-start',
+        'name' => 'TanStack Start playground',
+        'tagline' => 'A basic TanStack Start website without Appwrite SDK integration.',
+        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::STARTER],
+        'screenshotDark' => $url . '/images/sites/templates/playground-for-tanstack-start-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/playground-for-tanstack-start-light.png',
+        'frameworks' => [
+            getFramework('TANSTACK_START', [
+                'providerRootDirectory' => './tanstack-start/starter',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.5.*',
+        'variables' => [],
+    ],
+    [
         'key' => 'playground-for-react-native',
         'name' => 'React Native playground',
         'tagline' => 'A basic React Native website without Appwrite SDK integration.',
@@ -1364,5 +1443,33 @@ return [
         'providerOwner' => 'appwrite',
         'providerVersion' => '0.3.*',
         'variables' => []
+    ],
+    [
+        'key' => 'text-to-speech',
+        'name' => 'Text-to-speech with ElevenLabs',
+        'tagline' => 'Next.js app that transforms text into natural, human-like speech using ElevenLabs',
+        'score' => 10, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::AI],
+        'screenshotDark' => $url . '/images/sites/templates/text-to-speech-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/text-to-speech-light.png',
+        'frameworks' => [
+            getFramework('NEXTJS', [
+                'providerRootDirectory' => './nextjs/text-to-speech',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.6.*',
+        'variables' => [
+            [
+                'name' => 'ELEVENLABS_API_KEY',
+                'description' => 'Your ElevenLabs API key',
+                'value' => '',
+                'placeholder' => 'sk_.....',
+                'required' => true,
+                'type' => 'password'
+            ],
+        ]
     ],
 ];

@@ -527,6 +527,11 @@ return [
         'description' => 'The requested file is not publicly readable.',
         'code' => 403,
     ],
+    Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED => [
+        'name' => Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED,
+        'description' => 'Image transformations are disabled for the requested bucket.',
+        'code' => 403,
+    ],
 
     /** Tokens */
     Exception::TOKEN_NOT_FOUND => [

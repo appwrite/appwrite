@@ -1,6 +1,8 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Permission
+include Appwrite::Role
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -13,7 +15,7 @@ result = tables_db.create_table(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], # optional
+    permissions: [Permission.read(Role.any())], # optional
     row_security: false, # optional
     enabled: false # optional
 )

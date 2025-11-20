@@ -12,5 +12,6 @@ result = tables_db.list_rows(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
     queries = [], # optional
-    transaction_id = '<TRANSACTION_ID>' # optional
+    transaction_id = '<TRANSACTION_ID>', # optional
+    total = False # optional
 )

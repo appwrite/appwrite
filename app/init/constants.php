@@ -138,6 +138,7 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
 // Message types
@@ -270,6 +271,9 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_SITES_ID_REQUESTS = 'sites.{siteInternalId}.requests';
 const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
+const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
+const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
+const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

@@ -7,7 +7,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 // Downloading file
-UInt8List bytes = await avatars.getImage(
+Uint8List bytes = await avatars.getImage(
     url: 'https://example.com',
     width: 0, // optional
     height: 0, // optional

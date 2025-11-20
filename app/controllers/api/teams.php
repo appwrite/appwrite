@@ -10,7 +10,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\SDK\AuthType;
@@ -48,10 +48,12 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -169,9 +171,10 @@ App::get('/v1/teams')
     ))
     ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -211,7 +214,7 @@ App::get('/v1/teams')
         $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $results = $dbForProject->find('teams', $queries);
-            $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -466,7 +469,7 @@ App::post('/v1/teams/:teamId/memberships')
     ))
     ->label('abuse-limit', 10)
     ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
-    ->param('email', '', new Email(), 'Email of the new team member.', true)
+    ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of the user to be added to a team.', true, ['dbForProject'])
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], function (Document $project, Database $dbForProject) {
@@ -564,38 +567,52 @@ App::post('/v1/teams/:teamId/memberships')
             }
 
             try {
-                $userId = ID::unique();
-                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
-                    '$id' => $userId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::read(Role::user($userId)),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'email' => empty($email) ? null : $email,
-                    'phone' => empty($phone) ? null : $phone,
-                    'emailVerification' => false,
-                    'status' => true,
-                    // TODO: Set password empty?
-                    'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
-                    'hash' => Auth::DEFAULT_ALGO,
-                    'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
-                    /**
-                     * Set the password update time to 0 for users created using
-                     * team invite and OAuth to allow password updates without an
-                     * old password
-                     */
-                    'passwordUpdate' => null,
-                    'registration' => DateTime::now(),
-                    'reset' => false,
-                    'name' => $name,
-                    'prefs' => new \stdClass(),
-                    'sessions' => null,
-                    'tokens' => null,
-                    'memberships' => null,
-                    'search' => implode(' ', [$userId, $email, $name]),
-                ])));
+                $emailCanonical = new Email($email);
+            } catch (Throwable) {
+                $emailCanonical = null;
+            }
+
+            $userId = ID::unique();
+
+            $userDocument = new Document([
+                '$id' => $userId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::read(Role::user($userId)),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'email' => empty($email) ? null : $email,
+                'phone' => empty($phone) ? null : $phone,
+                'emailVerification' => false,
+                'status' => true,
+                // TODO: Set password empty?
+                'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                /**
+                 * Set the password update time to 0 for users created using
+                 * team invite and OAuth to allow password updates without an
+                 * old password
+                 */
+                'passwordUpdate' => null,
+                'registration' => DateTime::now(),
+                'reset' => false,
+                'name' => $name,
+                'prefs' => new \stdClass(),
+                'sessions' => null,
+                'tokens' => null,
+                'memberships' => null,
+                'search' => implode(' ', [$userId, $email, $name]),
+                'emailCanonical' => $emailCanonical?->getCanonical(),
+                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                'emailIsDisposable' => $emailCanonical?->isDisposable(),
+                'emailIsFree' => $emailCanonical?->isFree(),
+            ]);
+
+            try {
+                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', $userDocument));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
@@ -837,10 +854,11 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $teamId, array $queries, string $search, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (string $teamId, array $queries, string $search, bool $includeTotal, Response $response, Document $project, Database $dbForProject) {
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -892,11 +910,11 @@ App::get('/v1/teams/:teamId/memberships')
                 collection: 'memberships',
                 queries: $queries,
             );
-            $total = $dbForProject->count(
+            $total = $includeTotal ? $dbForProject->count(
                 collection: 'memberships',
                 queries: $filterQueries,
                 max: APP_LIMIT_COUNT
-            );
+            ) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -1429,11 +1447,12 @@ App::get('/v1/teams/:teamId/logs')
     ))
     ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1502,7 +1521,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

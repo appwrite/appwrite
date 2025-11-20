@@ -105,9 +105,7 @@ class Get extends Action
 
         $response
             ->setContentType('application/gzip')
-            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->addHeader('Expires', '0')
-            ->addHeader('Pragma', 'no-cache')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
@@ -134,6 +132,7 @@ class Get extends Action
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
             $response->send($device->read($path, $start, ($end - $start + 1)));
+            return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
