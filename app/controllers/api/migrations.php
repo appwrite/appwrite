@@ -43,6 +43,14 @@ use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
+function getDatabaseTransferResourceServices(string $databaseType)
+{
+    return match($databaseType) {
+        DATABASE_LEGACY_TYPE,
+        DATABASE_TABLESDB_TYPE => Transfer::GROUP_DATABASES_TABLES_DB
+    };
+}
+
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Create Appwrite migration')
@@ -415,8 +423,16 @@ App::post('/v1/migrations/csv/imports')
             throw new \Exception('Unable to copy file');
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+        }
         $fileSize = $deviceForMigrations->getFileSize($newPath);
-        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
@@ -540,13 +556,23 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+        }
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
             'destination' => CSV::getName(),
-            'resources' => Transfer::extractServices([Transfer::GROUP_DATABASES]),
+            'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
             'statusCounters' => '{}',
