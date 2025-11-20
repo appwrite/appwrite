@@ -1,6 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Storage
+import io.appwrite.enums.Compression
 import io.appwrite.Permission
 import io.appwrite.Role
 

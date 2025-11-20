@@ -14,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -66,23 +65,23 @@ class Create extends Action
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
-        ->inject('authorization')
         ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents): void
     {
         /**
          * @var Document $bucket
          * @var Document $file
          */
-        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $bucketId, $fileId);
+        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $bucketId, $fileId);
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $bucketPermission =  $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
+        $validator = new Authorization(Database::PERMISSION_UPDATE);
+        $bucketPermission = $validator->isValid($bucket->getUpdate());
 
         if ($fileSecurity) {
-            $filePermission = $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $file->getUpdate()));
+            $filePermission = $validator->isValid($file->getUpdate());
             if (!$bucketPermission && !$filePermission) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }

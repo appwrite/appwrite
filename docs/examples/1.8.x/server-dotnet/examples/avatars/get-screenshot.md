@@ -16,11 +16,11 @@ byte[] result = await avatars.GetScreenshot(
     viewportWidth: 1, // optional
     viewportHeight: 1, // optional
     scale: 0.1, // optional
-    theme: .Light, // optional
+    theme: Theme.Light, // optional
     userAgent: "<USER_AGENT>", // optional
     fullpage: false, // optional
     locale: "<LOCALE>", // optional
-    timezone: .AfricaAbidjan, // optional
+    timezone: Timezone.AfricaAbidjan, // optional
     latitude: -90, // optional
     longitude: -180, // optional
     accuracy: 0, // optional
@@ -30,5 +30,5 @@ byte[] result = await avatars.GetScreenshot(
     width: 0, // optional
     height: 0, // optional
     quality: -1, // optional
-    output: .Jpg // optional
+    output: Output.Jpg // optional
 );

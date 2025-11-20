@@ -28,12 +28,11 @@ use Utopia\Validator\Text;
 App::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->inject('authorization')
-    ->action(function (Document $project, Authorization $authorization) {
+    ->action(function (Document $project) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(Auth::isPrivilegedUser($authorization->getRoles()) || Auth::isAppUser($authorization->getRoles()))
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }

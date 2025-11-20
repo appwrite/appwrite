@@ -84,7 +84,6 @@ class Migrations extends Action
             ->inject('deviceForFiles')
             ->inject('queueForMails')
             ->inject('plan')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -102,7 +101,6 @@ class Migrations extends Action
         Device $deviceForFiles,
         Mail $queueForMails,
         array $plan,
-        Authorization $authorization,
     ): void {
         $payload = $message->getPayload() ?? [];
         $this->deviceForMigrations = $deviceForMigrations;
@@ -129,7 +127,7 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($migration, $queueForRealtime, $queueForMails, $authorization);
+        $this->processMigration($migration, $queueForRealtime, $queueForMails);
     }
 
     /**
@@ -298,7 +296,6 @@ class Migrations extends Action
         Document $migration,
         Realtime $queueForRealtime,
         Mail $queueForMails,
-        Authorization $authorization,
     ): void {
         $project = $this->dbForPlatform->getDocument('projects', $this->project->getId());
         $tempAPIKey = $this->generateAPIKey($project);
@@ -414,7 +411,7 @@ class Migrations extends Action
                 $source?->success();
 
                 if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $authorization);
+                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime);
                 }
             }
         }
@@ -436,7 +433,7 @@ class Migrations extends Action
         Document $project,
         Document $migration,
         Mail $queueForMails,
-        Authorization $authorization,
+        Realtime $queueForRealtime,
     ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
@@ -450,7 +447,7 @@ class Migrations extends Action
             throw new \Exception('User ' . $userInternalId . ' not found');
         }
 
-        $bucket = $authorization->skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
+        $bucket = Authorization::skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty()) {
             throw new \Exception('Bucket not found');
         }
@@ -534,6 +531,9 @@ class Migrations extends Action
         $endpoint = System::getEnv('_APP_DOMAIN', '');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
         $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+        $options['downloadUrl'] = $downloadUrl;
+        $migration->setAttribute('options', $options);
+        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
         $this->sendCSVEmail(
             success: true,

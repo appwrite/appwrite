@@ -65,7 +65,6 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForSites')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -79,8 +78,7 @@ class Create extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Build $queueForBuilds,
-        Device $deviceForSites,
-        Authorization $authorization
+        Device $deviceForSites
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -148,7 +146,7 @@ class Create extends Action
         // TODO: @christyjacob remove once we migrate the rules in 1.7.x
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
-        $authorization->skip(
+        Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
