@@ -205,7 +205,8 @@ class Migrations extends Action
                 $resourceId,
                 $migrationOptions['path'],
                 $this->deviceForMigrations,
-                $this->dbForProject
+                $this->dbForProject,
+                $getDatabasesDB
             ),
             default => throw new \Exception('Invalid source type'),
         };
