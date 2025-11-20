@@ -36,14 +36,17 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'specification' => $specifications['body']['specifications'][0]['slug']
+            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $function = $this->getFunction($function['body']['$id']);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
 
         $this->cleanupFunction($function['body']['$id']);
 
@@ -51,7 +54,15 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'specification' => 'cheap-please'
+            'buildSpecification' => 'cheap-please'
+        ]);
+        $this->assertEquals(400, $function['headers']['status-code']);
+
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Specs function',
+            'runtime' => 'node-22',
+            'runtimeSpecification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $function['headers']['status-code']);
     }
@@ -1364,12 +1375,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'specification' => Specification::S_1VCPU_1GB,
+            'runtimeSpecification' => Specification::S_1VCPU_1GB,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_1GB, $function['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $function['body']['runtimeSpecification']);
 
         // Verify the updated specs
         $execution = $this->createExecution($data['functionId']);
@@ -1398,12 +1409,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'specification' => Specification::S_1VCPU_512MB,
+            'runtimeSpecification' => Specification::S_1VCPU_512MB,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_512MB, $function['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_512MB, $function['body']['runtimeSpecification']);
 
         // Verify the updated specs
         $execution = $this->createExecution($data['functionId']);
@@ -1428,11 +1439,29 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'specification' => 's-2vcpu-512mb', // Invalid specification
+            'buildSpecification' => 's-2vcpu-512mb', // Invalid specification
         ]);
 
         $this->assertEquals(400, $function['headers']['status-code']);
-        $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $function['body']['message']);
+        $this->assertStringStartsWith('Invalid `buildSpecification` param: Specification must be one of:', $function['body']['message']);
+
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'events' => [
+                'users.*.update.name',
+                'users.*.update.email',
+            ],
+            'timeout' => 15,
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'runtimeSpecification' => 's-2vcpu-512mb', // Invalid specification
+        ]);
+
+        $this->assertEquals(400, $function['headers']['status-code']);
+        $this->assertStringStartsWith('Invalid `runtimeSpecification` param: Specification must be one of:', $function['body']['message']);
 
         return $data;
     }
@@ -2015,6 +2044,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('scopes', $response['body']);
         $this->assertArrayNotHasKey('specification', $response['body']);
+        $this->assertArrayNotHasKey('buildSpecification', $response['body']);
+        $this->assertArrayNotHasKey('runtimeSpecification', $response['body']);
 
         // get function with 1.5.0 response format header
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
@@ -2025,13 +2056,31 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertArrayNotHasKey('scopes', $function['body']);
+        $this->assertArrayNotHasKey('buildSpecification', $function['body']);
+        $this->assertArrayNotHasKey('runtimeSpecification', $function['body']);
         $this->assertArrayNotHasKey('specification', $function['body']);
 
-        $function = $this->getFunction($function['body']['$id']);
+        // get function with 1.8.0 response format header
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0', // add response format header
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertArrayHasKey('scopes', $function['body']);
         $this->assertArrayHasKey('specification', $function['body']);
+        $this->assertArrayNotHasKey('buildSpecification', $function['body']);
+        $this->assertArrayNotHasKey('runtimeSpecification', $function['body']);
+
+        // get function with latest version
+        $function = $this->getFunction($function['body']['$id']);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertArrayHasKey('scopes', $function['body']);
+        $this->assertArrayNotHasKey('specification', $function['body']);
+        $this->assertArrayHasKey('buildSpecification', $function['body']);
+        $this->assertArrayHasKey('runtimeSpecification', $function['body']);
 
         $functionId = $function['body']['$id'] ?? '';
         $this->cleanupFunction($functionId);
@@ -2181,15 +2230,17 @@ class FunctionsCustomServerTest extends Scope
             'entrypoint' => 'index.js',
             'logging' => false,
             'execute' => ['any'],
-            'specification' => Specification::S_2VCPU_2GB,
+            'buildSpecification' => Specification::S_2VCPU_2GB,
+            'runtimeSpecification' => Specification::S_1VCPU_1GB,
             'commands' => 'echo $APPWRITE_FUNCTION_MEMORY:$APPWRITE_FUNCTION_CPUS',
         ]);
 
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals(Specification::S_2VCPU_2GB, $function['body']['specification']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $function['body']['buildSpecification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $function['body']['runtimeSpecification']);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $functionId = $functionId = $function['body']['$id'] ?? '';
+        $functionId = $function['body']['$id'] ?? '';
 
         $deploymentId = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
@@ -2208,8 +2259,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['$id']);
 
         $executionResponse = json_decode($execution['body']['responseBody'], true);
-        $this->assertEquals('2048', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
-        $this->assertEquals('2', $executionResponse['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals('1024', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
+        $this->assertEquals('1', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 
         $this->cleanupFunction($functionId);
     }

@@ -38,14 +38,17 @@ class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Specs site',
             'siteId' => ID::unique(),
-            'specification' => $specifications['body']['specifications'][0]['slug']
+            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
+            'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
         $this->assertEquals(201, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['specification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $site = $this->getSite($site['body']['$id']);
         $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['specification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $site['body']['buildSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $site['body']['runtimeSpecification']);
 
         $this->cleanupSite($site['body']['$id']);
 
@@ -54,7 +57,16 @@ class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Specs site',
             'siteId' => ID::unique(),
-            'specification' => 'cheap-please'
+            'buildSpecification' => 'cheap-please'
+        ]);
+        $this->assertEquals(400, $site['headers']['status-code']);
+
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Specs site',
+            'siteId' => ID::unique(),
+            'runtimeSpecification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $site['headers']['status-code']);
     }
@@ -1287,12 +1299,12 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'specification' => Specification::S_1VCPU_1GB,
+            'runtimeSpecification' => Specification::S_1VCPU_1GB,
         ]);
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['runtimeSpecification']);
 
         // Change the specs to 1vcpu 512mb
         $site = $this->updateSite([
@@ -1304,12 +1316,12 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'specification' => Specification::S_1VCPU_512MB,
+            'runtimeSpecification' => Specification::S_1VCPU_512MB,
         ]);
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['specification']);
+        $this->assertEquals(Specification::S_1VCPU_512MB, $site['body']['runtimeSpecification']);
 
         /**
          * Test for FAILURE
@@ -1324,11 +1336,26 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'specification' => 's-2vcpu-512mb', // Invalid specification
+            'buildSpecification' => 's-2vcpu-512mb', // Invalid specification
         ]);
 
         $this->assertEquals(400, $site['headers']['status-code']);
-        $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $site['body']['message']);
+        $this->assertStringStartsWith('Invalid `buildSpecification` param: Specification must be one of:', $site['body']['message']);
+
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            '$id' => $siteId,
+            'runtimeSpecification' => 's-2vcpu-512mb', // Invalid specification
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertStringStartsWith('Invalid `runtimeSpecification` param: Specification must be one of:', $site['body']['message']);
 
         $this->cleanupSite($siteId);
     }
@@ -2936,6 +2963,55 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals("abcd123;efgh456", $response['body']);
         $this->assertEquals("value-one", $response['cookies']['my-cookie-one']);
         $this->assertEquals("value-two", $response['cookies']['my-cookie-two']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteSpecifications()
+    {
+        // Check if the site specifications are correctly set in builds
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'fallbackFile' => '',
+            'buildSpecification' => Specification::S_2VCPU_2GB,
+            'runtimeSpecification' => Specification::S_1VCPU_1GB,
+            'commands' => 'echo $APPWRITE_FUNCTION_MEMORY:$APPWRITE_FUNCTION_CPUS',
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $site['body']['buildSpecification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $site['body']['runtimeSpecification']);
+        $this->assertNotEmpty($site['body']['$id']);
+
+        $siteId = $site['body']['$id'] ?? '';
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => true
+        ]);
+
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertTrue(str_contains($deployment['body']['buildLogs'], '2048:2'));
+        }, 10000, 500);
+
+        // Check if the function specifications are correctly set in executions
+        // TODO: Finish
+        $execution = $this->createExecution($functionId);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+
+        $executionResponse = json_decode($execution['body']['responseBody'], true);
+        $this->assertEquals('1024', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
+        $this->assertEquals('1', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 
         $this->cleanupSite($siteId);
     }
