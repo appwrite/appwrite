@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use DateInterval;
 use DateTime;
@@ -27,18 +26,16 @@ class Maintenance extends Action
             ->desc('Schedules maintenance tasks and publishes them to our queues')
             ->inject('dbForPlatform')
             ->inject('console')
-            ->inject('queueForCertificates')
             ->inject('queueForDeletes')
             ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
+    public function action(Database $dbForPlatform, Document $console, Delete $queueForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
-        $intervalRuleVerification = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL_RULE_VERIFICATION', '60'); // 1 minute
 
         $usageStatsRetentionHourly = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
@@ -61,8 +58,8 @@ class Maintenance extends Action
 
         Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
 
-        \go(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates, $delay) {
-            Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
+        \go(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $delay) {
+            Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes) {
                 $time = DatabaseDateTime::now();
 
                 Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -95,17 +92,10 @@ class Maintenance extends Action
                     ->trigger();
 
                 $this->notifyDeleteConnections($queueForDeletes);
-                $this->renewCertificates($dbForPlatform, $queueForCertificates);
                 $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
                 $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
                 $this->notifyDeleteCSVExports($queueForDeletes);
             }, $interval, $delay);
-        });
-
-        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalRuleVerification) {
-            Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
-                $this->checkRuleVerification($dbForPlatform, $queueForCertificates);
-            }, $intervalRuleVerification);
         });
     }
 
@@ -117,85 +107,11 @@ class Maintenance extends Action
             ->trigger();
     }
 
-    private function checkRuleVerification(Database $dbForPlatform, Certificate $queueForCertificate): void
-    {
-        $time = DatabaseDateTime::now();
-
-        $oldestToCheck = new DateTime('-3 days');
-
-        $rules = $dbForPlatform->find('rules', [
-            Query::createdAfter(DatabaseDateTime::format($oldestToCheck)), // max 3 days old
-            Query::equal('status', [RULE_STATUS_VERIFICATION_FAILED]), // not verified yet
-            Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
-            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
-            Query::limit(30), // Reasonable pagination limit, processable within a minute
-        ]);
-
-        if (\count($rules) > 0) {
-            Console::info("[{$time}] Found " . \count($rules) . " rules for verification, scheduling jobs.");
-
-            foreach ($rules as $rule) {
-                $queueForCertificate
-                    ->setDomain(new Document([
-                        'domain' => $rule->getAttribute('domain'),
-                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                    ]))
-                    ->setAction(Certificate::ACTION_VERIFICATION)
-                    ->trigger();
-            }
-        } else {
-            // Silenced because interval makes it too often
-            // Console::log("[{$time}] No rules for checking verification status.");
-        }
-    }
-
     private function notifyDeleteCSVExports(Delete $queueForDeletes): void
     {
         $queueForDeletes
             ->setType(DELETE_TYPE_CSV_EXPORTS)
             ->trigger();
-    }
-
-    private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void
-    {
-        $time = DatabaseDateTime::now();
-
-        $certificates = $dbForPlatform->find('certificates', [
-            Query::lessThan('attempts', 5), // Maximum 5 attempts
-            Query::isNotNull('renewDate'),
-            Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
-            Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
-        ]);
-
-
-        if (\count($certificates) > 0) {
-            Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
-
-            foreach ($certificates as $certificate) {
-                $domain = $certificate->getAttribute('domain');
-                if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-                    $rule = $dbForPlatform->getDocument('rules', md5($domain));
-                } else {
-                    $rule = $dbForPlatform->findOne('rules', [
-                        Query::equal('domain', [$domain]),
-                    ]);
-                }
-
-                if ($rule->isEmpty() || $rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
-                    continue;
-                }
-
-                $queueForCertificate
-                    ->setDomain(new Document([
-                        'domain' => $rule->getAttribute('domain'),
-                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                    ]))
-                    ->setAction(Certificate::ACTION_GENERATION)
-                    ->trigger();
-            }
-        } else {
-            Console::info("[{$time}] No certificates for renewal.");
-        }
     }
 
     private function notifyDeleteCache($interval, Delete $queueForDeletes): void
