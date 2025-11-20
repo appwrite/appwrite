@@ -1161,7 +1161,11 @@ services:
       - appwrite
       - gateway
     environment:
-      - REDIS_HOSTS=redis
+      - RI_PRE_SETUP_DATABASES_PATH=/mnt/connections.json
+    configs:
+      - source: redisinsight-connections.json
+        target: /mnt/connections.json
+        mode: 0755
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -1202,6 +1206,41 @@ configs:
   redisinsight-connections.json:
     content: |
       [
+        {
+          "compressor": "NONE",
+          "id": "104dc90a-21ef-4d5e-8912-b30baabb152f",
+          "host": "redis",
+          "port": 6379,
+          "name": "redis:6379",
+          "db": 0,
+          "username": "default",
+          "password": null,
+          "connectionType": "STANDALONE",
+          "nameFromProvider": null,
+          "provider": "REDIS",
+          "lastConnection": "2025-10-16T09:22:02.591Z",
+          "modules": [
+            {
+              "name": "ReJSON",
+              "version": 20808,
+              "semanticVersion": "2.8.8"
+            },
+            {
+              "name": "search",
+              "version": 21015,
+              "semanticVersion": "2.10.15"
+            }
+          ],
+          "tls": false,
+          "tlsServername": null,
+          "verifyServerCert": null,
+          "caCert": null,
+          "clientCert": null,
+          "ssh": false,
+          "sshOptions": null,
+          "forceStandalone": false,
+          "tags": []
+        }
       ]
 
   adminer-index.php:
