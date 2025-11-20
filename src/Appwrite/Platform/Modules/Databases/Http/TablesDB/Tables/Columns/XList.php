@@ -56,9 +56,9 @@ class XList extends AttributesXList
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $tableId, array $queries, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $tableId, array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
     {
         // Call parent action with tableId as collectionId since they refer to the same resource
-        parent::action($databaseId, $tableId, $queries, $response, $dbForProject);
+        parent::action($databaseId, $tableId, $queries, $includeTotal, $response, $dbForProject);
     }
 }
