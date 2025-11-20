@@ -13213,7 +13213,7 @@
                                             "branch",
                                             "tag"
                                         ],
-                                        "x-enum-name": null,
+                                        "x-enum-name": "TemplateDeploymentType",
                                         "x-enum-keys": []
                                     },
                                     "reference": {

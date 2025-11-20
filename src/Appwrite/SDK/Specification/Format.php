@@ -266,6 +266,12 @@ abstract class Format
                                 return 'VCSDeploymentType';
                         }
                         break;
+                    case 'createTemplateDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'TemplateDeploymentType';
+                        }
+                        break;
                 }
                 break;
             case 'sites':
