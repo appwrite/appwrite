@@ -22,7 +22,7 @@ class V21 extends Filter
             Response::MODEL_FUNCTION => $this->parseFunction($content),
             Response::MODEL_FUNCTION_LIST => $this->handleList(
                 $content,
-                "sites",
+                "functions",
                 fn ($item) => $this->parseFunction($item),
             ),
             default => $parsedResponse,
