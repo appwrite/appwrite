@@ -16,6 +16,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -910,9 +911,8 @@ App::get('/v1/users/:userId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -969,8 +969,8 @@ App::get('/v1/users/:userId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
-            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -2189,7 +2189,7 @@ App::post('/v1/users/:userId/sessions')
     ->inject('locale')
     ->inject('geoRecord')
     ->inject('queueForEvents')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, array $geoRecord, Event $queueForEvents) {
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2210,7 +2210,7 @@ App::post('/v1/users/:userId/sessions')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
-                'countryCode' => $geoRecord['countryCode'] ?? '',
+                'countryCode' => $geoRecord->getCountryCode(),
                 'expire' => $expire,
             ],
             $detector->getOS(),
@@ -2599,7 +2599,8 @@ App::post('/v1/users/:userId/jwts')
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {
             // Find by ID
-            foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
+            foreach ($sessions as $loopSession) {
+                /** @var Utopia\Database\Document $loopSession */
                 if ($loopSession->getId() == $sessionId) {
                     $session = $loopSession;
                     break;

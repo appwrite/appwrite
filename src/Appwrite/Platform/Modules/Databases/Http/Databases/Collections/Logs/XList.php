@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Logs;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -73,7 +74,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, array $geoRecord, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, GeoRecord $geoRecord, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -139,8 +140,8 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel'] ?? null
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
-            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
 
         $response->dynamic(new Document([

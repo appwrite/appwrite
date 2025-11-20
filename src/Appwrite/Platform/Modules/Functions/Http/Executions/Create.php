@@ -10,6 +10,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -115,7 +116,7 @@ class Create extends Base
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
-        array $geoRecord,
+        GeoRecord $geoRecord,
         Executor $executor,
         Authorization $authorization
     ) {
@@ -237,9 +238,9 @@ class Create extends Base
             if ($geoRecord) {
                 $eu = Config::getParam('locale-eu');
 
-                $headers['x-appwrite-country-code'] = $geoRecord['countryCode'] ?? '';
-                $headers['x-appwrite-continent-code'] = $geoRecord['continentCode'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array(($geoRecord['countryCode'] ?? ''), $eu)) ? 'true' : 'false';
+                $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+                $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+                $headers['x-appwrite-continent-eu'] = (\in_array(($geoRecord->getCountryCode()), $eu)) ? 'true' : 'false';
             }
         }
 

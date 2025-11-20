@@ -10,6 +10,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Platform\Workers\Deletes;
@@ -659,7 +660,6 @@ App::post('/v1/teams/:teamId/memberships')
             if ($isPrivilegedUser || $isAppUser) {
                 $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             }
-
         } elseif ($membership->getAttribute('confirm') === false) {
             $membership->setAttribute('secret', Auth::hash($secret));
             $membership->setAttribute('invited', DateTime::now());
@@ -764,7 +764,6 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)
                     ->trigger();
-
             } elseif (!empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -1205,7 +1204,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('project')
     ->inject('geoRecord')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, Document $project, array $geoRecord, Event $queueForEvents) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, Document $project, GeoRecord $geoRecord, Event $queueForEvents) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -1275,7 +1274,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'factors' => ['email'],
-                'countryCode' => $geoRecord['countryCode'] ?? '',
+                'countryCode' => $geoRecord->getCountryCode(),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
@@ -1453,9 +1452,8 @@ App::get('/v1/teams/:teamId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1513,8 +1511,8 @@ App::get('/v1/teams/:teamId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
-            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
         $response->dynamic(new Document([
             'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,

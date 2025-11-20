@@ -7,6 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Permission;
@@ -1141,9 +1142,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1199,8 +1199,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
-            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -2544,7 +2544,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, GeoRecord $geoRecord) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2601,8 +2601,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
-            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -2957,9 +2957,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -3016,8 +3015,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
-            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
 
         $response->dynamic(new Document([
@@ -3753,9 +3752,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, array $geoRecord) {
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3812,9 +3810,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord['countryCode'] ?? '';
-            $output[$i]['countryName'] = $geoRecord['countryName'] ?? '';
-
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
 
         $response->dynamic(new Document([

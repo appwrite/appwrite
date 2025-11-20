@@ -11,6 +11,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\Method;
@@ -56,7 +57,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, Authorization $authorization, ?Key $apiKey)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, GeoRecord $geoRecord, callable $isResourceBlocked, string $previewHostname, Authorization $authorization, ?Key $apiKey)
 {
     $host = $request->getHostname() ?? '';
     if (!empty($previewHostname)) {
@@ -219,7 +220,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             - If user is not member of team of this deployment -> not authorized
             - If not authorized, redirect to Console redirect UI
             - If authorized, continue as if auth was not required
-        */
+         */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(Auth::$cookieNamePreview, '');
@@ -378,12 +379,12 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $headers['x-appwrite-user-jwt'] = '';
 
         if (!empty($ip)) {
-            if ($geoRecord) {
+            if (!$geoRecord->isEmpty()) {
                 $eu = Config::getParam('locale-eu');
 
-                $headers['x-appwrite-country-code'] = $geoRecord['countryCode'] ?? '';
-                $headers['x-appwrite-continent-code'] = $geoRecord['continentCode'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array(($geoRecord['countryCode'] ?? ''), $eu)) ? 'true' : 'false';
+                $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+                $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+                $headers['x-appwrite-continent-eu'] = (\in_array($geoRecord->getCountryCode(), $eu)) ? 'true' : 'false';
             }
         }
 
@@ -862,7 +863,7 @@ App::init()
     ->inject('httpReferrer')
     ->inject('httpReferrerSafe')
     ->inject('authorization')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $platforms, array $geoRecord, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe, Authorization $authorization) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $console, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, array $platforms, GeoRecord $geoRecord, StatsUsage $queueForStatsUsage, Event $queueForEvents, Certificate $queueForCertificates, Func $queueForFunctions, Executor $executor, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, string $httpReferrer, string $httpReferrerSafe, Authorization $authorization) {
         /*
         * Appwrite Router
         */
@@ -1128,7 +1129,7 @@ App::options()
     ->inject('devKey')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Authorization $authorization) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, GeoRecord $geoRecord, callable $isResourceBlocked, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Authorization $authorization) {
         /*
         * Appwrite Router
         */
@@ -1446,7 +1447,7 @@ App::get('/robots.txt')
     ->inject('previewHostname')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey, Authorization $authorization) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, GeoRecord $geoRecord, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey, Authorization $authorization) {
         $host = $request->getHostname() ?? '';
         $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');
@@ -1481,7 +1482,7 @@ App::get('/humans.txt')
     ->inject('previewHostname')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, array $geoRecord, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey, Authorization $authorization) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, GeoRecord $geoRecord, callable $isResourceBlocked, string $previewHostname, ?Key $apiKey, Authorization $authorization) {
         $host = $request->getHostname() ?? '';
         $consoleDomain = System::getEnv('_APP_CONSOLE_DOMAIN', '');
         $mainDomain = System::getEnv('_APP_DOMAIN', '');

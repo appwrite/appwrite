@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Utopia\Request;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -36,11 +37,11 @@ App::init()
     ->inject('project')
     ->inject('geoRecord')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Document $project, array $geoRecord, Authorization $authorization) {
+    ->action(function (App $utopia, Request $request, Document $project, GeoRecord $geoRecord, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
-            $country = $geoRecord['countryCode'] ?? '';
+            $country = $geoRecord->getCountryCode();
             if (in_array($country, $countries)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }

@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Locale\GeoRecord;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -31,9 +32,8 @@ App::get('/v1/locale')
     ->inject('response')
     ->inject('locale')
     ->inject('geoRecord')
-    ->action(function (Request $request, Response $response, Locale $locale, array $geoRecord) {
-        $output = $geoRecord;
-        $response->dynamic(new Document($output), Response::MODEL_LOCALE);
+    ->action(function (Request $request, Response $response, Locale $locale, GeoRecord $geoRecord) {
+        $response->dynamic($geoRecord, Response::MODEL_LOCALE);
     });
 
 App::get('/v1/locale/codes')

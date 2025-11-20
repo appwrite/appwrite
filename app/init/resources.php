@@ -21,6 +21,7 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
@@ -369,7 +370,8 @@ App::setResource('session', function (Document $user) {
         return;
     }
 
-    foreach ($sessions as $session) {/** @var Document $session */
+    foreach ($sessions as $session) {
+        /** @var Document $session */
         if ($sessionId === $session->getId()) {
             return $session;
         }
@@ -759,7 +761,7 @@ App::setResource('geoRecord', function (Reader $geodb, Request $request, Locale 
         $output['eu'] = false;
         $output['currency'] = $currency;
     }
-    return $output;
+    return new GeoRecord($output);
 }, ['geodb', 'request', 'locale']);
 
 App::setResource('passwordsDictionary', function ($register) {
