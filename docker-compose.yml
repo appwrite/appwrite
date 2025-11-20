@@ -1131,6 +1131,16 @@ services:
     networks:
       - appwrite
       - gateway
+    environment:
+      - ADMINER_DESIGN=pepa-linha
+      - ADMINER_DEFAULT_SERVER=mariadb
+      - ADMINER_DEFAULT_USERNAME=root
+      - ADMINER_DEFAULT_PASSWORD=rootsecretpassword
+      - ADMINER_DEFAULT_DB=appwrite
+    configs:
+      - source: adminer-index.php
+        target: /var/www/html/index.php
+        mode: 0755
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -1187,6 +1197,26 @@ networks:
     name: appwrite
   runtimes:
     name: runtimes
+
+configs:
+  redisinsight-connections.json:
+    content: |
+      [
+      ]
+
+  adminer-index.php:
+    content: |
+      <?php
+        if(!count($$_GET)) {
+          $$_POST['auth'] = [
+            'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
+            'driver' => 'server', /* seems to autodetect the driver from server settings */
+            'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
+            'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
+            'db' => $$_ENV['ADMINER_DEFAULT_DB'],
+          ];
+        }
+        include './adminer.php';
 
 volumes:
   appwrite-mariadb:
