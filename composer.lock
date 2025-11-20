@@ -4556,7 +4556,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/feat-documents-db"
             },
-            "time": "2025-11-19T12:47:12+00:00"
+            "time": "2025-11-20T13:04:52+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5428,16 +5428,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.5.7",
+            "version": "1.5.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "dc6720ba92ed98e2c62b2a319d4371f167ccc808"
+                "reference": "05367bc4a4c3e020e9aca114ae875b626ce8fc55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/dc6720ba92ed98e2c62b2a319d4371f167ccc808",
-                "reference": "dc6720ba92ed98e2c62b2a319d4371f167ccc808",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/05367bc4a4c3e020e9aca114ae875b626ce8fc55",
+                "reference": "05367bc4a4c3e020e9aca114ae875b626ce8fc55",
                 "shasum": ""
             },
             "require": {
@@ -5473,9 +5473,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.7"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.8"
             },
-            "time": "2025-11-18T05:57:01+00:00"
+            "time": "2025-11-20T11:00:34+00:00"
         },
         {
             "name": "doctrine/annotations",
