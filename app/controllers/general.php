@@ -29,6 +29,8 @@ use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
+use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
+use Appwrite\Utopia\Response\Filters\V21 as ResponseV21;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
@@ -305,7 +307,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $runtime = match ($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
@@ -1036,17 +1038,23 @@ App::init()
         */
         $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
-            if (version_compare($responseFormat, '1.4.0', '<')) {
-                $response->addFilter(new ResponseV16());
+            if (version_compare($responseFormat, '1.9.0', '<')) {
+                $response->addFilter(new ResponseV21());
             }
-            if (version_compare($responseFormat, '1.5.0', '<')) {
-                $response->addFilter(new ResponseV17());
+            if (version_compare($responseFormat, '1.8.0', '<')) {
+                $response->addFilter(new ResponseV20());
+            }
+            if (version_compare($responseFormat, '1.7.0', '<')) {
+                $response->addFilter(new ResponseV19());
             }
             if (version_compare($responseFormat, '1.6.0', '<')) {
                 $response->addFilter(new ResponseV18());
             }
-            if (version_compare($responseFormat, '1.7.0', '<')) {
-                $response->addFilter(new ResponseV19());
+            if (version_compare($responseFormat, '1.5.0', '<')) {
+                $response->addFilter(new ResponseV17());
+            }
+            if (version_compare($responseFormat, '1.4.0', '<')) {
+                $response->addFilter(new ResponseV16());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";
