@@ -884,11 +884,7 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send((function (array $payload) {
-                $func = 'yaml_emit';
-                $encoding = \defined('YAML_UTF8_ENCODING') ? \constant('YAML_UTF8_ENCODING') : 0;
-                return \call_user_func($func, $payload, $encoding);
-            })($data));
+            ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
     }
 
     /**

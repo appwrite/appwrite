@@ -400,9 +400,6 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2024-09.mmdb');
 });
-$register->set('embeddingAgent', function () {
-    return System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed');
-});
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');
     $content = explode("\n", $content);

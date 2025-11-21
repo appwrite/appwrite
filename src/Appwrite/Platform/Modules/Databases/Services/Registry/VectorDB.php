@@ -10,7 +10,6 @@ use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Bulk
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Get as GetDocument;
-use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Text\Create as CreateTextEmbeddings;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\XList as ListDocuments;
@@ -25,6 +24,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Usage\Get as G
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\XList as ListCollections;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Create as CreateVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Delete as DeleteVectorDatabase;
+use Appwrite\Platform\Modules\Databases\Http\VectorDB\Embeddings\Text\Create as CreateTextEmbeddings;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Get as GetVectorDatabase;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\Create as CreateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\VectorDB\Transactions\Delete as DeleteTransaction;

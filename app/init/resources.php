@@ -1172,6 +1172,6 @@ App::setResource('transactionState', function (Database $dbForProject, callable 
 
 App::setResource('embeddingAgent', function ($register) {
     $adapter = new Ollama();
-    $adapter->setEndpoint($register->get('embeddingAgent'));
+    $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed'));
     return new Agent($adapter);
 }, ['register']);

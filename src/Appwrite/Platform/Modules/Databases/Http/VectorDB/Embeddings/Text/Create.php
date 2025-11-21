@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections\Documents\Text;
+namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Embeddings\Text;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
@@ -14,7 +14,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
@@ -42,13 +41,13 @@ class Create extends CreateDocumentAction
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/vectordb/:databaseId/collections/:collectionId/text')
+            ->setHttpPath('/v1/vectordb/embeddings/text')
             ->desc('Create Text Embeddings')
             ->groups(['api', 'database'])
             ->label('scope', 'documents.read')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'embedding.create')
-            ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+            ->label('audits.resource', 'vectordb/embeddings/text')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -74,8 +73,6 @@ class Create extends CreateDocumentAction
                     ]
                 )
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
             ->inject('response')
             ->inject('embeddingAgent')
@@ -84,19 +81,13 @@ class Create extends CreateDocumentAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $documents, UtopiaResponse $response, $embeddingAgent, Database $dbForProject, callable $getDatabasesDB): void
+    public function action(array $documents, UtopiaResponse $response, $embeddingAgent, Database $dbForProject, callable $getDatabasesDB): void
     {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException());
+        if (!$isAPIKey && !$isPrivilegedUser) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
         }
 
         if (empty($documents)) {
@@ -116,7 +107,7 @@ class Create extends CreateDocumentAction
             }
 
             $text = $item['text'] ?? '';
-            $model = $item['embeddingModel'] ?? ($item['embeddigModel'] ?? null);
+            $model = $item['embeddingModel'] ?? ($item['embeddingModel'] ?? null);
 
             if (!\is_string($text) || $text === '') {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing or invalid "text" at index ' . $index);

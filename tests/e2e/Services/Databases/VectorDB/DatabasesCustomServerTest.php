@@ -589,7 +589,7 @@ class DatabasesCustomServerTest extends Scope
         $collectionId = $col['body']['$id'];
 
         // Success: two embeddings
-        $ok = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$collectionId}/text", [
+        $ok = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -612,7 +612,7 @@ class DatabasesCustomServerTest extends Scope
         }
 
         // Error: missing documents
-        $missingDocs = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$collectionId}/text", [
+        $missingDocs = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -620,7 +620,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $missingDocs['headers']['status-code']);
 
         // Error: invalid item structure (not an object)
-        $invalidItem = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$collectionId}/text", [
+        $invalidItem = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -630,7 +630,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $invalidItem['headers']['status-code']);
 
         // Error: missing text
-        $missingText = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$collectionId}/text", [
+        $missingText = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -640,7 +640,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $missingText['headers']['status-code']);
 
         // Error: missing embeddingModel
-        $missingModel = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$collectionId}/text", [
+        $missingModel = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -650,7 +650,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $missingModel['headers']['status-code']);
 
         // Error: unknown embedding model
-        $unknownModel = $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$collectionId}/text", [
+        $unknownModel = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']

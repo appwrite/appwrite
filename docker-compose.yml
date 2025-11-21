@@ -1176,8 +1176,7 @@ services:
 
   postgresql:
     build:
-      context: .
-      dockerfile: postgres.dockerfile
+      context: https://github.com/appwrite/docker-postgres.git#feat-dockerfile
     container_name: appwrite-postgresql
     <<: *x-logging
     networks:
@@ -1194,8 +1193,7 @@ services:
 
   ollama:
     build: 
-      context: .
-      dockerfile: ollama.dockerfile
+      context: https://github.com/appwrite/docker-ollama.git#feat-dockerfile
       args:
         MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
         # duration to keep model in memory
@@ -1206,7 +1204,7 @@ services:
     restart: unless-stopped
     # persistent for caching models across restarts and preloading
     volumes:
-      - _APP_EMBEDDING_MODELS:/root/.ollama
+      - appwrite-models:/root/.ollama
     networks:
       - appwrite
 
@@ -1320,4 +1318,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
-  _APP_EMBEDDING_MODELS:
+  appwrite-models:
