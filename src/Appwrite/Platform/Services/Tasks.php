@@ -10,6 +10,7 @@ use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMessages;
+use Appwrite\Platform\Tasks\SchedulePaymentsUsage;
 use Appwrite\Platform\Tasks\Screenshot;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
@@ -42,6 +43,7 @@ class Tasks extends Service
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
             ->addAction(StatsResources::getName(), new StatsResources())
+            ->addAction(SchedulePaymentsUsage::getName(), new SchedulePaymentsUsage())
         ;
     }
 }

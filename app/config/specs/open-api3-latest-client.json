@@ -8024,6 +8024,66 @@
                 ]
             }
         },
+        "\/payments\/webhooks\/{providerId}\/{projectId}": {
+            "post": {
+                "summary": "Handle provider webhook",
+                "operationId": "paymentsWebhook",
+                "tags": [
+                    "payments"
+                ],
+                "description": "Handle provider webhook",
+                "responses": [],
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "webhook",
+                    "group": "providers",
+                    "weight": 551,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/webhook.md",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterHandle provider webhook",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "public",
+                    "platforms": [
+                        "server",
+                        "client"
+                    ],
+                    "packaging": false,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "providerId",
+                        "description": "Provider ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROVIDER_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "projectId",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<PROJECT_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
         "\/storage\/buckets\/{bucketId}\/files": {
             "get": {
                 "summary": "List files",
@@ -11364,6 +11424,10 @@
         {
             "name": "functions",
             "description": "The Functions Service allows you view, create and manage your Cloud Functions."
+        },
+        {
+            "name": "payments",
+            "description": "Create and manage plans, subscriptions, usage and billing providers."
         },
         {
             "name": "proxy",
