@@ -82,7 +82,6 @@ class Update extends Base
 
         foreach ($providers as $providerId => $providerConfig) {
             $adapter = $registryPayments->get($providerId, (array) $providerConfig, $project, $dbForPlatform, $dbForProject);
-            \error_log("[Payments/Update] testing provider={$providerId}");
             $test = $adapter->testConnection((array) $providerConfig);
             if (!$test->success) {
                 \error_log("[Payments/Update] provider={$providerId} test failed: {$test->message}");
@@ -90,7 +89,6 @@ class Update extends Base
                 $response->json(['message' => 'Provider test failed: ' . $test->message]);
                 return;
             }
-            \error_log("[Payments/Update] provider={$providerId} test ok");
             $state = $adapter->configure((array) $providerConfig, $project);
             $providers[$providerId] = array_merge((array) $providerConfig, [
                 'state' => $state->metadata,
