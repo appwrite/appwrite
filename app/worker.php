@@ -192,6 +192,49 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     };
 }, ['pools', 'cache']);
 
+Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project) {
+    return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project): Database {
+        $projectDocument ??= $project;
+        $databaseType = $database->getAttribute('database', '');
+
+        try {
+            $databaseDSN = new DSN($databaseType);
+        } catch (\InvalidArgumentException) {
+            $databaseDSN = new DSN('mysql://'.$databaseType);
+        }
+
+        try {
+            $dsn = new DSN($projectDocument->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // Temporary fallback until all projects use shared tables
+            $dsn = new DSN('mysql://' . $projectDocument->getAttribute('database'));
+        }
+
+        $pools = $register->get('pools');
+        $pool = $pools->get($databaseDSN->getHost());
+
+        $adapter = new DatabasePool($pool);
+        $database = new Database($adapter, $cache);
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables, true)) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant((int) $projectDocument->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $projectDocument->getSequence());
+        }
+
+        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+        return $database;
+    };
+}, ['cache', 'register', 'project']);
+
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
 });

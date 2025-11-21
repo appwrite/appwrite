@@ -297,3 +297,11 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
+
+// Database types
+const DATABASE_LEGACY_TYPE = 'legacy';
+const DATABASE_TABLESDB_TYPE = 'tablesdb';
+const DATABASE_DOCUMENTSDB_TYPE = 'documentsdb';
+
+// CSV import/export allowed database types
+const CSV_ALLOWED_DATABASE_TYPES = [DATABASE_LEGACY_TYPE, DATABASE_LEGACY_TYPE];

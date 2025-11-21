@@ -22,6 +22,9 @@ class Action extends AppwriteAction
         if (\str_contains($path, '/tablesdb')) {
             $this->context = 'tablesdb';
         }
+        if (\str_contains($path, '/documentsdb')) {
+            $this->context = 'documentsdb';
+        }
         return parent::setHttpPath($path);
     }
 

@@ -5569,6 +5569,9 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithUpdateRow(): void
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
@@ -5693,6 +5696,9 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithCreateOperations(): void
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
@@ -5820,6 +5826,9 @@ trait TransactionsBase
      */
     public function testMultipleArrayOperators(): void
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
