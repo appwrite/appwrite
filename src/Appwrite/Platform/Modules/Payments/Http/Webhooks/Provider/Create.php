@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
@@ -48,14 +49,32 @@ class Create extends Base
             ->inject('request')
             ->inject('registryPayments')
             ->inject('dbForPlatform')
-            ->inject('dbForProject')
+            ->inject('getProjectDB')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $providerId, string $projectId, Response $response, Request $request, Registry $registryPayments, \Utopia\Database\Database $dbForPlatform, \Utopia\Database\Database $dbForProject, Event $queueForEvents)
+    public function action(
+        string $providerId,
+        string $projectId,
+        Response $response,
+        Request $request,
+        Registry $registryPayments,
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        Event $queueForEvents
+    )
     {
         $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+
+        if ($project === null || $project->isEmpty()) {
+            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $response->json(['message' => 'Project not found']);
+            return;
+        }
+
+        $dbForProject = $getProjectDB($project);
+
         // Feature flag: ignore if disabled
         $paymentsCfg = (array) $project->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {

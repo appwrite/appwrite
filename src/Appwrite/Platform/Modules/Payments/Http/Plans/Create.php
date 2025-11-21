@@ -143,13 +143,19 @@ class Create extends Base
             return new AppwriteException(ExtendException::RESOURCE_ALREADY_EXISTS);
         }
 
+        $payments = (array) $project->getAttribute('payments', []);
+        $providerConfigs = (array) ($payments['providers'] ?? []);
+        if (empty($providerConfigs)) {
+            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+            $response->json(['message' => 'At least one payment provider must be configured before creating plans']);
+            return;
+        }
+
         $created = $dbForProject->createDocument('payments_plans', $document);
 
         $queueForEvents->setParam('planId', $planId);
 
         // Provision on configured providers
-        $payments = (array) $project->getAttribute('payments', []);
-        $providerConfigs = (array) ($payments['providers'] ?? []);
         $providersMeta = [];
         foreach ($providerConfigs as $providerId => $providerConfig) {
             $state = new ProviderState((string) $providerId, (array) $providerConfig, (array) ($providerConfig['state'] ?? []));

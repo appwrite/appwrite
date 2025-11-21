@@ -134,6 +134,17 @@ class Get extends Base
             }
         }
 
+        if ($actorId !== '') {
+            $collection = $actorType === 'team' ? 'teams' : 'users';
+            $actor = $dbForProject->getDocument($collection, $actorId);
+
+            if ($actor->isEmpty()) {
+                $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+                $response->json(['message' => 'Actor not found']);
+                return;
+            }
+        }
+
         $queries = [
             Query::equal('actorType', [$actorType]),
             Query::equal('actorId', [$actorId]),
