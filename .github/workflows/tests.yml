@@ -172,6 +172,7 @@ jobs:
           Databases/Legacy,
           Databases/TablesDB,
           Databases/DocumentsDB,
+          Databases/VectorDB,
           Functions,
           FunctionsSchedule,
           GraphQL,

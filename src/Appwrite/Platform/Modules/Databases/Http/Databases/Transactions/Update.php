@@ -298,6 +298,11 @@ class Update extends Action
                     $data = $data->getArrayCopy();
                 }
 
+                // Decode JSON strings that may have been encoded when storing nested arrays/objects
+                if (\is_array($data)) {
+                    $data = $this->decodeJsonStrings($data);
+                }
+
                 if (!isset($dbCache[$databaseInternalId])) {
                     $databaseDoc = Authorization::skip(fn () => $dbForProject->findOne('databases', [
                         Query::equal('$sequence', [$databaseInternalId])
@@ -422,6 +427,7 @@ class Update extends Action
     {
         return match ($this->getDatabaseType()) {
             DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
+            VECTORDB => $project->getAttribute('vectorDatabase'),
             default => $project->getAttribute('database'),
         };
     }
@@ -721,6 +727,8 @@ class Update extends Action
         array &$state
     ): int {
         $count = 0;
+        // Decode JSON strings in bulk create data
+        $data = $this->decodeJsonStrings($data);
         $dbForProject->withRequestTimestamp($createdAt, function () use ($dbForProject, $collectionId, $data, &$state, &$count) {
             $documents = \array_map(function ($doc) {
                 return $doc instanceof Document ? $doc : new Document($doc);
@@ -759,8 +767,11 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): int {
+        // extracting query first then decoding the nested transaction log data
+        // otherwise can result error as queries would get transformed to array instead of string
         $queries = Query::parseQueries($data['queries'] ?? []);
         $updateData = new Document($data['data']);
+        $data = $this->decodeJsonStrings($data);
 
         $dependentDocs = [];
 
@@ -831,6 +842,8 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): int {
+        // Decode JSON strings in bulk upsert data
+        $data = $this->decodeJsonStrings($data);
         $documents = \array_map(function ($doc) {
             return $doc instanceof Document ? $doc : new Document($doc);
         }, $data);
@@ -905,5 +918,32 @@ class Update extends Action
         $transactionState->applyBulkDeleteToState($collectionId, $queries, $state);
 
         return $count;
+    }
+
+    /**
+     * Recursively decode JSON strings in data array
+     * This handles cases where nested arrays/objects are stored as JSON strings in the database
+     *
+     * @param array $data
+     * @return array
+     */
+    private function decodeJsonStrings(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (\is_string($value)) {
+                $decoded = \json_decode($value, true);
+                if (\json_last_error() === JSON_ERROR_NONE && (\is_array($decoded) || \is_object($decoded))) {
+                    $data[$key] = $decoded;
+                    // Recursively decode nested structures
+                    if (\is_array($decoded)) {
+                        $data[$key] = $this->decodeJsonStrings($decoded);
+                    }
+                }
+            } elseif (\is_array($value)) {
+                // Recursively process nested arrays
+                $data[$key] = $this->decodeJsonStrings($value);
+            }
+        }
+        return $data;
     }
 }

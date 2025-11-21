@@ -91,6 +91,14 @@ function getDatabaseDSN(string $databasetype, $region, ?string $dsn = null): str
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
             $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
             break;
+        case 'vectorDatabase':
+            $databases = Config::getParam('pools-vectordb', []);
+            $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
+            $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
+            $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql');
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
+            $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
+            break;
         default:
             // legacy/tablesdb
             $databases = Config::getParam('pools-database', []);
@@ -266,7 +274,8 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
-                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region, $dsn)
+                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region, $dsn),
+                'vectorDatabase' => getDatabaseDSN('vectorDatabase', $region, $dsn)
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);

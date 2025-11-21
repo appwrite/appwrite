@@ -26,6 +26,8 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Agent;
 use Utopia\App;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -1167,3 +1169,9 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
 App::setResource('transactionState', function (Database $dbForProject, callable $getDatabasesDB) {
     return new TransactionState($dbForProject, $getDatabasesDB);
 }, ['dbForProject', 'getDatabasesDB']);
+
+App::setResource('embeddingAgent', function ($register) {
+    $adapter = new Ollama();
+    $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed'));
+    return new Agent($adapter);
+}, ['register']);
