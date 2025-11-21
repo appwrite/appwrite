@@ -494,7 +494,7 @@ trait DatabasesBase
         $this->assertEquals(400, $attribute['headers']['status-code']);
 
         $message = $attribute['body']['message'];
-        if ($this->MongoDB()) {
+        if ($this->isMongoDB()) {
             $this->assertStringContainsString('Index length is longer than the maximum: 1024', $message);
         } else {
             // length depends on the shared table
