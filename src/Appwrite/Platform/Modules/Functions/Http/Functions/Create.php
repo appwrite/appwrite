@@ -23,6 +23,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -92,7 +93,7 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
+            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
@@ -201,36 +202,40 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        $function = $dbForProject->createDocument('functions', new Document([
-            '$id' => $functionId,
-            'execute' => $execute,
-            'enabled' => $enabled,
-            'live' => true,
-            'logging' => $logging,
-            'name' => $name,
-            'runtime' => $runtime,
-            'deploymentInternalId' => '',
-            'deploymentId' => '',
-            'events' => $events,
-            'schedule' => $schedule,
-            'scheduleInternalId' => '',
-            'scheduleId' => '',
-            'timeout' => $timeout,
-            'entrypoint' => $entrypoint,
-            'commands' => $commands,
-            'scopes' => $scopes,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v5',
-            'installationId' => $installation->getId(),
-            'installationInternalId' => $installation->getSequence(),
-            'providerRepositoryId' => $providerRepositoryId,
-            'repositoryId' => '',
-            'repositoryInternalId' => '',
-            'providerBranch' => $providerBranch,
-            'providerRootDirectory' => $providerRootDirectory,
-            'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification
-        ]));
+        try {
+            $function = $dbForProject->createDocument('functions', new Document([
+                '$id' => $functionId,
+                'execute' => $execute,
+                'enabled' => $enabled,
+                'live' => true,
+                'logging' => $logging,
+                'name' => $name,
+                'runtime' => $runtime,
+                'deploymentInternalId' => '',
+                'deploymentId' => '',
+                'events' => $events,
+                'schedule' => $schedule,
+                'scheduleInternalId' => '',
+                'scheduleId' => '',
+                'timeout' => $timeout,
+                'entrypoint' => $entrypoint,
+                'commands' => $commands,
+                'scopes' => $scopes,
+                'search' => implode(' ', [$functionId, $name, $runtime]),
+                'version' => 'v5',
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getSequence(),
+                'providerRepositoryId' => $providerRepositoryId,
+                'repositoryId' => '',
+                'repositoryInternalId' => '',
+                'providerBranch' => $providerBranch,
+                'providerRootDirectory' => $providerRootDirectory,
+                'providerSilentMode' => $providerSilentMode,
+                'specification' => $specification
+            ]));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
+        }
 
         $schedule = Authorization::skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([

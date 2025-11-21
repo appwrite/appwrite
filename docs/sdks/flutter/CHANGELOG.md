@@ -1,5 +1,33 @@
 # Change Log
 
+## 20.3.2
+
+* Fix OAuth2 browser infinite redirect issue
+
+## 20.3.1
+
+* Fix passing of `null` values and stripping only non-nullable optional parameters from the request body
+
+## 20.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 20.2.2
+
+* Widen `device_info_plus` and `package_info_plus` dependencies to allow for newer versions for Android 15+ support
+* Fix `CHUNK_SIZE` constant to `chunkSize`
+* Fix missing `@override` annotation to `toMap` method in all model classes
+
+## 20.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 20.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 19.1.0
 
 * Add `orderRandom` query support

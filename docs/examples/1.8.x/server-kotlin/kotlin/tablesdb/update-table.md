@@ -1,6 +1,8 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
+import io.appwrite.Permission
+import io.appwrite.Role
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,7 +15,7 @@ val response = tablesDB.updateTable(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
     name = "<NAME>",
-    permissions = listOf("read("any")"), // optional
+    permissions = listOf(Permission.read(Role.any())), // optional
     rowSecurity = false, // optional
     enabled = false // optional
 )

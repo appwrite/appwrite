@@ -18,4 +18,6 @@ response, error := service.ListRows(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     tablesdb.WithListRowsQueries([]interface{}{}),
+    tablesdb.WithListRowsTransactionId("<TRANSACTION_ID>"),
+    tablesdb.WithListRowsTotal(false),
 )

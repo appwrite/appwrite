@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Numeric;
 
 class Increment extends IncrementDocumentAttribute
@@ -41,8 +42,8 @@ class Increment extends IncrementDocumentAttribute
             ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
             ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/increment-row-column.md',
                 auth: [AuthType::SESSION, AuthType::JWT, AuthType::ADMIN, AuthType::KEY],
@@ -59,11 +60,13 @@ class Increment extends IncrementDocumentAttribute
             ->param('rowId', '', new UID(), 'Row ID.')
             ->param('column', '', new Key(), 'Column key.')
             ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true)
-            ->param('max', null, new Numeric(), 'Maximum value for the column. If the current value is greater than this value, an error will be thrown.', true)
+            ->param('max', null, new Nullable(new Numeric()), 'Maximum value for the column. If the current value is greater than this value, an error will be thrown.', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('plan')
             ->callback($this->action(...));
     }
 }

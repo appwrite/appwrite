@@ -16,6 +16,7 @@ use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
+use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
@@ -506,6 +507,7 @@ class Messaging extends Action
                 $credentials['isEuRegion'] ?? false
             ),
             'sendgrid' => new Sendgrid($apiKey),
+            'resend' => new Resend($apiKey),
             default => null
         };
     }
@@ -592,6 +594,14 @@ class Messaging extends Action
         $subject = $data['subject'];
         $content = $data['content'];
         $html = $data['html'] ?? false;
+
+        // For SMTP, move all recipients to BCC and use default recipient in TO field
+        if ($provider->getAttribute('provider') === 'smtp') {
+            foreach ($to as $recipient) {
+                $bcc[] = ['email' => $recipient];
+            }
+            $to = [];
+        }
 
         return new Email(
             $to,

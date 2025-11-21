@@ -7,7 +7,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 // Downloading file
-UInt8List bytes = await avatars.getInitials(
+Uint8List bytes = await avatars.getInitials(
     name: '<NAME>', // optional
     width: 0, // optional
     height: 0, // optional

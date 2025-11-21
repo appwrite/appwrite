@@ -8,6 +8,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
@@ -254,10 +255,21 @@ class OpenAPI3 extends Format
                     }
 
                     foreach ($methodObj->getResponses() as $response) {
-                        if (\is_array($response->getModel())) {
+                        /** @var Response|array $response */
+                        $responseModel = $response->getModel();
+
+                        if (\is_array($responseModel)) {
+                            foreach ($responseModel as $modelName) {
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $modelName) {
+                                        $usedModels[] = $modelName;
+                                        break;
+                                    }
+                                }
+                            }
                             $additionalMethod['responses'][] = [
                                 'code' => $response->getCode(),
-                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $response->getModel())
+                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $responseModel)
                             ];
                         } else {
                             $responseData = [
@@ -266,7 +278,13 @@ class OpenAPI3 extends Format
 
                             // lets not assume stuff here!
                             if ($response->getCode() !== 204) {
-                                $responseData['model'] = '#/components/schemas/' . $response->getModel();
+                                $responseData['model'] = '#/components/schemas/' . $responseModel;
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $responseModel) {
+                                        $usedModels[] = $responseModel;
+                                        break;
+                                    }
+                                }
                             }
 
                             $additionalMethod['responses'][] = $responseData;
@@ -397,7 +415,37 @@ class OpenAPI3 extends Format
                     $validator = $validator->getValidator();
                 }
 
-                switch ((!empty($validator)) ? \get_class($validator) : '') {
+                $class = !empty($validator)
+                    ? \get_class($validator)
+                    : '';
+
+                $base = !empty($class)
+                    ? \get_parent_class($class)
+                    : '';
+
+                switch ($base) {
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
+                        $class = $base;
+                        break;
+                }
+
+                if ($class === 'Utopia\Validator\AnyOf') {
+                    $validator = $param['validator']->getValidators()[0];
+                    $class = \get_class($validator);
+                }
+
+                $array = false;
+                if ($class === 'Utopia\Validator\ArrayList') {
+                    $array = true;
+                    $subclass = \get_class($validator->getValidator());
+                    switch ($subclass) {
+                        case 'Appwrite\Utopia\Database\Validator\Operation':
+                            $class = $subclass;
+                            break;
+                    }
+                }
+
+                switch ($class) {
                     case 'Utopia\Database\Validator\UID':
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
@@ -418,6 +466,20 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
                         $node['schema']['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
+                        break;
+                    case 'Utopia\Database\Validator\Spatial':
+                        /** @var Spatial $validator */
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'oneOf' => [
+                                ['type' => 'array']
+                            ]
+                        ];
+                        $node['schema']['x-example'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => '[1, 2]',
+                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
+                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                        };
                         break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = $validator->getType();
@@ -450,20 +512,7 @@ class OpenAPI3 extends Format
                             'type' => $validator->getValidator()->getType(),
                         ];
                         break;
-                    case 'Utopia\Database\Validator\Spatial':
-                        /** @var Spatial $validator */
-                        $node['schema']['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'oneOf' => [
-                                ['type' => 'array']
-                            ]
-                        ];
-                        $node['schema']['x-example'] = match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => '[1, 2]',
-                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
-                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
-                        };
-                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
@@ -557,8 +606,7 @@ class OpenAPI3 extends Format
                                 break;
                             }
                         }
-
-                        if ($allowed) {
+                        if ($allowed && $validator->getType() === 'string') {
                             $node['schema']['enum'] = $validator->getList();
                             $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
                             $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
@@ -569,7 +617,35 @@ class OpenAPI3 extends Format
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CompoundUID':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[ID1:ID2]';
+                        $node['schema']['x-example'] = '<ID1:ID2>';
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Operation':
+                        if ($array) {
+                            $validator = $validator->getValidator();
+                        }
+
+                        /** @var Operation $validator */
+                        $collectionIdKey = $validator->getCollectionIdKey();
+                        $documentIdKey = $validator->getDocumentIdKey();
+                        if ($array) {
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = ['type' => 'object'];
+                        } else {
+                            $node['schema']['type'] = 'object';
+                        }
+                        $example = [
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            $collectionIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)).'>',
+                            $documentIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($documentIdKey)).'>',
+                            'data' => [
+                                'name' => 'Walter O\'Brien',
+                            ],
+                        ];
+                        if ($array) {
+                            $example = [$example];
+                        }
+                        $node['schema']['x-example'] = \str_replace("\n", "\n\t", \json_encode($example, JSON_PRETTY_PRINT));
                         break;
                     default:
                         $node['schema']['type'] = 'string';

@@ -17,6 +17,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\IP;
+use Utopia\Validator\Nullable;
 
 class Create extends Action
 {
@@ -43,8 +44,8 @@ class Create extends Action
             ->label('audits.event', 'attribute.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-ip-attribute.md',
                 auth: [AuthType::KEY],
@@ -63,7 +64,7 @@ class Create extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new IP(), 'Default value. Cannot be set when attribute is required.', true)
+            ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')

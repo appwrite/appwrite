@@ -12,4 +12,5 @@ Document result = await databases.getDocument(
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
     queries: [], // (optional)
+    transactionId: '<TRANSACTION_ID>', // (optional)
 );

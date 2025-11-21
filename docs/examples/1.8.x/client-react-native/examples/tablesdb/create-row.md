@@ -1,4 +1,4 @@
-import { Client, TablesDB } from "react-native-appwrite";
+import { Client, TablesDB, Permission, Role } from "react-native-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -17,7 +17,8 @@ const result = await tablesDB.createRow({
         "age": 30,
         "isAdmin": false
     },
-    permissions: ["read("any")"] // optional
+    permissions: ["read("any")"], // optional
+    transactionId: '<TRANSACTION_ID>' // optional
 });
 
 console.log(result);

@@ -9,5 +9,6 @@ const sites = new sdk.Sites(client);
 
 const result = await sites.list({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });

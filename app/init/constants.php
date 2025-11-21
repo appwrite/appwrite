@@ -31,6 +31,7 @@ const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate 
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_LIMIT_DATABASE_BATCH = 100; // Default maximum batch size for database operations
+const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
@@ -55,6 +56,10 @@ const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
 const APP_DATABASE_TIMEOUT_MILLISECONDS_TASK = 300 * 1000; // 5 minutes
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_DATABASE_ENCRYPT_SIZE_MIN = 150;
+const APP_DATABASE_TXN_TTL_MIN = 60; // 1 minute
+const APP_DATABASE_TXN_TTL_MAX = 3600; // 1 hour
+const APP_DATABASE_TXN_TTL_DEFAULT = 300; // 5 minutes
+const APP_DATABASE_TXN_MAX_OPERATIONS = 100; // Maximum operations per transaction
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -85,6 +90,8 @@ const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
+const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
+const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -104,8 +111,11 @@ const BUILD_TYPE_RETRY = 'retry';
 
 // Deletion Types
 const DELETE_TYPE_DATABASES = 'databases';
+
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
+const DELETE_TYPE_TRANSACTION = 'transaction';
+const DELETE_TYPE_EXPIRED_TRANSACTIONS = 'expired_transactions';
 const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_SITES = 'sites';
 const DELETE_TYPE_FUNCTIONS = 'functions';
@@ -128,6 +138,7 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
 // Message types
@@ -260,6 +271,9 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_SITES_ID_REQUESTS = 'sites.{siteInternalId}.requests';
 const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
+const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
+const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
+const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

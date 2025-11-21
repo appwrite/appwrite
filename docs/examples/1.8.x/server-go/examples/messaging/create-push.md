@@ -23,7 +23,7 @@ response, error := service.CreatePush(
     messaging.WithCreatePushTargets([]interface{}{}),
     messaging.WithCreatePushData(map[string]interface{}{}),
     messaging.WithCreatePushAction("<ACTION>"),
-    messaging.WithCreatePushImage("[ID1:ID2]"),
+    messaging.WithCreatePushImage("<ID1:ID2>"),
     messaging.WithCreatePushIcon("<ICON>"),
     messaging.WithCreatePushSound("<SOUND>"),
     messaging.WithCreatePushColor("<COLOR>"),

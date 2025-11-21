@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Update extends Action
@@ -41,8 +42,8 @@ class Update extends Action
             ->label('audits.event', 'attribute.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-relationship-attribute.md',
                 auth: [AuthType::KEY],
@@ -61,12 +62,12 @@ class Update extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('key', '', new Key(), 'Attribute Key.')
-            ->param('onDelete', null, new WhiteList([
+            ->param('onDelete', null, new Nullable(new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true), 'Constraints option', true)
-            ->param('newKey', null, new Key(), 'New Attribute Key.', true)
+            ], true)), 'Constraints option', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New Attribute Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

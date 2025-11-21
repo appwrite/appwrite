@@ -8,6 +8,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
@@ -263,11 +264,20 @@ class Swagger2 extends Format
                     }
 
                     foreach ($methodObj->getResponses() as $response) {
-                        /** @var Response $response */
-                        if (\is_array($response->getModel())) {
+                        /** @var Response|array $response */
+                        $responseModel = $response->getModel();
+                        if (\is_array($responseModel)) {
+                            foreach ($responseModel as $modelName) {
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $modelName) {
+                                        $usedModels[] = $modelName;
+                                        break;
+                                    }
+                                }
+                            }
                             $additionalMethod['responses'][] = [
                                 'code' => $response->getCode(),
-                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
+                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $responseModel)
                             ];
                         } else {
                             $responseData = [
@@ -276,7 +286,13 @@ class Swagger2 extends Format
 
                             // lets not assume stuff here!
                             if ($response->getCode() !== 204) {
-                                $responseData['model'] = '#/definitions/' . $response->getModel();
+                                $responseData['model'] = '#/definitions/' . $responseModel;
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $responseModel) {
+                                        $usedModels[] = $responseModel;
+                                        break;
+                                    }
+                                }
                             }
 
                             $additionalMethod['responses'][] = $responseData;
@@ -423,6 +439,17 @@ class Swagger2 extends Format
                     $class = \get_class($validator);
                 }
 
+                $array = false;
+                if ($class === 'Utopia\Validator\ArrayList') {
+                    $array = true;
+                    $subclass = \get_class($validator->getValidator());
+                    switch ($subclass) {
+                        case 'Appwrite\Utopia\Database\Validator\Operation':
+                            $class = $subclass;
+                            break;
+                    }
+                }
+
                 switch ($class) {
                     case 'Utopia\Validator\Text':
                     case 'Utopia\Database\Validator\UID':
@@ -445,6 +472,20 @@ class Swagger2 extends Format
                         $node['format'] = 'datetime';
                         $node['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
                         break;
+                    case 'Utopia\Database\Validator\Spatial':
+                        /** @var Spatial $validator */
+                        $node['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'oneOf' => [
+                                ['type' => 'array']
+                            ]
+                        ];
+                        $node['x-example'] = match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => '[1, 2]',
+                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
+                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                        };
+                        break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'email';
@@ -464,20 +505,6 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => $validator->getValidator()->getType(),
                         ];
-                        break;
-                    case 'Utopia\Database\Validator\Spatial':
-                        /** @var Spatial $validator */
-                        $node['type'] = 'array';
-                        $node['schema']['items'] = [
-                            'oneOf' => [
-                                ['type' => 'array']
-                            ]
-                        ];
-                        $node['x-example'] = match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => '[1, 2]',
-                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
-                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
-                        };
                         break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
@@ -563,20 +590,47 @@ class Swagger2 extends Format
                                 break;
                             }
                         }
-
                         if ($allowed && $validator->getType() === 'string') {
                             $node['enum'] = $validator->getList();
                             $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
                             $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                         }
-
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CompoundUID':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '[ID1:ID2]';
+                        $node['x-example'] = '<ID1:ID2>';
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Operation':
+                        if ($array) {
+                            $validator = $validator->getValidator();
+                        }
+
+                        /** @var Operation $validator */
+                        $collectionIdKey = $validator->getCollectionIdKey();
+                        $documentIdKey = $validator->getDocumentIdKey();
+                        if ($array) {
+                            $node['type'] = 'array';
+                            $node['collectionFormat'] = 'multi';
+                            $node['items'] = ['type' => 'object'];
+                        } else {
+                            $node['type'] = 'object';
+                        }
+                        $example = [
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            $collectionIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)).'>',
+                            $documentIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($documentIdKey)).'>',
+                            'data' => [
+                                'name' => 'Walter O\'Brien',
+                            ],
+                        ];
+                        if ($array) {
+                            $example = [$example];
+                        }
+                        $node['x-example'] = \str_replace("\n", "\n\t", \json_encode($example, JSON_PRETTY_PRINT));
                         break;
                     default:
                         $node['type'] = 'string';

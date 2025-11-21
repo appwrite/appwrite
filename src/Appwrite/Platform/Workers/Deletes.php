@@ -93,7 +93,7 @@ class Deletes extends Action
             throw new Exception('Missing payload');
         }
 
-        $type     = $payload['type'] ?? '';
+        $type = $payload['type'] ?? '';
         $datetime = $payload['datetime'] ?? null;
         $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
         $resource = $payload['resource'] ?? null;
@@ -129,6 +129,9 @@ class Deletes extends Action
                         break;
                     case DELETE_TYPE_RULES:
                         $this->deleteRule($dbForPlatform, $document, $certificates);
+                        break;
+                    case DELETE_TYPE_TRANSACTION:
+                        $this->deleteTransactionLogs($getProjectDB, $document, $project);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -176,12 +179,16 @@ class Deletes extends Action
             case DELETE_TYPE_SESSION_TARGETS:
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
                 break;
+            case DELETE_TYPE_CSV_EXPORTS:
+                $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
+                break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
                 $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
+                $this->deleteExpiredTransactions($project, $getProjectDB);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
@@ -305,9 +312,9 @@ class Deletes extends Action
      * @param Document $project
      * @param callable $getProjectDB
      * @param string $resource
+     * @param string|null $resourceType
      * @return void
      * @throws Authorization
-     * @param string|null $resourceType
      * @throws Exception
      */
     private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
@@ -395,7 +402,7 @@ class Deletes extends Action
      */
     private function deleteUsageStats(Document $project, callable $getProjectDB, callable $getLogsDB, string $hourlyUsageRetentionDatetime): void
     {
-        /** @var Database $dbForProject*/
+        /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
         $selects = [...$this->selects, 'time'];
@@ -410,7 +417,7 @@ class Deletes extends Action
         ], $dbForProject);
 
         if ($project->getId() !== 'console') {
-            /** @var Database $dbForLogs*/
+            /** @var Database $dbForLogs */
             $dbForLogs = call_user_func($getLogsDB, $project);
 
             // Delete Usage stats from logsDB
@@ -452,16 +459,16 @@ class Deletes extends Action
     }
 
     /**
-    * @param Database $dbForPlatform
-    * @param Document $document
-    * @return void
-    * @throws Authorization
-    * @throws DatabaseException
-    * @throws Conflict
-    * @throws Restricted
-    * @throws Structure
-    * @throws Exception
-    */
+     * @param Database $dbForPlatform
+     * @param Document $document
+     * @return void
+     * @throws Authorization
+     * @throws DatabaseException
+     * @throws Conflict
+     * @throws Restricted
+     * @throws Structure
+     * @throws Exception
+     */
     protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
     {
 
@@ -539,7 +546,7 @@ class Deletes extends Action
                     );
                 }
             } catch (Throwable $e) {
-                Console::error('Error deleting '.$collection->getId().' '.$e->getMessage());
+                Console::error('Error deleting ' . $collection->getId() . ' ' . $e->getMessage());
             }
         });
 
@@ -714,6 +721,41 @@ class Deletes extends Action
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForProject);
+    }
+
+    /**
+     * @param Database $dbForPlatform
+     * @param Device $deviceForFiles
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteOldCSVExports(Database $dbForPlatform, Device $deviceForFiles): void
+    {
+        $bucket = $dbForPlatform->getDocument('buckets', 'default');
+
+        if ($bucket->isEmpty()) {
+            Console::warning('Default bucket not found, skipping CSV export cleanup');
+            return;
+        }
+
+        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7); // 1 week
+
+        Console::info("Deleting CSV export files older than " . $oneWeekAgo);
+
+        $this->deleteByGroup('bucket_' . $bucket->getSequence(), [
+            Query::select([...$this->selects, '$createdAt', 'name', 'path']),
+            Query::equal('bucketId', ['default']),
+            Query::createdBefore($oneWeekAgo),
+            Query::endsWith('name', ['.csv']),
+            Query::orderDesc('$createdAt'),
+            Query::orderDesc(),
+        ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {
+            $path = $file->getAttribute('path');
+            if ($deviceForFiles->exists($path)) {
+                $deviceForFiles->delete($path);
+                Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
+            }
+        });
     }
 
     /**
@@ -1117,9 +1159,6 @@ class Deletes extends Action
     ): void {
         $start = \microtime(true);
 
-        $deleteBatchSize = Database::DELETE_BATCH_SIZE;
-        $deleteBatchSize = 500; // TODO: Set right value in DB library after investigation
-
         /**
          * deleteDocuments uses a cursor, we need to add a unique order by field or use default
          */
@@ -1127,11 +1166,10 @@ class Deletes extends Action
             $count = $database->deleteDocuments(
                 $collection,
                 $queries,
-                $deleteBatchSize,
-                $callback
+                onNext: $callback
             );
         } catch (Throwable $th) {
-            $tenant = $database->getSharedTables() ? 'Tenant:'.$database->getTenant() : '';
+            $tenant = $database->getSharedTables() ? 'Tenant:' . $database->getTenant() : '';
             Console::error("Failed to delete documents for collection:{$database->getNamespace()}_{$collection} {$tenant} :{$th->getMessage()}");
             return;
         }
@@ -1298,5 +1336,49 @@ class Deletes extends Action
                 }
             );
         }
+    }
+
+    private function deleteTransactionLogs(callable $getProjectDB, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+        $transactionId = $document->getId();
+        $transactionInternalId = $document->getSequence();
+
+        try {
+            $dbForProject->deleteDocuments('transactionLogs', [
+                Query::equal('transactionInternalId', [$transactionInternalId]),
+            ]);
+            Console::info("Transaction logs for transaction {$transactionId} deleted.");
+        } catch (Throwable $th) {
+            Console::error("Failed to delete transaction logs for transaction {$transactionId}: " . $th->getMessage());
+        }
+    }
+
+    private function deleteExpiredTransactions(Document $project, callable $getProjectDB): void
+    {
+        $dbForProject = $getProjectDB($project);
+        $transactionInternalIds = [];
+
+        try {
+            $dbForProject->deleteDocuments('transactions', [
+                Query::lessThan('expiresAt', DateTime::format(new \DateTime())),
+            ], onNext: function (Document $transaction) use ($dbForProject, $project, &$transactionInternalIds) {
+                $transactionInternalIds[] = $transaction->getSequence();
+            }, onError: function (Throwable $th) use ($project) {
+                // Swallow errors to avoid breaking the cleanup process
+            });
+        } catch (Throwable $th) {
+            Console::error("Failed to find expired transactions for project {$project->getId()}: " . $th->getMessage());
+        }
+
+        if (empty($transactionInternalIds)) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('transactionLogs', [
+            Query::equal('transactionInternalId', $transactionInternalIds),
+        ], onError: function (Throwable $th) use ($project) {
+            // Swallow errors to avoid breaking the cleanup process
+        });
     }
 }

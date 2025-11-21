@@ -12,6 +12,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Nullable;
 
 class Create extends IntegerCreate
 {
@@ -38,8 +39,8 @@ class Create extends IntegerCreate
             ->label('audits.event', 'column.create')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/create-integer-column.md',
                 auth: [AuthType::KEY],
@@ -54,9 +55,9 @@ class Create extends IntegerCreate
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('min', null, new Integer(), 'Minimum value', true)
-            ->param('max', null, new Integer(), 'Maximum value', true)
-            ->param('default', null, new Integer(), 'Default value. Cannot be set when column is required.', true)
+            ->param('min', null, new Nullable(new Integer()), 'Minimum value', true)
+            ->param('max', null, new Nullable(new Integer()), 'Maximum value', true)
+            ->param('default', null, new Nullable(new Integer()), 'Default value. Cannot be set when column is required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')

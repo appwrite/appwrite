@@ -1,6 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
+import io.appwrite.enums.MessagePriority
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -18,7 +19,7 @@ val response = messaging.createPush(
     targets = listOf(), // optional
     data = mapOf( "a" to "b" ), // optional
     action = "<ACTION>", // optional
-    image = "[ID1:ID2]", // optional
+    image = "<ID1:ID2>", // optional
     icon = "<ICON>", // optional
     sound = "<SOUND>", // optional
     color = "<COLOR>", // optional

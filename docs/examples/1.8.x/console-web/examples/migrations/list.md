@@ -8,7 +8,8 @@ const migrations = new Migrations(client);
 
 const result = await migrations.list({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

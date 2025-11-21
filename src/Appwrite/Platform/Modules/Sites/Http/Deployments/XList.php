@@ -19,6 +19,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class XList extends Base
@@ -57,6 +58,7 @@ class XList extends Base
             ->param('siteId', '', new UID(), 'Site ID.')
             ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -67,6 +69,7 @@ class XList extends Base
         string $siteId,
         array $queries,
         string $search,
+        bool $includeTotal,
         Request $request,
         Response $response,
         Database $dbForProject
@@ -120,7 +123,7 @@ class XList extends Base
 
         try {
             $results = $dbForProject->find('deployments', $queries);
-            $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }

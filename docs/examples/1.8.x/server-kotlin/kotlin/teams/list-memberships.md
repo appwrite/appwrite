@@ -12,5 +12,6 @@ val teams = Teams(client)
 val response = teams.listMemberships(
     teamId = "<TEAM_ID>",
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )

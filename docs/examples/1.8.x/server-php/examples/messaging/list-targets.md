@@ -12,5 +12,6 @@ $messaging = new Messaging($client);
 
 $result = $messaging->listTargets(
     messageId: '<MESSAGE_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

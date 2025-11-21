@@ -2,6 +2,38 @@
 <html>
     <head>
         <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+        <meta name="color-scheme" content="light dark">
+        <meta name="supported-color-schemes" content="light dark">
+        <style type="text/css">
+            :root {
+                color-scheme: light dark;
+                supported-color-schemes: light dark;
+            }
+
+            @media (prefers-color-scheme: dark ) {
+                body {
+                    color: #616b7c !important;
+                    background-color: #ffffff !important;
+                }
+                a {
+                    color: currentColor !important;
+                }
+                a.button {
+                    color: #ffffff !important;
+                    background-color: {{accentColor}} !important;
+                    border-color: {{accentColor}} !important;
+                }
+                h1, h2, h3 {
+                    color: #373b4d !important;
+                }
+                h4 {
+                    color: #4f5769 !important;
+                }
+                p.security-phrase:not(:empty), hr {
+                    border-color: #e8e9f0 !important;
+                }
+            }
+        </style>
         <style>
             @font-face {
                 font-family: 'Inter';
@@ -37,7 +69,6 @@
                 font-family: "Inter", sans-serif;
                 background-color: #ffffff;
                 margin: 0;
-                padding: 0;
             }
             a {
                 color: currentColor;
@@ -98,6 +129,7 @@
                 color: #ffffff;
                 border-radius: 8px;
                 height: 48px;
+                line-height: 24px;
                 padding: 12px 20px;
                 box-sizing: border-box;
                 cursor: pointer;
@@ -131,6 +163,14 @@
             .social-icon > img {
                 margin: auto;
             }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin: 0;
+                padding: 0;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
+            }
         </style>
     </head>
 
@@ -145,8 +185,9 @@
                 <tr>
                     <td>
                         <img
-                            height="32px"
+                            height="26px"
                             src="{{logoUrl}}"
+                            alt="Appwrite logo"
                         />
                     </td>
                 </tr>
@@ -155,12 +196,12 @@
             <table style="margin-top: 32px">
                 <tr>
                     <td>
-                        <h1>{{subject}}</h1>
+                        <h1>{{heading}}</h1>
                     </td>
                 </tr>
             </table>
 
-            <table style="margin-top: 32px">
+            <table style="margin-top: 16px">
                 <tr>
                     <td>
 {{body}}

@@ -9,6 +9,7 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "repository": "<REPOSITORY>",
   "owner": "<OWNER>",
   "rootDirectory": "<ROOT_DIRECTORY>",
-  "version": "<VERSION>",
+  "type": "commit",
+  "reference": "<REFERENCE>",
   "activate": false
 }

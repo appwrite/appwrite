@@ -12,5 +12,6 @@ tables_db = TablesDB.new(client)
 result = tables_db.upsert_rows(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
-    rows: []
+    rows: [],
+    transaction_id: '<TRANSACTION_ID>' # optional
 )

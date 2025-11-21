@@ -389,6 +389,26 @@ class AccountCustomClientTest extends Scope
         $this->assertIsNumeric($responseLimitOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
+
+        /**
+         * Test for total=false
+         */
+        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $logsWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($logsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($logsWithIncludeTotalFalse['body']['logs']);
+        $this->assertIsInt($logsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $logsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($logsWithIncludeTotalFalse['body']['logs']));
+
         /**
          * Test for FAILURE
          */
@@ -924,7 +944,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Account Verification', $lastEmail['subject']);
+        $this->assertEquals('Account Verification for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Verify your email to activate your ' . $this->getProject()['name'] . ' account.', $lastEmail['text']);
 
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
@@ -1228,7 +1248,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
-        $this->assertEquals('Password Reset', $lastEmail['subject']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
 
 
@@ -1348,10 +1368,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
-    public function testSessionAlert($data): void
+    public function testSessionAlert(): void
     {
         $email = uniqid() . 'session-alert@appwrite.io';
         $password = 'password123';
@@ -1417,6 +1434,7 @@ class AccountCustomClientTest extends Scope
         $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
         $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
         $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+        $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
         // Verify no alert sent in OTP login
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
@@ -1919,6 +1937,26 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         return $session;
+    }
+
+    /**
+     * @depends testCreateAnonymousAccount
+     */
+    public function testCreateAnonymousAccountVerification($session): array
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(400, $response['body']['code']);
+        $this->assertEquals('user_email_not_found', $response['body']['type']);
+
+        return [];
     }
 
     /**

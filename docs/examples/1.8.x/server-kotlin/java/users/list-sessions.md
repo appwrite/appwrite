@@ -11,6 +11,7 @@ Users users = new Users(client);
 
 users.listSessions(
     "<USER_ID>", // userId
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

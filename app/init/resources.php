@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
@@ -557,7 +558,7 @@ App::setResource('deviceForFiles', function ($project, Telemetry $telemetry) {
 App::setResource('deviceForSites', function ($project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
-App::setResource('deviceForImports', function ($project, Telemetry $telemetry) {
+App::setResource('deviceForMigrations', function ($project, Telemetry $telemetry) {
     return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 App::setResource('deviceForFunctions', function ($project, Telemetry $telemetry) {
@@ -1044,3 +1045,7 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
     return $referrer;
 }, ['request', 'httpReferrer', 'platforms', 'dbForPlatform', 'project', 'utopia']);
+
+App::setResource('transactionState', function (Database $dbForProject) {
+    return new TransactionState($dbForProject);
+}, ['dbForProject']);

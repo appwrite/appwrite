@@ -799,6 +799,23 @@ trait UsersBase
         $this->assertGreaterThan(0, $users['body']['total']);
 
         /**
+         * Test for SUCCESS with total=false
+         */
+        $usersWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $usersWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($usersWithIncludeTotalFalse['body']);
+        $this->assertIsArray($usersWithIncludeTotalFalse['body']['users']);
+        $this->assertIsInt($usersWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $usersWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($usersWithIncludeTotalFalse['body']['users']));
+
+        /**
          * Test for FAILURE
          */
         $user = $this->client->call(Client::METHOD_GET, '/users/non_existent', array_merge([

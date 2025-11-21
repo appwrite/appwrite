@@ -43,8 +43,8 @@ class Update extends Action
             ->label('audits.event', 'attribute.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-polygon-attribute.md',
                 auth: [AuthType::KEY],
@@ -65,7 +65,7 @@ class Update extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Spatial(Database::VAR_POLYGON)), 'Default value for attribute when not provided, three-dimensional array where the outer array holds one or more linear rings, [[[longitude, latitude], …], …], the first ring is the exterior boundary, any additional rings are interior holes, and each ring must start and end with the same coordinate pair. Cannot be set when attribute is required.', true)
-            ->param('newKey', null, new Key(), 'New attribute key.', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New attribute key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

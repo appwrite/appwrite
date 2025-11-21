@@ -18,4 +18,5 @@ response, error := service.UpsertDocuments(
     "<DATABASE_ID>",
     "<COLLECTION_ID>",
     []interface{}{},
+    databases.WithUpsertDocumentsTransactionId("<TRANSACTION_ID>"),
 )

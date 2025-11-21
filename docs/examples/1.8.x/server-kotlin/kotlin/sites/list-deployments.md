@@ -12,5 +12,6 @@ val sites = Sites(client)
 val response = sites.listDeployments(
     siteId = "<SITE_ID>",
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )
