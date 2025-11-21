@@ -441,7 +441,23 @@ class StripeAdapter implements Adapter
     public function cancelSubscription(ProviderSubscriptionRef $subscription, bool $atPeriodEnd, ProviderState $state): ProviderSubscriptionRef
     {
         $apiKey = (string) ($state->config['secretKey'] ?? '');
-        $this->request($apiKey, 'DELETE', '/subscriptions/' . $subscription->externalSubscriptionId, [ 'cancel_at_period_end' => $atPeriodEnd ? 'true' : 'false' ]);
+        $subscriptionId = $subscription->externalSubscriptionId;
+
+        try {
+            if ($atPeriodEnd) {
+                // Schedule cancellation at period end using POST
+                $params = ['cancel_at_period_end' => 'true'];
+                $response = $this->request($apiKey, 'POST', '/subscriptions/' . $subscriptionId, $params);
+            } else {
+                // Immediately cancel using DELETE
+                $response = $this->request($apiKey, 'DELETE', '/subscriptions/' . $subscriptionId);
+            }
+
+            $responseData = $this->decodeResponse($response);
+        } catch (\Throwable $e) {
+            throw $e;
+        }
+
         return $subscription;
     }
 

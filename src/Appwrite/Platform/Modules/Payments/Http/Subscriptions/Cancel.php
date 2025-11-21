@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class Cancel extends Base
@@ -45,6 +46,7 @@ class Cancel extends Base
                 responses: []
             ))
             ->param('subscriptionId', '', new Text(128), 'Subscription ID')
+            ->param('endAtPeriodEnd', true, new Boolean(true), 'End at period end', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -56,6 +58,7 @@ class Cancel extends Base
 
     public function action(
         string $subscriptionId,
+        bool $endAtPeriodEnd,
         Response $response,
         Database $dbForPlatform,
         Database $dbForProject,
@@ -116,15 +119,21 @@ class Cancel extends Base
         if ($primary) {
             $config = (array) ($providers[$primary] ?? []);
             $provMap = (array) $sub->getAttribute('providers', []);
-            $subscriptionRef = (string) ((array) ($provMap[(string) $primary] ?? []))['subscriptionId'] ?? '';
+            $subscriptionRef = (string) ((array) ($provMap[(string) $primary] ?? []))['providerSubscriptionId'] ?? '';
             if ($subscriptionRef !== '') {
                 $state = new ProviderState((string) $primary, $config, (array) ($config['state'] ?? []));
                 $adapter = $registryPayments->get((string) $primary, $config, $project, $dbForPlatform, $dbForProject);
-                $adapter->cancelSubscription(new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef), true, $state);
+                $adapter->cancelSubscription(new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef), $endAtPeriodEnd, $state);
             }
         }
-        $sub->setAttribute('status', 'canceled');
-        $sub->setAttribute('canceledAt', date('c'));
+        if ($endAtPeriodEnd) {
+            $sub->setAttribute('cancelAtPeriodEnd', true);
+            $sub->setAttribute('canceledAt', null);
+        } else {
+            $sub->setAttribute('status', 'canceled');
+            $sub->setAttribute('cancelAtPeriodEnd', false);
+            $sub->setAttribute('canceledAt', date('c'));
+        }
         $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
         $response->noContent();
     }

@@ -7,9 +7,9 @@ use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
@@ -63,8 +63,7 @@ class Create extends Base
         Database $dbForPlatform,
         callable $getProjectDB,
         Event $queueForEvents
-    )
-    {
+    ) {
         $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         if ($project === null || $project->isEmpty()) {
