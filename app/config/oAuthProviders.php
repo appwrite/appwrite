@@ -200,6 +200,16 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Google',
     ],
+    'kakao' => [
+        'name' => 'Kakao',
+        'developers' => 'https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api',
+        'icon' => 'icon-kakao',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'linkedin' => [
         'name' => 'LinkedIn',
         'developers' => 'https://developer.linkedin.com/',
@@ -431,6 +441,7 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Zoom',
     ],
+    
     // 'instagram' => [
     //     'name' => 'Instagram',
     //     'developers' => 'https://www.instagram.com/developer/',
