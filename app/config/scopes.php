@@ -47,10 +47,10 @@ return [ // List of publicly visible scopes
         'description' => 'Access to create, update, and delete your project\'s database table\'s columns',
     ],
     'indexes.read' => [
-        'description' => 'Access to read your project\'s database collection\'s indexes',
+        'description' => 'Access to read your project\'s database table\'s indexes',
     ],
     'indexes.write' => [
-        'description' => 'Access to create, update, and delete your project\'s database collection\'s indexes',
+        'description' => 'Access to create, update, and delete your project\'s database table\'s indexes',
     ],
     'documents.read'  => [
         'description' => 'Access to read your project\'s database documents',

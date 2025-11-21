@@ -13314,7 +13314,7 @@
                                             "branch",
                                             "commit"
                                         ],
-                                        "x-enum-name": "VCSDeploymentType",
+                                        "x-enum-name": "VCSReferenceType",
                                         "x-enum-keys": []
                                     },
                                     "reference": {
@@ -22963,7 +22963,7 @@
                                             "commit",
                                             "tag"
                                         ],
-                                        "x-enum-name": "VCSDeploymentType",
+                                        "x-enum-name": "VCSReferenceType",
                                         "x-enum-keys": []
                                     },
                                     "reference": {
