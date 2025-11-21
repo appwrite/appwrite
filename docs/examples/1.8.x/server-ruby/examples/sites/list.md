@@ -11,5 +11,6 @@ sites = Sites.new(client)
 
 result = sites.list(
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

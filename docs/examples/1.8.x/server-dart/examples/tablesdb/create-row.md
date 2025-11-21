@@ -1,4 +1,6 @@
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/permission.dart';
+import 'package:dart_appwrite/role.dart';
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -18,6 +20,6 @@ Row result = await tablesDB.createRow(
         "age": 30,
         "isAdmin": false
     },
-    permissions: ["read("any")"], // (optional)
+    permissions: [Permission.read(Role.any())], // (optional)
     transactionId: '<TRANSACTION_ID>', // (optional)
 );

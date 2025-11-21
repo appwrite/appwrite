@@ -25,4 +25,5 @@ response, error := service.CreateBucket(
     storage.WithCreateBucketCompression("none"),
     storage.WithCreateBucketEncryption(false),
     storage.WithCreateBucketAntivirus(false),
+    storage.WithCreateBucketTransformations(false),
 )

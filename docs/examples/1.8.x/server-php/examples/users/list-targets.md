@@ -12,5 +12,6 @@ $users = new Users($client);
 
 $result = $users->listTargets(
     userId: '<USER_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

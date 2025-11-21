@@ -263,7 +263,13 @@ abstract class Format
                     case 'createVcsDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'VCSDeploymentType';
+                                return 'VCSReferenceType';
+                        }
+                        break;
+                    case 'createTemplateDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }
@@ -286,7 +292,13 @@ abstract class Format
                     case 'createVcsDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'VCSDeploymentType';
+                                return 'VCSReferenceType';
+                        }
+                        break;
+                    case 'createTemplateDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }

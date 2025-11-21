@@ -9,6 +9,7 @@ let functions = Functions(client)
 
 let functionList = try await functions.list(
     queries: [], // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 )
 

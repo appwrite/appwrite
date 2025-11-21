@@ -12,4 +12,5 @@ DocumentList result = await databases.listDocuments(
     collectionId: '<COLLECTION_ID>',
     queries: [], // (optional)
     transactionId: '<TRANSACTION_ID>', // (optional)
+    total: false, // (optional)
 );

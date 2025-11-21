@@ -9,7 +9,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -63,10 +62,23 @@ class TokensConsoleClientTest extends Scope
 
         $fileId = $file['body']['$id'];
 
+        // Failure case: Expire date is in the past
         $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'expire' => '2022-11-02',
+        ]);
+        $this->assertEquals(400, $token['headers']['status-code']);
+        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+
+        // Success case: No expire date
+        $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'expire' => null,
+        ]);
 
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals('files', $token['body']['resourceType']);
@@ -107,8 +119,19 @@ class TokensConsoleClientTest extends Scope
     {
         $tokenId = $data['tokenId'];
 
+        // Failure case: Expire date is in the past
+        $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => '2022-11-02',
+        ]);
+        $this->assertEquals(400, $token['headers']['status-code']);
+        $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
+
         // Finite expiry
-        $expiry = DateTime::addSeconds(new \DateTime(), 3600);
+        $expiry = date('Y-m-d', strtotime("tomorrow"));
         $token = $this->client->call(Client::METHOD_PATCH, '/tokens/' . $tokenId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']

@@ -10,4 +10,5 @@ Users users = Users(client);
 TargetList result = await users.listTargets(
     userId: '<USER_ID>',
     queries: [], // (optional)
+    total: false, // (optional)
 );

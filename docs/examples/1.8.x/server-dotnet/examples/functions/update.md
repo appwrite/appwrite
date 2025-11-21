@@ -13,7 +13,7 @@ Functions functions = new Functions(client);
 Function result = await functions.Update(
     functionId: "<FUNCTION_ID>",
     name: "<NAME>",
-    runtime: .Node145, // optional
+    runtime: Runtime.Node145, // optional
     execute: ["any"], // optional
     events: new List<string>(), // optional
     schedule: "", // optional

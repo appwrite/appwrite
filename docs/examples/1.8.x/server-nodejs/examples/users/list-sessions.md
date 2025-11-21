@@ -8,5 +8,6 @@ const client = new sdk.Client()
 const users = new sdk.Users(client);
 
 const result = await users.listSessions({
-    userId: '<USER_ID>'
+    userId: '<USER_ID>',
+    total: false // optional
 });

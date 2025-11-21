@@ -13,5 +13,6 @@ $functions = new Functions($client);
 $result = $functions->listDeployments(
     functionId: '<FUNCTION_ID>',
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

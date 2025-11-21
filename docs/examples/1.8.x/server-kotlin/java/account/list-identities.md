@@ -11,6 +11,7 @@ Account account = new Account(client);
 
 account.listIdentities(
     listOf(), // queries (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

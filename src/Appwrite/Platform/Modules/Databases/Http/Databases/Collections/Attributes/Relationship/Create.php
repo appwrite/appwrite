@@ -18,6 +18,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -71,8 +72,8 @@ class Create extends Action
                 Database::RELATION_ONE_TO_MANY
             ], true), 'Relation type')
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-            ->param('key', null, new Key(), 'Attribute Key.', true)
-            ->param('twoWayKey', null, new Key(), 'Two Way Attribute Key.', true)
+            ->param('key', null, new Nullable(new Key()), 'Attribute Key.', true)
+            ->param('twoWayKey', null, new Nullable(new Key()), 'Two Way Attribute Key.', true)
             ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,

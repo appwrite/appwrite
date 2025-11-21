@@ -10,4 +10,5 @@ Users users = Users(client);
 UserList result = await users.list(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

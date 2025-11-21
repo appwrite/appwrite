@@ -11,5 +11,6 @@ val functions = Functions(client)
 
 val response = functions.listExecutions(
     functionId = "<FUNCTION_ID>",
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    total = false // optional
 )

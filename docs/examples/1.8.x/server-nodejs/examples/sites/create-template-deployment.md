@@ -12,6 +12,7 @@ const result = await sites.createTemplateDeployment({
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    version: '<VERSION>',
+    type: sdk..Branch,
+    reference: '<REFERENCE>',
     activate: false // optional
 });

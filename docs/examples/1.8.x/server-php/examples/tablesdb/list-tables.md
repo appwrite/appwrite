@@ -13,5 +13,6 @@ $tablesDB = new TablesDB($client);
 $result = $tablesDB->listTables(
     databaseId: '<DATABASE_ID>',
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

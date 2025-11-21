@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.functions import Functions
+from appwrite.enums import Runtime
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -11,7 +12,7 @@ functions = Functions(client)
 result = functions.update(
     function_id = '<FUNCTION_ID>',
     name = '<NAME>',
-    runtime = .NODE_14_5, # optional
+    runtime = Runtime.NODE_14_5, # optional
     execute = ["any"], # optional
     events = [], # optional
     schedule = '', # optional

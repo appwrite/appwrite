@@ -10,4 +10,5 @@ Functions functions = Functions(client);
 FunctionList result = await functions.list(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

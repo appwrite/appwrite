@@ -16,4 +16,5 @@ service := account.New(client)
 
 response, error := service.ListIdentities(
     account.WithListIdentitiesQueries([]interface{}{}),
+    account.WithListIdentitiesTotal(false),
 )

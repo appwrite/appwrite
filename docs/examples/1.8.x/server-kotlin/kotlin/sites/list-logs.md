@@ -11,5 +11,6 @@ val sites = Sites(client)
 
 val response = sites.listLogs(
     siteId = "<SITE_ID>",
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    total = false // optional
 )

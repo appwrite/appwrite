@@ -25,4 +25,5 @@ response, error := service.UpdateBucket(
     storage.WithUpdateBucketCompression("none"),
     storage.WithUpdateBucketEncryption(false),
     storage.WithUpdateBucketAntivirus(false),
+    storage.WithUpdateBucketTransformations(false),
 )

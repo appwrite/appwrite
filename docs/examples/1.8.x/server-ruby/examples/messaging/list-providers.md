@@ -11,5 +11,6 @@ messaging = Messaging.new(client)
 
 result = messaging.list_providers(
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

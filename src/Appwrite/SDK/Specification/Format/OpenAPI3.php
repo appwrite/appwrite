@@ -255,10 +255,21 @@ class OpenAPI3 extends Format
                     }
 
                     foreach ($methodObj->getResponses() as $response) {
-                        if (\is_array($response->getModel())) {
+                        /** @var Response|array $response */
+                        $responseModel = $response->getModel();
+
+                        if (\is_array($responseModel)) {
+                            foreach ($responseModel as $modelName) {
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $modelName) {
+                                        $usedModels[] = $modelName;
+                                        break;
+                                    }
+                                }
+                            }
                             $additionalMethod['responses'][] = [
                                 'code' => $response->getCode(),
-                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $response->getModel())
+                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $responseModel)
                             ];
                         } else {
                             $responseData = [
@@ -267,7 +278,13 @@ class OpenAPI3 extends Format
 
                             // lets not assume stuff here!
                             if ($response->getCode() !== 204) {
-                                $responseData['model'] = '#/components/schemas/' . $response->getModel();
+                                $responseData['model'] = '#/components/schemas/' . $responseModel;
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $responseModel) {
+                                        $usedModels[] = $responseModel;
+                                        break;
+                                    }
+                                }
                             }
 
                             $additionalMethod['responses'][] = $responseData;

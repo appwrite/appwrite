@@ -17,4 +17,5 @@ service := storage.New(client)
 response, error := service.ListBuckets(
     storage.WithListBucketsQueries([]interface{}{}),
     storage.WithListBucketsSearch("<SEARCH>"),
+    storage.WithListBucketsTotal(false),
 )

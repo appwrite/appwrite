@@ -17,4 +17,5 @@ service := functions.New(client)
 response, error := service.ListExecutions(
     "<FUNCTION_ID>",
     functions.WithListExecutionsQueries([]interface{}{}),
+    functions.WithListExecutionsTotal(false),
 )

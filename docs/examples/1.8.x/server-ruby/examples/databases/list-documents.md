@@ -13,5 +13,6 @@ result = databases.list_documents(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     queries: [], # optional
-    transaction_id: '<TRANSACTION_ID>' # optional
+    transaction_id: '<TRANSACTION_ID>', # optional
+    total: false # optional
 )

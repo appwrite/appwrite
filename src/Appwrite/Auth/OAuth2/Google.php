@@ -53,7 +53,9 @@ class Google extends OAuth2
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
-            'response_type' => 'code'
+            'response_type' => 'code',
+            'access_type' => 'offline',
+            'prompt' => 'consent'
         ]);
     }
 

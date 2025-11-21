@@ -11,5 +11,6 @@ tables_db = TablesDB(client)
 result = tables_db.list_columns(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

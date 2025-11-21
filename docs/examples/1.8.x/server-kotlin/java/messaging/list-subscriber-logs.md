@@ -12,6 +12,7 @@ Messaging messaging = new Messaging(client);
 messaging.listSubscriberLogs(
     "<SUBSCRIBER_ID>", // subscriberId
     listOf(), // queries (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

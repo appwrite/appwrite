@@ -53,6 +53,13 @@ class ProviderRepository extends Model
                 'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
+            ])
+            ->addRule('variables', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Environment variables found in .env files',
+                'default' => [],
+                'array' => true,
+                'example' => ['PORT', 'NODE_ENV'],
             ]);
     }
 

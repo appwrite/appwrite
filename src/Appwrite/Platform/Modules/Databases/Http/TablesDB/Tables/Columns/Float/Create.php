@@ -12,6 +12,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
+use Utopia\Validator\Nullable;
 
 class Create extends FloatCreate
 {
@@ -54,9 +55,9 @@ class Create extends FloatCreate
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('min', null, new FloatValidator(), 'Minimum value', true)
-            ->param('max', null, new FloatValidator(), 'Maximum value', true)
-            ->param('default', null, new FloatValidator(), 'Default value. Cannot be set when required.', true)
+            ->param('min', null, new Nullable(new FloatValidator()), 'Minimum value', true)
+            ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value', true)
+            ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')

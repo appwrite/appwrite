@@ -11,7 +11,7 @@ const result = await tablesDB.updateTable({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // optional
+    permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     rowSecurity: false, // optional
     enabled: false // optional
 });

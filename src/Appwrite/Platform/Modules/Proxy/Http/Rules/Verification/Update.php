@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
+use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -113,15 +114,15 @@ class Update extends Action
 
         if (!is_null($targetCNAME)) {
             if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+                $validators[] = new DNS($targetCNAME->get(), Record::TYPE_CNAME);
             }
         }
 
         if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
+            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), Record::TYPE_A);
         }
         if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
+            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), Record::TYPE_AAAA);
         }
 
         if (empty($validators)) {
@@ -139,24 +140,13 @@ class Update extends Action
         if (!$validator->isValid($domain->get())) {
             $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
             $log->addTag('dnsDomain', $domain->get());
-
-            $errors = [];
-            foreach ($validators as $validator) {
-                if (!empty($validator->getLogs())) {
-                    $errors[] = $validator->getLogs();
-                }
-            }
-
-            $error = \implode("\n", $errors);
-            $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
         }
 
         // Ensure CAA won't block certificate issuance
         if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
             $validationStart = \microtime(true);
-            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), Record::TYPE_CAA);
             if (!$validator->isValid($domain->get())) {
                 $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
                 $log->addTag('dnsDomain', $domain->get());

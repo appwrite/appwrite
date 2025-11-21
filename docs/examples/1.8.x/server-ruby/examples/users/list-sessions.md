@@ -10,5 +10,6 @@ client = Client.new
 users = Users.new(client)
 
 result = users.list_sessions(
-    user_id: '<USER_ID>'
+    user_id: '<USER_ID>',
+    total: false # optional
 )
