@@ -3733,9 +3733,15 @@ App::post('/v1/account/verifications/email')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.verification.body");
-        $preview = $locale->getText("emails.verification.preview");
         $subject = $locale->getText("emails.verification.subject");
+        $preview = $locale->getText("emails.verification.preview");
         $heading = $locale->getText("emails.verification.heading");
+
+        $customEmailContent = $project->getAttribute('customEmailContent', [])['verification'][$locale->default] ?? [];
+        if (!empty($customEmailContent)) {
+            $preview = $customEmailContent['preview'] ?? $preview;
+            $heading = $customEmailContent['heading'] ?? $heading;
+        }
 
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
