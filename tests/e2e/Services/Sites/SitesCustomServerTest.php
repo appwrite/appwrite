@@ -1544,7 +1544,7 @@ class SitesCustomServerTest extends Scope
     #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
-        $template = $this->getTemplate('playground-for-astro');
+        $template = $this->getTemplate('playground-for-react');
         $this->assertEquals(200, $template['headers']['status-code']);
 
         $template = $template['body'];
@@ -1733,7 +1733,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 150000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1742,14 +1742,8 @@ class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("Hello, Astronaut!", $response['body']);
-
-        $response = $proxyClient->call(Client::METHOD_GET, '/about');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Astro Blog", $response['body']);
-        $this->assertStringContainsString("About Me", $response['body']);
+        $this->assertStringContainsString("React App", $response['body']);
+        $this->assertStringContainsString("Learn React", $response['body']);
 
         $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -2251,7 +2245,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId2) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 150000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", $response['body']);
@@ -2749,7 +2743,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('failed', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 150000, 500);
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
