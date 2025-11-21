@@ -493,9 +493,17 @@ trait DatabasesBase
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
 
-        $maxLength = $this->isMongoDB() ? 1024 : 768;
-
-        $this->assertStringContainsString('Index length is longer than the maximum: '.$maxLength, $attribute['body']['message']);
+        $message = $attribute['body']['message'];
+        if ($this->MongoDB()) {
+            $this->assertStringContainsString('Index length is longer than the maximum: 1024', $message);
+        } else {
+            // length depends on the shared table
+            $this->assertTrue(
+                str_contains($message, 'Index length is longer than the maximum: 767') ||
+                str_contains($message, 'Index length is longer than the maximum: 768'),
+                "Message does not contain expected max length"
+            );
+        }
     }
 
     public function testUpdateAttributeEnum(): void
