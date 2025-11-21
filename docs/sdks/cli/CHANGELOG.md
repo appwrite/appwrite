@@ -2,7 +2,7 @@
 
 ## 12.0.0
 
-* Change `create-deloyment-template`'s `version` parameter to `type` and `reference`. eg. usage - `create-deployment-template --type tag --reference 1.0.0`
+* Change `create-deployment-template`'s `version` parameter to `type` and `reference`. eg. usage - `create-deployment-template --type tag --reference 1.0.0`
 * Remove `bucket-id` parameter from `create-csv-export` command
 * Allow enabling or disabling of image `transformations` in a bucket
 * Fix type generation for `point`, `lineString` and `polygon` columns
