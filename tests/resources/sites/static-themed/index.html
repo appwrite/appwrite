@@ -5,19 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Themed website</title>
     <style>
-        /* Light theme */
-        body {
-            background-color: #ffffff;
-            color: #000000;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        /* Light theme */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #fd366e;
+            --border: #e0e0e0;
+        }
+
         /* Dark theme */
         @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #000000;
-                color: #ffffff;
+            :root {
+                --bg-primary: #1a1a1a;
+                --bg-secondary: #2d2d2d;
+                --text-primary: #ffffff;
+                --text-secondary: #b0b0b0;
+                --accent: #fd366e;
+                --border: #404040;
             }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .feature-list li {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: var(--bg-primary);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+            color: var(--text-primary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: var(--accent);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
         }
     </style>
 </head>
-<body></body>
+<body>
+<div class="container">
+    <header>
+        <h1>Themed website</h1>
+        <p class="subtitle">Adaptive light & dark mode showcase</p>
+    </header>
+
+    <div class="card">
+        <h2>About This Site</h2>
+        <p>This is a test deployment showcasing automatic theme switching based on your system preferences.</p>
+        <span class="badge">Appwrite Sites</span>
+    </div>
+
+    <div class="card">
+        <h2>Features</h2>
+        <ul class="feature-list">
+            <li>🎨 Automatic theme detection</li>
+            <li>🌓 Light and dark mode support</li>
+            <li>📱 Responsive design</li>
+            <li>⚡ Fast static deployment</li>
+        </ul>
+    </div>
+
+    <footer>
+        <p>Powered by Appwrite Sites • E2E Test</p>
+    </footer>
+</div>
+</body>
 </html>
