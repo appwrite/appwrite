@@ -17,7 +17,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -52,8 +51,26 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-function getDatabaseDSN(string $databasetype, $region): string
+// for returning dsn of multitype dbs with type optionally based on input dsn
+function getDatabaseDSN(string $databasetype, $region, ?string $dsn = null): string
 {
+    $isSharedTablesV1 = false;
+    $isSharedTablesV2 = false;
+    if (!empty($dsn)) {
+        try {
+            $parsedDsn = new DSN($dsn);
+            $dsnHost = $parsedDsn->getHost();
+        } catch (\InvalidArgumentException) {
+            $dsnHost = $dsn;
+        }
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
+        $isSharedTablesV1 = \in_array($dsnHost, $sharedTablesV1);
+        $isSharedTablesV2 = \in_array($dsnHost, $sharedTablesV2);
+    }
+
     $databases = [];
     $databaseKeys = [];
     /**
@@ -61,12 +78,18 @@ function getDatabaseDSN(string $databasetype, $region): string
     */
     $databaseOverride = '';
     $dbScheme = '';
+    $sharedTables = [];
+    $sharedTablesV1 = [];
+    $sharedTablesV2 = [];
+
     switch ($databasetype) {
         case 'documentsDatabase':
             $databases = Config::getParam('pools-documentsdb', []);
             $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
             $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
             $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
+            $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
             break;
         default:
             // legacy/tablesdb
@@ -74,6 +97,8 @@ function getDatabaseDSN(string $databasetype, $region): string
             $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
             $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
             $dbScheme = System::getEnv('_APP_DB_HOST', 'mysql');
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
             break;
     }
 
@@ -83,32 +108,40 @@ function getDatabaseDSN(string $databasetype, $region): string
             return str_contains($value, $region);
         });
     }
+    $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
 
     $index = \array_search($databaseOverride, $databases);
     if ($index !== false) {
-        $dsn = $databases[$index];
+        $selectedDsn = $databases[$index];
     } else {
-        $dsn = $databases[array_rand($databases)];
+        if (!empty($dsn)) {
+            if ($isSharedTablesV1) {
+                $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV1));
+            } elseif ($isSharedTablesV2) {
+                $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV2));
+            } else {
+                $databases = array_filter($databases, fn ($value) => !\in_array($value, $sharedTables));
+            }
+        }
+        $selectedDsn = !empty($databases) ? $databases[array_rand($databases)] : '';
     }
 
-    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-    if (\in_array($dsn, $sharedTables)) {
+    if (\in_array($selectedDsn, $sharedTables)) {
         $schema = 'appwrite';
         $database = 'appwrite';
         $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-        $dsn = $schema . '://' . $dsn . '?database=' . $database;
+        $selectedDsn = $schema . '://' . $selectedDsn . '?database=' . $database;
 
         if (!empty($namespace)) {
-            $dsn .= '&namespace=' . $namespace;
+            $selectedDsn .= '&namespace=' . $namespace;
         }
     }
     try {
-        // for validation
-        new DSN($dsn);
+        new DSN($selectedDsn);
     } catch (\InvalidArgumentException) {
-        $dsn = $dbScheme.'://' . $dsn;
+        $selectedDsn = $dbScheme.'://' . $selectedDsn;
     }
-    return $dsn;
+    return $selectedDsn;
 }
 
 App::init()
@@ -233,7 +266,7 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
-                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region)
+                'documentsDatabase' => getDatabaseDSN('documentsDatabase', $region, $dsn)
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
