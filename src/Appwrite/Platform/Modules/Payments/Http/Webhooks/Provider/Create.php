@@ -2,17 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Webhooks\Provider;
 
+use Appwrite\Event\Event;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Appwrite\Event\Event;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Swoole\Request;
-use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 class Create extends Base
 {

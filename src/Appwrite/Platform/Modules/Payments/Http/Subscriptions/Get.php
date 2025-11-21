@@ -72,7 +72,7 @@ class Get extends Base
         if ($actorId === '' || $actorId === ':actorId') {
             $actorId = '';
         }
-        
+
         $actorType = strtolower($actorType);
 
         if (!\in_array($actorType, ['user', 'team'], true)) {
@@ -222,7 +222,7 @@ class Get extends Base
             $planDataObj = new \stdClass();
         }
 
-        // Convert subscription data to plain array/object 
+        // Convert subscription data to plain array/object
         $subscriptionData = new \stdClass();
         if (!$subscriptionDoc->isEmpty()) {
             $subscriptionData = (object) [
