@@ -5,22 +5,18 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Verification;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\DNS;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Logger\Log;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
-use Utopia\Validator\AnyOf;
-use Utopia\Validator\IP;
 
 class Update extends Action
 {
@@ -31,8 +27,10 @@ class Update extends Action
         return 'updateRuleVerification';
     }
 
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/proxy/rules/:ruleId/verification')
@@ -82,81 +80,28 @@ class Update extends Action
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $targetCNAME = null;
-        switch ($rule->getAttribute('type', '')) {
-            case 'api':
-                // For example: fra.cloud.appwrite.io
-                $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-                break;
-            case 'redirect':
-                // For example: appwrite.network
-                $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
-                break;
-            case 'deployment':
-                switch ($rule->getAttribute('deploymentResourceType', '')) {
-                    case 'function':
-                        // For example: fra.appwrite.run
-                        $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_FUNCTIONS', ''));
-                        break;
-                    case 'site':
-                        // For example: appwrite.network
-                        $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
-                        break;
-                    default:
-                        break;
-                }
-                // no break
-            default:
-                break;
-        }
+        $queueForEvents->setParam('ruleId', $rule->getId());
 
-        $validators = [];
-
-        if (!is_null($targetCNAME)) {
-            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validators[] = new DNS($targetCNAME->get(), Record::TYPE_CNAME);
-            }
-        }
-
-        if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), Record::TYPE_A);
-        }
-        if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-            $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), Record::TYPE_AAAA);
-        }
-
-        if (empty($validators)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
-        }
-
-        if ($rule->getAttribute('verification') === true) {
+        if ($rule->getAttribute('status', '') !== RULE_STATUS_VERIFICATION_FAILED) {
             return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         }
 
-        $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
-        $domain = new Domain($rule->getAttribute('domain', ''));
+        $updates = new Document();
 
-        $validationStart = \microtime(true);
-        if (!$validator->isValid($domain->get())) {
-            $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
-            $log->addTag('dnsDomain', $domain->get());
-            throw new Exception(Exception::RULE_VERIFICATION_FAILED);
+        try {
+            $this->verifyRule($rule, $log);
+            $updates->setAttribute('logs', '');
+        } catch (Exception $err) {
+            $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                '$updatedAt' => DateTime::now(),
+                'logs' => $err->getMessage(),
+            ]));
+            throw $err;
         }
 
-        // Ensure CAA won't block certificate issuance
-        if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
-            $validationStart = \microtime(true);
-            $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), Record::TYPE_CAA);
-            if (!$validator->isValid($domain->get())) {
-                $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
-                $log->addTag('dnsDomain', $domain->get());
-                $error = $validator->getDescription();
-                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'Domain verification failed because CAA records do not allow Appwrite\'s certificate issuer.');
-            }
-        }
+        $updates->setAttribute('status', RULE_STATUS_GENERATING_CERTIFICATE);
 
-        $dbForPlatform->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
+        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
         // Issue a TLS certificate when domain is verified
         $queueForCertificates
@@ -166,10 +111,22 @@ class Update extends Action
             ]))
             ->trigger();
 
-        $queueForEvents->setParam('ruleId', $rule->getId());
-
+        // Fill response model
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
-        $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+
+        // Merge logs: priority to certificate logs if both have values, otherwise use whichever is not empty
+        $ruleLogs = $rule->getAttribute('logs', '');
+        $certificateLogs = $certificate->getAttribute('logs', '');
+        $logs = '';
+        if (!empty($certificateLogs) && !empty($ruleLogs)) {
+            $logs = $certificateLogs;
+        } elseif (!empty($certificateLogs)) {
+            $logs = $certificateLogs;
+        } elseif (!empty($ruleLogs)) {
+            $logs = $ruleLogs;
+        }
+        $rule->setAttribute('logs', $logs);
+        $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     }

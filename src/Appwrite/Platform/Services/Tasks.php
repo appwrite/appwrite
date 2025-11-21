@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
+use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueRetry;
@@ -28,6 +29,7 @@ class Tasks extends Service
         $this
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
+            ->addAction(Interval::getName(), new Interval())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(QueueRetry::getName(), new QueueRetry())

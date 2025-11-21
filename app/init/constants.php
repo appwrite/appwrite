@@ -140,7 +140,11 @@ const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
-
+// Rule types
+const RULE_STATUS_VERIFICATION_FAILED = 'created';
+const RULE_STATUS_GENERATING_CERTIFICATE = 'verifying';
+const RULE_STATUS_GENERATION_FAILED = 'unverified';
+const RULE_STATUS_SUCCESSFUL = 'verified';
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
 const MESSAGE_SEND_TYPE_EXTERNAL = 'external';

@@ -2,17 +2,16 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Frameworks;
 
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
-class XList extends Base
+class XList extends Action
 {
     use HTTP;
 
