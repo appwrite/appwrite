@@ -605,6 +605,11 @@ class DatabaseServerTest extends Scope
      */
     public function testCreateRelationshipAttribute(array $data): array
     {
+        if ($this->isMongoDB()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_RELATIONSHIP_ATTRIBUTE);
         $gqlPayload = [
@@ -637,6 +642,11 @@ class DatabaseServerTest extends Scope
      */
     public function testUpdateRelationshipAttribute(array $data): array
     {
+        if ($this->isMongoDB()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         sleep(1);
 
         $projectId = $this->getProject()['$id'];

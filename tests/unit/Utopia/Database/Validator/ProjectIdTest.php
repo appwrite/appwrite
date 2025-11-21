@@ -41,4 +41,20 @@ class ProjectIdTest extends TestCase
     {
         $this->assertEquals($this->object->isValid($input), $expected);
     }
+
+    public function testCustomMaxLength(): void
+    {
+        // Test with MongoDB max length (255)
+        $validator = new ProjectId(255);
+        $this->assertTrue($validator->isValid(\str_repeat('a', 255)));
+        $this->assertFalse($validator->isValid(\str_repeat('a', 256)));
+
+        // Test with smaller custom length
+        $validator = new ProjectId(10);
+        $this->assertTrue($validator->isValid(\str_repeat('a', 10)));
+        $this->assertFalse($validator->isValid(\str_repeat('a', 11)));
+
+        // Verify description updates
+        $this->assertStringContainsString('10 chars', $validator->getDescription());
+    }
 }

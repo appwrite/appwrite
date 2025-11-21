@@ -366,6 +366,7 @@ abstract class Action extends UtopiaAction
                 'filters' => $filters,
                 'options' => $options,
             ]);
+
             if (
                 !$dbForProject->getAdapter()->getSupportForSpatialIndexNull() &&
                 \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
