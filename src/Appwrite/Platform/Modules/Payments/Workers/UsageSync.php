@@ -30,8 +30,7 @@ class UsageSync extends Action
 
     public function action(Database $dbForPlatform, Database $dbForProject, Document $project, ProviderRegistry $registryPayments): void
     {
-        $pending = $dbForPlatform->find('payments_usage_events', [
-            Query::equal('projectId', [$project->getId()]),
+        $pending = $dbForProject->find('payments_usage_events', [
             Query::equal('providerSyncState', ['pending']),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]);
@@ -55,8 +54,7 @@ class UsageSync extends Action
                 $timestampStr = (string) $event->getAttribute('timestamp', date('c'));
                 $timestamp = new \DateTimeImmutable($timestampStr);
 
-                $sub = $dbForPlatform->findOne('payments_subscriptions', [
-                    Query::equal('projectId', [$project->getId()]),
+                $sub = $dbForProject->findOne('payments_subscriptions', [
                     Query::equal('subscriptionId', [$subscriptionId])
                 ]);
                 if ($sub === null || $sub->isEmpty()) {
@@ -65,7 +63,7 @@ class UsageSync extends Action
                     $meta['error'] = 'Subscription not found';
                     $event->setAttribute('metadata', $meta);
                     $event->setAttribute('providerSyncState', 'failed');
-                    $dbForPlatform->updateDocument('payments_usage_events', $event->getId(), $event);
+                    $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
                     continue;
                 }
                 $provMap = (array) $sub->getAttribute('providers', []);
@@ -75,7 +73,7 @@ class UsageSync extends Action
                     $meta['error'] = 'Provider subscription missing';
                     $event->setAttribute('metadata', $meta);
                     $event->setAttribute('providerSyncState', 'failed');
-                    $dbForPlatform->updateDocument('payments_usage_events', $event->getId(), $event);
+                    $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
                     continue;
                 }
 
@@ -86,7 +84,7 @@ class UsageSync extends Action
                 $adapter->reportUsage(new ProviderSubscriptionRef($providerSubId), $featureId, $quantity, $timestamp, $state);
 
                 $event->setAttribute('providerSyncState', 'synced');
-                $dbForPlatform->updateDocument('payments_usage_events', $event->getId(), $event);
+                $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
             } catch (\Throwable $e) {
                 $meta = (array) $event->getAttribute('metadata', []);
                 $meta['error'] = $e->getMessage();
@@ -94,7 +92,7 @@ class UsageSync extends Action
                 $meta['retries'] = (int) ($meta['retries'] ?? 0) + 1;
                 $event->setAttribute('metadata', $meta);
                 $event->setAttribute('providerSyncState', 'failed');
-                $dbForPlatform->updateDocument('payments_usage_events', $event->getId(), $event);
+                $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
             }
         }
     }

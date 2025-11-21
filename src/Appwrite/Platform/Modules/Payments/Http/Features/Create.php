@@ -53,6 +53,7 @@ class Create extends Base
             ->param('description', '', new Text(8192, 0), 'Description', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('dbForProject')
             ->inject('project')
             ->callback($this->action(...));
     }
@@ -64,6 +65,7 @@ class Create extends Base
         string $description,
         Response $response,
         Database $dbForPlatform,
+        Database $dbForProject,
         Document $project
     ) {
         // Feature flag: block if payments disabled for project
@@ -76,15 +78,13 @@ class Create extends Base
         }
 
         $doc = new Document([
-            'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
             'featureId' => $featureId,
             'name' => $name,
             'type' => $type,
             'description' => $description,
             'providers' => []
         ]);
-        $created = $dbForPlatform->createDocument('payments_features', $doc);
+        $created = $dbForProject->createDocument('payments_features', $doc);
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->json($created->getArrayCopy());
     }

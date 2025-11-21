@@ -45,6 +45,7 @@ class Delete extends Base
             ->param('featureId', '', new Text(128), 'Feature ID')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('dbForProject')
             ->inject('project')
             ->callback($this->action(...));
     }
@@ -53,6 +54,7 @@ class Delete extends Base
         string $featureId,
         Response $response,
         Database $dbForPlatform,
+        Database $dbForProject,
         Document $project
     ) {
         // Feature flag: block if payments disabled for project
@@ -64,8 +66,7 @@ class Delete extends Base
             return;
         }
 
-        $feature = $dbForPlatform->findOne('payments_features', [
-            Query::equal('projectId', [$project->getId()]),
+        $feature = $dbForProject->findOne('payments_features', [
             Query::equal('featureId', [$featureId])
         ]);
         if ($feature === null || $feature->isEmpty()) {
@@ -73,7 +74,7 @@ class Delete extends Base
             $response->json(['message' => 'Feature not found']);
             return;
         }
-        $dbForPlatform->deleteDocument('payments_features', $feature->getId());
+        $dbForProject->deleteDocument('payments_features', $feature->getId());
         $response->noContent();
     }
 }

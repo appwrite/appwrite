@@ -72,8 +72,7 @@ class Cancel extends Base
             return;
         }
 
-        $sub = $dbForPlatform->findOne('payments_subscriptions', [
-            Query::equal('projectId', [$project->getId()]),
+        $sub = $dbForProject->findOne('payments_subscriptions', [
             Query::equal('subscriptionId', [$subscriptionId])
         ]);
         if ($sub === null || $sub->isEmpty()) {
@@ -126,7 +125,7 @@ class Cancel extends Base
         }
         $sub->setAttribute('status', 'canceled');
         $sub->setAttribute('canceledAt', date('c'));
-        $dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
+        $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
         $response->noContent();
     }
 }

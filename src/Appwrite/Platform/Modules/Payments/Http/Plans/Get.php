@@ -8,7 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -47,19 +46,16 @@ class Get extends Base
             ))
             ->param('planId', '', new Text(128), 'Plan ID')
             ->inject('response')
-            ->inject('dbForPlatform')
-            ->inject('project')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
     public function action(
         string $planId,
         Response $response,
-        Database $dbForPlatform,
-        Document $project
+        Database $dbForProject
     ) {
-        $plan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
 

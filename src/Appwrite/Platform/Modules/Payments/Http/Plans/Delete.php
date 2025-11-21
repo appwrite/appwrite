@@ -45,6 +45,7 @@ class Delete extends Base
             ->param('planId', '', new Text(128), 'Plan ID')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('dbForProject')
             ->inject('project')
             ->callback($this->action(...));
     }
@@ -53,6 +54,7 @@ class Delete extends Base
         string $planId,
         Response $response,
         Database $dbForPlatform,
+        Database $dbForProject,
         Document $project
     ) {
         // Feature flag: block if payments disabled for project
@@ -64,8 +66,7 @@ class Delete extends Base
             return;
         }
 
-        $plan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan === null || $plan->isEmpty()) {
@@ -73,7 +74,7 @@ class Delete extends Base
             $response->json(['message' => 'Plan not found']);
             return;
         }
-        $dbForPlatform->deleteDocument('payments_plans', $plan->getId());
+        $dbForProject->deleteDocument('payments_plans', $plan->getId());
         $response->noContent();
     }
 }

@@ -113,8 +113,6 @@ class Create extends Base
         $pricing = $normalizedPricing;
 
         $document = new Document([
-            'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
             'planId' => $planId,
             'name' => $name,
             'description' => $description,
@@ -137,8 +135,7 @@ class Create extends Base
         }
 
         // Check if plan already exists
-        $existingPlan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $existingPlan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($existingPlan !== null && !$existingPlan->isEmpty()) {
@@ -146,7 +143,7 @@ class Create extends Base
             return new AppwriteException(ExtendException::RESOURCE_ALREADY_EXISTS);
         }
 
-        $created = $dbForPlatform->createDocument('payments_plans', $document);
+        $created = $dbForProject->createDocument('payments_plans', $document);
 
         $queueForEvents->setParam('planId', $planId);
 
@@ -173,7 +170,7 @@ class Create extends Base
 
         if (!empty($providersMeta)) {
             $created->setAttribute('providers', $providersMeta);
-            $created = $dbForPlatform->updateDocument('payments_plans', $created->getId(), $created);
+            $created = $dbForProject->updateDocument('payments_plans', $created->getId(), $created);
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);

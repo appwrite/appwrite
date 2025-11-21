@@ -92,8 +92,7 @@ class Create extends Base
             return;
         }
 
-        $plan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan === null || $plan->isEmpty()) {
@@ -146,8 +145,7 @@ class Create extends Base
         }
 
         // Check if actor already has an active subscription
-        $existingSubscriptions = $dbForPlatform->find('payments_subscriptions', [
-            Query::equal('projectId', [$project->getId()]),
+        $existingSubscriptions = $dbForProject->find('payments_subscriptions', [
             Query::equal('actorType', [$actorType]),
             Query::equal('actorId', [$actorId]),
             Query::equal('status', ['active', 'trialing', 'paused']),
@@ -310,8 +308,6 @@ class Create extends Base
             'subscriptionId' => ID::unique(),
             'providerSubscriptionId' => $providerSubscriptionId,
             'providerCheckoutId' => $providerCheckoutId,
-            'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
             'actorType' => $actorType,
             'actorId' => $actorId,
             'actorInternalId' => $actor->getSequence(),
@@ -329,7 +325,7 @@ class Create extends Base
             'search' => implode(' ', [$actorType, $actorId, $planId])
         ]);
 
-        $created = $dbForPlatform->createDocument('payments_subscriptions', $subscription);
+        $created = $dbForProject->createDocument('payments_subscriptions', $subscription);
 
         $queueForEvents
             ->setProject($project)

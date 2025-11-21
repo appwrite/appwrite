@@ -72,8 +72,7 @@ class Resume extends Base
             return;
         }
 
-        $sub = $dbForPlatform->findOne('payments_subscriptions', [
-            Query::equal('projectId', [$project->getId()]),
+        $sub = $dbForProject->findOne('payments_subscriptions', [
             Query::equal('subscriptionId', [$subscriptionId])
         ]);
         if ($sub === null || $sub->isEmpty()) {
@@ -126,7 +125,7 @@ class Resume extends Base
         $sub->setAttribute('status', 'active');
         $sub->setAttribute('canceledAt', null);
         $sub->setAttribute('cancelAtPeriodEnd', false);
-        $dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
+        $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
         $response->noContent();
     }
 }

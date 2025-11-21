@@ -54,6 +54,7 @@ class Update extends Base
             ->param('description', '', new Text(8192, 0), 'Description', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('dbForProject')
             ->inject('project')
             ->callback($this->action(...));
     }
@@ -65,6 +66,7 @@ class Update extends Base
         string $description,
         Response $response,
         Database $dbForPlatform,
+        Database $dbForProject,
         Document $project
     ) {
         // Feature flag: block if payments disabled for project
@@ -76,8 +78,7 @@ class Update extends Base
             return;
         }
 
-        $feature = $dbForPlatform->findOne('payments_features', [
-            Query::equal('projectId', [$project->getId()]),
+        $feature = $dbForProject->findOne('payments_features', [
             Query::equal('featureId', [$featureId])
         ]);
         if ($feature === null || $feature->isEmpty()) {
@@ -94,7 +95,7 @@ class Update extends Base
         if ($description !== '') {
             $feature->setAttribute('description', $description);
         }
-        $feature = $dbForPlatform->updateDocument('payments_features', $feature->getId(), $feature);
+        $feature = $dbForProject->updateDocument('payments_features', $feature->getId(), $feature);
         $response->json($feature->getArrayCopy());
     }
 }

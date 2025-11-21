@@ -8,7 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -51,8 +50,7 @@ class XList extends Base
             ->param('subscriptionId', '', new Text(128, 0), 'Filter by subscription ID', true)
             ->param('featureId', '', new Text(128, 0), 'Filter by feature ID', true)
             ->inject('response')
-            ->inject('dbForPlatform')
-            ->inject('project')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
@@ -60,17 +58,16 @@ class XList extends Base
         string $subscriptionId,
         string $featureId,
         Response $response,
-        Database $dbForPlatform,
-        Document $project
+        Database $dbForProject
     ) {
-        $filters = [ Query::equal('projectId', [$project->getId()]) ];
+        $filters = [];
         if ($subscriptionId !== '') {
             $filters[] = Query::equal('subscriptionId', [$subscriptionId]);
         }
         if ($featureId !== '') {
             $filters[] = Query::equal('featureId', [$featureId]);
         }
-        $list = $dbForPlatform->find('payments_usage_events', $filters);
+        $list = $dbForProject->find('payments_usage_events', $filters);
         $response->json([
             'total' => count($list),
             'events' => array_map(fn ($d) => $d->getArrayCopy(), $list)

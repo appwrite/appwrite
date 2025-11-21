@@ -8,7 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -47,22 +46,20 @@ class XList extends Base
             ))
             ->param('search', '', new Text(256), 'Search term.', true)
             ->inject('response')
-            ->inject('dbForPlatform')
-            ->inject('project')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
     public function action(
         string $search,
         Response $response,
-        Database $dbForPlatform,
-        Document $project
+        Database $dbForProject
     ) {
-        $filters = [ Query::equal('projectId', [$project->getId()]) ];
+        $filters = [];
         if ($search !== '') {
             $filters[] = Query::search('name', $search);
         }
-        $list = $dbForPlatform->find('payments_features', $filters);
+        $list = $dbForProject->find('payments_features', $filters);
         $response->json([
             'total' => count($list),
             'features' => array_map(fn ($d) => $d->getArrayCopy(), $list)

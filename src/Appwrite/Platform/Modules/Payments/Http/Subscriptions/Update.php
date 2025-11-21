@@ -85,8 +85,7 @@ class Update extends Base
             return;
         }
 
-        $sub = $dbForPlatform->findOne('payments_subscriptions', [
-            Query::equal('projectId', [$project->getId()]),
+        $sub = $dbForProject->findOne('payments_subscriptions', [
             Query::equal('subscriptionId', [$subscriptionId])
         ]);
         if ($sub === null || $sub->isEmpty()) {
@@ -137,8 +136,7 @@ class Update extends Base
                 if ($planId !== '' || $priceId !== '') {
                     $currentPlanId = (string) $sub->getAttribute('planId', '');
                     $targetPlanId = $planId !== '' ? $planId : $currentPlanId;
-                    $plan = $dbForPlatform->findOne('payments_plans', [
-                        Query::equal('projectId', [$project->getId()]),
+                    $plan = $dbForProject->findOne('payments_plans', [
                         Query::equal('planId', [$targetPlanId])
                     ]);
                     if ($plan === null || $plan->isEmpty()) {
@@ -212,7 +210,7 @@ class Update extends Base
                 }
             }
         }
-        $sub = $dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
+        $sub = $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
         $response->json($sub->getArrayCopy());
     }
 }

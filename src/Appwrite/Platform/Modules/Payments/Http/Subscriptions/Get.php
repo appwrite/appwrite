@@ -53,9 +53,7 @@ class Get extends Base
             ->param('actorType', 'user', new Text(16), 'Actor type: user or team', true)
             ->param('actorId', '', new Text(128), 'Actor ID', true)
             ->inject('response')
-            ->inject('dbForPlatform')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('user')
             ->callback($this->action(...));
     }
@@ -64,9 +62,7 @@ class Get extends Base
         string $actorType,
         string $actorId,
         Response $response,
-        Database $dbForPlatform,
         Database $dbForProject,
-        Document $project,
         Document $user
     ) {
         // Handle case where path parameters might not be extracted (e.g., from aliases)
@@ -139,7 +135,6 @@ class Get extends Base
         }
 
         $queries = [
-            Query::equal('projectId', [$project->getId()]),
             Query::equal('actorType', [$actorType]),
             Query::equal('actorId', [$actorId]),
             Query::notEqual('status', 'pending'),
@@ -147,7 +142,7 @@ class Get extends Base
             Query::limit(1),
         ];
 
-        $subscriptions = $dbForPlatform->find('payments_subscriptions', $queries);
+        $subscriptions = $dbForProject->find('payments_subscriptions', $queries);
         $subscription = $subscriptions[0] ?? null;
 
         $activeSubscription = null;
@@ -169,15 +164,13 @@ class Get extends Base
         $planData = null;
         $features = [];
 
-        $plan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan && !$plan->isEmpty()) {
             $planData = $plan->getArrayCopy();
 
-            $planFeatures = $dbForPlatform->find('payments_plan_features', [
-                Query::equal('projectId', [$project->getId()]),
+            $planFeatures = $dbForProject->find('payments_plan_features', [
                 Query::equal('planId', [$planId]),
                 Query::equal('enabled', [true]),
             ]);
@@ -187,8 +180,7 @@ class Get extends Base
                     continue;
                 }
                 $featureId = (string) $featureDoc->getAttribute('featureId', '');
-                $featureDetails = $dbForPlatform->findOne('payments_features', [
-                    Query::equal('projectId', [$project->getId()]),
+                $featureDetails = $dbForProject->findOne('payments_features', [
                     Query::equal('featureId', [$featureId])
                 ]);
 

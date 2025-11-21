@@ -55,6 +55,7 @@ class Create extends Base
             ->param('quantity', 0, new IntValidator(), 'Usage quantity')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('dbForProject')
             ->inject('project')
             ->callback($this->action(...));
     }
@@ -65,6 +66,7 @@ class Create extends Base
         int $quantity,
         Response $response,
         Database $dbForPlatform,
+        Database $dbForProject,
         Document $project
     ) {
         // Feature flag: block if payments disabled for project
@@ -76,8 +78,7 @@ class Create extends Base
             return;
         }
 
-        $sub = $dbForPlatform->findOne('payments_subscriptions', [
-            Query::equal('projectId', [$project->getId()]),
+        $sub = $dbForProject->findOne('payments_subscriptions', [
             Query::equal('subscriptionId', [$subscriptionId])
         ]);
         if ($sub === null || $sub->isEmpty()) {
@@ -87,7 +88,6 @@ class Create extends Base
         }
         $event = new Document([
             '$id' => ID::unique(),
-            'projectId' => $project->getId(),
             'subscriptionId' => $subscriptionId,
             'actorType' => $sub->getAttribute('actorType'),
             'actorId' => $sub->getAttribute('actorId'),
@@ -99,7 +99,7 @@ class Create extends Base
             'providerEventId' => null,
             'metadata' => []
         ]);
-        $created = $dbForPlatform->createDocument('payments_usage_events', $event);
+        $created = $dbForProject->createDocument('payments_usage_events', $event);
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->json($created->getArrayCopy());
     }

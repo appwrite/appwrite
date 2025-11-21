@@ -65,13 +65,10 @@ class Create extends Base
         $providers = (array) ($payments['providers'] ?? []);
         $primary = array_key_first($providers);
         $config = $primary ? (array) ($providers[$primary] ?? []) : [];
-        $subs = $dbForPlatform->find('payments_subscriptions', [
-            Query::equal('projectId', [$project->getId()])
-        ]);
+        $subs = $dbForProject->find('payments_subscriptions', []);
         foreach ($subs as $sub) {
             // Aggregate internal usage summary
-            $events = $dbForPlatform->find('payments_usage_events', [
-                Query::equal('projectId', [$project->getId()]),
+            $events = $dbForProject->find('payments_usage_events', [
                 Query::equal('subscriptionId', [$sub->getAttribute('subscriptionId')])
             ]);
             $totals = [];
@@ -80,7 +77,7 @@ class Create extends Base
                 $totals[$fid] = ($totals[$fid] ?? 0) + (int) $e->getAttribute('quantity', 0);
             }
             $sub->setAttribute('usageSummary', $totals);
-            $dbForPlatform->updateDocument('payments_subscriptions', $sub->getId(), $sub);
+            $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
 
             // Optionally invoke provider sync for parity
             if ($primary) {

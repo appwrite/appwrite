@@ -49,8 +49,7 @@ class XList extends Base
             ->param('actorId', '', new Text(128, 0), 'Filter by actor ID', true)
             ->param('status', '', new Text(32, 0), 'Filter by status', true)
             ->inject('response')
-            ->inject('dbForPlatform')
-            ->inject('project')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
@@ -59,10 +58,9 @@ class XList extends Base
         string $actorId,
         string $status,
         Response $response,
-        Database $dbForPlatform,
-        Document $project
+        Database $dbForProject
     ) {
-        $filters = [ Query::equal('projectId', [$project->getId()]) ];
+        $filters = [];
         if ($actorType !== '') {
             $filters[] = Query::equal('actorType', [$actorType]);
         }
@@ -72,13 +70,12 @@ class XList extends Base
         if ($status !== '') {
             $filters[] = Query::equal('status', [$status]);
         }
-        $list = $dbForPlatform->find('payments_subscriptions', $filters);
+        $list = $dbForProject->find('payments_subscriptions', $filters);
         $plansById = [];
         foreach ($list as $sub) {
             $planId = (string) $sub->getAttribute('planId', '');
             if ($planId !== '' && !isset($plansById[$planId])) {
-                $plan = $dbForPlatform->findOne('payments_plans', [
-                    Query::equal('projectId', [$project->getId()]),
+                $plan = $dbForProject->findOne('payments_plans', [
                     Query::equal('planId', [$planId])
                 ]);
                 if ($plan) {

@@ -99,8 +99,7 @@ class Assign extends Base
             return;
         }
 
-        $plan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan === null || $plan->isEmpty()) {
@@ -110,8 +109,7 @@ class Assign extends Base
         }
 
         // Infer feature type from existing feature document
-        $feature = $dbForPlatform->findOne('payments_features', [
-            Query::equal('projectId', [$project->getId()]),
+        $feature = $dbForProject->findOne('payments_features', [
             Query::equal('featureId', [$featureId])
         ]);
         if ($feature === null || $feature->isEmpty()) {
@@ -122,8 +120,6 @@ class Assign extends Base
         $type = (string) strtolower((string) $feature->getAttribute('type', 'boolean'));
 
         $doc = new Document([
-            'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
             'planId' => $planId,
             'featureId' => $featureId,
             'type' => $type,
@@ -138,7 +134,7 @@ class Assign extends Base
             'providers' => [],
             'metadata' => []
         ]);
-        $created = $dbForPlatform->createDocument('payments_plan_features', $doc);
+        $created = $dbForProject->createDocument('payments_plan_features', $doc);
 
         // Provision feature with each provider and persist refs (metered only)
         $planProviders = (array) $plan->getAttribute('providers', []);
@@ -167,7 +163,7 @@ class Assign extends Base
         }
         if (!empty($providersMeta)) {
             $created->setAttribute('providers', $providersMeta);
-            $created = $dbForPlatform->updateDocument('payments_plan_features', $created->getId(), $created);
+            $created = $dbForProject->updateDocument('payments_plan_features', $created->getId(), $created);
         }
 
         $queueForEvents

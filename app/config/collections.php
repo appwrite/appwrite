@@ -6,7 +6,6 @@ $projects = include __DIR__ . '/collections/projects.php';
 $databases = include __DIR__ . '/collections/databases.php';
 $platform = include __DIR__ . '/collections/platform.php';
 $authPlans = include __DIR__ . '/collections/auth_plans.php';
-$payments = include __DIR__ . '/collections/payments.php';
 $logs = include __DIR__ . '/collections/logs.php';
 
 // see - http.php#245
@@ -29,7 +28,7 @@ $collections = [
     'buckets' => $buckets,
     'databases' => $databases,
     'projects' => array_merge($projects, $common),
-    'console' => array_merge($platform, $authPlans, $payments, $common),
+    'console' => array_merge($platform, $authPlans, $common),
     'logs' => $logs,
 ];
 

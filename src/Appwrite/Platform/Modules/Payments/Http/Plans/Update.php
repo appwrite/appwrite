@@ -88,8 +88,7 @@ class Update extends Base
             return;
         }
 
-        $plan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan === null || $plan->isEmpty()) {
@@ -131,7 +130,7 @@ class Update extends Base
             $pricing = $normalizedPricing;
             $plan->setAttribute('pricing', $pricing);
         }
-        $plan = $dbForPlatform->updateDocument('payments_plans', $plan->getId(), $plan);
+        $plan = $dbForProject->updateDocument('payments_plans', $plan->getId(), $plan);
 
         // Update on providers if pricing changed or name/desc changed
         $payments = (array) $project->getAttribute('payments', []);
@@ -157,7 +156,7 @@ class Update extends Base
         }
         if (!empty($providersMeta)) {
             $plan->setAttribute('providers', $providersMeta);
-            $plan = $dbForPlatform->updateDocument('payments_plans', $plan->getId(), $plan);
+            $plan = $dbForProject->updateDocument('payments_plans', $plan->getId(), $plan);
         }
         $response->json($plan->getArrayCopy());
     }

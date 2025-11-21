@@ -568,7 +568,7 @@ class StripeAdapter implements Adapter
             }
 
             /** @var Document|null $subscription */
-            $subscription = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
+            $subscription = Authorization::skip(fn () => $this->dbForProject->findOne('payments_subscriptions', [
                 Query::equal('providerSubscriptionId', [$stripeSubId]),
             ]));
 
@@ -582,7 +582,7 @@ class StripeAdapter implements Adapter
                     $sessionId = (string) ($sessionsData['data'][0]['id'] ?? '');
                     $sessionCustomerId = (string) ($sessionsData['data'][0]['customer'] ?? '');
                     if ($sessionId !== '') {
-                        $subscription = Authorization::skip(fn () => $this->dbForPlatform->findOne('payments_subscriptions', [
+                        $subscription = Authorization::skip(fn () => $this->dbForProject->findOne('payments_subscriptions', [
                             Query::equal('providerCheckoutId', [$sessionId]),
                         ]));
                         if ($subscription instanceof Document && !$subscription->isEmpty()) {
@@ -639,7 +639,7 @@ class StripeAdapter implements Adapter
             }
             $subscription->setAttribute('providers', $providers);
 
-            Authorization::skip(fn () => $this->dbForPlatform->updateDocument('payments_subscriptions', $subscription->getId(), $subscription));
+            Authorization::skip(fn () => $this->dbForProject->updateDocument('payments_subscriptions', $subscription->getId(), $subscription));
             $changes['subscription'] = $subscription->getId();
             $changes['status'] = $internalStatus;
             return new ProviderWebhookResult(status: 'ok', changes: $changes);

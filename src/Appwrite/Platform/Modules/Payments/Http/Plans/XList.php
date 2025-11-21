@@ -47,22 +47,20 @@ class XList extends Base
             ))
             ->param('search', '', new Text(256), 'Search term.', true)
             ->inject('response')
-            ->inject('dbForPlatform')
-            ->inject('project')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
     public function action(
         string $search,
         Response $response,
-        Database $dbForPlatform,
-        Document $project
+        Database $dbForProject
     ) {
-        $filters = [ Query::equal('projectId', [$project->getId()]) ];
+        $filters = [];
         if ($search !== '') {
             $filters[] = Query::search('search', $search);
         }
-        $plans = $dbForPlatform->find('payments_plans', $filters);
+        $plans = $dbForProject->find('payments_plans', $filters);
         $payload = [
             'total' => count($plans),
             'plans' => array_map(fn ($d) => $d->getArrayCopy(), $plans)

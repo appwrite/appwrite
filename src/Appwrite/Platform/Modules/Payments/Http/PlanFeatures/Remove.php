@@ -78,8 +78,7 @@ class Remove extends Base
             return;
         }
 
-        $assignment = $dbForPlatform->findOne('payments_plan_features', [
-            Query::equal('projectId', [$project->getId()]),
+        $assignment = $dbForProject->findOne('payments_plan_features', [
             Query::equal('planId', [$planId]),
             Query::equal('featureId', [$featureId])
         ]);
@@ -89,8 +88,7 @@ class Remove extends Base
             return;
         }
         // Attempt deprovision: deactivate provider price if tracked
-        $plan = $dbForPlatform->findOne('payments_plans', [
-            Query::equal('projectId', [$project->getId()]),
+        $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         $planProviders = (array) ($plan?->getAttribute('providers', []) ?? []);
@@ -106,7 +104,7 @@ class Remove extends Base
             $featRef = new \Appwrite\Payments\Provider\ProviderFeatureRef((string) ($providerAssignment['priceId'] ?? ''), (array) $providerAssignment);
             $adapter->deleteFeature($featRef, $planRef, $state);
         }
-        $dbForPlatform->deleteDocument('payments_plan_features', $assignment->getId());
+        $dbForProject->deleteDocument('payments_plan_features', $assignment->getId());
 
         $queueForEvents
             ->setProject($project)
