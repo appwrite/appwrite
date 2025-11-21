@@ -145,6 +145,27 @@ class Create extends Base
             return;
         }
 
+        // Check if actor already has an active subscription
+        $existingSubscriptions = $dbForPlatform->find('payments_subscriptions', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::equal('actorType', [$actorType]),
+            Query::equal('actorId', [$actorId]),
+            Query::equal('status', ['active', 'trialing', 'paused']),
+            Query::limit(1),
+        ]);
+
+        if (!empty($existingSubscriptions)) {
+            $existingSubscription = $existingSubscriptions[0];
+            if ($existingSubscription instanceof Document && !$existingSubscription->isEmpty()) {
+                $response->setStatusCode(Response::STATUS_CODE_CONFLICT);
+                $response->json([
+                    'message' => 'Actor already has an active subscription',
+                    'subscriptionId' => $existingSubscription->getAttribute('subscriptionId')
+                ]);
+                return;
+            }
+        }
+
         // Get payment provider and create checkout session
         $payments = (array) $project->getAttribute('payments', []);
         $providers = (array) ($payments['providers'] ?? []);

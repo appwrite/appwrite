@@ -30,7 +30,7 @@ class StripeAdapter implements Adapter
         $account = $this->decodeResponse($accountResponse);
         $rawDomain = (string) System::getEnv('_APP_DOMAIN', '');
         $domain = \trim($rawDomain);
-        if ($domain === '' || \in_array(\strtolower($domain), ['localhost', '127.0.0.1'], true)) {
+        if ($domain === '' || \in_array(\strtolower($domain), ['localhost', '127.0.0.1', 'traefik'], true)) {
             throw new \RuntimeException('Appwrite domain is not configured. Set _APP_DOMAIN to a publicly accessible hostname before configuring Stripe.');
         }
         $domain = (string) \preg_replace('/^\s*https?:\/\//i', '', $domain);

@@ -153,7 +153,7 @@ class Get extends Base
         $activeSubscription = null;
         if ($subscription instanceof Document && !$subscription->isEmpty()) {
             $status = strtolower((string) $subscription->getAttribute('status', ''));
-            if ($status == 'active') {
+            if ($status == 'active' || $status == 'trialing' || $status == 'paused') {
                 $activeSubscription = $subscription;
             }
         }
