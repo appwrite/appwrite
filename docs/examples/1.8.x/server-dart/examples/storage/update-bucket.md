@@ -17,7 +17,8 @@ Bucket result = await storage.updateBucket(
     enabled: false, // (optional)
     maximumFileSize: 1, // (optional)
     allowedFileExtensions: [], // (optional)
-    compression: .none, // (optional)
+    compression: Compression.none, // (optional)
     encryption: false, // (optional)
     antivirus: false, // (optional)
+    transformations: false, // (optional)
 );

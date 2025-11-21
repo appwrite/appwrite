@@ -84,7 +84,7 @@ const TEMPLATE_FRAMEWORKS = [
         'installCommand' => '',
         'buildCommand' => 'flutter build web',
         'outputDirectory' => './build/web',
-        'buildRuntime' => 'flutter-3.29',
+        'buildRuntime' => 'flutter-3.35',
         'adapter' => 'static',
         'fallbackFile' => '',
     ],
