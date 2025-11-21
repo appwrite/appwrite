@@ -16,7 +16,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -49,12 +49,14 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -97,6 +99,12 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             }
         }
 
+        try {
+            $emailCanonical = new Email($email);
+        } catch (Throwable) {
+            $emailCanonical = null;
+        }
+
         $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = new Document([
             '$id' => $userId,
@@ -124,6 +132,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'tokens' => null,
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $phone, $name]),
+            'emailCanonical' => $emailCanonical?->getCanonical(),
+            'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+            'emailIsCorporate' => $emailCanonical?->isCorporate(),
+            'emailIsDisposable' => $emailCanonical?->isDisposable(),
+            'emailIsFree' => $emailCanonical?->isFree(),
         ]);
 
         if ($hash === 'plaintext') {
@@ -208,8 +221,8 @@ App::post('/v1/users')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', null, new Email(), 'User email.', true)
-    ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('email', null, new Nullable(new EmailValidator()), 'User email.', true)
+    ->param('phone', null, new Nullable(new Phone()), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -243,7 +256,7 @@ App::post('/v1/users/bcrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -278,7 +291,7 @@ App::post('/v1/users/md5')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using MD5.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -313,7 +326,7 @@ App::post('/v1/users/argon2')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Argon2.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -348,7 +361,7 @@ App::post('/v1/users/sha')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using SHA.')
     ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -390,7 +403,7 @@ App::post('/v1/users/phpass')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using PHPass.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
@@ -425,7 +438,7 @@ App::post('/v1/users/scrypt')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
     ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
     ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.')
@@ -473,7 +486,7 @@ App::post('/v1/users/scrypt-modified')
         ]
     ))
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt Modified.')
     ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
     ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
@@ -527,7 +540,7 @@ App::post('/v1/users/:userId/targets')
 
         switch ($providerType) {
             case 'email':
-                $validator = new Email();
+                $validator = new EmailValidator();
                 if (!$validator->isValid($identifier)) {
                     throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                 }
@@ -605,11 +618,10 @@ App::get('/v1/users')
     ))
     ->param('queries', [], new Users(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForPlatform')
-    ->inject('project')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -649,59 +661,16 @@ App::get('/v1/users')
         $users = [];
         $total = 0;
 
-        $dbForProject->skipFilters(function () use ($dbForProject, $queries, &$users, &$total) {
+        $dbForProject->skipFilters(function () use ($dbForProject, $queries, $includeTotal, &$users, &$total) {
             try {
                 $users = $dbForProject->find('users', $queries);
-                $total = $dbForProject->count('users', $queries, APP_LIMIT_COUNT);
+                $total = $includeTotal ? $dbForProject->count('users', $queries, APP_LIMIT_COUNT) : 0;
             } catch (OrderException $e) {
                 throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
             } catch (QueryException $e) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
         }, ['subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships']);
-
-        $planIds = [];
-        foreach ($users as $u) {
-            $pid = (string) $u->getAttribute('planId', '');
-            if ($pid !== '') {
-                $planIds[$pid] = true;
-            }
-        }
-        $planMap = [];
-        if (!empty($planIds)) {
-            $plans = $dbForPlatform->find('auth_plans', [
-                Query::equal('projectId', [$project->getId()]),
-                Query::equal('planId', array_keys($planIds)),
-                Query::equal('active', [true])
-            ]);
-            foreach ($plans as $p) {
-                $planMap[(string) $p->getAttribute('planId')] = $p;
-            }
-        }
-        $defaultPlan = $dbForPlatform->findOne('auth_plans', [
-            Query::equal('projectId', [$project->getId()]),
-            Query::equal('isDefault', [true]),
-            Query::equal('active', [true])
-        ]);
-        foreach ($users as $u) {
-            $pid = (string) $u->getAttribute('planId', '');
-            $p = null;
-            if ($pid !== '' && isset($planMap[$pid])) {
-                $p = $planMap[$pid];
-            } elseif ($defaultPlan) {
-                $p = $defaultPlan;
-            }
-            if ($p) {
-                $u->setAttribute('plan', [
-                    'id' => $p->getAttribute('planId'),
-                    'name' => $p->getAttribute('name'),
-                    'price' => $p->getAttribute('price'),
-                    'currency' => $p->getAttribute('currency'),
-                    'interval' => $p->getAttribute('interval'),
-                    'isFree' => $p->getAttribute('isFree', false)
-                ]);
-            }
-        }
 
         $response->dynamic(new Document([
             'users' => $users,
@@ -729,186 +698,13 @@ App::get('/v1/users/:userId')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForPlatform')
-    ->inject('project')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Database $dbForPlatform, Document $project) {
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
-        $pid = (string) $user->getAttribute('planId', '');
-        $plan = null;
-        if ($pid !== '') {
-            $candidate = $dbForPlatform->findOne('auth_plans', [
-                Query::equal('projectId', [$project->getId()]),
-                Query::equal('planId', [$pid]),
-                Query::equal('active', [true])
-            ]);
-            $plan = ($candidate instanceof \Utopia\Database\Document && !$candidate->isEmpty()) ? $candidate : null;
-        } else {
-            $candidate = $dbForPlatform->findOne('auth_plans', [
-                Query::equal('projectId', [$project->getId()]),
-                Query::equal('isDefault', [true]),
-                Query::equal('active', [true])
-            ]);
-            $plan = ($candidate instanceof \Utopia\Database\Document && !$candidate->isEmpty()) ? $candidate : null;
-        }
-        if ($plan instanceof \Utopia\Database\Document && !$plan->isEmpty()) {
-            $features = [];
-            $resolvedPlanId = (string) $plan->getAttribute('planId');
-            $assigned = [];
-            if ($resolvedPlanId !== '') {
-                $assigned = Authorization::skip(fn () => $dbForPlatform->find('auth_plan_features', [
-                    Query::equal('projectId', [$project->getId()]),
-                    Query::equal('planId', [$resolvedPlanId]),
-                    Query::equal('active', [true])
-                ]));
-            }
-            $stripeService = new \Appwrite\Auth\Subscription\StripeService(
-                $project->getAttribute('authStripeSecretKey'),
-                $dbForProject,
-                $project,
-                $dbForPlatform
-            );
-            $customerId = (string) $user->getAttribute('stripeCustomerId', '');
-            $periodStart = $user->getAttribute('subscriptionCurrentPeriodStart');
-            $periodEnd = $user->getAttribute('subscriptionCurrentPeriodEnd');
-            $startTs = $periodStart ? strtotime($periodStart) : 0;
-            $endTs = $periodEnd ? strtotime($periodEnd) : time();
-            foreach ($assigned as $af) {
-                $featureId = (string) $af->getAttribute('featureId');
-                $usage = 0;
-                if ((string)$af->getAttribute('type') === 'metered') {
-                    try {
-                        $usage = $stripeService->getFeatureUsageTotalLocal($user->getId(), $resolvedPlanId, $featureId, $startTs, $endTs);
-                    } catch (\Throwable $_) {
-                    }
-                }
-                $features[] = [
-                    'featureId' => (string) $af->getAttribute('featureId'),
-                    'type' => (string) $af->getAttribute('type'),
-                    'enabled' => (bool) $af->getAttribute('enabled', true),
-                    'currency' => $af->getAttribute('currency'),
-                    'interval' => $af->getAttribute('interval'),
-                    'includedUnits' => (int) $af->getAttribute('includedUnits', 0),
-                    'tiersMode' => $af->getAttribute('tiersMode'),
-                    'tiers' => (array) $af->getAttribute('tiers', []),
-                    'usage' => $usage,
-                    'usageCap' => $af->getAttribute('usageCap'),
-                ];
-            }
-            $user->setAttribute('plan', [
-                'id' => $plan->getAttribute('planId'),
-                'name' => $plan->getAttribute('name'),
-                'price' => $plan->getAttribute('price'),
-                'currency' => $plan->getAttribute('currency'),
-                'interval' => $plan->getAttribute('interval'),
-                'isFree' => $plan->getAttribute('isFree', false),
-                'features' => $features
-            ]);
-        }
-
-        $response->dynamic($user, Response::MODEL_USER);
-    });
-
-App::post('/v1/users/:userId/plan')
-    ->desc('Assign plan to user (admin)')
-    ->groups(['api', 'users'])
-    ->label('scope', 'users.write')
-    ->label('sdk', new Method(
-        namespace: 'users',
-        group: 'users',
-        name: 'assignPlan',
-        description: '/docs/references/users/assign-plan.md',
-        auth: [AuthType::KEY],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USER,
-            )
-        ]
-    ))
-    ->param('userId', '', new UID(), 'User ID.')
-    ->param('planId', '', new Text(128), 'Plan ID to assign.')
-    ->param('complimentary', true, new Boolean(), 'If true, create a complimentary Stripe subscription for one billing interval.', true)
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('dbForPlatform')
-    ->action(function (string $userId, string $planId, bool $complimentary, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform) {
-        $user = $dbForProject->getDocument('users', $userId);
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $plan = $dbForPlatform->findOne('auth_plans', [
-            Query::equal('projectId', [$project->getId()]),
-            Query::equal('planId', [$planId]),
-            Query::equal('active', [true])
-        ]);
-        if (!$plan) {
-            throw new Exception(Exception::GENERAL_NOT_FOUND, 'Plan not found');
-        }
-
-        $user->setAttribute('planId', $planId);
-        $now = time();
-        $interval = (string) $plan->getAttribute('interval', 'month');
-        $seconds = match ($interval) {
-            'day' => 86400,
-            'week' => 86400 * 7,
-            'year' => 86400 * 365,
-            default => 86400 * 30,
-        };
-        $user->setAttribute('subscriptionStatus', 'active');
-        $user->setAttribute('subscriptionCurrentPeriodStart', DateTime::format(new \DateTime('@' . $now)));
-        $user->setAttribute('subscriptionCurrentPeriodEnd', DateTime::format(new \DateTime('@' . ($now + $seconds))));
-        $user->setAttribute('subscriptionCancelAtPeriodEnd', true);
-        $user->setAttribute('subscriptionTrialEnd', DateTime::format(new \DateTime('@' . ($now + $seconds))));
-
-        if ($plan->getAttribute('isFree', false) && $project->getAttribute('authSubscriptionsEnabled')) {
-            $stripe = new \Appwrite\Auth\Subscription\StripeService(
-                $project->getAttribute('authStripeSecretKey'),
-                $dbForProject,
-                $project
-            );
-            $subscriptionId = (string) $user->getAttribute('stripeSubscriptionId', '');
-            if ($subscriptionId === '') {
-                $customerId = (string) $user->getAttribute('stripeCustomerId', '');
-                if ($customerId !== '') {
-                    try {
-                        $found = $stripe->findActiveSubscriptionId($customerId);
-                        if (!empty($found)) {
-                            $subscriptionId = (string) $found;
-                        }
-                    } catch (\Throwable $_) {
-                    }
-                }
-            }
-            if ($subscriptionId !== '') {
-                try {
-                    $stripe->cancelSubscription($subscriptionId, false);
-                } catch (\Throwable $_) {
-                }
-                $user->setAttribute('stripeSubscriptionId', null);
-            }
-        } elseif ($complimentary && !$plan->getAttribute('isFree', false) && $project->getAttribute('authSubscriptionsEnabled')) {
-            $stripe = new \Appwrite\Auth\Subscription\StripeService(
-                $project->getAttribute('authStripeSecretKey'),
-                $dbForProject,
-                $project
-            );
-            $customerId = (string) $user->getAttribute('stripeCustomerId', '');
-            if ($customerId === '') {
-                $customerId = $stripe->ensureCustomer($user);
-                $user->setAttribute('stripeCustomerId', $customerId);
-            }
-            $stripe->createComplimentarySubscription($customerId, (string) $plan->getAttribute('stripePriceId'), $interval, $user->getId());
-        }
-
-        $user = $dbForProject->updateDocument('users', $userId, $user);
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -1002,10 +798,11 @@ App::get('/v1/users/:userId/sessions')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Locale $locale) {
+    ->action(function (string $userId, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1027,7 +824,7 @@ App::get('/v1/users/:userId/sessions')
 
         $response->dynamic(new Document([
             'sessions' => $sessions,
-            'total' => count($sessions),
+            'total' => $includeTotal ? count($sessions) : 0,
         ]), Response::MODEL_SESSION_LIST);
     });
 
@@ -1051,9 +848,10 @@ App::get('/v1/users/:userId/memberships')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1087,7 +885,7 @@ App::get('/v1/users/:userId/memberships')
 
         $response->dynamic(new Document([
             'memberships' => $memberships,
-            'total' => count($memberships),
+            'total' => $includeTotal ? count($memberships) : 0,
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
@@ -1110,11 +908,12 @@ App::get('/v1/users/:userId/logs')
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1183,7 +982,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getSequence(), $queries),
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1207,9 +1006,10 @@ App::get('/v1/users/:userId/targets')
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1249,7 +1049,7 @@ App::get('/v1/users/:userId/targets')
         }
         try {
             $targets = $dbForProject->find('targets', $queries);
-            $total = $dbForProject->count('targets', $queries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('targets', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -1278,9 +1078,10 @@ App::get('/v1/users/identities')
     ))
     ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -1317,10 +1118,9 @@ App::get('/v1/users/identities')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
         try {
             $identities = $dbForProject->find('identities', $queries);
-            $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+            $total = $includeTotal ? $dbForProject->count('identities', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
@@ -1615,7 +1415,7 @@ App::patch('/v1/users/:userId/email')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('email', '', new Email(allowEmpty: true), 'User email.')
+    ->param('email', '', new EmailValidator(allowEmpty: true), 'User email.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1650,9 +1450,20 @@ App::patch('/v1/users/:userId/email')
 
         $oldEmail = $user->getAttribute('email');
 
+        try {
+            $emailCanonical = new Email($email);
+        } catch (Throwable) {
+            $emailCanonical = null;
+        }
+
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
+            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
+            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
+            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
+            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
+            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
         ;
 
         try {
@@ -1913,7 +1724,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
 
             switch ($providerType) {
                 case 'email':
-                    $validator = new Email();
+                    $validator = new EmailValidator();
                     if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                     }

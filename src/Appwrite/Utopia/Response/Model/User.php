@@ -133,20 +133,6 @@ class User extends Model
                 'array' => true,
                 'example' => [],
             ])
-            ->addRule('plan', [
-                'type' => self::TYPE_JSON,
-                'description' => 'User subscription plan details.',
-                'required' => false,
-                'default' => new \stdClass(),
-                'example' => [
-                    'id' => 'basic',
-                    'name' => 'Basic',
-                    'price' => 999,
-                    'currency' => 'usd',
-                    'interval' => 'month',
-                    'isFree' => false
-                ],
-            ])
             ->addRule('accessedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_USER_ACCESS / 60 / 60 . ' hours.',
