@@ -4,6 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+    "content-hash": "3999dacf9f2fc437123cca148964cb7e",
     "content-hash": "bdd11652978ebab653ca17a00074343d",
     "packages": [
         {
@@ -4505,16 +4506,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-feat-documents-db",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "bcd7bcb634dea60485c16648e68ed7a255315560"
+                "reference": "18bd7d39dcee09280f40edb12879c727ecec98d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/bcd7bcb634dea60485c16648e68ed7a255315560",
-                "reference": "bcd7bcb634dea60485c16648e68ed7a255315560",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/18bd7d39dcee09280f40edb12879c727ecec98d3",
+                "reference": "18bd7d39dcee09280f40edb12879c727ecec98d3",
                 "shasum": ""
             },
             "require": {
@@ -4554,9 +4555,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/feat-documents-db"
+                "source": "https://github.com/utopia-php/migration/tree/1.4.0"
             },
-            "time": "2025-11-20T13:04:52+00:00"
+            "time": "2025-11-21T06:08:59+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8940,18 +8941,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-feat-documents-db",
-            "alias": "1.1.1",
-            "alias_normalized": "1.1.1.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
