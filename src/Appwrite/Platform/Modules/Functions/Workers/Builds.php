@@ -1107,10 +1107,6 @@ class Builds extends Action
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
             }
@@ -1197,6 +1193,11 @@ class Builds extends Action
 
                 Console::log('Deployment activated');
             }
+
+            // Send realtime event after updating the associated resource so that Console will have the resource's deployment details when re-fetching.
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
 
             if ($resource->getCollection() === 'sites') {
                 // VCS branch
