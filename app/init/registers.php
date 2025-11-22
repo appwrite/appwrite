@@ -315,6 +315,11 @@ $register->set('smtp', function () {
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
+    // Enable SMTP debug in development environment
+    if (System::getEnv('_APP_ENV', 'development') === 'development') {
+        $mail->SMTPDebug = true;
+    }
+
     $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
     $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
