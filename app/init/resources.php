@@ -1022,11 +1022,15 @@ App::setResource('httpReferrerSafe', function (Request $request, string $httpRef
     $protocol = \parse_url($request->getOrigin($httpReferrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($httpReferrer), PHP_URL_PORT);
     $referrer = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
+    $method = $request->getMethod();
 
-    // Safe if route is publicly accessible
-    $route = $utopia->getRoute();
-    if ($route->getLabel('origin', false)) {
-        return $referrer;
+    // For OPTIONS requests, there won't be a route registered in Utopia to match against.
+    if ($method !== Request::METHOD_OPTIONS) {
+        // Safe if route is publicly accessible
+        $route = $utopia->getRoute();
+        if ($route->getLabel('origin', false)) {
+            return $referrer;
+        }
     }
 
     // Safe if added as web platform
