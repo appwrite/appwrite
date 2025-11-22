@@ -198,6 +198,11 @@ class Mails extends Action
         $mail->SMTPAutoTLS = false;
         $mail->CharSet = 'UTF-8';
 
+        // Enable SMTP debug in development environment
+        if (System::getEnv('_APP_ENV', 'development') === 'development') {
+            $mail->SMTPDebug = true;
+        }
+
         $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
 
         $mail->isHTML();
