@@ -72,7 +72,7 @@ class XList extends Action
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->param('useCache', false, new Boolean(true), 'Opt-in to cached responses for select queries. Disabled by default.', true)
-            ->param('ttl', 60, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
+            ->param('ttl', 30, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
@@ -144,7 +144,7 @@ class XList extends Action
                     foreach ($queries as $query) {
                         $serializedQueries[] = $query instanceof Query ? $query->toArray() : $query;
                     }
-
+                
                     $hostname = $dbForProject->getAdapter()->getHostname();
                     $cacheKeyBase = \sprintf(
                         '%s-cache-%s:%s:%s:collection:%s:%s',
@@ -155,13 +155,14 @@ class XList extends Action
                         $collectionId,
                         \md5(\json_encode($serializedQueries))
                     );
-
+                
                     $documentsCacheKey = $cacheKeyBase . ':documents';
                     $totalCacheKey = $cacheKeyBase . ':total';
 
                     $documentsCacheHit = $totalDocumentsCacheHit = false;
 
                     $cachedDocuments = $dbForProject->cache->load($documentsCacheKey, $ttl);
+                   
                     if ($cachedDocuments !== null &&
                         $cachedDocuments !== false &&
                       \is_array($cachedDocuments)) {
@@ -179,9 +180,6 @@ class XList extends Action
                         $dbForProject->cache->save($documentsCacheKey, $documentsArray);
                     }
 
-                    $response->addHeader('X-Appwrite-Cache-Documents', $documentsCacheHit ? 'hit' : 'miss');
-
-
                     if ($includeTotal) {
                         $cachedTotal = $dbForProject->cache->load($totalCacheKey, $ttl);
                         if ($cachedTotal !== null && $cachedTotal !== false) {
@@ -195,7 +193,10 @@ class XList extends Action
                         $total = 0;
                     }
 
-                    $response->addHeader('X-Appwrite-Cache-Documents-Total', $totalDocumentsCacheHit ? 'hit' : 'miss');
+                    $response
+                        ->addHeader('X-Appwrite-Cache-Documents-Total', $totalDocumentsCacheHit ? 'hit' : 'miss')
+                        ->addHeader('X-Appwrite-Cache-Documents', $documentsCacheHit ? 'hit' : 'miss')
+                        ->addHeader('X-Appwrite-Cache-Documents-Ttl', $ttl);
 
                 } else {
                     // has selects, allow relationship on documents
