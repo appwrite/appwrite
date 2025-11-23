@@ -361,7 +361,7 @@ class FunctionsCustomServerTest extends Scope
         $starterTemplate = $this->getTemplate('starter');
         $this->assertEquals(200, $starterTemplate['headers']['status-code']);
 
-        $phpRuntime = array_values(array_filter($starterTemplate['body']['runtimes'], function ($runtime) {
+        $runtime = array_values(array_filter($starterTemplate['body']['runtimes'], function ($runtime) {
             return $runtime['name'] === 'node-22';
         }))[0];
 
@@ -374,15 +374,15 @@ class FunctionsCustomServerTest extends Scope
                 'name' => $starterTemplate['body']['name'],
                 'runtime' => 'node-22',
                 'execute' => $starterTemplate['body']['permissions'],
-                'entrypoint' => $phpRuntime['entrypoint'],
+                'entrypoint' => $runtime['entrypoint'],
                 'events' => $starterTemplate['body']['events'],
                 'schedule' => $starterTemplate['body']['cron'],
                 'timeout' => $starterTemplate['body']['timeout'],
-                'commands' => $phpRuntime['commands'],
+                'commands' => $runtime['commands'],
                 'scopes' => $starterTemplate['body']['scopes'],
                 'templateRepository' => $starterTemplate['body']['providerRepositoryId'],
                 'templateOwner' => $starterTemplate['body']['providerOwner'],
-                'templateRootDirectory' => $phpRuntime['providerRootDirectory'],
+                'templateRootDirectory' => $runtime['providerRootDirectory'],
                 'templateVersion' => $starterTemplate['body']['providerVersion'],
             ]
         );
@@ -399,19 +399,29 @@ class FunctionsCustomServerTest extends Scope
                 'activate' => true,
                 'repository' => $starterTemplate['body']['providerRepositoryId'],
                 'owner' => $starterTemplate['body']['providerOwner'],
-                'rootDirectory' => $phpRuntime['providerRootDirectory'],
-                'version' => $starterTemplate['body']['providerVersion'],
+                'rootDirectory' => $runtime['providerRootDirectory'],
+                'type' => 'tag',
+                'reference' => $starterTemplate['body']['providerVersion'],
             ]
         );
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
+        // Wait for deployment to be ready
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
+
+        // Verify deployment sizes
+        $deployment = $this->getDeployment($functionId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertEquals(0, $deployment['body']['sourceSize']);
-        $this->assertEquals(0, $deployment['body']['buildSize']);
-        $this->assertEquals(0, $deployment['body']['totalSize']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
 
         $deployments = $this->listDeployments($functionId);
 
@@ -433,16 +443,7 @@ class FunctionsCustomServerTest extends Scope
         $lastDeployment = $deployments['body']['deployments'][0];
 
         $this->assertNotEmpty($lastDeployment['$id']);
-        $this->assertEquals(0, $lastDeployment['sourceSize']);
-
-        $deploymentId = $lastDeployment['$id'];
-
-        $this->assertEventually(function () use ($functionId, $deploymentId) {
-            $deployment = $this->getDeployment($functionId, $deploymentId);
-
-            $this->assertEquals(200, $deployment['headers']['status-code']);
-            $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 1000);
+        $this->assertGreaterThan(0, $lastDeployment['sourceSize']);
 
         $function = $this->getFunction($functionId);
 
@@ -511,7 +512,144 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($deployment['body']['$id'], $function['body']['deploymentId']);
         $this->assertEquals($deployment['body']['$createdAt'], $function['body']['deploymentCreatedAt']);
 
-        $function = $this->cleanupFunction($functionId);
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testCreateFunctionAndDeploymentFromTemplateBranch()
+    {
+        $starterTemplate = $this->getTemplate('starter');
+        $this->assertEquals(200, $starterTemplate['headers']['status-code']);
+
+        $runtime = array_values(array_filter($starterTemplate['body']['runtimes'], function ($runtime) {
+            return $runtime['name'] === 'node-22';
+        }))[0];
+
+        // If this fails, the template has variables, and this test needs to be updated
+        $this->assertEmpty($starterTemplate['body']['variables']);
+
+        $function = $this->createFunction(
+            [
+                'functionId' => ID::unique(),
+                'name' => $starterTemplate['body']['name'] . ' - Branch Test',
+                'runtime' => 'node-22',
+                'execute' => $starterTemplate['body']['permissions'],
+                'entrypoint' => $runtime['entrypoint'],
+                'events' => $starterTemplate['body']['events'],
+                'schedule' => $starterTemplate['body']['cron'],
+                'timeout' => $starterTemplate['body']['timeout'],
+                'commands' => $runtime['commands'],
+                'scopes' => $starterTemplate['body']['scopes'],
+            ]
+        );
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        // Deploy using branch
+        $deployment = $this->createTemplateDeployment(
+            $functionId,
+            [
+                'resourceId' => ID::unique(),
+                'activate' => true,
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'rootDirectory' => $runtime['providerRootDirectory'],
+                'type' => 'branch',
+                'reference' => 'main',
+            ]
+        );
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
+
+        $deployment = $this->getDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testCreateFunctionAndDeploymentFromTemplateCommit()
+    {
+        $starterTemplate = $this->getTemplate('starter');
+        $this->assertEquals(200, $starterTemplate['headers']['status-code']);
+
+        // Get latest commit using helper function
+        $latestCommit = $this->helperGetLatestCommit(
+            $starterTemplate['body']['providerOwner'],
+            $starterTemplate['body']['providerRepositoryId']
+        );
+        $this->assertNotNull($latestCommit);
+
+        $runtime = array_values(array_filter($starterTemplate['body']['runtimes'], function ($runtime) {
+            return $runtime['name'] === 'node-22';
+        }))[0];
+
+        // If this fails, the template has variables, and this test needs to be updated
+        $this->assertEmpty($starterTemplate['body']['variables']);
+
+        $function = $this->createFunction(
+            [
+                'functionId' => ID::unique(),
+                'name' => $starterTemplate['body']['name'] . ' - Commit Test',
+                'runtime' => 'node-22',
+                'execute' => $starterTemplate['body']['permissions'],
+                'entrypoint' => $runtime['entrypoint'],
+                'events' => $starterTemplate['body']['events'],
+                'schedule' => $starterTemplate['body']['cron'],
+                'timeout' => $starterTemplate['body']['timeout'],
+                'commands' => $runtime['commands'],
+                'scopes' => $starterTemplate['body']['scopes'],
+            ]
+        );
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        // Deploy using commit
+        $deployment = $this->createTemplateDeployment(
+            $functionId,
+            [
+                'resourceId' => ID::unique(),
+                'activate' => true,
+                'repository' => $starterTemplate['body']['providerRepositoryId'],
+                'owner' => $starterTemplate['body']['providerOwner'],
+                'rootDirectory' => $runtime['providerRootDirectory'],
+                'type' => 'commit',
+                'reference' => $latestCommit,
+            ]
+        );
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentId = $deployment['body']['$id'];
+        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $deployment = $this->getDeployment($functionId, $deploymentId);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 50000, 500);
+
+        $deployment = $this->getDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
+        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+        $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
+        $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupFunction($functionId);
     }
 
     /**

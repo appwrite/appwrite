@@ -1,7 +1,0 @@
-services:
-  appwrite:
-    # volumes:
-    #   - ~/.ssh:/root/.ssh
-    environment:
-      - GH_TOKEN=
-      - GIT_EMAIL=

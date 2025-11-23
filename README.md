@@ -1,4 +1,4 @@
-> We just announced Transactions API for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-transactions-api)
+> We just announced DB operators for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-db-operators)
 
 > Appwrite Cloud is now Generally Available - [Learn more](https://appwrite.io/cloud-ga)
 

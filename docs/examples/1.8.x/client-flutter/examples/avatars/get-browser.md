@@ -7,7 +7,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 // Downloading file
-UInt8List bytes = await avatars.getBrowser(
+Uint8List bytes = await avatars.getBrowser(
     code: Browser.avantBrowser,
     width: 0, // optional
     height: 0, // optional

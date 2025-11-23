@@ -21,6 +21,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Nullable;
 
 class Delete extends Action
 {
@@ -74,7 +75,7 @@ class Delete extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('documentId', '', new UID(), 'Document ID.')
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
@@ -175,6 +176,8 @@ class Delete extends Action
                     1
                 );
             });
+
+            $queueForEvents->reset();
 
             // Return successful response without actually deleting document
             $response->noContent();
