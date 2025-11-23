@@ -68,4 +68,7 @@ return [
 
     // Adobe PDF
     "application/pdf",
+
+    // WebAssembly
+    "application/wasm",
 ];
