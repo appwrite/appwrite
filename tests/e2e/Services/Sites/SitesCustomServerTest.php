@@ -2785,4 +2785,41 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testStaticFileMimeTypes(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Static MIME test site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'adapter' => 'static',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        // Test WASM file MIME type
+        $response = $proxyClient->call(Client::METHOD_GET, '/test.wasm');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('application/wasm', $response['headers']['content-type'], 'WASM files should be served with application/wasm MIME type');
+
+        // Test HTML file MIME type for comparison
+        $response = $proxyClient->call(Client::METHOD_GET, '/index.html');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('text/html', $response['headers']['content-type'], 'HTML files should be served with text/html MIME type');
+
+        $this->cleanupSite($siteId);
+    }
 }
