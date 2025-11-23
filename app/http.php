@@ -437,8 +437,17 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
     if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 
+        // Get MIME type with custom handling for WebAssembly files
+        $uri = $request->getURI();
+        $mimeType = Files::getFileMimeType($uri);
+        
+        // Override MIME type for .wasm files
+        if (\str_ends_with(\strtolower($uri), '.wasm')) {
+            $mimeType = 'application/wasm';
+        }
+
         $response
-            ->setContentType(Files::getFileMimeType($request->getURI()))
+            ->setContentType($mimeType)
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
             ->send(Files::getFileContents($request->getURI()));
