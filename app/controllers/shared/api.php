@@ -343,7 +343,7 @@ App::init()
                 } else {
                     $adminRole = $adminRole->getRole();
                 }
-                $scopes = \array_merge($scopes, $roles[$adminRole]['scopes']);
+                $scopes = \array_merge($scopes, $roles[$adminRole]['scopes'] ?? []);
             }
 
             Authorization::setDefaultStatus($hasProjectSpecificPermissions);  // Cancel security segmentation for admin users.
