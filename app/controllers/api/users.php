@@ -108,7 +108,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
-        
+
         try {
             $emailCanonical = new Email($email);
         } catch (Throwable) {
