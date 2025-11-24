@@ -940,7 +940,7 @@ class UsageTest extends Scope
                 'schedule' => '0 0 1 1 *',
                 'timeout' => 10,
                 'buildSpecification' => Specification::S_8VCPU_8GB,
-                'runtimeSpecification' => Specification::S_8VCPU_8GB, // TODO: Test with different value to ensure it's use correctly
+                'runtimeSpecification' => Specification::S_4VCPU_4GB,
             ]
         );
 
