@@ -140,12 +140,6 @@ class Func extends Model
                 'default' => '',
                 'example' => 'npm install',
             ])
-            ->addRule('startCommand', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Custom command to use when starting function runtime.',
-                'default' => '',
-                'example' => 'node custom-server.mjs',
-            ])
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Version of Open Runtimes used for the function.',
