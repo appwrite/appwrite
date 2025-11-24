@@ -2073,8 +2073,11 @@ App::patch('/v1/projects/:projectId/smtp')
         if ($enabled) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
-            $mail->Username = $username;
-            $mail->Password = $password;
+            if (!empty($username) && !empty($password)){
+                $mail->SMTPAuth = true;
+                $mail->Username = $username;
+                $mail->Password = $password;
+            }
             $mail->Host = $host;
             $mail->Port = $port;
             $mail->SMTPSecure = $secure;
@@ -2088,7 +2091,11 @@ App::patch('/v1/projects/:projectId/smtp')
                     throw new Exception('Connection is not valid.');
                 }
             } catch (Throwable $error) {
-                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
+               if (\str_contains($error->getMessage(), '5.7.8 Authentication Required')) {
+            throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'SMTP authentication failed. Check your username and password.');
+            }
+
+            throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
             }
         }
 
