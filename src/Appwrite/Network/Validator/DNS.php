@@ -2,115 +2,69 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\DNS\Client;
-use Utopia\DNS\Message;
-use Utopia\DNS\Message\Question;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\DNS\Message\Record;
-use Utopia\Domains\Domain;
-use Utopia\System\System;
-use Utopia\Validator;
+use Utopia\DNS\Validator\DNS as BaseDNS;
 
-class DNS extends Validator
+class DNS extends BaseDNS
 {
-    public function __construct(
-        protected string $target,
-        protected int $type = Record::TYPE_CNAME,
-        protected string $server = ''
-    ) {
-        $this->server = $server ?: System::getEnv('_APP_DNS', '8.8.8.8');
+    /**
+     * @var array<string>
+     */
+    protected array $dnsServers = [];
+
+    /**
+     * @param string $target Expected value for the DNS record
+     * @param int $type Type of DNS record to validate
+     *  For value, use const from Record, such as Record::TYPE_A
+     *  When using CAA type, you can provide exact match, or just issuer domain as $target
+     * @param array<string> $dnsServers DNS server IP(s) or domain(s) to use for validation
+     */
+    public function __construct(string $target, int $type = Record::TYPE_CNAME, array $dnsServers = [])
+    {
+        parent::__construct($target, $type, $dnsServers[0] ?? self::DEFAULT_DNS_SERVER);
+
+        $this->dnsServers = $dnsServers;
     }
 
-    public function getDescription(): string
+    /**
+     * Validate DNS record value against multiple DNS servers
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    public function isValid(mixed $value): bool
     {
-        return 'Invalid DNS record.';
-    }
+        $wg = new WaitGroup();
+        $failedValidator = null;
 
-    public function isValid($value): bool
-    {
-        if (!is_string($value) || trim($value) === '') {
-            return false;
-        }
+        foreach ($this->dnsServers as $dnsServer) {
+            $wg->add();
 
-        $client = new Client($this->server);
-        try {
-            $response = $client->query(Message::query(
-                new Question($value, $this->type)
-            ));
-        } catch (\Throwable) {
-            return false;
-        }
+            \go(function () use ($value, $dnsServer, $wg, &$failedValidator) {
+                try {
+                    $validator = new BaseDNS($this->target, $this->type, $dnsServer);
+                    $isValid = $validator->isValid($value);
 
-        $typeMatches = array_filter(
-            $response->answers,
-            fn (Record $record) => $record->type === $this->type
-        );
-
-        if (empty($typeMatches)) {
-            if ($this->type === Record::TYPE_CAA) {
-                return $this->validateParentCAA($value);
-            }
-
-            return false;
-        }
-
-        foreach ($typeMatches as $record) {
-            if ($this->type === Record::TYPE_CAA) {
-                $valuePart = $this->extractCAAValue($record->rdata);
-                if ($valuePart !== '' && $valuePart === $this->target) {
-                    return true;
+                    if (!$isValid) {
+                        $failedValidator = $validator;
+                    }
+                } finally {
+                    $wg->done();
                 }
-            }
-
-            if ($record->rdata === $this->target) {
-                return true;
-            }
+            });
         }
 
-        return false;
-    }
+        $wg->wait();
 
-    private function validateParentCAA(string $domain): bool
-    {
-        try {
-            $domainInfo = new Domain($domain);
-        } catch (\Throwable) {
+        if (!\is_null($failedValidator)) {
+            $this->count = $failedValidator->count;
+            $this->value = $failedValidator->value;
+            $this->reason = $failedValidator->reason;
+            $this->records = $failedValidator->records;
             return false;
         }
 
-        if ($domainInfo->get() === $domainInfo->getApex()) {
-            return true;
-        }
-
-        $parts = explode('.', $domainInfo->get());
-        array_shift($parts);
-        $parent = implode('.', $parts);
-
-        if ($parent === '') {
-            return false;
-        }
-
-        $validator = new self($this->target, Record::TYPE_CAA, $this->server);
-        return $validator->isValid($parent);
-    }
-
-    private function extractCAAValue(string $rdata): string
-    {
-        $parts = explode(' ', $rdata, 3);
-        if (count($parts) < 3) {
-            return '';
-        }
-
-        $value = trim($parts[2], '"');
-        return explode(';', $value)[0] ?? '';
-    }
-
-    public function isArray(): bool
-    {
-        return false;
-    }
-
-    public function getType(): string
-    {
-        return self::TYPE_STRING;
+        return true;
     }
 }

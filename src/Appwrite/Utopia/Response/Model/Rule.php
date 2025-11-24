@@ -84,17 +84,16 @@ class Rule extends Model
                 'example' => 'main',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_ENUM,
-                'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
-                'default' => 'created',
-                'example' => 'verified',
-                'enum' => ['created', 'verifying', 'verified', 'unverified'],
+                'type' => self::TYPE_STRING,
+                'description' => 'Domain verification status. Possible values are "' . RULE_STATUS_VERIFICATION_FAILED . '", "' . RULE_STATUS_GENERATING_CERTIFICATE . '", "' . RULE_STATUS_SUCCESSFUL . '" and "' . RULE_STATUS_GENERATION_FAILED . '"',
+                'default' => '',
+                'example' => RULE_STATUS_SUCCESSFUL,
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate generation logs. This will return an empty string if generation did not run, or succeeded.',
+                'description' => 'Logs from rule verification or certificate generation. Priority: certificate logs if both have values, otherwise whichever is not empty.',
                 'default' => '',
-                'example' => 'HTTP challegne failed.',
+                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
             ])
             ->addRule('renewAt', [
                 'type' => self::TYPE_DATETIME,

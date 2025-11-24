@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Action as PlatformAction;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -19,7 +19,7 @@ use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
-class Base extends Action
+class Action extends PlatformAction
 {
     /**
      * Get default specification based on plan and available specifications.
@@ -252,7 +252,7 @@ class Base extends Action
                 'deploymentResourceId' => $site->getId(),
                 'deploymentResourceInternalId' => $site->getSequence(),
                 'deploymentVcsProviderBranch' => $providerBranch,
-                'status' => 'verified',
+                'status' => RULE_STATUS_SUCCESSFUL,
                 'certificateId' => '',
                 'search' => implode(' ', [$ruleId, $domain]),
                 'owner' => 'Appwrite',
@@ -278,7 +278,7 @@ class Base extends Action
                         'deploymentResourceId' => $site->getId(),
                         'deploymentResourceInternalId' => $site->getSequence(),
                         'deploymentVcsProviderBranch' => $providerBranch,
-                        'status' => 'verified',
+                        'status' => RULE_STATUS_SUCCESSFUL,
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
                         'owner' => 'Appwrite',
@@ -315,7 +315,7 @@ class Base extends Action
                         'deploymentResourceId' => $site->getId(),
                         'deploymentResourceInternalId' => $site->getSequence(),
                         'deploymentVcsProviderBranch' => $providerBranch,
-                        'status' => 'verified',
+                        'status' => RULE_STATUS_SUCCESSFUL,
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
                         'owner' => 'Appwrite',

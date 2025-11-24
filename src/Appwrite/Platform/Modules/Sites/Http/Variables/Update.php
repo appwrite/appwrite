@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Variables;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -11,13 +11,12 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
-class Update extends Base
+class Update extends Action
 {
     use HTTP;
 

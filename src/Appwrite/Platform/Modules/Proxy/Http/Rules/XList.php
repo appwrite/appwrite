@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,7 +14,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -107,9 +107,23 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $rules = $dbForPlatform->find('rules', $queries);
+
+        // Fill response model
         foreach ($rules as $rule) {
             $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
-            $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+
+            // Merge logs: priority to certificate logs if both have values, otherwise use whichever is not empty
+            $ruleLogs = $rule->getAttribute('logs', '');
+            $certificateLogs = $certificate->getAttribute('logs', '');
+            $logs = '';
+            if (!empty($certificateLogs) && !empty($ruleLogs)) {
+                $logs = $certificateLogs; // Certificate logs have priority
+            } elseif (!empty($certificateLogs)) {
+                $logs = $certificateLogs;
+            } elseif (!empty($ruleLogs)) {
+                $logs = $ruleLogs;
+            }
+            $rule->setAttribute('logs', $logs);
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         }
 

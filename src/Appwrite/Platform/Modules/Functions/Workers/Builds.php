@@ -9,6 +9,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Permission;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\Role;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
@@ -33,7 +34,6 @@ use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
 use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
-use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
@@ -1226,7 +1226,7 @@ class Builds extends Action
                             'deploymentResourceId' => $deployment->getId(),
                             'deploymentResourceInternalId' => $deployment->getSequence(),
                             'deploymentVcsProviderBranch' => $branchName,
-                            'status' => 'verified',
+                            'status' => RULE_STATUS_SUCCESSFUL,
                             'certificateId' => '',
                             'search' => implode(' ', [$ruleId, $domain]),
                             'owner' => 'Appwrite',

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Sites\Http\Deployments;
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Compute\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -19,7 +20,6 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
@@ -288,7 +288,7 @@ class Create extends Action
                         'deploymentResourceType' => 'site',
                         'deploymentResourceId' => $site->getId(),
                         'deploymentResourceInternalId' => $site->getSequence(),
-                        'status' => 'verified',
+                        'status' => RULE_STATUS_SUCCESSFUL,
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
                         'owner' => 'Appwrite',
@@ -353,7 +353,7 @@ class Create extends Action
                         'deploymentResourceType' => 'site',
                         'deploymentResourceId' => $site->getId(),
                         'deploymentResourceInternalId' => $site->getSequence(),
-                        'status' => 'verified',
+                        'status' => RULE_STATUS_SUCCESSFUL,
                         'certificateId' => '',
                         'search' => implode(' ', [$ruleId, $domain]),
                         'owner' => 'Appwrite',
