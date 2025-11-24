@@ -93,12 +93,18 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ), 'Build specification for the function deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function executions.', true, ['plan'])
             ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
@@ -136,7 +142,8 @@ class Create extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
         string $templateRepository,
         string $templateOwner,
         string $templateRootDirectory,
@@ -231,7 +238,8 @@ class Create extends Base
                 'providerBranch' => $providerBranch,
                 'providerRootDirectory' => $providerRootDirectory,
                 'providerSilentMode' => $providerSilentMode,
-                'specification' => $specification
+                'buildSpecification' => $buildSpecification,
+                'runtimeSpecification' => $runtimeSpecification,
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);

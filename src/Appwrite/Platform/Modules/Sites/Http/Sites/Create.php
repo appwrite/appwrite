@@ -79,12 +79,18 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Framework specification for the site and builds.', true, ['plan'])
+            ), 'Build specification for the site deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function SSR executions.', true, ['plan'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -112,7 +118,8 @@ class Create extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -164,7 +171,8 @@ class Create extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
         ]));
