@@ -82,12 +82,18 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Framework specification for the site and builds.', true, ['plan'])
+            ), 'Build specification for the site deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function SSR executions.', true, ['plan'])
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -118,7 +124,8 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -233,14 +240,22 @@ class Update extends Base
             $live = false;
         }
 
-        // Enforce Cold Start if spec limits change.
-        if ($site->getAttribute('specification') !== $specification && !empty($site->getAttribute('deploymentId'))) {
-            try {
-                $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
-            } catch (\Throwable $th) {
-                // Don't throw if the deployment doesn't exist
-                if ($th->getCode() !== 404) {
-                    throw $th;
+        if (!empty($site->getAttribute('deploymentId'))) {
+            $specsChanged = false;
+            if ($site->getAttribute('runtimeSpecification') !== $runtimeSpecification) {
+                $specsChanged = true;
+            } elseif ($site->getAttribute('buildSpecification') !== $buildSpecification) {
+                $specsChanged = true;
+            }
+
+            if ($specsChanged) {
+                try {
+                    $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
+                } catch (\Throwable $th) {
+                    // Don't throw if the deployment doesn't exist
+                    if ($th->getCode() !== 404) {
+                        throw $th;
+                    }
                 }
             }
         }
@@ -263,7 +278,8 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
