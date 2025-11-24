@@ -77,7 +77,6 @@ class Create extends Action
                 )
             ])
             ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
-            ->inject('requestTimestamp')
             ->inject('response')
             ->inject('project')
             ->inject('user')
@@ -88,7 +87,6 @@ class Create extends Action
 
     public function action(
         string $type,
-        ?\DateTime $requestTimestamp,
         Response $response,
         Document $project,
         Document $user,
