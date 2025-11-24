@@ -2579,7 +2579,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    public function testDomainForFailedDeloyment(): void
+    public function testDomainForFailedDeployment(): void
     {
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),
