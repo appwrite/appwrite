@@ -538,6 +538,10 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 }
             }
 
+            if (!empty($deployment->getAttribute('startCommand', ''))) {
+                $startCommand = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
+            }
+
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
                 default => "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$startCommand\"",

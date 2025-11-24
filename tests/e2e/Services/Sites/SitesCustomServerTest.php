@@ -2967,6 +2967,65 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSiteCustomStartCommand(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Astro site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'startCommand' => 'node custom-server.js',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro-custom-start-command'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Homepage OK", $response['body']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("SSR OK", $response['body']);
+        $originalBody = $response['body'];
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("SSR OK", $response['body']);
+        $this->assertNotEquals($originalBody, $response['body']); // Includes Date.now()
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr-custom');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Custom SSR OK", $response['body']);
+        $originalBody = $response['body'];
+        $response = $proxyClient->call(Client::METHOD_GET, '/ssr-custom');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Custom SSR OK", $response['body']);
+        $this->assertNotEquals($originalBody, $response['body']); // Includes Date.now()
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/non-existing');
+        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertStringContainsString("Custom error", $response['body']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testSiteSpecifications()
     {
         // Check if the site specifications are correctly set in builds
