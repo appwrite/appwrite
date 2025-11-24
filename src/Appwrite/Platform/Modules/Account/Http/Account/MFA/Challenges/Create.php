@@ -293,7 +293,7 @@ class Create extends Action
                     'user' => $user->getAttribute('name'),
                     'project' => $project->getAttribute('name'),
                     'otp' => $code,
-                    'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+                    'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
                     'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
                 ];
