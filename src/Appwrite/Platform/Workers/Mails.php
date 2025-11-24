@@ -185,8 +185,8 @@ class Mails extends Action
 
         $mail->isSMTP();
 
-        $username = $smtp['username'];
-        $password = $smtp['password'];
+       $username = $smtp['username'] ?? ''; // Ensure safe access
+       $password = $smtp['password'] ?? ''; // Ensure safe access
 
         $mail->XMailer = 'Appwrite Mailer';
         $mail->Host = $smtp['host'];
