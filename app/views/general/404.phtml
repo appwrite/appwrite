@@ -95,6 +95,26 @@
             border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #D8D8DB);
             background: var(--color-bgColor-neutral-primary, #FFF);
             color: var(--color-fgColor-neutral-secondary, #56565C);
+            transition: all 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background: #F5F5F5;
+            border-color: #B8B8BB;
+            transform: translateY(-1px);
+        }
+
+        button:focus {
+            outline: 2px solid #5A67D8;
+            outline-offset: 2px;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        a {
+            text-decoration: none;
         }
 
         .center {
@@ -144,6 +164,15 @@
                 border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #414146);
                 background: var(--color-bgColor-neutral-primary, #1D1D21);
                 color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            button:hover {
+                background: #2D2D31;
+                border-color: #56565C;
+            }
+
+            button:focus {
+                outline-color: #818CF8;
             }
 
             .brand p {
