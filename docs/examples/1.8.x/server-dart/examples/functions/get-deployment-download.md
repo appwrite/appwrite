@@ -7,7 +7,7 @@ Client client = Client()
 
 Functions functions = Functions(client);
 
-UInt8List result = await functions.getDeploymentDownload(
+Uint8List result = await functions.getDeploymentDownload(
     functionId: '<FUNCTION_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
     type: DeploymentDownloadType.source, // (optional)

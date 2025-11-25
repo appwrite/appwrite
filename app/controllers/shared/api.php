@@ -613,6 +613,10 @@ App::init()
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
+                    if (!$bucket->getAttribute('transformations', true) && !$isAppUser && !$isPrivilegedUser) {
+                        throw new Exception(Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED);
+                    }
+
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
                     $validator = new Authorization(Database::PERMISSION_READ);
                     $valid = $validator->isValid($bucket->getRead());
