@@ -31,7 +31,10 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Detector\Detection\Framework\Analog;
 use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
@@ -1033,10 +1036,11 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('gitHub')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $type, string $search, GitHub $github, Response $response, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $type, string $search, array $queries, GitHub $github, Response $response, Database $dbForPlatform) {
         if (empty($search)) {
             $search = "";
         }
@@ -1052,11 +1056,16 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
-        $page = 1;
-        $perPage = 4;
+        $queries = Query::parseQueries($queries);
+        $limitQuery = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT);
+        $offsetQuery = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET);
+
+        $limit = !empty($limitQuery) ? $limitQuery[0]->getValue() : 4;
+        $offset = !empty($offsetQuery) ? $offsetQuery[0]->getValue() : 0;
+        $page = ($offset / $limit) + 1;
 
         $owner = $github->getOwnerName($providerInstallationId);
-        $repos = $github->searchRepositories($owner, $page, $perPage, $search);
+        ['items' => $repos, 'total' => $total] = $github->searchRepositories($owner, $page, $limit, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id'] ?? '');
@@ -1228,7 +1237,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
         $response->dynamic(new Document([
             $type === 'framework' ? 'frameworkProviderRepositories' : 'runtimeProviderRepositories' => $repos,
-            'total' => \count($repos),
+            'total' => $total,
         ]), ($type === 'framework') ? Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST : Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST);
     });
 
