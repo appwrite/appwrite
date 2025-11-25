@@ -11,7 +11,7 @@ Databases databases = new Databases(client);
 
 databases.listCollections(
     "<DATABASE_ID>", // databaseId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {

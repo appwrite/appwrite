@@ -10,7 +10,7 @@ Client client = new Client()
 TablesDB tablesDB = new TablesDB(client);
 
 tablesDB.list(
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
