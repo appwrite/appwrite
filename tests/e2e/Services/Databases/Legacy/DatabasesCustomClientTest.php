@@ -229,7 +229,7 @@ class DatabasesCustomClientTest extends Scope
     public function testUpdateTwoWayRelationship(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -325,7 +325,7 @@ class DatabasesCustomClientTest extends Scope
     public function testRelationshipSameTwoWayKey(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -489,7 +489,7 @@ class DatabasesCustomClientTest extends Scope
     public function testUpdateWithoutRelationPermission(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }

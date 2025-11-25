@@ -1319,8 +1319,9 @@ class DatabasesCustomServerTest extends Scope
     public function testColumnRowWidthLimit()
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB does not have a row collection attribute limit');
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
@@ -3265,8 +3266,9 @@ class DatabasesCustomServerTest extends Scope
     public function testColumnUpdateStringResize(array $data)
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB does not have an attribute resize limit');
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $key = 'string';
@@ -3641,8 +3643,9 @@ class DatabasesCustomServerTest extends Scope
     public function createRelationshipTables(): void
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         // Prepare the database with tables and relationships
@@ -3706,8 +3709,9 @@ class DatabasesCustomServerTest extends Scope
     public function testColumnRenameRelationshipOneToMany()
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';
@@ -3825,8 +3829,9 @@ class DatabasesCustomServerTest extends Scope
     public function testColumnRenameRelationshipOneToOne()
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';
@@ -3943,8 +3948,9 @@ class DatabasesCustomServerTest extends Scope
 
     public function testColumnRenameRelationshipManyToOne()
     {
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';
@@ -4066,8 +4072,9 @@ class DatabasesCustomServerTest extends Scope
     public function testColumnRenameRelationshipManyToMany()
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         $databaseId = 'database1';
@@ -4383,45 +4390,47 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         // TEST FAIL - Can't bulk create in a table with relationships
-        $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'tableId' => ID::unique(),
-            'name' => 'Bulk Related',
-            'rowSecurity' => true,
-            'permissions' => [],
-        ]);
+        if ($this->getSupportForRelationships()) {
+            $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'tableId' => ID::unique(),
+                'name' => 'Bulk Related',
+                'rowSecurity' => true,
+                'permissions' => [],
+            ]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'relatedTableId' => $table2['body']['$id'],
-            'type' => 'manyToOne',
-            'twoWay' => true,
-            'onDelete' => 'cascade',
-            'key' => 'level2',
-            'twoWayKey' => 'level1'
-        ]);
+            $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], $this->getHeaders()), [
+                'relatedTableId' => $table2['body']['$id'],
+                'type' => 'manyToOne',
+                'twoWay' => true,
+                'onDelete' => 'cascade',
+                'key' => 'level2',
+                'twoWayKey' => 'level1'
+            ]);
 
-        $this->assertEquals(202, $response['headers']['status-code']);
+            $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+            sleep(1);
 
-        $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$data['$id']}/rows", array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'rows' => [
-                ['$id' => ID::unique(), 'number' => 1,],
-                ['$id' => ID::unique(), 'number' => 2,],
-            ],
-        ]);
+            $response = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$data['$id']}/rows", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'rows' => [
+                    ['$id' => ID::unique(), 'number' => 1,],
+                    ['$id' => ID::unique(), 'number' => 2,],
+                ],
+            ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 
     public function testBulkUpdate(): void
@@ -4671,47 +4680,49 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(10, $rows['body']['total']);
 
         // TEST: Fail - Can't bulk update in a table with relationships
-        $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'tableId' => ID::unique(),
-            'name' => 'Bulk Related',
-            'rowSecurity' => true,
-            'permissions' => [],
-        ]);
+        if ($this->getSupportForRelationships()) {
+            $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'tableId' => ID::unique(),
+                'name' => 'Bulk Related',
+                'rowSecurity' => true,
+                'permissions' => [],
+            ]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'relatedTableId' => $table2['body']['$id'],
-            'type' => 'manyToOne',
-            'twoWay' => true,
-            'onDelete' => 'cascade',
-            'key' => 'level2',
-            'twoWayKey' => 'level1'
-        ]);
+            $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], $this->getHeaders()), [
+                'relatedTableId' => $table2['body']['$id'],
+                'type' => 'manyToOne',
+                'twoWay' => true,
+                'onDelete' => 'cascade',
+                'key' => 'level2',
+                'twoWayKey' => 'level1'
+            ]);
 
-        $this->assertEquals(202, $response['headers']['status-code']);
+            $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+            sleep(1);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'number' => 500
-            ],
-            'queries' => [
-                Query::equal('number', [300])->toString(),
-            ],
-        ]);
+            $response = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'number' => 500
+                ],
+                'queries' => [
+                    Query::equal('number', [300])->toString(),
+                ],
+            ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 
     public function testBulkUpsert(): void
@@ -4864,47 +4875,49 @@ class DatabasesCustomServerTest extends Scope
         ], $response['body']['rows'][1]['$permissions']);
 
         // TEST: Fail - Can't bulk upsert in a table with relationships
-        $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'tableId' => ID::unique(),
-            'name' => 'Bulk Related',
-            'rowSecurity' => true,
-            'permissions' => [],
-        ]);
+        if ($this->getSupportForRelationships()) {
+            $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'tableId' => ID::unique(),
+                'name' => 'Bulk Related',
+                'rowSecurity' => true,
+                'permissions' => [],
+            ]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'relatedTableId' => $table2['body']['$id'],
-            'type' => 'manyToOne',
-            'twoWay' => true,
-            'onDelete' => 'cascade',
-            'key' => 'level2',
-            'twoWayKey' => 'level1'
-        ]);
+            $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], $this->getHeaders()), [
+                'relatedTableId' => $table2['body']['$id'],
+                'type' => 'manyToOne',
+                'twoWay' => true,
+                'onDelete' => 'cascade',
+                'key' => 'level2',
+                'twoWayKey' => 'level1'
+            ]);
 
-        $this->assertEquals(202, $response['headers']['status-code']);
+            $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+            sleep(1);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'rows' => [
-                [
-                    '$id' => '1',
-                    'number' => 1000,
+            $response = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'rows' => [
+                    [
+                        '$id' => '1',
+                        'number' => 1000,
+                    ],
                 ],
-            ],
-        ]);
+            ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 
     public function testBulkDelete(): void
@@ -5205,40 +5218,42 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(0, $rows['body']['total']);
 
         // TEST: Fail - Can't bulk delete in a table with relationships
-        $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'tableId' => ID::unique(),
-            'name' => 'Bulk Related',
-            'rowSecurity' => true,
-            'permissions' => [],
-        ]);
+        if ($this->getSupportForRelationships()) {
+            $table2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'tableId' => ID::unique(),
+                'name' => 'Bulk Related',
+                'rowSecurity' => true,
+                'permissions' => [],
+            ]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'relatedTableId' => $table2['body']['$id'],
-            'type' => 'manyToOne',
-            'twoWay' => true,
-            'onDelete' => 'cascade',
-            'key' => 'level2',
-            'twoWayKey' => 'level1'
-        ]);
+            $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['$id'] . '/columns/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], $this->getHeaders()), [
+                'relatedTableId' => $table2['body']['$id'],
+                'type' => 'manyToOne',
+                'twoWay' => true,
+                'onDelete' => 'cascade',
+                'key' => 'level2',
+                'twoWayKey' => 'level1'
+            ]);
 
-        $this->assertEquals(202, $response['headers']['status-code']);
+            $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+            sleep(1);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+            $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['$id'] . '/rows', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
     }
 
     public function testDateTimeRow(): void
@@ -6187,8 +6202,9 @@ class DatabasesCustomServerTest extends Scope
     public function testSpatialBulkOperations(): void
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+        if (!$this->getSupportForSpatials()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         // Create database
@@ -6601,8 +6617,9 @@ class DatabasesCustomServerTest extends Scope
     public function testSpatialBulkOperationsWithLineStrings(): void
     {
 
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
+        if (!$this->getSupportForSpatials()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         // Create database

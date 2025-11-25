@@ -606,7 +606,7 @@ class DatabaseServerTest extends Scope
      */
     public function testCreateRelationshipColumn(array $data): array
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return $data;
         }
@@ -643,7 +643,7 @@ class DatabaseServerTest extends Scope
      */
     public function testUpdateRelationshipColumn(array $data): array
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return $data;
         }

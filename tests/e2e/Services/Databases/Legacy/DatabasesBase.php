@@ -271,17 +271,20 @@ trait DatabasesBase
             'required' => false,
         ]);
 
-        $relationship = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedCollectionId' => $data['actorsId'],
-            'type' => 'oneToMany',
-            'twoWay' => true,
-            'key' => 'starringActors',
-            'twoWayKey' => 'movie'
-        ]);
+        $relationship = null;
+        if ($this->getSupportForRelationships()) {
+            $relationship = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'relatedCollectionId' => $data['actorsId'],
+                'type' => 'oneToMany',
+                'twoWay' => true,
+                'key' => 'starringActors',
+                'twoWayKey' => 'movie'
+            ]);
+        }
 
         $integers = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
@@ -351,13 +354,15 @@ trait DatabasesBase
         $this->assertEquals($datetime['body']['type'], 'datetime');
         $this->assertEquals($datetime['body']['required'], false);
 
-        $this->assertEquals($relationship['headers']['status-code'], 202);
-        $this->assertEquals($relationship['body']['key'], 'starringActors');
-        $this->assertEquals($relationship['body']['type'], 'relationship');
-        $this->assertEquals($relationship['body']['relatedCollection'], $data['actorsId']);
-        $this->assertEquals($relationship['body']['relationType'], 'oneToMany');
-        $this->assertEquals($relationship['body']['twoWay'], true);
-        $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals($relationship['headers']['status-code'], 202);
+            $this->assertEquals($relationship['body']['key'], 'starringActors');
+            $this->assertEquals($relationship['body']['type'], 'relationship');
+            $this->assertEquals($relationship['body']['relatedCollection'], $data['actorsId']);
+            $this->assertEquals($relationship['body']['relationType'], 'oneToMany');
+            $this->assertEquals($relationship['body']['twoWay'], true);
+            $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
+        }
 
         $this->assertEquals(202, $integers['headers']['status-code']);
         $this->assertEquals($integers['body']['key'], 'integers');
@@ -383,7 +388,7 @@ trait DatabasesBase
         ]));
 
         $this->assertIsArray($movies['body']['attributes']);
-        $this->assertCount(10, $movies['body']['attributes']);
+        $this->assertCount($this->getSupportForRelationships() ? 10 : 9, $movies['body']['attributes']);
         $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['attributes'][1]['key'], $description['body']['key']);
         $this->assertEquals($movies['body']['attributes'][2]['key'], $tagline['body']['key']);
@@ -391,9 +396,14 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['attributes'][4]['key'], $duration['body']['key']);
         $this->assertEquals($movies['body']['attributes'][5]['key'], $actors['body']['key']);
         $this->assertEquals($movies['body']['attributes'][6]['key'], $datetime['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][7]['key'], $relationship['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][8]['key'], $integers['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][9]['key'], $integers2['body']['key']);
+        if (!$this->getSupportForRelationships()) {
+            $this->assertEquals($movies['body']['attributes'][7]['key'], $integers['body']['key']);
+            $this->assertEquals($movies['body']['attributes'][8]['key'], $integers2['body']['key']);
+        } else {
+            $this->assertEquals($movies['body']['attributes'][7]['key'], $relationship['body']['key']);
+            $this->assertEquals($movies['body']['attributes'][8]['key'], $integers['body']['key']);
+            $this->assertEquals($movies['body']['attributes'][9]['key'], $integers2['body']['key']);
+        }
 
         return $data;
     }
@@ -493,7 +503,7 @@ trait DatabasesBase
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
 
-        $maxLength = $this->isMongoDB() ? 1024 : 768;
+        $maxLength = $this->getMaxIndexLength();
 
         $this->assertStringContainsString('Index length is longer than the maximum: '.$maxLength, $attribute['body']['message']);
     }
@@ -675,17 +685,20 @@ trait DatabasesBase
             'default' => null,
         ]);
 
-        $relationship = $this->client->call(Client::METHOD_POST, $attributesPath . '/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedCollectionId' => $data['actorsId'],
-            'type' => 'oneToMany',
-            'twoWay' => true,
-            'key' => 'relationship',
-            'twoWayKey' => 'twoWayKey'
-        ]);
+        $relationship = null;
+        if ($this->getSupportForRelationships()) {
+            $relationship = $this->client->call(Client::METHOD_POST, $attributesPath . '/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'relatedCollectionId' => $data['actorsId'],
+                'type' => 'oneToMany',
+                'twoWay' => true,
+                'key' => 'relationship',
+                'twoWayKey' => 'twoWayKey'
+            ]);
+        }
 
         $strings = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
             'content-type' => 'application/json',
@@ -784,15 +797,17 @@ trait DatabasesBase
         $this->assertEquals(false, $datetime['body']['array']);
         $this->assertEquals(null, $datetime['body']['default']);
 
-        $this->assertEquals(202, $relationship['headers']['status-code']);
-        $this->assertEquals('relationship', $relationship['body']['key']);
-        $this->assertEquals('relationship', $relationship['body']['type']);
-        $this->assertEquals(false, $relationship['body']['required']);
-        $this->assertEquals(false, $relationship['body']['array']);
-        $this->assertEquals($data['actorsId'], $relationship['body']['relatedCollection']);
-        $this->assertEquals('oneToMany', $relationship['body']['relationType']);
-        $this->assertEquals(true, $relationship['body']['twoWay']);
-        $this->assertEquals('twoWayKey', $relationship['body']['twoWayKey']);
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals(202, $relationship['headers']['status-code']);
+            $this->assertEquals('relationship', $relationship['body']['key']);
+            $this->assertEquals('relationship', $relationship['body']['type']);
+            $this->assertEquals(false, $relationship['body']['required']);
+            $this->assertEquals(false, $relationship['body']['array']);
+            $this->assertEquals($data['actorsId'], $relationship['body']['relatedCollection']);
+            $this->assertEquals('oneToMany', $relationship['body']['relationType']);
+            $this->assertEquals(true, $relationship['body']['twoWay']);
+            $this->assertEquals('twoWayKey', $relationship['body']['twoWayKey']);
+        }
 
         $this->assertEquals(202, $strings['headers']['status-code']);
         $this->assertEquals('names', $strings['body']['key']);
@@ -867,11 +882,14 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $relationshipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $relationship['body']['key'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        $relationshipResponse = null;
+        if ($this->getSupportForRelationships()) {
+            $relationshipResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $relationship['body']['key'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+        }
 
         $stringsResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $strings['body']['key'], array_merge([
             'content-type' => 'application/json',
@@ -967,16 +985,18 @@ trait DatabasesBase
         $this->assertEquals($datetime['body']['array'], $datetimeResponse['body']['array']);
         $this->assertEquals($datetime['body']['default'], $datetimeResponse['body']['default']);
 
-        $this->assertEquals(200, $relationshipResponse['headers']['status-code']);
-        $this->assertEquals($relationship['body']['key'], $relationshipResponse['body']['key']);
-        $this->assertEquals($relationship['body']['type'], $relationshipResponse['body']['type']);
-        $this->assertEquals('available', $relationshipResponse['body']['status']);
-        $this->assertEquals($relationship['body']['required'], $relationshipResponse['body']['required']);
-        $this->assertEquals($relationship['body']['array'], $relationshipResponse['body']['array']);
-        $this->assertEquals($relationship['body']['relatedCollection'], $relationshipResponse['body']['relatedCollection']);
-        $this->assertEquals($relationship['body']['relationType'], $relationshipResponse['body']['relationType']);
-        $this->assertEquals($relationship['body']['twoWay'], $relationshipResponse['body']['twoWay']);
-        $this->assertEquals($relationship['body']['twoWayKey'], $relationshipResponse['body']['twoWayKey']);
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals(200, $relationshipResponse['headers']['status-code']);
+            $this->assertEquals($relationship['body']['key'], $relationshipResponse['body']['key']);
+            $this->assertEquals($relationship['body']['type'], $relationshipResponse['body']['type']);
+            $this->assertEquals('available', $relationshipResponse['body']['status']);
+            $this->assertEquals($relationship['body']['required'], $relationshipResponse['body']['required']);
+            $this->assertEquals($relationship['body']['array'], $relationshipResponse['body']['array']);
+            $this->assertEquals($relationship['body']['relatedCollection'], $relationshipResponse['body']['relatedCollection']);
+            $this->assertEquals($relationship['body']['relationType'], $relationshipResponse['body']['relationType']);
+            $this->assertEquals($relationship['body']['twoWay'], $relationshipResponse['body']['twoWay']);
+            $this->assertEquals($relationship['body']['twoWayKey'], $relationshipResponse['body']['twoWayKey']);
+        }
 
         $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', array_merge([
             'content-type' => 'application/json',
@@ -985,7 +1005,7 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
-        $this->assertEquals(12, $attributes['body']['total']);
+        $this->assertEquals($this->getSupportForRelationships() ? 12 : 11, $attributes['body']['total']);
 
         /**
          * Test for SUCCESS with total=false
@@ -1326,8 +1346,8 @@ trait DatabasesBase
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
 
-        // MongoDB only allows one fulltext index per collection, so it returns a different error
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
+            // Some databases only allow one fulltext index per collection
             $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
         } else {
             $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
@@ -1384,8 +1404,8 @@ trait DatabasesBase
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
 
-        // MongoDB only allows one fulltext index per collection, so it returns a different error
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
+            // Some databases only allow one fulltext index per collection
             $this->assertEquals('There is already a fulltext index in the collection', $fulltextArray['body']['message']);
         } else {
             $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
@@ -1522,8 +1542,8 @@ trait DatabasesBase
 
         // Test case for lengths array overriding
         // set a length for an array attribute, it should get overridden with Database::ARRAY_INDEX_LENGTH
-        if ($this->isMongoDB()) {
-            // MongoDB doesn't support identical indexes, so delete the existing one first
+        if (!$this->getSupportForRelationships()) {
+            // Some databases don't support identical indexes, so delete the existing one first
             $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/indexes/index-actors", [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1565,9 +1585,9 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
 
-        // Test case for lengths exceeding total of 768/1024(mongodb)
+        // Test case for lengths exceeding total of 768/1024
         $indexLength = 256;
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $indexLength = 500;
         }
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
@@ -3157,6 +3177,11 @@ trait DatabasesBase
 
     public function testOperators(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -3405,6 +3430,11 @@ trait DatabasesBase
 
     public function testBulkOperators(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -4995,7 +5025,7 @@ trait DatabasesBase
      */
     public function testOneToOneRelationship(array $data): array
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return $data;
         }
@@ -5246,7 +5276,7 @@ trait DatabasesBase
      */
     public function testOneToManyRelationship(array $data): array
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return $data;
         }
@@ -5406,7 +5436,7 @@ trait DatabasesBase
      */
     public function testManyToOneRelationship(array $data): array
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return $data;
         }
@@ -5563,7 +5593,7 @@ trait DatabasesBase
      */
     public function testManyToManyRelationship(array $data): array
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return $data;
         }
@@ -5731,6 +5761,11 @@ trait DatabasesBase
      */
     public function testValidateOperators(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5774,6 +5809,11 @@ trait DatabasesBase
      */
     public function testSelectQueries(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5961,7 +6001,7 @@ trait DatabasesBase
      */
     public function testUpdateWithExistingRelationships(array $data): void
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6381,7 +6421,7 @@ trait DatabasesBase
     public function testSpatialPointAttributes(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6525,7 +6565,7 @@ trait DatabasesBase
     public function testSpatialLineAttributes(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6668,7 +6708,7 @@ trait DatabasesBase
     public function testSpatialPolygonAttributes(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6809,7 +6849,7 @@ trait DatabasesBase
     public function testSpatialAttributesMixedCollection(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6969,7 +7009,7 @@ trait DatabasesBase
     public function testUpdateSpatialAttributes(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7134,7 +7174,7 @@ trait DatabasesBase
     public function testSpatialQuery(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7550,7 +7590,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToOne(): void
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7693,7 +7733,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToMany(): void
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7833,7 +7873,7 @@ trait DatabasesBase
     public function testSpatialRelationshipManyToOne(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7963,7 +8003,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipManyToMany(): void
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8094,7 +8134,7 @@ trait DatabasesBase
     public function testSpatialIndex(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8210,7 +8250,7 @@ trait DatabasesBase
     public function testSpatialDistanceInMeter(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8371,7 +8411,7 @@ trait DatabasesBase
     public function testSpatialColCreateOnExistingData(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8507,7 +8547,7 @@ trait DatabasesBase
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
 
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }

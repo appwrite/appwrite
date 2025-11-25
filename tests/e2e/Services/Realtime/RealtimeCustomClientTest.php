@@ -2974,7 +2974,7 @@ class RealtimeCustomClientTest extends Scope
 
     public function testRelationshipPayloadHidesRelatedDoc()
     {
-        if ($this->isMongoDB()) {
+        if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
             return;
         }

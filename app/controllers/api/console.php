@@ -7,6 +7,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
 use Utopia\System\System;
@@ -42,7 +43,8 @@ App::get('/v1/console/variables')
         contentType: ContentType::JSON
     ))
     ->inject('response')
-    ->action(function (Response $response) {
+    ->inject('dbForProject')
+    ->action(function (Response $response, Database $dbForProject) {
         $validator = new Domain(System::getEnv('_APP_DOMAIN'));
         $isDomainValid = !empty(System::getEnv('_APP_DOMAIN', '')) && $validator->isKnown() && !$validator->isTest();
 
@@ -67,6 +69,8 @@ App::get('/v1/console/variables')
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
+        $adapter = $dbForProject->getAdapter();
+
         $variables = new Document([
             '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),
             '_APP_DOMAIN_TARGET_AAAA' => System::getEnv('_APP_DOMAIN_TARGET_AAAA'),
@@ -85,6 +89,10 @@ App::get('/v1/console/variables')
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
             '_APP_DB_ADAPTER' => System::getEnv('_APP_DB_ADAPTER'),
+            'supportForRelationships' => $adapter->getSupportForRelationships(),
+            'supportForOperators' => $adapter->getSupportForOperators(),
+            'supportForSpatials' => $adapter->getSupportForSpatialAttributes(),
+            'maxIndexLength' => $adapter->getMaxIndexLength(),
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
