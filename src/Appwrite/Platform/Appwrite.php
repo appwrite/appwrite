@@ -6,6 +6,7 @@ use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
+use Appwrite\Platform\Modules\Payments;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
 use Appwrite\Platform\Modules\Sites;
@@ -24,5 +25,6 @@ class Appwrite extends Platform
         $this->addModule(new Console\Module());
         $this->addModule(new Proxy\Module());
         $this->addModule(new Tokens\Module());
+        $this->addModule(new Payments\Module());
     }
 }

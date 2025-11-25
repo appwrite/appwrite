@@ -233,6 +233,17 @@ return [
                 'filters' => ['json'],
             ],
             [
+                '$id' => ID::custom('payments'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65536,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json', 'encrypt'],
+            ],
+            [
                 '$id' => ID::custom('auths'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -330,7 +341,7 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
-            ]
+            ],
         ],
         'indexes' => [
             [

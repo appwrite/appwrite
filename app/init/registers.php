@@ -340,3 +340,8 @@ $register->set('promiseAdapter', function () {
 $register->set('hooks', function () {
     return new Hooks();
 });
+$register->set('registryPayments', function () {
+    $registry = new \Appwrite\Payments\Provider\Registry();
+    $registry->register('stripe', \Appwrite\Payments\Provider\StripeAdapter::class);
+    return $registry;
+});
