@@ -1509,6 +1509,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
         }
 
         $isInternal = $decoded['internal'] ?? false;
+        $disposition = $decoded['disposition'] ?? 'inline';
         $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1565,7 +1566,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', 'script-src none;')
             ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Content-Disposition', $disposition . '; filename="' . $file->getAttribute('name', '') . '"')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage());
 

@@ -5,6 +5,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Redirect;
+use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -432,6 +433,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     }
                 }
             }
+
+            ComputeBase::updateEmptyManualRule($project, $resource, $deployment, $dbForPlatform);
 
             if ($resource->getCollection() === 'sites' && !empty($latestCommentId) && !empty($previewRuleId)) {
                 $retries = 0;
