@@ -411,7 +411,7 @@ class Migrations extends Action
                 $source?->success();
 
                 if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails);
+                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime);
                 }
             }
         }
@@ -432,7 +432,8 @@ class Migrations extends Action
     protected function handleCSVExportComplete(
         Document $project,
         Document $migration,
-        Mail $queueForMails
+        Mail $queueForMails,
+        Realtime $queueForRealtime,
     ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
@@ -524,12 +525,16 @@ class Migrations extends Action
             'fileId' => $fileId,
             'projectId' => $project->getId(),
             'internal' => true,
+            'disposition' => 'attachment',
         ]);
 
         // Generate download URL with JWT
         $endpoint = System::getEnv('_APP_DOMAIN', '');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
         $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+        $options['downloadUrl'] = $downloadUrl;
+        $migration->setAttribute('options', $options);
+        $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
         $this->sendCSVEmail(
             success: true,

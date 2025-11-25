@@ -215,7 +215,7 @@ return [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
-                'outputDirectory' => './dist',
+                'outputDirectory' => './.output',
                 'startCommand' => 'bash helpers/tanstack-start/server.sh',
             ],
             'static' => [
