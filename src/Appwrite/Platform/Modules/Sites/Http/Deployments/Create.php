@@ -88,6 +88,7 @@ class Create extends Base
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -107,7 +108,8 @@ class Create extends Base
         Device $deviceForSites,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -276,7 +278,7 @@ class Create extends Base
                 // TODO: @christyjacob remove once we migrate the rules in 1.7.x
                 $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
 
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -341,7 +343,7 @@ class Create extends Base
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
