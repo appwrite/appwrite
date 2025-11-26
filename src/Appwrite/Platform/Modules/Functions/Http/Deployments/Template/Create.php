@@ -15,6 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -131,7 +132,9 @@ class Create extends Base
                 template: $template,
                 github: $github,
                 activate: $activate,
-                authorization: $authorization
+                authorization: $authorization,
+                referenceType: $type,
+                reference: $reference
             );
 
             $queueForEvents
