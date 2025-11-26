@@ -10,7 +10,7 @@ Functions functions = new Functions(client);
 
 functions.listExecutions(
     "<FUNCTION_ID>", // functionId 
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

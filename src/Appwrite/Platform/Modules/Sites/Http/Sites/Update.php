@@ -272,7 +272,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github, true);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $queueForBuilds, new Document(), $github, true);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

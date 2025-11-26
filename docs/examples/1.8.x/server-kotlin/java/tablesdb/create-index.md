@@ -15,9 +15,9 @@ tablesDB.createIndex(
     "<TABLE_ID>", // tableId
     "", // key
     IndexType.KEY, // type
-    listOf(), // columns
-    listOf(), // orders (optional)
-    listOf(), // lengths (optional)
+    List.of(), // columns
+    List.of(), // orders (optional)
+    List.of(), // lengths (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -1,8 +1,8 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.Databases;
 import io.appwrite.Permission;
 import io.appwrite.Role;
+import io.appwrite.services.Databases;
 
 Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,14 +14,14 @@ databases.createDocument(
     "<DATABASE_ID>", // databaseId 
     "<COLLECTION_ID>", // collectionId 
     "<DOCUMENT_ID>", // documentId 
-    mapOf(
-        "username" to "walter.obrien",
-        "email" to "walter.obrien@example.com",
-        "fullName" to "Walter O'Brien",
-        "age" to 30,
-        "isAdmin" to false
+    Map.of(
+        "username", "walter.obrien",
+        "email", "walter.obrien@example.com",
+        "fullName", "Walter O'Brien",
+        "age", 30,
+        "isAdmin", false
     ), // data 
-    listOf(Permission.read(Role.any())), // permissions (optional)
+    List.of(Permission.read(Role.any())), // permissions (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
