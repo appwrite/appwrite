@@ -53,7 +53,7 @@ class Base extends Action
         return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
@@ -134,7 +134,7 @@ class Base extends Action
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('functions', $function->getId(), $function);
 
-        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform);
+        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -330,7 +330,7 @@ class Base extends Action
             }
         }
 
-        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform);
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -351,7 +351,7 @@ class Base extends Action
      * @param \Utopia\Database\Database $dbForPlatform
      * @return void
      */
-    public static function updateEmptyManualRule(Document $project, Document $resource, Document $deployment, Database $dbForPlatform)
+    public static function updateEmptyManualRule(Document $project, Document $resource, Document $deployment, Database $dbForPlatform, Authorization $authorization)
     {
         $resourceType = $resource->getCollection() === 'sites' ? 'site' : 'function';
 
@@ -363,8 +363,8 @@ class Base extends Action
             Query::equal('type', ['deployment']),
             Query::equal('trigger', ['manual']),
         ];
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform) {
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform, $authorization) {
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'deploymentId' => $deployment->getId(),
                 'deploymentInternalId' => $deployment->getSequence(),
             ])));

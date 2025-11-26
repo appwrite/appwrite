@@ -211,7 +211,7 @@ class Create extends Base
             ]))
         );
 
-        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform);
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
