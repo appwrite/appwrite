@@ -214,7 +214,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'description',
-            'size' => 512,
+            'size' => 500,
             'required' => false,
             'default' => '',
         ]);
@@ -225,7 +225,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'tagline',
-            'size' => 512,
+            'size' => 600,
             'required' => false,
             'default' => '',
         ]);
@@ -271,17 +271,20 @@ trait DatabasesBase
             'required' => false,
         ]);
 
-        $relationship = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedTableId' => $data['actorsId'],
-            'type' => 'oneToMany',
-            'twoWay' => true,
-            'key' => 'starringActors',
-            'twoWayKey' => 'movie'
-        ]);
+        $relationship = null;
+        if ($this->getSupportForRelationships()) {
+            $relationship = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'relatedTableId' => $data['actorsId'],
+                'type' => 'oneToMany',
+                'twoWay' => true,
+                'key' => 'starringActors',
+                'twoWayKey' => 'movie'
+            ]);
+        }
 
         $integers = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns/integer', array_merge([
             'content-type' => 'application/json',
@@ -295,6 +298,20 @@ trait DatabasesBase
             'max' => 99,
         ]);
 
+        //Since mongodb does not allow multiple indexes on the same field, we need to create a second index.
+        $integers2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'integers2',
+            'required' => false,
+            'array' => true,
+            'min' => 10,
+            'max' => 99,
+        ]);
+
+
         $this->assertEquals(202, $title['headers']['status-code']);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
@@ -304,14 +321,14 @@ trait DatabasesBase
         $this->assertEquals(202, $description['headers']['status-code']);
         $this->assertEquals($description['body']['key'], 'description');
         $this->assertEquals($description['body']['type'], 'string');
-        $this->assertEquals($description['body']['size'], 512);
+        $this->assertEquals($description['body']['size'], 500);
         $this->assertEquals($description['body']['required'], false);
         $this->assertEquals($description['body']['default'], '');
 
         $this->assertEquals(202, $tagline['headers']['status-code']);
         $this->assertEquals($tagline['body']['key'], 'tagline');
         $this->assertEquals($tagline['body']['type'], 'string');
-        $this->assertEquals($tagline['body']['size'], 512);
+        $this->assertEquals($tagline['body']['size'], 600); // to match the index max length in mongo also.
         $this->assertEquals($tagline['body']['required'], false);
         $this->assertEquals($tagline['body']['default'], '');
 
@@ -337,13 +354,15 @@ trait DatabasesBase
         $this->assertEquals($datetime['body']['type'], 'datetime');
         $this->assertEquals($datetime['body']['required'], false);
 
-        $this->assertEquals($relationship['headers']['status-code'], 202);
-        $this->assertEquals($relationship['body']['key'], 'starringActors');
-        $this->assertEquals($relationship['body']['type'], 'relationship');
-        $this->assertEquals($relationship['body']['relatedTable'], $data['actorsId']);
-        $this->assertEquals($relationship['body']['relationType'], 'oneToMany');
-        $this->assertEquals($relationship['body']['twoWay'], true);
-        $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals($relationship['headers']['status-code'], 202);
+            $this->assertEquals($relationship['body']['key'], 'starringActors');
+            $this->assertEquals($relationship['body']['type'], 'relationship');
+            $this->assertEquals($relationship['body']['relatedTable'], $data['actorsId']);
+            $this->assertEquals($relationship['body']['relationType'], 'oneToMany');
+            $this->assertEquals($relationship['body']['twoWay'], true);
+            $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
+        }
 
         $this->assertEquals(202, $integers['headers']['status-code']);
         $this->assertEquals($integers['body']['key'], 'integers');
@@ -352,6 +371,12 @@ trait DatabasesBase
         $this->assertEquals($integers['body']['required'], false);
         $this->assertEquals($integers['body']['array'], true);
 
+        $this->assertEquals(202, $integers2['headers']['status-code']);
+        $this->assertEquals($integers2['body']['key'], 'integers2');
+        $this->assertEquals($integers2['body']['type'], 'integer');
+        $this->assertArrayNotHasKey('size', $integers2['body']);
+        $this->assertEquals($integers2['body']['required'], false);
+        $this->assertEquals($integers2['body']['array'], true);
         // wait for database worker to create attributes
         sleep(2);
 
@@ -362,7 +387,7 @@ trait DatabasesBase
         ]));
 
         $this->assertIsArray($movies['body']['columns']);
-        $this->assertCount(9, $movies['body']['columns']);
+        $this->assertCount($this->getSupportForRelationships() ? 10 : 9, $movies['body']['columns']);
         $this->assertEquals($movies['body']['columns'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['columns'][1]['key'], $description['body']['key']);
         $this->assertEquals($movies['body']['columns'][2]['key'], $tagline['body']['key']);
@@ -370,8 +395,15 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['columns'][4]['key'], $duration['body']['key']);
         $this->assertEquals($movies['body']['columns'][5]['key'], $actors['body']['key']);
         $this->assertEquals($movies['body']['columns'][6]['key'], $datetime['body']['key']);
-        $this->assertEquals($movies['body']['columns'][7]['key'], $relationship['body']['key']);
-        $this->assertEquals($movies['body']['columns'][8]['key'], $integers['body']['key']);
+        if (!$this->getSupportForRelationships()) {
+            // Relationships not supported, so indices shift down
+            $this->assertEquals($movies['body']['columns'][7]['key'], $integers['body']['key']);
+            $this->assertEquals($movies['body']['columns'][8]['key'], $integers2['body']['key']);
+        } else {
+            $this->assertEquals($movies['body']['columns'][7]['key'], $relationship['body']['key']);
+            $this->assertEquals($movies['body']['columns'][8]['key'], $integers['body']['key']);
+            $this->assertEquals($movies['body']['columns'][9]['key'], $integers2['body']['key']);
+        }
 
         return $data;
     }
@@ -464,13 +496,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'size' => 1000,
+            'size' => 2000, // to match the index max length in mongo also.
             'required' => true,
             'default' => null,
         ]);
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
-        $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
+        $this->assertStringContainsString('Index length is longer than the maximum', $attribute['body']['message']); //to  match mongdb length limit. also
     }
 
     public function testUpdateColumnEnum(): void
@@ -650,17 +682,20 @@ trait DatabasesBase
             'default' => null,
         ]);
 
-        $relationship = $this->client->call(Client::METHOD_POST, $columnsPath . '/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedTableId' => $data['actorsId'],
-            'type' => 'oneToMany',
-            'twoWay' => true,
-            'key' => 'relationship',
-            'twoWayKey' => 'twoWayKey'
-        ]);
+        $relationship = null;
+        if ($this->getSupportForRelationships()) {
+            $relationship = $this->client->call(Client::METHOD_POST, $columnsPath . '/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'relatedTableId' => $data['actorsId'],
+                'type' => 'oneToMany',
+                'twoWay' => true,
+                'key' => 'relationship',
+                'twoWayKey' => 'twoWayKey'
+            ]);
+        }
 
         $strings = $this->client->call(Client::METHOD_POST, $columnsPath . '/string', array_merge([
             'content-type' => 'application/json',
@@ -759,15 +794,17 @@ trait DatabasesBase
         $this->assertEquals(false, $datetime['body']['array']);
         $this->assertEquals(null, $datetime['body']['default']);
 
-        $this->assertEquals(202, $relationship['headers']['status-code']);
-        $this->assertEquals('relationship', $relationship['body']['key']);
-        $this->assertEquals('relationship', $relationship['body']['type']);
-        $this->assertEquals(false, $relationship['body']['required']);
-        $this->assertEquals(false, $relationship['body']['array']);
-        $this->assertEquals($data['actorsId'], $relationship['body']['relatedTable']);
-        $this->assertEquals('oneToMany', $relationship['body']['relationType']);
-        $this->assertEquals(true, $relationship['body']['twoWay']);
-        $this->assertEquals('twoWayKey', $relationship['body']['twoWayKey']);
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals(202, $relationship['headers']['status-code']);
+            $this->assertEquals('relationship', $relationship['body']['key']);
+            $this->assertEquals('relationship', $relationship['body']['type']);
+            $this->assertEquals(false, $relationship['body']['required']);
+            $this->assertEquals(false, $relationship['body']['array']);
+            $this->assertEquals($data['actorsId'], $relationship['body']['relatedTable']);
+            $this->assertEquals('oneToMany', $relationship['body']['relationType']);
+            $this->assertEquals(true, $relationship['body']['twoWay']);
+            $this->assertEquals('twoWayKey', $relationship['body']['twoWayKey']);
+        }
 
         $this->assertEquals(202, $strings['headers']['status-code']);
         $this->assertEquals('names', $strings['body']['key']);
@@ -842,11 +879,14 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $relationshipResponse = $this->client->call(Client::METHOD_GET, $columnsPath . '/' . $relationship['body']['key'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        $relationshipResponse = null;
+        if ($this->getSupportForRelationships()) {
+            $relationshipResponse = $this->client->call(Client::METHOD_GET, $columnsPath . '/' . $relationship['body']['key'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+        }
 
         $stringsResponse = $this->client->call(Client::METHOD_GET, $columnsPath . '/' . $strings['body']['key'], array_merge([
             'content-type' => 'application/json',
@@ -942,16 +982,18 @@ trait DatabasesBase
         $this->assertEquals($datetime['body']['array'], $datetimeResponse['body']['array']);
         $this->assertEquals($datetime['body']['default'], $datetimeResponse['body']['default']);
 
-        $this->assertEquals(200, $relationshipResponse['headers']['status-code']);
-        $this->assertEquals($relationship['body']['key'], $relationshipResponse['body']['key']);
-        $this->assertEquals($relationship['body']['type'], $relationshipResponse['body']['type']);
-        $this->assertEquals('available', $relationshipResponse['body']['status']);
-        $this->assertEquals($relationship['body']['required'], $relationshipResponse['body']['required']);
-        $this->assertEquals($relationship['body']['array'], $relationshipResponse['body']['array']);
-        $this->assertEquals($relationship['body']['relatedTable'], $relationshipResponse['body']['relatedTable']);
-        $this->assertEquals($relationship['body']['relationType'], $relationshipResponse['body']['relationType']);
-        $this->assertEquals($relationship['body']['twoWay'], $relationshipResponse['body']['twoWay']);
-        $this->assertEquals($relationship['body']['twoWayKey'], $relationshipResponse['body']['twoWayKey']);
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals(200, $relationshipResponse['headers']['status-code']);
+            $this->assertEquals($relationship['body']['key'], $relationshipResponse['body']['key']);
+            $this->assertEquals($relationship['body']['type'], $relationshipResponse['body']['type']);
+            $this->assertEquals('available', $relationshipResponse['body']['status']);
+            $this->assertEquals($relationship['body']['required'], $relationshipResponse['body']['required']);
+            $this->assertEquals($relationship['body']['array'], $relationshipResponse['body']['array']);
+            $this->assertEquals($relationship['body']['relatedTable'], $relationshipResponse['body']['relatedTable']);
+            $this->assertEquals($relationship['body']['relationType'], $relationshipResponse['body']['relationType']);
+            $this->assertEquals($relationship['body']['twoWay'], $relationshipResponse['body']['twoWay']);
+            $this->assertEquals($relationship['body']['twoWayKey'], $relationshipResponse['body']['twoWayKey']);
+        }
 
         $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns', array_merge([
             'content-type' => 'application/json',
@@ -960,11 +1002,11 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $columns['headers']['status-code']);
-        $this->assertEquals(12, $columns['body']['total']);
+        $this->assertEquals($this->getSupportForRelationships() ? 12 : 11, $columns['body']['total']);
 
         $columns = $columns['body']['columns'];
         $this->assertIsArray($columns);
-        $this->assertCount(12, $columns);
+        $this->assertCount($this->getSupportForRelationships() ? 12 : 11, $columns);
 
         $this->assertEquals($stringResponse['body']['key'], $columns[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $columns[0]['type']);
@@ -1039,31 +1081,39 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['array'], $columns[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $columns[8]['default']);
 
-        $this->assertEquals($relationshipResponse['body']['key'], $columns[9]['key']);
-        $this->assertEquals($relationshipResponse['body']['type'], $columns[9]['type']);
-        $this->assertEquals($relationshipResponse['body']['status'], $columns[9]['status']);
-        $this->assertEquals($relationshipResponse['body']['required'], $columns[9]['required']);
-        $this->assertEquals($relationshipResponse['body']['array'], $columns[9]['array']);
-        $this->assertEquals($relationshipResponse['body']['relatedTable'], $columns[9]['relatedTable']);
-        $this->assertEquals($relationshipResponse['body']['relationType'], $columns[9]['relationType']);
-        $this->assertEquals($relationshipResponse['body']['twoWay'], $columns[9]['twoWay']);
-        $this->assertEquals($relationshipResponse['body']['twoWayKey'], $columns[9]['twoWayKey']);
+        // Relationships not supported - indices shift accordingly
+        if (!$this->getSupportForRelationships()) {
+            $stringsIdx = 9;
+            $integersIdx = 10;
+        } else {
+            $this->assertEquals($relationshipResponse['body']['key'], $columns[9]['key']);
+            $this->assertEquals($relationshipResponse['body']['type'], $columns[9]['type']);
+            $this->assertEquals($relationshipResponse['body']['status'], $columns[9]['status']);
+            $this->assertEquals($relationshipResponse['body']['required'], $columns[9]['required']);
+            $this->assertEquals($relationshipResponse['body']['array'], $columns[9]['array']);
+            $this->assertEquals($relationshipResponse['body']['relatedTable'], $columns[9]['relatedTable']);
+            $this->assertEquals($relationshipResponse['body']['relationType'], $columns[9]['relationType']);
+            $this->assertEquals($relationshipResponse['body']['twoWay'], $columns[9]['twoWay']);
+            $this->assertEquals($relationshipResponse['body']['twoWayKey'], $columns[9]['twoWayKey']);
+            $stringsIdx = 10;
+            $integersIdx = 11;
+        }
 
-        $this->assertEquals($stringsResponse['body']['key'], $columns[10]['key']);
-        $this->assertEquals($stringsResponse['body']['type'], $columns[10]['type']);
-        $this->assertEquals($stringsResponse['body']['status'], $columns[10]['status']);
-        $this->assertEquals($stringsResponse['body']['required'], $columns[10]['required']);
-        $this->assertEquals($stringsResponse['body']['array'], $columns[10]['array']);
-        $this->assertEquals($stringsResponse['body']['default'], $columns[10]['default']);
+        $this->assertEquals($stringsResponse['body']['key'], $columns[$stringsIdx]['key']);
+        $this->assertEquals($stringsResponse['body']['type'], $columns[$stringsIdx]['type']);
+        $this->assertEquals($stringsResponse['body']['status'], $columns[$stringsIdx]['status']);
+        $this->assertEquals($stringsResponse['body']['required'], $columns[$stringsIdx]['required']);
+        $this->assertEquals($stringsResponse['body']['array'], $columns[$stringsIdx]['array']);
+        $this->assertEquals($stringsResponse['body']['default'], $columns[$stringsIdx]['default']);
 
-        $this->assertEquals($integersResponse['body']['key'], $columns[11]['key']);
-        $this->assertEquals($integersResponse['body']['type'], $columns[11]['type']);
-        $this->assertEquals($integersResponse['body']['status'], $columns[11]['status']);
-        $this->assertEquals($integersResponse['body']['required'], $columns[11]['required']);
-        $this->assertEquals($integersResponse['body']['array'], $columns[11]['array']);
-        $this->assertEquals($integersResponse['body']['default'], $columns[11]['default']);
-        $this->assertEquals($integersResponse['body']['min'], $columns[11]['min']);
-        $this->assertEquals($integersResponse['body']['max'], $columns[11]['max']);
+        $this->assertEquals($integersResponse['body']['key'], $columns[$integersIdx]['key']);
+        $this->assertEquals($integersResponse['body']['type'], $columns[$integersIdx]['type']);
+        $this->assertEquals($integersResponse['body']['status'], $columns[$integersIdx]['status']);
+        $this->assertEquals($integersResponse['body']['required'], $columns[$integersIdx]['required']);
+        $this->assertEquals($integersResponse['body']['array'], $columns[$integersIdx]['array']);
+        $this->assertEquals($integersResponse['body']['default'], $columns[$integersIdx]['default']);
+        $this->assertEquals($integersResponse['body']['min'], $columns[$integersIdx]['min']);
+        $this->assertEquals($integersResponse['body']['max'], $columns[$integersIdx]['max']);
 
         $table = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([
             'content-type' => 'application/json',
@@ -1076,7 +1126,7 @@ trait DatabasesBase
         $columns = $table['body']['columns'];
 
         $this->assertIsArray($columns);
-        $this->assertCount(12, $columns);
+        $this->assertCount($this->getSupportForRelationships() ? 12 : 11, $columns);
 
         $this->assertEquals($stringResponse['body']['key'], $columns[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $columns[0]['type']);
@@ -1151,31 +1201,39 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['array'], $columns[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $columns[8]['default']);
 
-        $this->assertEquals($relationshipResponse['body']['key'], $columns[9]['key']);
-        $this->assertEquals($relationshipResponse['body']['type'], $columns[9]['type']);
-        $this->assertEquals($relationshipResponse['body']['status'], $columns[9]['status']);
-        $this->assertEquals($relationshipResponse['body']['required'], $columns[9]['required']);
-        $this->assertEquals($relationshipResponse['body']['array'], $columns[9]['array']);
-        $this->assertEquals($relationshipResponse['body']['relatedTable'], $columns[9]['relatedTable']);
-        $this->assertEquals($relationshipResponse['body']['relationType'], $columns[9]['relationType']);
-        $this->assertEquals($relationshipResponse['body']['twoWay'], $columns[9]['twoWay']);
-        $this->assertEquals($relationshipResponse['body']['twoWayKey'], $columns[9]['twoWayKey']);
+        // Relationships not supported - indices shift accordingly
+        if (!$this->getSupportForRelationships()) {
+            $stringsIdx2 = 9;
+            $integersIdx2 = 10;
+        } else {
+            $this->assertEquals($relationshipResponse['body']['key'], $columns[9]['key']);
+            $this->assertEquals($relationshipResponse['body']['type'], $columns[9]['type']);
+            $this->assertEquals($relationshipResponse['body']['status'], $columns[9]['status']);
+            $this->assertEquals($relationshipResponse['body']['required'], $columns[9]['required']);
+            $this->assertEquals($relationshipResponse['body']['array'], $columns[9]['array']);
+            $this->assertEquals($relationshipResponse['body']['relatedTable'], $columns[9]['relatedTable']);
+            $this->assertEquals($relationshipResponse['body']['relationType'], $columns[9]['relationType']);
+            $this->assertEquals($relationshipResponse['body']['twoWay'], $columns[9]['twoWay']);
+            $this->assertEquals($relationshipResponse['body']['twoWayKey'], $columns[9]['twoWayKey']);
+            $stringsIdx2 = 10;
+            $integersIdx2 = 11;
+        }
 
-        $this->assertEquals($stringsResponse['body']['key'], $columns[10]['key']);
-        $this->assertEquals($stringsResponse['body']['type'], $columns[10]['type']);
-        $this->assertEquals($stringsResponse['body']['status'], $columns[10]['status']);
-        $this->assertEquals($stringsResponse['body']['required'], $columns[10]['required']);
-        $this->assertEquals($stringsResponse['body']['array'], $columns[10]['array']);
-        $this->assertEquals($stringsResponse['body']['default'], $columns[10]['default']);
+        $this->assertEquals($stringsResponse['body']['key'], $columns[$stringsIdx2]['key']);
+        $this->assertEquals($stringsResponse['body']['type'], $columns[$stringsIdx2]['type']);
+        $this->assertEquals($stringsResponse['body']['status'], $columns[$stringsIdx2]['status']);
+        $this->assertEquals($stringsResponse['body']['required'], $columns[$stringsIdx2]['required']);
+        $this->assertEquals($stringsResponse['body']['array'], $columns[$stringsIdx2]['array']);
+        $this->assertEquals($stringsResponse['body']['default'], $columns[$stringsIdx2]['default']);
 
-        $this->assertEquals($integersResponse['body']['key'], $columns[11]['key']);
-        $this->assertEquals($integersResponse['body']['type'], $columns[11]['type']);
-        $this->assertEquals($integersResponse['body']['status'], $columns[11]['status']);
-        $this->assertEquals($integersResponse['body']['required'], $columns[11]['required']);
-        $this->assertEquals($integersResponse['body']['array'], $columns[11]['array']);
-        $this->assertEquals($integersResponse['body']['default'], $columns[11]['default']);
-        $this->assertEquals($integersResponse['body']['min'], $columns[11]['min']);
-        $this->assertEquals($integersResponse['body']['max'], $columns[11]['max']);
+        $this->assertEquals($integersResponse['body']['key'], $columns[$integersIdx2]['key']);
+        $this->assertEquals($integersResponse['body']['type'], $columns[$integersIdx2]['type']);
+        $this->assertEquals($integersResponse['body']['status'], $columns[$integersIdx2]['status']);
+        $this->assertEquals($integersResponse['body']['required'], $columns[$integersIdx2]['required']);
+        $this->assertEquals($integersResponse['body']['array'], $columns[$integersIdx2]['array']);
+        $this->assertEquals($integersResponse['body']['default'], $columns[$integersIdx2]['default']);
+        $this->assertEquals($integersResponse['body']['min'], $columns[$integersIdx2]['min']);
+        $this->assertEquals($integersResponse['body']['max'], $columns[$integersIdx2]['max']);
 
         /**
          * Test for FAILURE
@@ -1282,7 +1340,13 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
-        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a fulltext index, must be of type string');
+
+        if (!$this->getSupportForRelationships()) {
+            // Some databases only allow one fulltext index per collection
+            $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
+        } else {
+            $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
+        }
 
         $noAttributes = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1334,7 +1398,13 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+
+        if (!$this->getSupportForRelationships()) {
+            // Some databases only allow one fulltext index per collection
+            $this->assertEquals('There is already a fulltext index in the collection', $fulltextArray['body']['message']);
+        } else {
+            $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+        }
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1394,7 +1464,7 @@ trait DatabasesBase
         ]), [
             'key' => 'integers-size',
             'type' => 'key',
-            'columns' => ['integers'], // array column
+            'columns' => ['integers2'], // array column
         ]);
 
         $this->assertEquals(202, $index2['headers']['status-code']);
@@ -1467,7 +1537,8 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
 
-        // Test case for lengths exceeding total of 768
+        // Test case for lengths exceeding total of 768(or 1024 in mongodb)
+        $maxLength = $this->getMaxIndexLength();
         $create = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1476,7 +1547,7 @@ trait DatabasesBase
             'key' => 'lengthTooLargeIndex',
             'type' => 'key',
             'columns' => ['title','description','tagline','actors'],
-            'lengths' => [256,256,256,20]
+            'lengths' => [$maxLength,$maxLength,$maxLength,20]
         ]);
 
         $this->assertEquals(400, $create['headers']['status-code']);
@@ -1699,21 +1770,24 @@ trait DatabasesBase
         /**
          * Resubmit same document, nothing to update
          */
+        $upsertData = [
+            'title' => 'Thor: Ragnarok',
+            'releaseYear' => 2000,
+            'integers' => [],
+            'birthDay' => null,
+            'duration' => null,
+            'actors' => [],
+            'tagline' => '',
+            'description' => '',
+        ];
+        if ($this->getSupportForRelationships()) {
+            $upsertData['starringActors'] = [];
+        }
         $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'data' => [
-                'title' => 'Thor: Ragnarok',
-                'releaseYear' => 2000,
-                'integers' => [],
-                'birthDay' => null,
-                'duration' => null,
-                'starringActors' => [],
-                'actors' => [],
-                'tagline' => '',
-                'description' => '',
-            ],
+            'data' => $upsertData,
             'permissions' => [
                 Permission::read(Role::users()),
                 Permission::update(Role::users()),
@@ -1830,193 +1904,195 @@ trait DatabasesBase
         $this->assertEquals(204, $row['headers']['status-code']);
 
         // relationship behaviour
-        $person = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'tableId' => 'person-upsert',
-            'name' => 'person',
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-                Permission::create(Role::users()),
-            ],
-            'rowSecurity' => true,
-        ]);
-
-        $this->assertEquals(201, $person['headers']['status-code']);
-
-        $library = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'tableId' => 'library-upsert',
-            'name' => 'library',
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::create(Role::users()),
-                Permission::delete(Role::users()),
-            ],
-            'rowSecurity' => true,
-        ]);
-
-        $this->assertEquals(201, $library['headers']['status-code']);
-
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/columns/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'fullName',
-            'size' => 255,
-            'required' => false,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $relation = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/columns/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedTableId' => 'library-upsert',
-            'type' => Database::RELATION_ONE_TO_ONE,
-            'key' => 'library',
-            'twoWay' => true,
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $libraryName = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $library['body']['$id'] . '/columns/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'libraryName',
-            'size' => 255,
-            'required' => true,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $this->assertEquals(202, $libraryName['headers']['status-code']);
-
-        // upserting values
-        $rowId = ID::unique();
-        $person1 = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/'.$rowId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'library' => [
-                    '$id' => 'library1',
-                    '$permissions' => [
-                        Permission::read(Role::users()),
-                        Permission::update(Role::users()),
-                        Permission::delete(Role::users()),
-                    ],
-                    'libraryName' => 'Library 1',
+        if ($this->getSupportForRelationships()) {
+            $person = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'tableId' => 'person-upsert',
+                'name' => 'person',
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                    Permission::create(Role::users()),
                 ],
-            ],
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-            ]
-        ]);
+                'rowSecurity' => true,
+            ]);
 
-        $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
-        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['fullName', 'library.*'])->toString(),
-                Query::equal('library', ['library1'])->toString(),
-            ],
-        ]);
+            $this->assertEquals(201, $person['headers']['status-code']);
 
-        $this->assertEquals(1, $rows['body']['total']);
-        $this->assertEquals('Library 1', $rows['body']['rows'][0]['library']['libraryName']);
-
-
-        $person1 = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/'.$rowId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'library' => [
-                    '$id' => 'library1',
-                    '$permissions' => [
-                        Permission::read(Role::users()),
-                        Permission::update(Role::users()),
-                        Permission::delete(Role::users()),
-                    ],
-                    'libraryName' => 'Library 2',
+            $library = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'tableId' => 'library-upsert',
+                'name' => 'library',
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::create(Role::users()),
+                    Permission::delete(Role::users()),
                 ],
-            ],
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-            ]
-        ]);
+                'rowSecurity' => true,
+            ]);
 
-        // data should get updated
-        $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
-        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['fullName', 'library.*'])->toString(),
-                Query::equal('library', ['library1'])->toString(),
-            ],
-        ]);
+            $this->assertEquals(201, $library['headers']['status-code']);
 
-        $this->assertEquals(1, $rows['body']['total']);
-        $this->assertEquals('Library 2', $rows['body']['rows'][0]['library']['libraryName']);
+            $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/columns/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'fullName',
+                'size' => 255,
+                'required' => false,
+            ]);
 
-        // data should get added
-        $person1 = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/'.ID::unique(), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'library' => [
-                    '$id' => 'library2',
-                    '$permissions' => [
-                        Permission::read(Role::users()),
-                        Permission::update(Role::users()),
-                        Permission::delete(Role::users()),
+            sleep(1); // Wait for worker
+
+            $relation = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/columns/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'relatedTableId' => 'library-upsert',
+                'type' => Database::RELATION_ONE_TO_ONE,
+                'key' => 'library',
+                'twoWay' => true,
+                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            ]);
+
+            sleep(1); // Wait for worker
+
+            $libraryName = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $library['body']['$id'] . '/columns/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'libraryName',
+                'size' => 255,
+                'required' => true,
+            ]);
+
+            sleep(1); // Wait for worker
+
+            $this->assertEquals(202, $libraryName['headers']['status-code']);
+
+            // upserting values
+            $rowId = ID::unique();
+            $person1 = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/'.$rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'library' => [
+                        '$id' => 'library1',
+                        '$permissions' => [
+                            Permission::read(Role::users()),
+                            Permission::update(Role::users()),
+                            Permission::delete(Role::users()),
+                        ],
+                        'libraryName' => 'Library 1',
                     ],
-                    'libraryName' => 'Library 2',
                 ],
-            ],
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-            ]
-        ]);
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ]
+            ]);
 
-        $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
+            $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
+            $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::select(['fullName', 'library.*'])->toString(),
+                    Query::equal('library', ['library1'])->toString(),
+                ],
+            ]);
 
-        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['fullName', 'library.*'])->toString()
-            ],
-        ]);
+            $this->assertEquals(1, $rows['body']['total']);
+            $this->assertEquals('Library 1', $rows['body']['rows'][0]['library']['libraryName']);
 
-        $this->assertEquals(2, $rows['body']['total']);
+
+            $person1 = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/'.$rowId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'library' => [
+                        '$id' => 'library1',
+                        '$permissions' => [
+                            Permission::read(Role::users()),
+                            Permission::update(Role::users()),
+                            Permission::delete(Role::users()),
+                        ],
+                        'libraryName' => 'Library 2',
+                    ],
+                ],
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ]
+            ]);
+
+            // data should get updated
+            $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
+            $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::select(['fullName', 'library.*'])->toString(),
+                    Query::equal('library', ['library1'])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(1, $rows['body']['total']);
+            $this->assertEquals('Library 2', $rows['body']['rows'][0]['library']['libraryName']);
+
+            // data should get added
+            $person1 = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/'.ID::unique(), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'library' => [
+                        '$id' => 'library2',
+                        '$permissions' => [
+                            Permission::read(Role::users()),
+                            Permission::update(Role::users()),
+                            Permission::delete(Role::users()),
+                        ],
+                        'libraryName' => 'Library 2',
+                    ],
+                ],
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ]
+            ]);
+
+            $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
+
+            $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::select(['fullName', 'library.*'])->toString()
+                ],
+            ]);
+
+            $this->assertEquals(2, $rows['body']['total']);
+        }
 
         // test without passing permissions
         $row = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows/' . $rowId, array_merge([
@@ -2149,57 +2225,59 @@ trait DatabasesBase
 
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
-            // upsert for the related row without passing permissions
-            // data should get added
-            $newPersonId = ID::unique();
-            $personNoPerm = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/' . $newPersonId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'data' => [
-                    'library' => [
-                        '$id' => 'library3',
-                        'libraryName' => 'Library 3',
+            // upsert for the related row without passing permissions - only for databases that support relationships
+            if ($this->getSupportForRelationships()) {
+                // data should get added
+                $newPersonId = ID::unique();
+                $personNoPerm = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/' . $newPersonId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'data' => [
+                        'library' => [
+                            '$id' => 'library3',
+                            'libraryName' => 'Library 3',
+                        ],
                     ],
-                ],
-            ]);
+                ]);
 
-            $this->assertEquals('Library 3', $personNoPerm['body']['library']['libraryName']);
-            $this->assertCount(3, $personNoPerm['body']['library']['$permissions']);
-            $this->assertCount(3, $personNoPerm['body']['$permissions']);
-            $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'queries' => [
-                    Query::select(['fullName', 'library.*'])->toString()
-                ],
-            ]);
-            $this->assertGreaterThanOrEqual(1, $rows['body']['total']);
-            $rowsDetails = $rows['body']['rows'];
-            foreach ($rowsDetails as $doc) {
-                $this->assertCount(3, $doc['$permissions']);
-            }
-            $found = false;
-            foreach ($rows['body']['rows'] as $doc) {
-                if (isset($doc['library']['libraryName']) && $doc['library']['libraryName'] === 'Library 3') {
-                    $found = true;
-                    break;
+                $this->assertEquals('Library 3', $personNoPerm['body']['library']['libraryName']);
+                $this->assertCount(3, $personNoPerm['body']['library']['$permissions']);
+                $this->assertCount(3, $personNoPerm['body']['$permissions']);
+                $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'queries' => [
+                        Query::select(['fullName', 'library.*'])->toString()
+                    ],
+                ]);
+                $this->assertGreaterThanOrEqual(1, $rows['body']['total']);
+                $rowsDetails = $rows['body']['rows'];
+                foreach ($rowsDetails as $doc) {
+                    $this->assertCount(3, $doc['$permissions']);
                 }
+                $found = false;
+                foreach ($rows['body']['rows'] as $doc) {
+                    if (isset($doc['library']['libraryName']) && $doc['library']['libraryName'] === 'Library 3') {
+                        $found = true;
+                        break;
+                    }
+                }
+                $this->assertTrue($found, 'Library 3 should be present in the upserted rows.');
+
+                // Fetch the related library and assert on its permissions (should be default/inherited)
+                $library3 = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $library['body']['$id'] . '/rows/library3', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()));
+
+                $this->assertEquals(200, $library3['headers']['status-code']);
+                $this->assertEquals('Library 3', $library3['body']['libraryName']);
+                $this->assertArrayHasKey('$permissions', $library3['body']);
+                $this->assertCount(3, $library3['body']['$permissions']);
+                $this->assertNotEmpty($library3['body']['$permissions']);
             }
-            $this->assertTrue($found, 'Library 3 should be present in the upserted rows.');
-
-            // Fetch the related library and assert on its permissions (should be default/inherited)
-            $library3 = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $library['body']['$id'] . '/rows/library3', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
-
-            $this->assertEquals(200, $library3['headers']['status-code']);
-            $this->assertEquals('Library 3', $library3['body']['libraryName']);
-            $this->assertArrayHasKey('$permissions', $library3['body']);
-            $this->assertCount(3, $library3['body']['$permissions']);
-            $this->assertNotEmpty($library3['body']['$permissions']);
         }
     }
 
@@ -3011,6 +3089,11 @@ trait DatabasesBase
 
     public function testOperators(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
@@ -3259,6 +3342,11 @@ trait DatabasesBase
 
     public function testBulkOperators(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
@@ -4541,7 +4629,15 @@ trait DatabasesBase
 
         $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
 
-        sleep(2);
+        $index = null;
+        $this->assertEventually(function () use ($databaseId, $data, &$index) {
+            $index = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes/unique_title', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $this->assertEquals('available', $index['body']['status']);
+        }, 30000, 500);
 
         // test for failure
         $duplicate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
@@ -4850,6 +4946,12 @@ trait DatabasesBase
      */
     public function testOneToOneRelationship(array $data): array
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
 
         $person = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
@@ -5096,6 +5198,11 @@ trait DatabasesBase
      */
     public function testOneToManyRelationship(array $data): array
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
         $personCollection = $data['personCollection'];
         $libraryCollection = $data['libraryCollection'];
@@ -5251,6 +5358,11 @@ trait DatabasesBase
      */
     public function testManyToOneRelationship(array $data): array
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create album table
@@ -5403,6 +5515,11 @@ trait DatabasesBase
      */
     public function testManyToManyRelationship(array $data): array
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create sports table
@@ -5566,6 +5683,11 @@ trait DatabasesBase
      */
     public function testValidateOperators(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5609,6 +5731,11 @@ trait DatabasesBase
      */
     public function testSelectQueries(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7529,6 +7656,11 @@ trait DatabasesBase
      */
     public function testUpdateWithExistingRelationships(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $databaseId = $data['databaseId'];
 
         $table1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
@@ -7917,6 +8049,11 @@ trait DatabasesBase
 
     public function testSpatialPointColumns(): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8055,6 +8192,11 @@ trait DatabasesBase
 
     public function testSpatialLineColumns(): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8189,6 +8331,11 @@ trait DatabasesBase
 
     public function testSpatialPolygonColumns(): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8321,6 +8468,12 @@ trait DatabasesBase
 
     public function testSpatialColumnsMixedTable(): void
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8475,6 +8628,12 @@ trait DatabasesBase
 
     public function testSpatialQuery(): void
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8561,7 +8720,7 @@ trait DatabasesBase
                 '$id' => 'row1',
                 'name' => 'Test Row 1',
                 'pointAttr' => [6.0, 6.0],
-                'lineAttr' => [[1.0, 1.0], [1.1,1.1] , [2.0, 2.0]],
+                'lineAttr' => [[1.0, 1.0], [2.0, 2.0]],
                 'polyAttr' => [[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]]
             ],
             [
@@ -8864,6 +9023,12 @@ trait DatabasesBase
 
     public function testSpatialIndex(): void
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8980,6 +9145,12 @@ trait DatabasesBase
 
     public function testUpdateSpatialColumns(): void
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9137,6 +9308,12 @@ trait DatabasesBase
     }
     public function testSpatialDistanceInMeter(): void
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9233,6 +9410,12 @@ trait DatabasesBase
 
     public function testSpatialColCreateOnExistingData(): void
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9363,6 +9546,12 @@ trait DatabasesBase
 
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
+
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

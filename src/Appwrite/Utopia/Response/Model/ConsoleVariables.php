@@ -105,7 +105,53 @@ class ConsoleVariables extends Model
                     'default' => '',
                     'example' => 'ns1.example.com,ns2.example.com',
                 ]
-            );
+            )
+            ->addRule(
+                '_APP_DB_ADAPTER',
+                [
+                    'type' => self::TYPE_STRING,
+                    'description' => 'Database adapter in use.',
+                    'default' => 'mariadb',
+                    'example' => 'mysql',
+                ]
+            )
+            ->addRule(
+                'supportForRelationships',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports relationships.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForOperators',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports operators.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForSpatials',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports spatial attributes.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'maxIndexLength',
+                [
+                    'type' => self::TYPE_INTEGER,
+                    'description' => 'Maximum index length supported by the database adapter.',
+                    'default' => 768,
+                    'example' => 768,
+                ]
+            )
+        ;
     }
 
     /**
