@@ -115,9 +115,10 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             $emailCanonical = null;
         }
         $hashedPassword = null;
-
+        
+        $isHashed = !$hash instanceof Plaintext;
         if (!empty($password)) {
-            if ($hash instanceof Plaintext) { // Password was never hashed, hash it with the default hash
+            if (!$isHashed) { // Password was never hashed, hash it with the default hash
                 $defaultHash = new ProofsPassword();
                 $hashedPassword = $defaultHash->hash($password);
                 $hash = $defaultHash->getHash();
@@ -159,7 +160,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             'emailIsFree' => $emailCanonical?->isFree(),
         ]);
 
-        if ($hash instanceof Plaintext) {
+        if (!$isHashed) {
             $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
