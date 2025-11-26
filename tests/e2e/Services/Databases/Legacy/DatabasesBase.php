@@ -1027,7 +1027,8 @@ trait DatabasesBase
 
         $attributes = $attributes['body']['attributes'];
         $this->assertIsArray($attributes);
-        $this->assertCount(12, $attributes);
+        $expectedCount = $this->getSupportForRelationships() ? 12 : 11;
+        $this->assertCount($expectedCount, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -1102,31 +1103,38 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
 
-        $this->assertEquals($relationshipResponse['body']['key'], $attributes[9]['key']);
-        $this->assertEquals($relationshipResponse['body']['type'], $attributes[9]['type']);
-        $this->assertEquals($relationshipResponse['body']['status'], $attributes[9]['status']);
-        $this->assertEquals($relationshipResponse['body']['required'], $attributes[9]['required']);
-        $this->assertEquals($relationshipResponse['body']['array'], $attributes[9]['array']);
-        $this->assertEquals($relationshipResponse['body']['relatedCollection'], $attributes[9]['relatedCollection']);
-        $this->assertEquals($relationshipResponse['body']['relationType'], $attributes[9]['relationType']);
-        $this->assertEquals($relationshipResponse['body']['twoWay'], $attributes[9]['twoWay']);
-        $this->assertEquals($relationshipResponse['body']['twoWayKey'], $attributes[9]['twoWayKey']);
+        // Relationship attribute assertions - only when relationships are supported
+        $stringsIndex = 9;
+        $integersIndex = 10;
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals($relationshipResponse['body']['key'], $attributes[9]['key']);
+            $this->assertEquals($relationshipResponse['body']['type'], $attributes[9]['type']);
+            $this->assertEquals($relationshipResponse['body']['status'], $attributes[9]['status']);
+            $this->assertEquals($relationshipResponse['body']['required'], $attributes[9]['required']);
+            $this->assertEquals($relationshipResponse['body']['array'], $attributes[9]['array']);
+            $this->assertEquals($relationshipResponse['body']['relatedCollection'], $attributes[9]['relatedCollection']);
+            $this->assertEquals($relationshipResponse['body']['relationType'], $attributes[9]['relationType']);
+            $this->assertEquals($relationshipResponse['body']['twoWay'], $attributes[9]['twoWay']);
+            $this->assertEquals($relationshipResponse['body']['twoWayKey'], $attributes[9]['twoWayKey']);
+            $stringsIndex = 10;
+            $integersIndex = 11;
+        }
 
-        $this->assertEquals($stringsResponse['body']['key'], $attributes[10]['key']);
-        $this->assertEquals($stringsResponse['body']['type'], $attributes[10]['type']);
-        $this->assertEquals($stringsResponse['body']['status'], $attributes[10]['status']);
-        $this->assertEquals($stringsResponse['body']['required'], $attributes[10]['required']);
-        $this->assertEquals($stringsResponse['body']['array'], $attributes[10]['array']);
-        $this->assertEquals($stringsResponse['body']['default'], $attributes[10]['default']);
+        $this->assertEquals($stringsResponse['body']['key'], $attributes[$stringsIndex]['key']);
+        $this->assertEquals($stringsResponse['body']['type'], $attributes[$stringsIndex]['type']);
+        $this->assertEquals($stringsResponse['body']['status'], $attributes[$stringsIndex]['status']);
+        $this->assertEquals($stringsResponse['body']['required'], $attributes[$stringsIndex]['required']);
+        $this->assertEquals($stringsResponse['body']['array'], $attributes[$stringsIndex]['array']);
+        $this->assertEquals($stringsResponse['body']['default'], $attributes[$stringsIndex]['default']);
 
-        $this->assertEquals($integersResponse['body']['key'], $attributes[11]['key']);
-        $this->assertEquals($integersResponse['body']['type'], $attributes[11]['type']);
-        $this->assertEquals($integersResponse['body']['status'], $attributes[11]['status']);
-        $this->assertEquals($integersResponse['body']['required'], $attributes[11]['required']);
-        $this->assertEquals($integersResponse['body']['array'], $attributes[11]['array']);
-        $this->assertEquals($integersResponse['body']['default'], $attributes[11]['default']);
-        $this->assertEquals($integersResponse['body']['min'], $attributes[11]['min']);
-        $this->assertEquals($integersResponse['body']['max'], $attributes[11]['max']);
+        $this->assertEquals($integersResponse['body']['key'], $attributes[$integersIndex]['key']);
+        $this->assertEquals($integersResponse['body']['type'], $attributes[$integersIndex]['type']);
+        $this->assertEquals($integersResponse['body']['status'], $attributes[$integersIndex]['status']);
+        $this->assertEquals($integersResponse['body']['required'], $attributes[$integersIndex]['required']);
+        $this->assertEquals($integersResponse['body']['array'], $attributes[$integersIndex]['array']);
+        $this->assertEquals($integersResponse['body']['default'], $attributes[$integersIndex]['default']);
+        $this->assertEquals($integersResponse['body']['min'], $attributes[$integersIndex]['min']);
+        $this->assertEquals($integersResponse['body']['max'], $attributes[$integersIndex]['max']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -1139,7 +1147,8 @@ trait DatabasesBase
         $attributes = $collection['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(12, $attributes);
+        $expectedCount = $this->getSupportForRelationships() ? 12 : 11;
+        $this->assertCount($expectedCount, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -1214,31 +1223,38 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
 
-        $this->assertEquals($relationshipResponse['body']['key'], $attributes[9]['key']);
-        $this->assertEquals($relationshipResponse['body']['type'], $attributes[9]['type']);
-        $this->assertEquals($relationshipResponse['body']['status'], $attributes[9]['status']);
-        $this->assertEquals($relationshipResponse['body']['required'], $attributes[9]['required']);
-        $this->assertEquals($relationshipResponse['body']['array'], $attributes[9]['array']);
-        $this->assertEquals($relationshipResponse['body']['relatedCollection'], $attributes[9]['relatedCollection']);
-        $this->assertEquals($relationshipResponse['body']['relationType'], $attributes[9]['relationType']);
-        $this->assertEquals($relationshipResponse['body']['twoWay'], $attributes[9]['twoWay']);
-        $this->assertEquals($relationshipResponse['body']['twoWayKey'], $attributes[9]['twoWayKey']);
+        // Relationship attribute assertions - only when relationships are supported
+        $stringsIndex = 9;
+        $integersIndex = 10;
+        if ($this->getSupportForRelationships()) {
+            $this->assertEquals($relationshipResponse['body']['key'], $attributes[9]['key']);
+            $this->assertEquals($relationshipResponse['body']['type'], $attributes[9]['type']);
+            $this->assertEquals($relationshipResponse['body']['status'], $attributes[9]['status']);
+            $this->assertEquals($relationshipResponse['body']['required'], $attributes[9]['required']);
+            $this->assertEquals($relationshipResponse['body']['array'], $attributes[9]['array']);
+            $this->assertEquals($relationshipResponse['body']['relatedCollection'], $attributes[9]['relatedCollection']);
+            $this->assertEquals($relationshipResponse['body']['relationType'], $attributes[9]['relationType']);
+            $this->assertEquals($relationshipResponse['body']['twoWay'], $attributes[9]['twoWay']);
+            $this->assertEquals($relationshipResponse['body']['twoWayKey'], $attributes[9]['twoWayKey']);
+            $stringsIndex = 10;
+            $integersIndex = 11;
+        }
 
-        $this->assertEquals($stringsResponse['body']['key'], $attributes[10]['key']);
-        $this->assertEquals($stringsResponse['body']['type'], $attributes[10]['type']);
-        $this->assertEquals($stringsResponse['body']['status'], $attributes[10]['status']);
-        $this->assertEquals($stringsResponse['body']['required'], $attributes[10]['required']);
-        $this->assertEquals($stringsResponse['body']['array'], $attributes[10]['array']);
-        $this->assertEquals($stringsResponse['body']['default'], $attributes[10]['default']);
+        $this->assertEquals($stringsResponse['body']['key'], $attributes[$stringsIndex]['key']);
+        $this->assertEquals($stringsResponse['body']['type'], $attributes[$stringsIndex]['type']);
+        $this->assertEquals($stringsResponse['body']['status'], $attributes[$stringsIndex]['status']);
+        $this->assertEquals($stringsResponse['body']['required'], $attributes[$stringsIndex]['required']);
+        $this->assertEquals($stringsResponse['body']['array'], $attributes[$stringsIndex]['array']);
+        $this->assertEquals($stringsResponse['body']['default'], $attributes[$stringsIndex]['default']);
 
-        $this->assertEquals($integersResponse['body']['key'], $attributes[11]['key']);
-        $this->assertEquals($integersResponse['body']['type'], $attributes[11]['type']);
-        $this->assertEquals($integersResponse['body']['status'], $attributes[11]['status']);
-        $this->assertEquals($integersResponse['body']['required'], $attributes[11]['required']);
-        $this->assertEquals($integersResponse['body']['array'], $attributes[11]['array']);
-        $this->assertEquals($integersResponse['body']['default'], $attributes[11]['default']);
-        $this->assertEquals($integersResponse['body']['min'], $attributes[11]['min']);
-        $this->assertEquals($integersResponse['body']['max'], $attributes[11]['max']);
+        $this->assertEquals($integersResponse['body']['key'], $attributes[$integersIndex]['key']);
+        $this->assertEquals($integersResponse['body']['type'], $attributes[$integersIndex]['type']);
+        $this->assertEquals($integersResponse['body']['status'], $attributes[$integersIndex]['status']);
+        $this->assertEquals($integersResponse['body']['required'], $attributes[$integersIndex]['required']);
+        $this->assertEquals($integersResponse['body']['array'], $attributes[$integersIndex]['array']);
+        $this->assertEquals($integersResponse['body']['default'], $attributes[$integersIndex]['default']);
+        $this->assertEquals($integersResponse['body']['min'], $attributes[$integersIndex]['min']);
+        $this->assertEquals($integersResponse['body']['max'], $attributes[$integersIndex]['max']);
 
         /**
          * Test for FAILURE
@@ -1825,21 +1841,24 @@ trait DatabasesBase
         /**
          * Resubmit same document, nothing to update
          */
+        $upsertData = [
+            'title' => 'Thor: Ragnarok',
+            'releaseYear' => 2000,
+            'integers' => [],
+            'birthDay' => null,
+            'duration' => null,
+            'actors' => [],
+            'tagline' => '',
+            'description' => '',
+        ];
+        if ($this->getSupportForRelationships()) {
+            $upsertData['starringActors'] = [];
+        }
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'data' => [
-                'title' => 'Thor: Ragnarok',
-                'releaseYear' => 2000,
-                'integers' => [],
-                'birthDay' => null,
-                'duration' => null,
-                'starringActors' => [],
-                'actors' => [],
-                'tagline' => '',
-                'description' => '',
-            ],
+            'data' => $upsertData,
             'permissions' => [
                 Permission::read(Role::users()),
                 Permission::update(Role::users()),
@@ -1933,8 +1952,9 @@ trait DatabasesBase
         ], $this->getHeaders()));
         $this->assertEquals(204, $document['headers']['status-code']);
 
-        // relationship behaviour
-        $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+        // relationship behaviour - only test on databases that support relationships
+        if ($this->getSupportForRelationships()) {
+            $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2120,6 +2140,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(2, $documents['body']['total']);
+        }
 
         // test without passing permissions
         $document = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, array_merge([
@@ -2252,10 +2273,11 @@ trait DatabasesBase
 
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
-            // upsertion for the related document without passing permissions
-            // data should get added
-            $newPersonId = ID::unique();
-            $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+            // upsertion for the related document without passing permissions - only for databases that support relationships
+            if ($this->getSupportForRelationships()) {
+                // data should get added
+                $newPersonId = ID::unique();
+                $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -2351,6 +2373,7 @@ trait DatabasesBase
             } else {
                 $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$createdAt']);
                 $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
+            }
             }
         }
     }

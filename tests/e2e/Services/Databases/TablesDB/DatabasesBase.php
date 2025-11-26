@@ -2225,10 +2225,11 @@ trait DatabasesBase
 
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
-            // upsert for the related row without passing permissions
-            // data should get added
-            $newPersonId = ID::unique();
-            $personNoPerm = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/' . $newPersonId, array_merge([
+            // upsert for the related row without passing permissions - only for databases that support relationships
+            if ($this->getSupportForRelationships()) {
+                // data should get added
+                $newPersonId = ID::unique();
+                $personNoPerm = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $person['body']['$id'] . '/rows/' . $newPersonId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
@@ -2276,6 +2277,7 @@ trait DatabasesBase
             $this->assertArrayHasKey('$permissions', $library3['body']);
             $this->assertCount(3, $library3['body']['$permissions']);
             $this->assertNotEmpty($library3['body']['$permissions']);
+            }
         }
     }
 
@@ -4947,7 +4949,7 @@ trait DatabasesBase
 
         if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
-            return;
+            return $data;
         }
 
         $databaseId = $data['databaseId'];
@@ -5681,6 +5683,11 @@ trait DatabasesBase
      */
     public function testValidateOperators(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5724,6 +5731,11 @@ trait DatabasesBase
      */
     public function testSelectQueries(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['personCollection'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
