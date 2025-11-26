@@ -10,7 +10,7 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 storage.listBuckets(
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {

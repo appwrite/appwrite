@@ -9,7 +9,7 @@ Functions functions = Functions(client);
 
 Deployment result = await functions.createVcsDeployment(
     functionId: '<FUNCTION_ID>',
-    type: VCSDeploymentType.branch,
+    type: VCSReferenceType.branch,
     reference: '<REFERENCE>',
     activate: false, // (optional)
 );

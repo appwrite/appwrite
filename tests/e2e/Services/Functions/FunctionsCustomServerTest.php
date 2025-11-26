@@ -14,6 +14,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -392,6 +393,10 @@ class FunctionsCustomServerTest extends Scope
 
         $functionId = $function['body']['$id'] ?? '';
 
+        $domain = ID::unique() . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $rule = $this->createFunctionRule($functionId, $domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
         $deployment = $this->createTemplateDeployment(
             $functionId,
             [
@@ -408,6 +413,20 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
+        $rule = $this->getFunctionRule($rule['body']['$id']);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment is still building", $response['body']);
+        $this->assertStringContainsString("The page will update after the build completes.", $response['body']);
+
+        $deployment = $this->getDeployment($functionId, $deployment['body']['$id']);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
         // Wait for deployment to be ready
         $deploymentId = $deployment['body']['$id'];
         $this->assertEventually(function () use ($functionId, $deploymentId) {
@@ -417,7 +436,6 @@ class FunctionsCustomServerTest extends Scope
 
         // Verify deployment sizes
         $deployment = $this->getDeployment($functionId, $deploymentId);
-        $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertGreaterThan(0, $deployment['body']['sourceSize']);
         $this->assertGreaterThan(0, $deployment['body']['buildSize']);
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
@@ -662,6 +680,10 @@ class FunctionsCustomServerTest extends Scope
          */
         $functionId = $data['functionId'];
 
+        $domain = ID::unique() . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $rule = $this->createFunctionRule($functionId, $domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true
@@ -672,6 +694,18 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('waiting', $deployment['body']['status']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.js', $deployment['body']['entrypoint']);
+
+        $rule = $this->getFunctionRule($rule['body']['$id']);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString("Deployment is still building", $response['body']);
+        $this->assertStringContainsString('The page will update after the build completes.', $response['body']);
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
@@ -2392,6 +2426,12 @@ class FunctionsCustomServerTest extends Scope
         $domain = $this->setupFunctionDomain($functionId);
         $proxyClient->setEndpoint('http://' . $domain);
 
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
+
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true
@@ -2404,11 +2444,22 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('Deployment is still building', $response['body']);
+        $this->assertStringContainsString('The page will update after the build completes.', $response['body']);
 
         // canceled deployment
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Error Pages',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'commands' => 'cd non-existing-directory',
+            'execute' => ['any']
+        ]);
+        $domain = $this->setupFunctionDomain($functionId);
+        $proxyClient->setEndpoint('http://' . $domain);
         $deployment = $this->createDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
             'activate' => true
@@ -2426,9 +2477,9 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('Deployment build canceled', $response['body']);
+        $this->assertStringContainsString('This build was canceled and won\'t be deployed.', $response['body']);
 
         $this->cleanupFunction($functionId);
     }
