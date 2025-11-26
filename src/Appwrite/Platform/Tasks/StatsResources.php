@@ -44,7 +44,6 @@ class StatsResources extends Action
             ->inject('dbForPlatform')
             ->inject('logError')
             ->inject('queueForStatsResources')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
