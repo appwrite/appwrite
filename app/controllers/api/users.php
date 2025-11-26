@@ -115,7 +115,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             $emailCanonical = null;
         }
         $hashedPassword = null;
-        
+
         $isHashed = !$hash instanceof Plaintext;
         if (!empty($password)) {
             if (!$isHashed) { // Password was never hashed, hash it with the default hash
