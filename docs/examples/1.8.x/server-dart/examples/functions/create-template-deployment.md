@@ -12,7 +12,7 @@ Deployment result = await functions.createTemplateDeployment(
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    type: .commit,
+    type: TemplateReferenceType.commit,
     reference: '<REFERENCE>',
     activate: false, // (optional)
 );

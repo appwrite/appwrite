@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b4743ea3702b0c46864372c7a8d84817",
+    "content-hash": "1d3d4b19a835b3be79a63146fcdd389b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -283,16 +283,16 @@
         },
         {
             "name": "brick/math",
-            "version": "0.14.0",
+            "version": "0.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2"
+                "reference": "f05858549e5f9d7bb45875a75583240a38a281d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2",
-                "reference": "113a8ee2656b882d4c3164fa31aa6e12cbb7aaa2",
+                "url": "https://api.github.com/repos/brick/math/zipball/f05858549e5f9d7bb45875a75583240a38a281d0",
+                "reference": "f05858549e5f9d7bb45875a75583240a38a281d0",
                 "shasum": ""
             },
             "require": {
@@ -331,7 +331,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.14.0"
+                "source": "https://github.com/brick/math/tree/0.14.1"
             },
             "funding": [
                 {
@@ -339,7 +339,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-08-29T12:40:03+00:00"
+            "time": "2025-11-24T14:40:29+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -1763,16 +1763,16 @@
         },
         {
             "name": "php-amqplib/php-amqplib",
-            "version": "v3.7.3",
+            "version": "v3.7.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-amqplib/php-amqplib.git",
-                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59"
+                "reference": "381b6f7c600e0e0c7463cdd7f7a1a3bc6268e5fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-amqplib/php-amqplib/zipball/9f50fe69a9f1a19e2cb25596a354d705de36fe59",
-                "reference": "9f50fe69a9f1a19e2cb25596a354d705de36fe59",
+                "url": "https://api.github.com/repos/php-amqplib/php-amqplib/zipball/381b6f7c600e0e0c7463cdd7f7a1a3bc6268e5fd",
+                "reference": "381b6f7c600e0e0c7463cdd7f7a1a3bc6268e5fd",
                 "shasum": ""
             },
             "require": {
@@ -1838,9 +1838,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-amqplib/php-amqplib/issues",
-                "source": "https://github.com/php-amqplib/php-amqplib/tree/v3.7.3"
+                "source": "https://github.com/php-amqplib/php-amqplib/tree/v3.7.4"
             },
-            "time": "2025-02-18T20:11:13+00:00"
+            "time": "2025-11-23T17:00:56+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -3953,16 +3953,16 @@
         },
         {
             "name": "utopia-php/detector",
-            "version": "0.2.2",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/detector.git",
-                "reference": "9a41be5f21efe2d865de79b08dff94fff85ce5e9"
+                "reference": "c1f49b3e82250c3256ffba48aa9737d6c17a243a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/detector/zipball/9a41be5f21efe2d865de79b08dff94fff85ce5e9",
-                "reference": "9a41be5f21efe2d865de79b08dff94fff85ce5e9",
+                "url": "https://api.github.com/repos/utopia-php/detector/zipball/c1f49b3e82250c3256ffba48aa9737d6c17a243a",
+                "reference": "c1f49b3e82250c3256ffba48aa9737d6c17a243a",
                 "shasum": ""
             },
             "require": {
@@ -3992,9 +3992,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/detector/issues",
-                "source": "https://github.com/utopia-php/detector/tree/0.2.2"
+                "source": "https://github.com/utopia-php/detector/tree/0.2.3"
             },
-            "time": "2025-10-31T12:43:31+00:00"
+            "time": "2025-11-24T15:52:51+00:00"
         },
         {
             "name": "utopia-php/dns",
@@ -4511,16 +4511,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.4.0",
+            "version": "1.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "18bd7d39dcee09280f40edb12879c727ecec98d3"
+                "reference": "4abe70cc242bbffebfa377e4126ee2a4a1c9ef7e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/18bd7d39dcee09280f40edb12879c727ecec98d3",
-                "reference": "18bd7d39dcee09280f40edb12879c727ecec98d3",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/4abe70cc242bbffebfa377e4126ee2a4a1c9ef7e",
+                "reference": "4abe70cc242bbffebfa377e4126ee2a4a1c9ef7e",
                 "shasum": ""
             },
             "require": {
@@ -4560,9 +4560,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.4.0"
+                "source": "https://github.com/utopia-php/migration/tree/1.3.6"
             },
-            "time": "2025-11-21T06:08:59+00:00"
+            "time": "2025-11-25T11:36:57+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5434,16 +5434,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.5.8",
+            "version": "1.5.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "05367bc4a4c3e020e9aca114ae875b626ce8fc55"
+                "reference": "ee434aa00a9185380b9a39bb46bf86d7104d3a93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/05367bc4a4c3e020e9aca114ae875b626ce8fc55",
-                "reference": "05367bc4a4c3e020e9aca114ae875b626ce8fc55",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ee434aa00a9185380b9a39bb46bf86d7104d3a93",
+                "reference": "ee434aa00a9185380b9a39bb46bf86d7104d3a93",
                 "shasum": ""
             },
             "require": {
@@ -5479,9 +5479,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.8"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.5.9"
             },
-            "time": "2025-11-20T11:00:34+00:00"
+            "time": "2025-11-25T05:22:25+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8972,5 +8972,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
