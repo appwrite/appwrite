@@ -1955,191 +1955,191 @@ trait DatabasesBase
         // relationship behaviour - only test on databases that support relationships
         if ($this->getSupportForRelationships()) {
             $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => 'person-upsert',
-            'name' => 'person',
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-                Permission::create(Role::users()),
-            ],
-            'documentSecurity' => true,
-        ]);
-
-        $this->assertEquals(201, $person['headers']['status-code']);
-
-        $library = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => 'library-upsert',
-            'name' => 'library',
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::create(Role::users()),
-                Permission::delete(Role::users()),
-            ],
-            'documentSecurity' => true,
-        ]);
-
-        $this->assertEquals(201, $library['headers']['status-code']);
-
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'fullName',
-            'size' => 255,
-            'required' => false,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedCollectionId' => 'library-upsert',
-            'type' => Database::RELATION_ONE_TO_ONE,
-            'key' => 'library',
-            'twoWay' => true,
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $libraryName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'libraryName',
-            'size' => 255,
-            'required' => true,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $this->assertEquals(202, $libraryName['headers']['status-code']);
-
-        // upserting values
-        $documentId = ID::unique();
-        $person1 = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/'.$documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'library' => [
-                    '$id' => 'library1',
-                    '$permissions' => [
-                        Permission::read(Role::users()),
-                        Permission::update(Role::users()),
-                        Permission::delete(Role::users()),
-                    ],
-                    'libraryName' => 'Library 1',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'collectionId' => 'person-upsert',
+                'name' => 'person',
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                    Permission::create(Role::users()),
                 ],
-            ],
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-            ]
-        ]);
+                'documentSecurity' => true,
+            ]);
 
-        $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['fullName', 'library.*'])->toString(),
-                Query::equal('library', ['library1'])->toString(),
-            ],
-        ]);
+            $this->assertEquals(201, $person['headers']['status-code']);
 
-        $this->assertEquals(1, $documents['body']['total']);
-        $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
-
-
-        $person1 = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/'.$documentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'library' => [
-                    '$id' => 'library1',
-                    '$permissions' => [
-                        Permission::read(Role::users()),
-                        Permission::update(Role::users()),
-                        Permission::delete(Role::users()),
-                    ],
-                    'libraryName' => 'Library 2',
+            $library = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'collectionId' => 'library-upsert',
+                'name' => 'library',
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::create(Role::users()),
+                    Permission::delete(Role::users()),
                 ],
-            ],
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-            ]
-        ]);
+                'documentSecurity' => true,
+            ]);
 
-        // data should get updated
-        $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['fullName', 'library.*'])->toString(),
-                Query::equal('library', ['library1'])->toString(),
-            ],
-        ]);
+            $this->assertEquals(201, $library['headers']['status-code']);
 
-        $this->assertEquals(1, $documents['body']['total']);
-        $this->assertEquals('Library 2', $documents['body']['documents'][0]['library']['libraryName']);
+            $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'fullName',
+                'size' => 255,
+                'required' => false,
+            ]);
 
+            sleep(1); // Wait for worker
 
-        // data should get added
-        $person1 = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/'.ID::unique(), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [
-                'library' => [
-                    '$id' => 'library2',
-                    '$permissions' => [
-                        Permission::read(Role::users()),
-                        Permission::update(Role::users()),
-                        Permission::delete(Role::users()),
+            $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/relationship', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'relatedCollectionId' => 'library-upsert',
+                'type' => Database::RELATION_ONE_TO_ONE,
+                'key' => 'library',
+                'twoWay' => true,
+                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            ]);
+
+            sleep(1); // Wait for worker
+
+            $libraryName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/attributes/string', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'libraryName',
+                'size' => 255,
+                'required' => true,
+            ]);
+
+            sleep(1); // Wait for worker
+
+            $this->assertEquals(202, $libraryName['headers']['status-code']);
+
+            // upserting values
+            $documentId = ID::unique();
+            $person1 = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/'.$documentId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'library' => [
+                        '$id' => 'library1',
+                        '$permissions' => [
+                            Permission::read(Role::users()),
+                            Permission::update(Role::users()),
+                            Permission::delete(Role::users()),
+                        ],
+                        'libraryName' => 'Library 1',
                     ],
-                    'libraryName' => 'Library 2',
                 ],
-            ],
-            'permissions' => [
-                Permission::read(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
-            ]
-        ]);
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ]
+            ]);
 
-        $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['fullName', 'library.*'])->toString()
-            ],
-        ]);
-        $this->assertEquals(2, $documents['body']['total']);
+            $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
+            $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::select(['fullName', 'library.*'])->toString(),
+                    Query::equal('library', ['library1'])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(1, $documents['body']['total']);
+            $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
+
+
+            $person1 = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/'.$documentId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'library' => [
+                        '$id' => 'library1',
+                        '$permissions' => [
+                            Permission::read(Role::users()),
+                            Permission::update(Role::users()),
+                            Permission::delete(Role::users()),
+                        ],
+                        'libraryName' => 'Library 2',
+                    ],
+                ],
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ]
+            ]);
+
+            // data should get updated
+            $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
+            $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::select(['fullName', 'library.*'])->toString(),
+                    Query::equal('library', ['library1'])->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(1, $documents['body']['total']);
+            $this->assertEquals('Library 2', $documents['body']['documents'][0]['library']['libraryName']);
+
+
+            // data should get added
+            $person1 = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/'.ID::unique(), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'data' => [
+                    'library' => [
+                        '$id' => 'library2',
+                        '$permissions' => [
+                            Permission::read(Role::users()),
+                            Permission::update(Role::users()),
+                            Permission::delete(Role::users()),
+                        ],
+                        'libraryName' => 'Library 2',
+                    ],
+                ],
+                'permissions' => [
+                    Permission::read(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ]
+            ]);
+
+            $this->assertEquals('Library 2', $person1['body']['library']['libraryName']);
+            $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::select(['fullName', 'library.*'])->toString()
+                ],
+            ]);
+            $this->assertEquals(2, $documents['body']['total']);
         }
 
         // test without passing permissions
@@ -2278,102 +2278,102 @@ trait DatabasesBase
                 // data should get added
                 $newPersonId = ID::unique();
                 $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'data' => [
-                    'library' => [
-                        '$id' => 'library3',
-                        'libraryName' => 'Library 3',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'data' => [
+                        'library' => [
+                            '$id' => 'library3',
+                            'libraryName' => 'Library 3',
+                        ],
                     ],
-                ],
-            ]);
+                ]);
 
-            $this->assertEquals('Library 3', $personNoPerm['body']['library']['libraryName']);
-            $this->assertCount(3, $personNoPerm['body']['library']['$permissions']);
-            $this->assertCount(3, $personNoPerm['body']['$permissions']);
-            $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'queries' => [
-                    Query::select(['fullName', 'library.*'])->toString()
-                ],
-            ]);
-            $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
-            $documentsDetails = $documents['body']['documents'];
-            foreach ($documentsDetails as $doc) {
-                $this->assertCount(3, $doc['$permissions']);
-            }
-            $found = false;
-            foreach ($documents['body']['documents'] as $doc) {
-                if (isset($doc['library']['libraryName']) && $doc['library']['libraryName'] === 'Library 3') {
-                    $found = true;
-                    break;
+                $this->assertEquals('Library 3', $personNoPerm['body']['library']['libraryName']);
+                $this->assertCount(3, $personNoPerm['body']['library']['$permissions']);
+                $this->assertCount(3, $personNoPerm['body']['$permissions']);
+                $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'queries' => [
+                        Query::select(['fullName', 'library.*'])->toString()
+                    ],
+                ]);
+                $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
+                $documentsDetails = $documents['body']['documents'];
+                foreach ($documentsDetails as $doc) {
+                    $this->assertCount(3, $doc['$permissions']);
                 }
-            }
-            $this->assertTrue($found, 'Library 3 should be present in the upserted documents.');
+                $found = false;
+                foreach ($documents['body']['documents'] as $doc) {
+                    if (isset($doc['library']['libraryName']) && $doc['library']['libraryName'] === 'Library 3') {
+                        $found = true;
+                        break;
+                    }
+                }
+                $this->assertTrue($found, 'Library 3 should be present in the upserted documents.');
 
-            // Fetch the related library and assert on its permissions (should be default/inherited)
-            $library3 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/documents/library3', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()));
+                // Fetch the related library and assert on its permissions (should be default/inherited)
+                $library3 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/documents/library3', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()));
 
-            $this->assertEquals(200, $library3['headers']['status-code']);
-            $this->assertEquals('Library 3', $library3['body']['libraryName']);
-            $this->assertArrayHasKey('$permissions', $library3['body']);
-            $this->assertCount(3, $library3['body']['$permissions']);
-            $this->assertNotEmpty($library3['body']['$permissions']);
+                $this->assertEquals(200, $library3['headers']['status-code']);
+                $this->assertEquals('Library 3', $library3['body']['libraryName']);
+                $this->assertArrayHasKey('$permissions', $library3['body']);
+                $this->assertCount(3, $library3['body']['$permissions']);
+                $this->assertNotEmpty($library3['body']['$permissions']);
 
-            // Readonly attributes are ignored
-            $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'data' => [
-                    '$id' => 'some-other-id',
-                    '$collectionId' => 'some-other-collection',
-                    '$databaseId' => 'some-other-database',
-                    '$createdAt' => '2024-01-01T00:00:00Z',
-                    '$updatedAt' => '2024-01-01T00:00:00Z',
-                    'library' => [
-                        '$id' => 'library3',
-                        'libraryName' => 'Library 3',
+                // Readonly attributes are ignored
+                $personNoPerm = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'data' => [
+                        '$id' => 'some-other-id',
+                        '$collectionId' => 'some-other-collection',
+                        '$databaseId' => 'some-other-database',
                         '$createdAt' => '2024-01-01T00:00:00Z',
                         '$updatedAt' => '2024-01-01T00:00:00Z',
+                        'library' => [
+                            '$id' => 'library3',
+                            'libraryName' => 'Library 3',
+                            '$createdAt' => '2024-01-01T00:00:00Z',
+                            '$updatedAt' => '2024-01-01T00:00:00Z',
+                        ],
                     ],
-                ],
-            ]);
+                ]);
 
-            $update = $personNoPerm;
-            $update['body']['$id'] = 'random';
-            $update['body']['$sequence'] = 123;
-            $update['body']['$databaseId'] = 'random';
-            $update['body']['$collectionId'] = 'random';
-            $update['body']['$createdAt'] = '2024-01-01T00:00:00.000+00:00';
-            $update['body']['$updatedAt'] = '2024-01-01T00:00:00.000+00:00';
+                $update = $personNoPerm;
+                $update['body']['$id'] = 'random';
+                $update['body']['$sequence'] = 123;
+                $update['body']['$databaseId'] = 'random';
+                $update['body']['$collectionId'] = 'random';
+                $update['body']['$createdAt'] = '2024-01-01T00:00:00.000+00:00';
+                $update['body']['$updatedAt'] = '2024-01-01T00:00:00.000+00:00';
 
-            $upserted = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'data' => $update['body']
-            ]);
+                $upserted = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $newPersonId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'data' => $update['body']
+                ]);
 
-            $this->assertEquals(200, $upserted['headers']['status-code']);
-            $this->assertEquals($personNoPerm['body']['$id'], $upserted['body']['$id']);
-            $this->assertEquals($personNoPerm['body']['$collectionId'], $upserted['body']['$collectionId']);
-            $this->assertEquals($personNoPerm['body']['$databaseId'], $upserted['body']['$databaseId']);
-            $this->assertEquals($personNoPerm['body']['$sequence'], $upserted['body']['$sequence']);
+                $this->assertEquals(200, $upserted['headers']['status-code']);
+                $this->assertEquals($personNoPerm['body']['$id'], $upserted['body']['$id']);
+                $this->assertEquals($personNoPerm['body']['$collectionId'], $upserted['body']['$collectionId']);
+                $this->assertEquals($personNoPerm['body']['$databaseId'], $upserted['body']['$databaseId']);
+                $this->assertEquals($personNoPerm['body']['$sequence'], $upserted['body']['$sequence']);
 
-            if ($this->getSide() === 'client') {
-                $this->assertEquals($personNoPerm['body']['$createdAt'], $upserted['body']['$createdAt']);
-                $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
-            } else {
-                $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$createdAt']);
-                $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
-            }
+                if ($this->getSide() === 'client') {
+                    $this->assertEquals($personNoPerm['body']['$createdAt'], $upserted['body']['$createdAt']);
+                    $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
+                } else {
+                    $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$createdAt']);
+                    $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
+                }
             }
         }
     }
