@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Functions;
-use Appwrite\Enums\Type;
+use Appwrite\Enums\TemplateReferenceType;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -16,7 +16,7 @@ $result = $functions->createTemplateDeployment(
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    type: Type::COMMIT(),
+    type: TemplateReferenceType::COMMIT(),
     reference: '<REFERENCE>',
     activate: false // optional
 );

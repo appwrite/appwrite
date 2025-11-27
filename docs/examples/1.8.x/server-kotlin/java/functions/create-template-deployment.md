@@ -1,7 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
-import io.appwrite.enums.Type;
+import io.appwrite.enums.TemplateReferenceType;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -15,7 +15,7 @@ functions.createTemplateDeployment(
     "<REPOSITORY>", // repository
     "<OWNER>", // owner
     "<ROOT_DIRECTORY>", // rootDirectory
-    .COMMIT, // type
+    TemplateReferenceType.COMMIT, // type
     "<REFERENCE>", // reference
     false, // activate (optional)
     new CoroutineCallback<>((result, error) -> {

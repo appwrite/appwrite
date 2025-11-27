@@ -93,6 +93,62 @@ const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
+/**
+ * Token Expiration times.
+ */
+const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
+const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
+const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
+const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
+const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+
+/**
+ * Token Lengths.
+ */
+const TOKEN_LENGTH_MAGIC_URL = 64;
+const TOKEN_LENGTH_VERIFICATION = 256;
+const TOKEN_LENGTH_RECOVERY = 256;
+const TOKEN_LENGTH_OAUTH2 = 64;
+const TOKEN_LENGTH_SESSION = 256;
+
+/**
+ * Token Types.
+ */
+const TOKEN_TYPE_LOGIN = 1; // Deprecated
+const TOKEN_TYPE_VERIFICATION = 2;
+const TOKEN_TYPE_RECOVERY = 3;
+const TOKEN_TYPE_INVITE = 4;
+const TOKEN_TYPE_MAGIC_URL = 5;
+const TOKEN_TYPE_PHONE = 6;
+const TOKEN_TYPE_OAUTH2 = 7;
+const TOKEN_TYPE_GENERIC = 8;
+const TOKEN_TYPE_EMAIL = 9; // OTP
+
+/**
+ * Session Providers.
+ */
+const SESSION_PROVIDER_EMAIL = 'email';
+const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+const SESSION_PROVIDER_PHONE = 'phone';
+const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_TOKEN = 'token';
+const SESSION_PROVIDER_SERVER = 'server';
+
+/**
+ * Activity associated with user or the app.
+ */
+const ACTIVITY_TYPE_APP = 'app';
+const ACTIVITY_TYPE_USER = 'user';
+const ACTIVITY_TYPE_GUEST = 'guest';
+
+/**
+ * MFA
+ */
+const MFA_RECENT_DURATION = 1800; // 30 mins
+
+
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
@@ -297,3 +353,6 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
+
+/** Preview cookie */
+const COOKIE_NAME_PREVIEW = 'a_jwt_console';

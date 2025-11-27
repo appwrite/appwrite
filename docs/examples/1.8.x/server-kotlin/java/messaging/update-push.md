@@ -12,12 +12,12 @@ Messaging messaging = new Messaging(client);
 
 messaging.updatePush(
     "<MESSAGE_ID>", // messageId
-    listOf(), // topics (optional)
-    listOf(), // users (optional)
-    listOf(), // targets (optional)
+    List.of(), // topics (optional)
+    List.of(), // users (optional)
+    List.of(), // targets (optional)
     "<TITLE>", // title (optional)
     "<BODY>", // body (optional)
-    mapOf( "a" to "b" ), // data (optional)
+    Map.of("a", "b"), // data (optional)
     "<ACTION>", // action (optional)
     "<ID1:ID2>", // image (optional)
     "<ICON>", // icon (optional)

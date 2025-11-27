@@ -14,7 +14,7 @@ tablesDB.createPolygonColumn(
     "<TABLE_ID>", // tableId
     "", // key
     false, // required
-    listOf([[1, 2], [3, 4], [5, 6], [1, 2]]), // default (optional)
+    List.of(List.of(List.of(1, 2), List.of(3, 4), List.of(5, 6), List.of(1, 2))), // default (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

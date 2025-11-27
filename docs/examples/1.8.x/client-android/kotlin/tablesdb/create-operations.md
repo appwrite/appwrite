@@ -10,15 +10,13 @@ val tablesDB = TablesDB(client)
 
 val result = tablesDB.createOperations(
     transactionId = "<TRANSACTION_ID>", 
-    operations = listOf(
-	    {
-	        "action": "create",
-	        "databaseId": "<DATABASE_ID>",
-	        "tableId": "<TABLE_ID>",
-	        "rowId": "<ROW_ID>",
-	        "data": {
-	            "name": "Walter O'Brien"
-	        }
-	    }
-	), // (optional)
+    operations = listOf(mapOf(
+        "action" to "create",
+        "databaseId" to "<DATABASE_ID>",
+        "tableId" to "<TABLE_ID>",
+        "rowId" to "<ROW_ID>",
+        "data" to mapOf(
+            "name" to "Walter O'Brien"
+        )
+    )), // (optional)
 )

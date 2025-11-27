@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
@@ -16,13 +15,13 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\SDK\Method;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -34,7 +33,7 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
-$parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
+$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
     foreach ($matches[1] ?? [] as $pos => $match) {
         $find = $matches[0][$pos];
@@ -232,44 +231,97 @@ App::init()
     ->inject('mode')
     ->inject('team')
     ->inject('apiKey')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
         $route = $utopia->getRoute();
-        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted' && str_starts_with($route->getPath(), '/v1/backups')) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database Backups are available on Appwrite Cloud');
-        }
+
+        /**
+         * Handle user authentication and session validation.
+         *
+         * This function follows a series of steps to determine the appropriate user session
+         * based on cookies, headers, and JWT tokens.
+         *
+         * Process:
+         *
+         * Project & Role Validation:
+         * 1. Check if the project is empty. If so, throw an exception.
+         * 2. Get the roles configuration.
+         * 3. Determine the role for the user based on the user document.
+         * 4. Get the scopes for the role.
+         *
+         * API Key Authentication:
+         * 5. If there is an API key:
+         *    - Verify no user session exists simultaneously
+         *    - Check if key is expired
+         *    - Set role and scopes from API key
+         *    - Handle special app role case
+         *    - For standard keys, update last accessed time
+         *
+         * User Activity:
+         * 6. If the project is not the console and user is not admin:
+         *    - Update user's last activity timestamp
+         *
+         * Access Control:
+         * 7. Get the method from the route
+         * 8. Validate namespace permissions
+         * 9. Validate scope permissions
+         * 10. Check if user is blocked
+         *
+         * Security Checks:
+         * 11. Verify password status (check if reset required)
+         * 12. Validate MFA requirements:
+         *     - Check if MFA is enabled
+         *     - Verify email status
+         *     - Verify phone status
+         *     - Verify authenticator status
+         * 13. Handle Multi-Factor Authentication:
+         *     - Check remaining required factors
+         *     - Validate factor completion
+         *     - Throw exception if factors incomplete
+         */
+
+        // Step 1: Check if project is empty
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        // Step 2: Get roles configuration
         $roles = Config::getParam('roles', []);
+
+        // Step 3: Determine role for user
+        // TODO get scopes from the identity instead of the user roles config. The identity will containn the scopes the user authorized for the access token.
 
         $role = $user->isEmpty()
             ? Role::guests()->toString()
             : Role::users()->toString();
 
+        // Step 4: Get scopes for the role
         $scopes = $roles[$role]['scopes'];
 
-        // API Key authentication
+        // Step 5: API Key Authentication
         if (!empty($apiKey)) {
+            // Verify no user session exists simultaneously
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
+            // Check if key is expired
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
+            // Set role and scopes from API key
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
 
-            if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
+            // Handle special app role case
+            if ($apiKey->getRole() === User::ROLE_APPS) {
                 // Disable authorization checks for API keys
                 Authorization::setDefaultStatus(false);
 
-                $user = new Document([
+                $user = new User([
                     '$id' => '',
                     'status' => true,
-                    'type' => Auth::ACTIVITY_TYPE_APP,
+                    'type' => ACTIVITY_TYPE_APP,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
@@ -278,6 +330,7 @@ App::init()
                 $queueForAudits->setUser($user);
             }
 
+            // For standard keys, update last accessed time
             if ($apiKey->getType() === API_KEY_STANDARD) {
                 $dbKey = $project->find(
                     key: 'secret',
@@ -343,11 +396,11 @@ App::init()
         $scopes = \array_unique($scopes);
 
         Authorization::setRole($role);
-        foreach (Auth::getRoles($user) as $authRole) {
+        foreach ($user->getRoles() as $authRole) {
             Authorization::setRole($authRole);
         }
 
-        // Update project last activity
+        // Step 6: Update project and user last activity
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
@@ -356,7 +409,6 @@ App::init()
             }
         }
 
-        // Update user last activity
         if (!empty($user->getId())) {
             $accessedAt = $user->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
@@ -370,6 +422,7 @@ App::init()
             }
         }
 
+        // Steps 7-9: Access Control - Method, Namespace and Scope Validation
         /**
          * @var ?Method $method
          */
@@ -387,27 +440,29 @@ App::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && !$project->getAttribute('services', [])[$namespace]
-                && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+                && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
         }
 
-        // Do now allow access if scope is not allowed
+        // Step 9: Validate scope permissions
         $allowed = (array)$route->getLabel('scope', 'none');
         if (empty(\array_intersect($allowed, $scopes))) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
 
-        // Do not allow access to blocked accounts
+        // Step 10: Check if user is blocked
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
+        // Step 11: Verify password status
         if ($user->getAttribute('reset')) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
+        // Step 12: Validate MFA requirements
         $mfaEnabled = $user->getAttribute('mfa', false);
         $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
         $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
@@ -415,6 +470,7 @@ App::init()
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
+        // Step 13: Handle Multi-Factor Authentication
         if (!in_array('mfa', $route->getGroups())) {
             if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
@@ -454,7 +510,7 @@ App::init()
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['rest']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -485,8 +541,8 @@ App::init()
         $closestLimit = null;
 
         $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
+        $isPrivilegedUser = User::isPrivileged($roles);
+        $isAppUser = User::isApp($roles);
 
         foreach ($timeLimitArray as $timeLimit) {
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
@@ -541,7 +597,7 @@ App::init()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         }
 
@@ -584,7 +640,7 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged(Authorization::getRoles());
 
             $key = $request->cacheIdentifier();
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -607,7 +663,7 @@ App::init()
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+                    $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -641,7 +697,7 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                     //Do not update transformedAt if it's a console user
-                    if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                    if (!User::isPrivileged(Authorization::getRoles())) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
@@ -741,7 +797,7 @@ App::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -789,7 +845,7 @@ App::shutdown()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**
@@ -800,10 +856,10 @@ App::shutdown()
              *
              * Therefore, we consider this an anonymous request and create a relevant user.
              */
-            $user = new Document([
+            $user = new User([
                 '$id' => '',
                 'status' => true,
-                'type' => Auth::ACTIVITY_TYPE_GUEST,
+                'type' => ACTIVITY_TYPE_GUEST,
                 'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
                 'name' => 'Guest',
@@ -893,7 +949,7 @@ App::shutdown()
         }
 
         if ($project->getId() !== 'console') {
-            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            if (!User::isPrivileged(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
