@@ -854,7 +854,7 @@ App::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger, $authorization);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $authorization, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -1061,7 +1061,7 @@ App::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger, $authorization);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $authorization, $logger);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -1145,7 +1145,7 @@ App::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger, $authorization);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $authorization, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
