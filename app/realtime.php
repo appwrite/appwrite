@@ -236,7 +236,7 @@ $adapter
 $server = new Server($adapter);
 
 $logError = function (Throwable $error, string $action) use ($register) {
-    $logger = $register->get('logger');
+    $logger = $register->get('realtimeLogger');
 
     if ($logger && !$error instanceof Exception) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
