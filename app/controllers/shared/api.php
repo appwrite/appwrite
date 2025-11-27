@@ -347,6 +347,10 @@ App::init()
             }
 
             Authorization::setDefaultStatus($hasProjectSpecificPermissions);  // Cancel security segmentation for admin users.
+
+            if (!$hasProjectSpecificPermissions) {
+                $role = $adminRole;
+            }
         }
 
         $scopes = \array_unique($scopes);

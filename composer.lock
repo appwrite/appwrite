@@ -3974,16 +3974,16 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "1.1.3",
+            "version": "1.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "1e6b4bac735329c9e5ec69a6a5d899ec2d050707"
+                "reference": "eea6b9299a1420ae6c574f16eb1e9da8689ac56b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/1e6b4bac735329c9e5ec69a6a5d899ec2d050707",
-                "reference": "1e6b4bac735329c9e5ec69a6a5d899ec2d050707",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/eea6b9299a1420ae6c574f16eb1e9da8689ac56b",
+                "reference": "eea6b9299a1420ae6c574f16eb1e9da8689ac56b",
                 "shasum": ""
             },
             "require": {
@@ -3991,7 +3991,7 @@
                 "utopia-php/console": "0.0.*",
                 "utopia-php/domains": "0.9.*",
                 "utopia-php/telemetry": "0.1.*",
-                "utopia-php/validators": "^0.0.2"
+                "utopia-php/validators": "0.*"
             },
             "require-dev": {
                 "laravel/pint": "1.25.*",
@@ -4025,32 +4025,32 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/1.1.3"
+                "source": "https://github.com/utopia-php/dns/tree/1.1.4"
             },
-            "time": "2025-11-06T19:08:29+00:00"
+            "time": "2025-11-26T13:38:10+00:00"
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.9.1",
+            "version": "0.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "99b4ec95d5d6b7a5c990a66c56412212d9af37e7"
+                "reference": "52b654f8a0e170bfa2e54cb47755b256822477c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/99b4ec95d5d6b7a5c990a66c56412212d9af37e7",
-                "reference": "99b4ec95d5d6b7a5c990a66c56412212d9af37e7",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/52b654f8a0e170bfa2e54cb47755b256822477c7",
+                "reference": "52b654f8a0e170bfa2e54cb47755b256822477c7",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0",
+                "php": ">=8.2",
                 "utopia-php/cache": "0.13.*",
-                "utopia-php/validators": "0.0.*"
+                "utopia-php/validators": "0.*"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
+                "laravel/pint": "^1.18",
+                "phpstan/phpstan": "^1.12",
                 "phpunit/phpunit": "^9.3"
             },
             "type": "library",
@@ -4087,9 +4087,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/0.9.1"
+                "source": "https://github.com/utopia-php/domains/tree/0.9.2"
             },
-            "time": "2025-10-21T14:52:27+00:00"
+            "time": "2025-11-26T12:16:36+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -4140,16 +4140,16 @@
         },
         {
             "name": "utopia-php/emails",
-            "version": "0.6.2",
+            "version": "0.6.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/emails.git",
-                "reference": "9c4c40cf7c03c2e9e21364566f9b192d03ea93c9"
+                "reference": "9524d7f7bd1651a06fef8a3d964f774b04fe2918"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/emails/zipball/9c4c40cf7c03c2e9e21364566f9b192d03ea93c9",
-                "reference": "9c4c40cf7c03c2e9e21364566f9b192d03ea93c9",
+                "url": "https://api.github.com/repos/utopia-php/emails/zipball/9524d7f7bd1651a06fef8a3d964f774b04fe2918",
+                "reference": "9524d7f7bd1651a06fef8a3d964f774b04fe2918",
                 "shasum": ""
             },
             "require": {
@@ -4157,7 +4157,7 @@
                 "utopia-php/cli": "^0.15",
                 "utopia-php/domains": "^0.9",
                 "utopia-php/fetch": "^0.4",
-                "utopia-php/validators": "^0.0.2"
+                "utopia-php/validators": "0.*"
             },
             "require-dev": {
                 "laravel/pint": "1.25.*",
@@ -4194,9 +4194,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/emails/issues",
-                "source": "https://github.com/utopia-php/emails/tree/0.6.2"
+                "source": "https://github.com/utopia-php/emails/tree/0.6.3"
             },
-            "time": "2025-10-28T16:08:17+00:00"
+            "time": "2025-11-26T12:27:47+00:00"
         },
         {
             "name": "utopia-php/fetch",
@@ -5141,26 +5141,25 @@
         },
         {
             "name": "utopia-php/validators",
-            "version": "0.0.2",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/validators.git",
-                "reference": "894210695c5d35fa248fb65f7fe7237b6ff4fb0b"
+                "reference": "5c57d5b6cf964f8981807c1d3ea8df620c869080"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/validators/zipball/894210695c5d35fa248fb65f7fe7237b6ff4fb0b",
-                "reference": "894210695c5d35fa248fb65f7fe7237b6ff4fb0b",
+                "url": "https://api.github.com/repos/utopia-php/validators/zipball/5c57d5b6cf964f8981807c1d3ea8df620c869080",
+                "reference": "5c57d5b6cf964f8981807c1d3ea8df620c869080",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1"
+                "php": ">=8.0"
             },
             "require-dev": {
-                "ext-xdebug": "*",
-                "laravel/pint": "^1.2",
+                "laravel/pint": "1.*",
                 "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "^9.5.25"
+                "phpunit/phpunit": "11.*"
             },
             "type": "library",
             "autoload": {
@@ -5181,9 +5180,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/validators/issues",
-                "source": "https://github.com/utopia-php/validators/tree/0.0.2"
+                "source": "https://github.com/utopia-php/validators/tree/0.1.0"
             },
-            "time": "2025-10-20T21:52:28+00:00"
+            "time": "2025-11-18T11:05:46+00:00"
         },
         {
             "name": "utopia-php/vcs",

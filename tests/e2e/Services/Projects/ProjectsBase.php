@@ -19,6 +19,8 @@ trait ProjectsBase
             ]);
 
             $this->assertEquals(201, $team['headers']['status-code'], 'Setup team failed with status code: ' . $team['headers']['status-code'] . ' and response: ' . json_encode($team['body'], JSON_PRETTY_PRINT));
+
+            $teamId = $team['body']['$id'];
         }
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
