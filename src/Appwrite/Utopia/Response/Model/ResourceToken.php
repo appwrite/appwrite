@@ -73,13 +73,13 @@ class ResourceToken extends Model
             'resourceInternalId' => $document->getAttribute('resourceInternalId'),
         ];
 
+        $createdDate = new \DateTime($document->getCreatedAt());
+        $payload['iat'] = $createdDate->getTimestamp();
+
         // Set explicit expiration in JWT payload if we have an expiry date
         if ($expire !== null) {
             $expiryDate = new \DateTime($expire);
             $payload['exp'] = $expiryDate->getTimestamp();
-        } else {
-            // For infinite expiry, set 'iat' to prevent JWT library from auto-adding 'exp'
-            $payload['iat'] = time();
         }
 
         $secret = $jwt->encode($payload);
