@@ -2,7 +2,6 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Audit;
@@ -23,10 +22,18 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Hashes\Argon2;
+use Utopia\Auth\Hashes\Sha;
+use Utopia\Auth\Proofs\Code;
+use Utopia\Auth\Proofs\Password;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -226,96 +233,106 @@ App::setResource('platforms', function (Request $request, Document $console, Doc
     ];
 }, ['request', 'console', 'project', 'dbForPlatform', 'authorization']);
 
-App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForPlatform, $authorization) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForPlatform */
-    /** @var Utopia\Database\Authorization $authorization */
-    /** @var string $mode */
+App::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
+    /**
+     * Handles user authentication and session validation.
+     *
+     * This function follows a series of steps to determine the appropriate user session
+     * based on cookies, headers, and JWT tokens.
+     *
+     * Process:
+     * 1. Checks the cookie based on mode:
+     *    - If in admin mode, uses console project id for key.
+     *    - Otherwise, sets the key using the project ID
+     * 2. If no cookie is found, attempts to retrieve the fallback header `x-fallback-cookies`.
+     *    - If this method is used, returns the header: `X-Debug-Fallback: true`.
+     * 3. Fetches the user document from the appropriate database based on the mode.
+     * 4. If the user document is empty or the session key cannot be verified, sets an empty user document.
+     * 5. Regardless of the results from steps 1-4, attempts to fetch the JWT token.
+     * 6. If the JWT user has a valid session ID, updates the user variable with the user from `projectDB`,
+     *    overwriting the previous value.
+     */
 
     $authorization->setDefaultStatus(true);
 
-    Auth::setCookieName('a_session_' . $project->getId());
+    $store->setKey('a_session_' . $project->getId());
 
     if (APP_MODE_ADMIN === $mode) {
-        Auth::setCookieName('a_session_' . $console->getId());
+        $store->setKey('a_session_' . $console->getId());
     }
 
-    $session = Auth::decodeSession(
+    $store->decode(
         $request->getCookie(
-            Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName . '_legacy', '')
+            $store->getKey(), // Get sessions
+            $request->getCookie($store->getKey() . '_legacy', '')
         )
     );
 
     // Get session from header for SSR clients
-    if (empty($session['id']) && empty($session['secret'])) {
+    if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
         $sessionHeader = $request->getHeader('x-appwrite-session', '');
 
         if (!empty($sessionHeader)) {
-            $session = Auth::decodeSession($sessionHeader);
+            $store->decode($sessionHeader);
         }
     }
 
     // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
-    if ($response) {
+    if ($response) { // if in http context - add debug header
         $response->addHeader('X-Debug-Fallback', 'false');
     }
 
-    if (empty($session['id']) && empty($session['secret'])) {
+    if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
         if ($response) {
             $response->addHeader('X-Debug-Fallback', 'true');
         }
         $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
-        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+        $store->decode(((is_array($fallback) && isset($fallback[$store->getKey()])) ? $fallback[$store->getKey()] : ''));
     }
 
-    Auth::$unique = $session['id'] ?? '';
-    Auth::$secret = $session['secret'] ?? '';
-
-    $user = new Document([]);
-
-    if (!empty(Auth::$unique)) {
-        if ($mode === APP_MODE_ADMIN) {
-            $user = $dbForPlatform->getDocument('users', Auth::$unique);
-        } elseif (!$project->isEmpty()) {
-            if ($project->getId() === 'console') {
-                $user = $dbForPlatform->getDocument('users', Auth::$unique);
-            } else {
-                $user = $dbForProject->getDocument('users', Auth::$unique);
+    $user = null;
+    if (APP_MODE_ADMIN === $mode) {
+        /** @var User $user */
+        $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+    } else {
+        if ($project->isEmpty()) {
+            $user = new User([]);
+        } else {
+            if (!empty($store->getProperty('id', ''))) {
+                if ($project->getId() === 'console') {
+                    /** @var User $user */
+                    $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+                } else {
+                    /** @var User $user */
+                    $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+                }
             }
         }
     }
 
     if (
+        !$user ||
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
     ) { // Validate user has valid login token
-        $user = new Document([]);
+        $user = new User([]);
     }
-
     // if (APP_MODE_ADMIN === $mode) {
     //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-    //         $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
+    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
     //     } else {
     //         $user = new Document([]);
     //     }
     // }
-
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
-
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
             throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
         }
-
         $jwtUserId = $payload['userId'] ?? '';
         if (!empty($jwtUserId)) {
             if ($mode === APP_MODE_ADMIN) {
@@ -324,20 +341,18 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
                 $user = $dbForProject->getDocument('users', $jwtUserId);
             }
         }
-
         $jwtSessionId = $payload['sessionId'] ?? '';
         if (!empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-                $user = new Document([]);
+                $user = new User([]);
             }
         }
     }
-
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'authorization']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
 
 App::setResource('project', function ($dbForPlatform, $request, $console, $authorization) {
     /** @var Appwrite\Utopia\Request $request */
@@ -355,26 +370,56 @@ App::setResource('project', function ($dbForPlatform, $request, $console, $autho
     return $project;
 }, ['dbForPlatform', 'request', 'console', 'authorization']);
 
-App::setResource('session', function (Document $user) {
+App::setResource('session', function (User $user, Store $store, Token $proofForToken) {
     if ($user->isEmpty()) {
         return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
+    $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
     if (!$sessionId) {
         return;
     }
-
-    foreach ($sessions as $session) {/** @var Document $session */
+    foreach ($sessions as $session) {
+        /** @var Document $session */
         if ($sessionId === $session->getId()) {
             return $session;
         }
     }
 
     return;
-}, ['user']);
+}, ['user', 'store', 'proofForToken']);
+
+App::setResource('store', function (): Store {
+    return new Store();
+});
+
+App::setResource('proofForPassword', function (): Password {
+    $hash = new Argon2();
+    $hash
+        ->setMemoryCost(7168)
+        ->setTimeCost(5)
+        ->setThreads(1);
+
+    $password = new Password();
+    $password
+        ->setHash($hash);
+
+    return $password;
+});
+
+App::setResource('proofForToken', function (): Token {
+    $token = new Token();
+    $token->setHash(new Sha());
+    return $token;
+});
+
+App::setResource('proofForCode', function (): Code {
+    $code = new Code();
+    $code->setHash(new Sha());
+    return $code;
+});
 
 App::setResource('console', function () {
     return new Document(Config::getParam('console'));
@@ -405,6 +450,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+    $database->setDocumentType('users', User::class);
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -436,6 +482,8 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authoriz
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
+    $database->setDocumentType('users', User::class);
+
     return $database;
 }, ['pools', 'cache', 'authorization']);
 
@@ -460,7 +508,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES)
+                ->setDocumentType('users', User::class)
+            ;
 
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 

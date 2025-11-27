@@ -938,7 +938,7 @@ App::get('/v1/teams/:teamId/memberships')
         ];
 
         $roles = $authorization->getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isPrivilegedUser = User::isPrivilegedUser($roles);
         $isAppUser = User::isAppUser($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
@@ -1030,7 +1030,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         ];
 
         $roles = $authorization->getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isPrivilegedUser = User::isPrivilegedUser($roles);
         $isAppUser = User::isAppUser($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
@@ -1127,8 +1127,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $isPrivilegedUser = User::isPrivilegedUser($authorization->getRoles());
-        $isAppUser = User::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAppUser = User::isApp(Authorization::getRoles());
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
         if ($project->getId() === 'console') {

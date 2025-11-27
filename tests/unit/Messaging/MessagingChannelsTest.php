@@ -2,10 +2,9 @@
 
 namespace Tests\Unit\Messaging;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
@@ -64,7 +63,7 @@ class MessagingChannelsTest extends TestCase
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                $user = new Document([
+                $user = new User([
                     '$id' => ID::custom('user' . $this->connectionsCount),
                     'memberships' => [
                         [
@@ -73,14 +72,14 @@ class MessagingChannelsTest extends TestCase
                             'confirm' => true,
                             'roles' => [
                                 empty($index % 2)
-                                    ? Auth::USER_ROLE_ADMIN
+                                    ? User::ROLE_ADMIN
                                     : 'member',
                             ]
                         ]
                     ]
                 ]);
 
-                $roles = Auth::getRoles($user, $this->getAuthorization());
+                $roles = $user->getRoles();
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
@@ -100,11 +99,11 @@ class MessagingChannelsTest extends TestCase
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                $user = new Document([
+                $user = new User([
                     '$id' => ''
                 ]);
 
-                $roles = Auth::getRoles($user, $this->getAuthorization());
+                $roles = $user->getRoles();
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
@@ -308,7 +307,7 @@ class MessagingChannelsTest extends TestCase
             }
 
             $role = empty($index % 2)
-                ? Auth::USER_ROLE_ADMIN
+                ? User::ROLE_ADMIN
                 : 'member';
 
             $permissions = [
