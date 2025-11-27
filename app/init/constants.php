@@ -94,6 +94,13 @@ const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 /**
+ * JWT for Resource Tokens.
+ */
+const RESOURCE_TOKEN_ALGORITHM = 'HS256';
+const RESOURCE_TOKEN_MAX_AGE = 86400 * 365 * 10; /* 10 years */
+const RESOURCE_TOKEN_LEEWAY = 10; // 10 seconds
+
+/**
  * Token Expiration times.
  */
 const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
