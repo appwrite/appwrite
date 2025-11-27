@@ -189,7 +189,7 @@ class RequestTest extends TestCase
     {
         // No headers set, should return remote_addr
         $ip = $this->request->getIP();
-        
+
         $this->assertIsString($ip);
         // Default fallback when nothing is set
         $this->assertSame('0.0.0.0', $ip);
@@ -199,9 +199,9 @@ class RequestTest extends TestCase
     {
         // Set remote_addr in server variables
         $this->request->setServer('remote_addr', '192.168.1.100');
-        
+
         $ip = $this->request->getIP();
-        
+
         $this->assertSame('192.168.1.100', $ip);
     }
 
@@ -209,9 +209,9 @@ class RequestTest extends TestCase
     {
         // Set X-Forwarded-For header with single IP
         $this->request->addHeader('x-forwarded-for', '203.0.113.195');
-        
+
         $ip = $this->request->getIP();
-        
+
         $this->assertSame('203.0.113.195', $ip);
     }
 
@@ -219,9 +219,9 @@ class RequestTest extends TestCase
     {
         // Set X-Forwarded-For with multiple IPs (leftmost is client)
         $this->request->addHeader('x-forwarded-for', '203.0.113.195, 70.41.3.18, 150.172.238.178');
-        
+
         $ip = $this->request->getIP();
-        
+
         // Should return the leftmost (original client) IP
         $this->assertSame('203.0.113.195', $ip);
     }
@@ -230,9 +230,9 @@ class RequestTest extends TestCase
     {
         // Test that whitespace is properly trimmed
         $this->request->addHeader('x-forwarded-for', '  203.0.113.195  ,  70.41.3.18  ');
-        
+
         $ip = $this->request->getIP();
-        
+
         $this->assertSame('203.0.113.195', $ip);
     }
 
@@ -243,9 +243,9 @@ class RequestTest extends TestCase
         // and we fallback to remote_addr (intentional security behavior)
         $this->request->addHeader('x-forwarded-for', 'not-an-ip, 203.0.113.195');
         $this->request->setServer('remote_addr', '192.168.1.100');
-        
+
         $ip = $this->request->getIP();
-        
+
         // Should fallback to remote_addr since leftmost IP is invalid
         $this->assertSame('192.168.1.100', $ip);
     }
@@ -254,54 +254,54 @@ class RequestTest extends TestCase
     {
         // Assuming you can set environment variable in test
         $_ENV['_APP_TRUSTED_HEADERS'] = 'cf-connecting-ip';
-        
+
         $this->request->addHeader('cf-connecting-ip', '203.0.113.195');
         $this->request->addHeader('x-forwarded-for', '198.51.100.178');
-        
+
         $ip = $this->request->getIP();
-        
+
         // Should use cf-connecting-ip since it's the trusted header
         $this->assertSame('203.0.113.195', $ip);
-        
+
         unset($_ENV['_APP_TRUSTED_HEADERS']);
     }
 
     public function testGetIPWithMultipleTrustedHeaders(): void
     {
         $_ENV['_APP_TRUSTED_HEADERS'] = 'cf-connecting-ip, x-real-ip, x-forwarded-for';
-        
+
         // Only set the third header
         $this->request->addHeader('x-forwarded-for', '203.0.113.195');
-        
+
         $ip = $this->request->getIP();
-        
+
         $this->assertSame('203.0.113.195', $ip);
-        
+
         unset($_ENV['_APP_TRUSTED_HEADERS']);
     }
 
     public function testGetIPHeaderPriority(): void
     {
         $_ENV['_APP_TRUSTED_HEADERS'] = 'cf-connecting-ip, x-forwarded-for';
-        
+
         // Set both headers, cf-connecting-ip should take priority
         $this->request->addHeader('cf-connecting-ip', '203.0.113.195');
         $this->request->addHeader('x-forwarded-for', '198.51.100.178');
-        
+
         $ip = $this->request->getIP();
-        
+
         // Should return the first trusted header's value
         $this->assertSame('203.0.113.195', $ip);
-        
+
         unset($_ENV['_APP_TRUSTED_HEADERS']);
     }
 
     public function testGetIPWithIPv6(): void
     {
         $this->request->addHeader('x-forwarded-for', '2001:0db8:85a3:0000:0000:8a2e:0370:7334');
-        
+
         $ip = $this->request->getIP();
-        
+
         $this->assertSame('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $ip);
     }
 
@@ -309,9 +309,9 @@ class RequestTest extends TestCase
     {
         $this->request->addHeader('x-forwarded-for', '');
         $this->request->setServer('remote_addr', '192.168.1.100');
-        
+
         $ip = $this->request->getIP();
-        
+
         // Should fallback to remote_addr when header is empty
         $this->assertSame('192.168.1.100', $ip);
     }
@@ -320,12 +320,12 @@ class RequestTest extends TestCase
     {
         $_ENV['_APP_TRUSTED_HEADERS'] = ' , , ';
         $this->request->setServer('remote_addr', '192.168.1.100');
-        
+
         $ip = $this->request->getIP();
-        
+
         // Should fallback to remote_addr when config is effectively empty
         $this->assertSame('192.168.1.100', $ip);
-        
+
         unset($_ENV['_APP_TRUSTED_HEADERS']);
     }
 }
