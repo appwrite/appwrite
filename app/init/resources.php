@@ -1004,7 +1004,7 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
 
     if (!empty($tokenJWT) && !$project->isEmpty()) { // JWT authentication
         // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($tokenJWT);
