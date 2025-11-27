@@ -57,7 +57,6 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
     ->desc('Create team')
