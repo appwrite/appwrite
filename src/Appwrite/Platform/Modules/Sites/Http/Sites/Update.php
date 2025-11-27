@@ -97,6 +97,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -127,7 +128,8 @@ class Update extends Base
         Build $queueForBuilds,
         Database $dbForPlatform,
         GitHub $github,
-        Executor $executor
+        Executor $executor,
+        Authorization $authorization
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -272,7 +274,7 @@ class Update extends Base
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $queueForBuilds, new Document(), $github, true);
+            $this->redeployVcsFunction($request, $site, $project, $installation, $dbForProject, $dbForPlatform, $queueForBuilds, new Document(), $github, true, $authorization);
         }
 
         $queueForEvents->setParam('siteId', $site->getId());

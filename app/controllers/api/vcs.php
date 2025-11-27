@@ -434,7 +434,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
             }
 
-            ComputeBase::updateEmptyManualRule($project, $resource, $deployment, $dbForPlatform);
+            ComputeBase::updateEmptyManualRule($project, $resource, $deployment, $dbForPlatform, $authorization);
 
             if ($resource->getCollection() === 'sites' && !empty($latestCommentId) && !empty($previewRuleId)) {
                 $retries = 0;

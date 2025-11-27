@@ -319,6 +319,7 @@ class Create extends Base
                     template: $template,
                     github: $github,
                     activate: true,
+                    authorization: $authorization,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
