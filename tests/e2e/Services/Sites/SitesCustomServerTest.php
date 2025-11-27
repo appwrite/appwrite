@@ -861,10 +861,6 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotNull($siteId);
 
-        $domain = ID::unique() . '.' . System::getEnv('_APP_DOMAIN_SITES', '');
-        $rule = $this->createSiteRule($siteId, $domain);
-        $this->assertEquals(201, $rule['headers']['status-code']);
-
         $deployment = $this->createDeployment($siteId, [
             'siteId' => $siteId,
             'code' => $this->packageSite('static-single-file'),
@@ -875,18 +871,6 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertEquals('waiting', $deployment['body']['status']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
-
-        $rule = $this->getSiteRule($rule['body']['$id']);
-        $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
-
-        $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
-
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString("Deployment is still building", $response['body']);
-        $this->assertStringContainsString('The page will update after the build completes.', $response['body']);
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
@@ -1579,10 +1563,6 @@ class SitesCustomServerTest extends Scope
 
         $this->assertNotEmpty($siteId);
 
-        $domain = ID::unique() . '.' . System::getEnv('_APP_DOMAIN_SITES', '');
-        $rule = $this->createSiteRule($siteId, $domain);
-        $this->assertEquals(201, $rule['headers']['status-code']);
-
         $deployment = $this->createTemplateDeployment($siteId, [
             'repository' => $template['providerRepositoryId'],
             'owner' => $template['providerOwner'],
@@ -1595,18 +1575,6 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        $rule = $this->getSiteRule($rule['body']['$id']);
-        $this->assertEquals(200, $rule['headers']['status-code']);
-        $this->assertEquals($deployment['body']['$id'], $rule['body']['deploymentId']);
-
-        $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
-
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString("Deployment is still building", $response['body']);
-        $this->assertStringContainsString('The page will update after the build completes.', $response['body']);
-
         $deployment = $this->getDeployment($siteId, $deployment['body']['$id']);
         $this->assertEquals(200, $deployment['headers']['status-code']);
         $this->assertEquals(0, $deployment['body']['sourceSize']);
@@ -1617,6 +1585,10 @@ class SitesCustomServerTest extends Scope
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
         }, 50000, 500);
+
+        $domain = $this->setupSiteDomain($siteId);
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
@@ -2612,8 +2584,7 @@ class SitesCustomServerTest extends Scope
         }, 100000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString('Deployment build failed', $response['body']);
+        $this->assertStringContainsString('This page is empty, activate a deployment to make it live.', $response['body']);
 
         $this->cleanupSite($siteId);
     }
@@ -2708,12 +2679,6 @@ class SitesCustomServerTest extends Scope
         $this->assertNotEmpty($siteId);
 
         $domain = $this->setupSiteDomain($siteId);
-        $proxyClient->setEndpoint('http://' . $domain);
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertStringContainsString('No active deployments', $response['body']);
-        $this->assertStringContainsString('View deployments', $response['body']);
 
         // test canceled deployment error page
         $deployment = $this->createDeployment($siteId, [
@@ -2748,6 +2713,13 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment build canceled", $response['body']);
         $this->assertStringContainsString("View deployments", $response['body']);
+
+        // check site domain for no active deployments
+        $proxyClient->setEndpoint('http://' . $domain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertStringContainsString('No active deployments', $response['body']);
+        $this->assertStringContainsString('View deployments', $response['body']);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
