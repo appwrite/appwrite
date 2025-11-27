@@ -14,13 +14,26 @@ use Utopia\Database\Validator\Roles;
 
 class UserTest extends TestCase
 {
+
+    private $authorization;
+
+    public function getAuthorization(): Authorization
+    {
+        if (isset($this->authorization)) {
+            return $this->authorization;
+        }
+
+        $this->authorization = new Authorization();
+        return $this->authorization;
+    }
+
     /**
      * Reset Roles
      */
     public function tearDown(): void
     {
-        Authorization::cleanRoles();
-        Authorization::setRole(Role::any()->toString());
+        $this->getAuthorization()->cleanRoles();
+        $this->getAuthorization()->addRole(Role::any()->toString());
     }
 
     public function testSessionVerify(): void
@@ -197,7 +210,7 @@ class UserTest extends TestCase
             '$id' => ''
         ]);
 
-        $roles = $user->getRoles();
+        $roles = $user->getRoles($this->getAuthorization());
         $this->assertCount(1, $roles);
         $this->assertContains(Role::guests()->toString(), $roles);
     }
@@ -233,7 +246,7 @@ class UserTest extends TestCase
             ]
         ]);
 
-        $roles = $user->getRoles();
+        $roles = $user->getRoles($this->getAuthorization());
 
         $this->assertCount(13, $roles);
         $this->assertContains(Role::users()->toString(), $roles);
@@ -254,21 +267,21 @@ class UserTest extends TestCase
         $user['emailVerification'] = false;
         $user['phoneVerification'] = false;
 
-        $roles = $user->getRoles();
+        $roles = $user->getRoles($this->getAuthorization());
         $this->assertContains(Role::users(Roles::DIMENSION_UNVERIFIED)->toString(), $roles);
         $this->assertContains(Role::user(ID::custom('123'), Roles::DIMENSION_UNVERIFIED)->toString(), $roles);
 
         // Enable single verification type
         $user['emailVerification'] = true;
 
-        $roles = $user->getRoles();
+        $roles = $user->getRoles($this->getAuthorization() );
         $this->assertContains(Role::users(Roles::DIMENSION_VERIFIED)->toString(), $roles);
         $this->assertContains(Role::user(ID::custom('123'), Roles::DIMENSION_VERIFIED)->toString(), $roles);
     }
 
     public function testPrivilegedUserRoles(): void
     {
-        Authorization::setRole(User::ROLE_OWNER);
+        $this->getAuthorization()->addRole(User::ROLE_OWNER);
         $user  = new User([
             '$id' => ID::custom('123'),
             'emailVerification' => true,
@@ -293,8 +306,7 @@ class UserTest extends TestCase
                 ]
             ]
         ]);
-
-        $roles = $user->getRoles();
+        $roles = $user->getRoles($this->getAuthorization());
 
         $this->assertCount(7, $roles);
         $this->assertNotContains(Role::users()->toString(), $roles);
@@ -312,7 +324,7 @@ class UserTest extends TestCase
 
     public function testAppUserRoles(): void
     {
-        Authorization::setRole(User::ROLE_APPS);
+        $this->getAuthorization()->addRole(User::ROLE_APPS);
         $user  = new User([
             '$id' => ID::custom('123'),
             'memberships' => [
@@ -336,7 +348,7 @@ class UserTest extends TestCase
             ]
         ]);
 
-        $roles = $user->getRoles();
+        $roles = $user->getRoles($this->getAuthorization());
 
         $this->assertCount(7, $roles);
         $this->assertNotContains(Role::users()->toString(), $roles);

@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -1006,7 +1007,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if ($file->isEmpty()) {
@@ -1495,7 +1496,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
         try {
             $decoded = $decoder->decode($jwt);
         } catch (JWTException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if (
@@ -1503,7 +1504,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             $decoded['bucketId'] !== $bucketId ||
             $decoded['fileId'] !== $fileId
         ) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $isInternal = $decoded['internal'] ?? false;
@@ -1526,7 +1527,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
         $mimes = Config::getParam('storage-mimes');
 
         $path = $file->getAttribute('path', '');
-
         if (!$deviceForFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }

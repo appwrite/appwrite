@@ -79,7 +79,7 @@ class MessagingChannelsTest extends TestCase
                     ]
                 ]);
 
-                $roles = $user->getRoles();
+                $roles = $user->getRoles($this->getAuthorization());
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
@@ -103,7 +103,7 @@ class MessagingChannelsTest extends TestCase
                     '$id' => ''
                 ]);
 
-                $roles = $user->getRoles();
+                $roles = $user->getRoles($this->getAuthorization());
 
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
