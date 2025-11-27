@@ -101,8 +101,8 @@ class Update extends Action
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = User::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);

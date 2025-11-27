@@ -450,7 +450,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $authorization) {
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
@@ -466,7 +466,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         /** @var Appwrite\Utopia\Database\Documents\User $user */
                         $user = $database->getDocument('users', $userId);
 
-                        $roles = $user->getRoles();
+                        $roles = $user->getRoles($authorization);
                         $channels = $realtime->connections[$connection]['channels'];
 
                         $realtime->unsubscribe($connection);
@@ -534,7 +534,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !(User::isPrivileged($authorization->getRoles()) || User::isApp(Authorization::getRoles()))
+            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }

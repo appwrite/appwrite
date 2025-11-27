@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -341,12 +340,21 @@ App::post('/v1/migrations/csv/imports')
     ->inject('deviceForMigrations')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, bool $internalFile, Response $response, Database $dbForProject, Database $dbForPlatform, Authorization $authorization, Document $project, Device $deviceForFiles, Device $deviceForMigrations, Event $queueForEvents, Migration $queueForMigrations) {
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
-        if ($internalFile && !$isPrivilegedUser) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+    ->action(function (
+        string $bucketId,
+        string $fileId,
+        string $resourceId,
+        bool $internalFile,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Document $project,
+        Device $deviceForFiles,
+        Device $deviceForMigrations,
+        Event $queueForEvents,
+        Migration $queueForMigrations
+    ) {
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');

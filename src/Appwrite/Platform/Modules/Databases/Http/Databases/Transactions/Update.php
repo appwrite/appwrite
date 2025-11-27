@@ -112,8 +112,8 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot commit and rollback at the same time');
         }
 
-        $isAPIKey = User::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         $transaction = ($isAPIKey || $isPrivilegedUser)
             ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
@@ -246,8 +246,6 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e);
-            } catch (DuplicateException|ConflictException $e) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
             } catch (DuplicateException | ConflictException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',

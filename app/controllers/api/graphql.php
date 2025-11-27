@@ -33,7 +33,7 @@ App::init()
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(User::isPrivileged($authorization->getRoles()) || User::isApp(Authorization::getRoles()))
+            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }

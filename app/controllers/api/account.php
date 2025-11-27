@@ -197,7 +197,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, Authorization $authorization) {
 
     /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
-    $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+    $userFromRequest = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
     if ($userFromRequest->isEmpty()) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -1256,7 +1256,7 @@ App::post('/v1/account/sessions/token')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
-    ->inject('authorization')
+->inject('authorization')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -2708,7 +2708,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode,  Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3194,7 +3194,7 @@ App::patch('/v1/account/email')
     ->inject('project')
     ->inject('hooks')
     ->inject('proofForPassword')
-    ->inject('authorization')
+ ->inject('authorization')
     ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
@@ -3304,8 +3304,8 @@ App::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->inject('proofForPassword')
-    ->inject('authorization')
+                ->inject('proofForPassword')
+->inject('authorization')
     ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
@@ -3668,7 +3668,7 @@ App::put('/v1/account/recovery')
     ->inject('hooks')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->inject('authorization')
+->inject('authorization')
     ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
@@ -4001,7 +4001,7 @@ App::put('/v1/account/verifications/email')
     ->inject('authorization')
     ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -4073,7 +4073,7 @@ App::post('/v1/account/verifications/phone')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->inject('proofForCode')
-    ->inject('authorization')
+                ->inject('authorization')
     ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -4222,7 +4222,7 @@ App::put('/v1/account/verifications/phone')
     ->inject('authorization')
     ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User  $profile */
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);

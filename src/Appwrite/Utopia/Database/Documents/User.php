@@ -7,7 +7,6 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document
@@ -36,11 +35,11 @@ class User extends Document
      *
      * @return array<string>
      */
-    public function getRoles(): array
+    public function getRoles($authorization): array
     {
         $roles = [];
 
-        if (!$this->isPrivileged(Authorization::getRoles()) && !$this->isApp(Authorization::getRoles())) {
+        if (!$this->isPrivileged($authorization->getRoles) && !$this->isApp($authorization->getRoles())) {
             if ($this->getId()) {
                 $roles[] = Role::user($this->getId())->toString();
                 $roles[] = Role::users()->toString();

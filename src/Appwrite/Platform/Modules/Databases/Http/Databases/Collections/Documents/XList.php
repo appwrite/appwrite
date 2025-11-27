@@ -80,8 +80,8 @@ class XList extends Action
 
     public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
     {
-        $isAPIKey = User::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {

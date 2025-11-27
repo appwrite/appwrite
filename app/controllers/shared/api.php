@@ -398,7 +398,7 @@ App::init()
         $scopes = \array_unique($scopes);
 
         $authorization->addRole($role);
-        foreach ($user->getRoles() as $authRole) {
+        foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
         }
 
@@ -643,7 +643,7 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged(Authorization::getRoles());
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged($authorization->getRoles());
 
             $key = $request->cacheIdentifier();
             $cacheLog  = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));

@@ -107,8 +107,8 @@ class Upsert extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $isAPIKey = User::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {

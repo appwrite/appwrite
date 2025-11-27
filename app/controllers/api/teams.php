@@ -91,8 +91,8 @@ App::post('/v1/teams')
     ->inject('queueForEvents')
     ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Authorization $authorization, Event $queueForEvents) {
 
-        $isPrivilegedUser = User::isPrivilegedUser($authorization->getRoles());
-        $isAppUser = User::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAppUser = User::isApp($authorization->getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 
@@ -504,8 +504,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('proofForPassword')
     ->inject('proofForToken')
     ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword, Token $proofForToken) {
-        $isAppUser = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAppUser = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         $url = htmlentities($url);
         if (empty($url)) {
@@ -622,7 +622,7 @@ App::post('/v1/teams/:teamId/memberships')
             ]);
 
             try {
-                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', $userDocument));
+                $invitee = $authorization->skip(fn () => $dbForProject->createDocument('users', $userDocument));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
@@ -938,8 +938,8 @@ App::get('/v1/teams/:teamId/memberships')
         ];
 
         $roles = $authorization->getRoles();
-        $isPrivilegedUser = User::isPrivilegedUser($roles);
-        $isAppUser = User::isAppUser($roles);
+        $isPrivilegedUser = User::isPrivileged($roles);
+        $isAppUser = User::isApp($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
@@ -1030,8 +1030,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         ];
 
         $roles = $authorization->getRoles();
-        $isPrivilegedUser = User::isPrivilegedUser($roles);
-        $isAppUser = User::isAppUser($roles);
+        $isPrivilegedUser = User::isPrivileged($roles);
+        $isAppUser = User::isApp($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
@@ -1127,8 +1127,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
-        $isAppUser = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAppUser = User::isApp($authorization->getRoles());
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
         if ($project->getId() === 'console') {

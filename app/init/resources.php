@@ -320,7 +320,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     }
     // if (APP_MODE_ADMIN === $mode) {
     //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+    //         $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
     //     } else {
     //         $user = new Document([]);
     //     }
