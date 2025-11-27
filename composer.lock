@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b9e113520fc88b51f332112de988875c",
+    "content-hash": "de089be13fb56313c3554a681070b2a8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4239,22 +4239,23 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.30",
+            "version": "0.33.33",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "07cf699a7c47bd1a03b4da1812f1719a66b3c924"
+                "reference": "838e3a28276e73187bc34a314f014096dc92191b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/07cf699a7c47bd1a03b4da1812f1719a66b3c924",
-                "reference": "07cf699a7c47bd1a03b4da1812f1719a66b3c924",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/838e3a28276e73187bc34a314f014096dc92191b",
+                "reference": "838e3a28276e73187bc34a314f014096dc92191b",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1",
                 "utopia-php/compression": "0.1.*",
-                "utopia-php/telemetry": "0.1.*"
+                "utopia-php/telemetry": "0.1.*",
+                "utopia-php/validators": "0.1.*"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
@@ -4280,9 +4281,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.30"
+                "source": "https://github.com/utopia-php/http/tree/0.33.33"
             },
-            "time": "2025-11-18T12:18:00+00:00"
+            "time": "2025-11-25T10:21:13+00:00"
         },
         {
             "name": "utopia-php/image",

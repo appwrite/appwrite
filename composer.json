@@ -57,7 +57,7 @@
         "utopia-php/emails": "0.6.*",
         "utopia-php/dns": "1.1.*",
         "utopia-php/dsn": "0.2.1",
-        "utopia-php/framework": "0.33.30",
+        "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.4.*",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
