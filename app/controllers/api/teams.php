@@ -1092,7 +1092,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->param('roles', [], function (Document $project) {
         if ($project->getId() === 'console') {
             $roles = array_keys(Config::getParam('roles', []));
-            array_filter($roles, function ($role) {
+            $roles = array_filter($roles, function ($role) {
                 return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
             });
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);

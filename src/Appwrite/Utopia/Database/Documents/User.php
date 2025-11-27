@@ -90,7 +90,7 @@ class User extends Document
      * @param Document $this
      * @return bool
      */
-    public static function isAnonymous(): bool
+    public function isAnonymous(): bool
     {
         return is_null($this->getEmail())
             && is_null($this->getPhone());
@@ -167,6 +167,7 @@ class User extends Document
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
+                $session->isSet('expire') &&
                 $proofForToken->verify($secret, $session->getAttribute('secret')) &&
                 DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
