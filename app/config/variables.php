@@ -357,6 +357,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_TRUSTED_HEADERS',
+                'description' => 'This option allows you to set the list of trusted headers',
+                'introduction' => '1.8.0',
+                'default' => 'x-forwarded-for',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

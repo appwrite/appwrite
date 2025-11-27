@@ -233,4 +233,44 @@ class Request extends UtopiaRequest
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
     }
+
+    /**
+     * Get IP
+     *
+     * Returns users IP address based on a list of trusted headers
+     * Assumes application is only accessible through a trusted proxy
+     * 
+     */
+    public function getIP(): string
+    {
+        // Setup the fallback
+        $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
+        
+        // Fetch and parse the list of trusted headers from configuration
+        $trustedHeadersConfig = $_ENV['_APP_TRUSTED_HEADERS'] ?? 'x-forwarded-for';
+        
+        $trustedHeaders = explode(',', $trustedHeadersConfig);
+        $trustedHeaders = array_map('trim', $trustedHeaders);
+        $trustedHeaders = array_map('strtolower', $trustedHeaders);
+        $trustedHeaders = array_filter($trustedHeaders);
+        
+        foreach ($trustedHeaders as $header) {
+            $headerValue = $this->getHeader($header);
+            
+            if (empty($headerValue)) {
+                continue;
+            }
+            
+            // Leftmost IP address is the address of the originating client
+            $ips = explode(',', $headerValue);
+            $ip = trim($ips[0]);
+            
+            // Validate IP format (supports both IPv4 and IPv6)
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+        
+        return $remoteAddr;
+    }
 }
