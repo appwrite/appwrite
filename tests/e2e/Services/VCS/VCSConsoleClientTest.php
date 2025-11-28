@@ -10,6 +10,7 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
@@ -321,24 +322,24 @@ class VCSConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'type' => 'runtime',
-            'limit' => 1,
-            'offset' => 0
+            'limit' => Query::limit(1)->toString(),
+            'offset' => Query::offset(0)->toString()
         ]);
         $this->assertSame(200, $repositories['headers']['status-code']);
         $this->assertSame(4, $repositories['body']['total']);
-        $this->assertSame(1, \count($repositories['body']['runtimeProviderRepositories']));
+        $this->assertCount(1, $repositories['body']['runtimeProviderRepositories']);
         $this->assertSame('starter-for-svelte', $repositories['body']['runtimeProviderRepositories'][0]['name']);
 
         $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'type' => 'runtime',
-            'limit' => 2,
-            'offset' => 1
+            'limit' => Query::limit(2)->toString(),
+            'offset' => Query::offset(1)->toString()
         ]);
         $this->assertSame(200, $repositories['headers']['status-code']);
         $this->assertSame(4, $repositories['body']['total']);
-        $this->assertSame(2, \count($repositories['body']['runtimeProviderRepositories']));
+        $this->assertCount(2, $repositories['body']['runtimeProviderRepositories']);
         $this->assertSame('templates-for-functions', $repositories['body']['runtimeProviderRepositories'][0]['name']);
         $this->assertSame('appwrite', $repositories['body']['runtimeProviderRepositories'][1]['name']);
 
@@ -346,12 +347,12 @@ class VCSConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'type' => 'runtime',
-            'limit' => 2,
-            'offset' => 100
+            'limit' => Query::limit(2)->toString(),
+            'offset' => Query::offset(100)->toString()
         ]);
         $this->assertSame(200, $repositories['headers']['status-code']);
         $this->assertSame(4, $repositories['body']['total']);
-        $this->assertSame(0, \count($repositories['body']['runtimeProviderRepositories']));
+        $this->assertCount(0, $repositories['body']['runtimeProviderRepositories']);
 
         // TODO: If you are about to add another check, rewrite this to @provideScenarios
 
