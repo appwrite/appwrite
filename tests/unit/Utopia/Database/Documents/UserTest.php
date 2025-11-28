@@ -14,7 +14,6 @@ use Utopia\Database\Validator\Roles;
 
 class UserTest extends TestCase
 {
-
     private $authorization;
 
     public function getAuthorization(): Authorization
@@ -274,7 +273,7 @@ class UserTest extends TestCase
         // Enable single verification type
         $user['emailVerification'] = true;
 
-        $roles = $user->getRoles($this->getAuthorization() );
+        $roles = $user->getRoles($this->getAuthorization());
         $this->assertContains(Role::users(Roles::DIMENSION_VERIFIED)->toString(), $roles);
         $this->assertContains(Role::user(ID::custom('123'), Roles::DIMENSION_VERIFIED)->toString(), $roles);
     }
