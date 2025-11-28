@@ -304,8 +304,6 @@ class Create extends Action
             }
         }
 
-        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);
-
         $metadata = null;
 
         $queueForEvents

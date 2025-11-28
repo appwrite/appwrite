@@ -80,7 +80,6 @@ class Create extends Action
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->inject('project')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
@@ -101,7 +100,6 @@ class Create extends Action
         Request $request,
         Response $response,
         Database $dbForProject,
-        Database $dbForPlatform,
         Document $project,
         Event $queueForEvents,
         Device $deviceForSites,
@@ -367,7 +365,7 @@ class Create extends Action
             }
         }
 
-        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
+      
 
         $metadata = null;
 
