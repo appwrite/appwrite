@@ -645,8 +645,10 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database = getConsoleDB();
 
         if ($projectId !== 'console') {
-            $project = $database->getAuthorization()->skip(fn () => $database->getDocument('projects', $projectId));
-            $database = getProjectDB($project, $database->getAuthorization());
+            $authorization = $database->getAuthorization();
+            $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            $database = getProjectDB($project);
+            $database->setAuthorization($authorization);
         } else {
             $project = null;
         }
@@ -656,7 +658,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
+        $timeLimit = new TimeLimitRedis('url:{url},connection:{connection}', 32, 60, getRedis());
 
         $timeLimit
             ->setParam('{connection}', $connection)
