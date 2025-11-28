@@ -316,6 +316,43 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['name'], 'appwrite');
         $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['runtime'], 'other');
 
+        // with limit and offset
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => 1,
+            'offset' => 0
+        ]);
+        $this->assertSame(200, $repositories['headers']['status-code']);
+        $this->assertSame(4, $repositories['body']['total']);
+        $this->assertSame(1, \count($repositories['body']['runtimeProviderRepositories']));
+        $this->assertSame('starter-for-svelte', $repositories['body']['runtimeProviderRepositories'][0]['name']);
+
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => 2,
+            'offset' => 1
+        ]);
+        $this->assertSame(200, $repositories['headers']['status-code']);
+        $this->assertSame(4, $repositories['body']['total']);
+        $this->assertSame(2, \count($repositories['body']['runtimeProviderRepositories']));
+        $this->assertSame('templates-for-functions', $repositories['body']['runtimeProviderRepositories'][0]['name']);
+        $this->assertSame('appwrite', $repositories['body']['runtimeProviderRepositories'][1]['name']);
+
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => 2,
+            'offset' => 100
+        ]);
+        $this->assertSame(200, $repositories['headers']['status-code']);
+        $this->assertSame(4, $repositories['body']['total']);
+        $this->assertSame(0, \count($repositories['body']['runtimeProviderRepositories']));
+
         // TODO: If you are about to add another check, rewrite this to @provideScenarios
 
         /**

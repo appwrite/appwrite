@@ -1057,11 +1057,11 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $queries = Query::parseQueries($queries);
-        $limitQuery = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT);
-        $offsetQuery = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET);
+        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
+        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET));
 
-        $limit = !empty($limitQuery) ? $limitQuery[0]->getValue() : 4;
-        $offset = !empty($offsetQuery) ? $offsetQuery[0]->getValue() : 0;
+        $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
+        $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;
         $page = ($offset / $limit) + 1;
 
         $owner = $github->getOwnerName($providerInstallationId);
