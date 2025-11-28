@@ -237,10 +237,10 @@ class Request extends UtopiaRequest
 
     /**
      * Get IP
-     * 
+     *
      * Returns users IP address based on a list of trusted headers.
      * Assumes application is only accessible through a trusted proxy.
-     * 
+     *
      * @return string
      */
     public function getIP(): string

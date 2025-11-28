@@ -10,7 +10,6 @@ use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
 use Tests\Unit\Utopia\Request\Filters\Second;
 use Utopia\Route;
-use Utopia\System\System;
 
 class RequestTest extends TestCase
 {
