@@ -39,7 +39,7 @@ class User extends Document
     {
         $roles = [];
 
-        if (!$this->isPrivileged($authorization->getRoles) && !$this->isApp($authorization->getRoles())) {
+        if (!$this->isPrivileged($authorization->getRoles()) && !$this->isApp($authorization->getRoles())) {
             if ($this->getId()) {
                 $roles[] = Role::user($this->getId())->toString();
                 $roles[] = Role::users()->toString();
