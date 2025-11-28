@@ -52,7 +52,7 @@ class Base extends Action
         return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
     }
 
-    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate,  string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
