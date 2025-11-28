@@ -1062,8 +1062,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
         $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
         $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;
-        $page = ($offset / $limit) + 1;
 
+        if ($offset % $limit !== 0) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'offset must be a multiple of the limit');
+        }
+
+        $page = ($offset / $limit) + 1;
         $owner = $github->getOwnerName($providerInstallationId);
         ['items' => $repos, 'total' => $total] = $github->searchRepositories($owner, $page, $limit, $search);
 

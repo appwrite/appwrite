@@ -335,13 +335,13 @@ class VCSConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'runtime',
             'limit' => Query::limit(2)->toString(),
-            'offset' => Query::offset(1)->toString()
+            'offset' => Query::offset(2)->toString()
         ]);
         $this->assertSame(200, $repositories['headers']['status-code']);
         $this->assertSame(4, $repositories['body']['total']);
         $this->assertCount(2, $repositories['body']['runtimeProviderRepositories']);
-        $this->assertSame('templates-for-functions', $repositories['body']['runtimeProviderRepositories'][0]['name']);
-        $this->assertSame('appwrite', $repositories['body']['runtimeProviderRepositories'][1]['name']);
+        $this->assertSame('appwrite', $repositories['body']['runtimeProviderRepositories'][0]['name']);
+        $this->assertSame('ruby-starter', $repositories['body']['runtimeProviderRepositories'][1]['name']);
 
         $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -375,6 +375,17 @@ class VCSConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $repositories['headers']['status-code']);
+
+        // invalid offset
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => Query::limit(2)->toString(),
+            'offset' => Query::offset(1)->toString()
+        ]);
+        $this->assertEquals(400, $repositories['headers']['status-code']);
+        $this->assertEquals('offset must be a multiple of the limit', $repositories['body']['message']);
 
         $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
