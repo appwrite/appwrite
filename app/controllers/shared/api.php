@@ -859,7 +859,7 @@ App::shutdown()
              *
              * Therefore, we consider this an anonymous request and create a relevant user.
              */
-            $user = new Document([
+            $user = new User([
                 '$id' => '',
                 'status' => true,
                 'type' => ACTIVITY_TYPE_GUEST,
