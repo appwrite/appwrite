@@ -9,6 +9,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
+use Utopia\System\System;
 
 class Request extends UtopiaRequest
 {
@@ -236,10 +237,11 @@ class Request extends UtopiaRequest
 
     /**
      * Get IP
-     *
+     * 
      * Returns users IP address based on a list of trusted headers.
      * Assumes application is only accessible through a trusted proxy.
-     *
+     * 
+     * @return string
      */
     public function getIP(): string
     {
@@ -247,7 +249,7 @@ class Request extends UtopiaRequest
         $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
 
         // Fetch and parse the list of trusted headers from configuration
-        $trustedHeadersConfig = $_ENV['_APP_TRUSTED_HEADERS'] ?? 'x-forwarded-for';
+        $trustedHeadersConfig = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
 
         $trustedHeaders = explode(',', $trustedHeadersConfig);
         $trustedHeaders = array_map('trim', $trustedHeaders);
