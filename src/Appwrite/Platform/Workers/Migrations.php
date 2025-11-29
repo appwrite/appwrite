@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Realtime;
+use Appwrite\Migration\Destination\Appwrite as DestinationAppwrite;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -13,8 +14,8 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+// Custom class to fix #10711 (Unknown attribute error)
 use Utopia\Migration\Destination;
-use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
@@ -84,7 +85,7 @@ class Migrations extends Action
             throw new Exception('Missing payload');
         }
 
-        $events    = $payload['events'] ?? [];
+        $events = $payload['events'] ?? [];
         $migration = new Document($payload['migration'] ?? []);
 
         if ($project->getId() === 'console') {
@@ -252,10 +253,10 @@ class Migrations extends Action
                 'rows.write',
                 'tokens.read',
                 'tokens.write',
-            ]
+            ],
         ]);
 
-        return API_KEY_DYNAMIC . '_' . $apiKey;
+        return API_KEY_DYNAMIC.'_'.$apiKey;
     }
 
     /**
@@ -384,12 +385,12 @@ class Migrations extends Action
 
                     foreach ($destination->getErrors() as $error) {
                         /** @var MigrationException $error */
-                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
                             'migrationId' => $migration->getId(),
                             'source' => $migration->getAttribute('source') ?? '',
                             'destination' => $migration->getAttribute('destination') ?? '',
                             'resourceName' => $error->getResourceName(),
-                            'resourceGroup' => $error->getResourceGroup()
+                            'resourceGroup' => $error->getResourceGroup(),
                         ]);
                     }
                 }
@@ -399,12 +400,12 @@ class Migrations extends Action
 
                     foreach ($source->getErrors() as $error) {
                         /** @var MigrationException $error */
-                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                        call_user_func($this->logError, $error, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
                             'migrationId' => $migration->getId(),
                             'source' => $migration->getAttribute('source') ?? '',
                             'destination' => $migration->getAttribute('destination') ?? '',
                             'resourceName' => $error->getResourceName(),
-                            'resourceGroup' => $error->getResourceGroup()
+                            'resourceGroup' => $error->getResourceGroup(),
                         ]);
                     }
                 }
