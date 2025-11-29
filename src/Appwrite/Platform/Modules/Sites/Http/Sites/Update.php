@@ -97,7 +97,6 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -128,8 +127,7 @@ class Update extends Base
         Build $queueForBuilds,
         Database $dbForPlatform,
         GitHub $github,
-        Executor $executor,
-        Authorization $authorization
+        Executor $executor
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
