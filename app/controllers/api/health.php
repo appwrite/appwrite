@@ -110,6 +110,9 @@ App::get('/v1/health/db')
         ];
 
         foreach ($configs as $key => $config) {
+            if (!is_array($config)) {
+                continue;
+            }
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
@@ -120,7 +123,7 @@ App::get('/v1/health/db')
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $database;
@@ -172,6 +175,9 @@ App::get('/v1/health/cache')
         ];
 
         foreach ($configs as $key => $config) {
+            if (!is_array($config)) {
+                continue;
+            }
             foreach ($config as $cache) {
                 try {
                     $adapter = new CachePool($pools->get($cache));
@@ -182,7 +188,7 @@ App::get('/v1/health/cache')
                         $output[] = new Document([
                             'name' => $key . " ($cache)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $cache;
@@ -232,6 +238,9 @@ App::get('/v1/health/pubsub')
         ];
 
         foreach ($configs as $key => $config) {
+            if (!is_array($config)) {
+                continue;
+            }
             foreach ($config as $pubsub) {
                 try {
                     $adapter = new PubSubPool($pools->get($pubsub));
@@ -242,7 +251,7 @@ App::get('/v1/health/pubsub')
                         $output[] = new Document([
                             'name' => $key . " ($pubsub)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $pubsub;
@@ -824,7 +833,7 @@ App::get('/v1/health/storage/local')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+            'ping' => \round((\microtime(true) - $checkStart) * 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -876,7 +885,7 @@ App::get('/v1/health/storage')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+            'ping' => \round((\microtime(true) - $checkStart) * 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
