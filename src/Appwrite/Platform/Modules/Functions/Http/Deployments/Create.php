@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Functions\Http\Deployments;
 use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -32,7 +31,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
-class Create extends Base
+class Create extends Action
 {
     use HTTP;
 
@@ -83,7 +82,6 @@ class Create extends Base
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('deviceForFunctions')
@@ -102,7 +100,6 @@ class Create extends Base
         Request $request,
         Response $response,
         Database $dbForProject,
-        Database $dbForPlatform,
         Event $queueForEvents,
         Document $project,
         Device $deviceForFunctions,
@@ -303,8 +300,6 @@ class Create extends Base
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
             }
         }
-
-        $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform);
 
         $metadata = null;
 
