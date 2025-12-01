@@ -123,21 +123,21 @@ App::get('/v1/health/db')
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
+                            'checkStart' => $checkStart,
+                            'now' => \microtime(true),
                             'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $database;
                     }
                 } catch (\Throwable) {
-                    var_dump($key . " ($database)");
                     $failures[] = $database;
                 }
             }
         }
 
         if (!empty($failures)) {
-            var_dump($failures);
-            //throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
 
         $response->dynamic(new Document([
