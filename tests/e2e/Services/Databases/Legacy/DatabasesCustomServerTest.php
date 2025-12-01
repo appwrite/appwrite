@@ -6780,4 +6780,424 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
     }
+
+    public function testCreateCollectionWithAttributesAndIndexes(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Multi Create',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Test: Create collection with attributes and indexes in one call
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::custom('movies'),
+            'name' => 'Movies',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                    'size' => 256,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'year',
+                    'type' => Database::VAR_INTEGER,
+                    'required' => false,
+                    'default' => 2024,
+                ],
+                [
+                    'key' => 'rating',
+                    'type' => Database::VAR_FLOAT,
+                    'required' => false,
+                ],
+                [
+                    'key' => 'active',
+                    'type' => Database::VAR_BOOLEAN,
+                    'required' => false,
+                    'default' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'idx_title',
+                    'type' => Database::INDEX_KEY,
+                    'attributes' => ['title'],
+                ],
+                [
+                    'key' => 'idx_year',
+                    'type' => Database::INDEX_KEY,
+                    'attributes' => ['year'],
+                    'orders' => ['DESC'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('Movies', $collection['body']['name']);
+        $this->assertEquals('movies', $collection['body']['$id']);
+
+        // Verify attributes were created and are available
+        $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/movies/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attributes['headers']['status-code']);
+        $this->assertEquals(4, $attributes['body']['total']);
+
+        $attrByKey = [];
+        foreach ($attributes['body']['attributes'] as $attr) {
+            $attrByKey[$attr['key']] = $attr;
+        }
+
+        $this->assertEquals('available', $attrByKey['title']['status']);
+        $this->assertEquals(Database::VAR_STRING, $attrByKey['title']['type']);
+        $this->assertEquals(256, $attrByKey['title']['size']);
+        $this->assertTrue($attrByKey['title']['required']);
+
+        $this->assertEquals('available', $attrByKey['year']['status']);
+        $this->assertEquals(Database::VAR_INTEGER, $attrByKey['year']['type']);
+        $this->assertFalse($attrByKey['year']['required']);
+        $this->assertEquals(2024, $attrByKey['year']['default']);
+
+        $this->assertEquals('available', $attrByKey['rating']['status']);
+        $this->assertEquals(Database::VAR_FLOAT, $attrByKey['rating']['type']);
+
+        $this->assertEquals('available', $attrByKey['active']['status']);
+        $this->assertEquals(Database::VAR_BOOLEAN, $attrByKey['active']['type']);
+        $this->assertTrue($attrByKey['active']['default']);
+
+        // Verify indexes were created and are available
+        $indexes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/movies/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $indexes['headers']['status-code']);
+        $this->assertEquals(2, $indexes['body']['total']);
+
+        $idxByKey = [];
+        foreach ($indexes['body']['indexes'] as $idx) {
+            $idxByKey[$idx['key']] = $idx;
+        }
+
+        $this->assertEquals('available', $idxByKey['idx_title']['status']);
+        $this->assertEquals(Database::INDEX_KEY, $idxByKey['idx_title']['type']);
+        $this->assertEquals(['title'], $idxByKey['idx_title']['attributes']);
+
+        $this->assertEquals('available', $idxByKey['idx_year']['status']);
+        $this->assertEquals(Database::INDEX_KEY, $idxByKey['idx_year']['type']);
+        $this->assertEquals(['year'], $idxByKey['idx_year']['attributes']);
+        $this->assertEquals(['DESC'], $idxByKey['idx_year']['orders']);
+
+        // Verify we can create documents using the attributes
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/movies/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'The Matrix',
+                'year' => 1999,
+                'rating' => 8.7,
+                'active' => true,
+            ],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals('The Matrix', $document['body']['title']);
+        $this->assertEquals(1999, $document['body']['year']);
+        $this->assertEquals(8.7, $document['body']['rating']);
+        $this->assertTrue($document['body']['active']);
+
+        // Test: Create document with default values
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/movies/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'New Movie',
+            ],
+        ]);
+
+        $this->assertEquals(201, $document2['headers']['status-code']);
+        $this->assertEquals('New Movie', $document2['body']['title']);
+        $this->assertEquals(2024, $document2['body']['year']); // default value
+        $this->assertTrue($document2['body']['active']); // default value
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testCreateCollectionWithAttributesAndIndexesErrors(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Multi Create Errors',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Test: Invalid attribute type
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Invalid Type',
+            'attributes' => [
+                [
+                    'key' => 'test',
+                    'type' => 'invalid_type',
+                    'size' => 256,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+
+        // Test: Index referencing non-existent attribute
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Invalid Index',
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                    'size' => 256,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'idx_invalid',
+                    'type' => Database::INDEX_KEY,
+                    'attributes' => ['nonexistent'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+
+        // Test: String attribute without size
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'No Size',
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                ],
+            ],
+        ]);
+
+        // Should succeed with default size
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        // Test: Required attribute with default value (should fail)
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Required With Default',
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                    'size' => 256,
+                    'required' => true,
+                    'default' => 'test',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+
+        // Test: Duplicate attribute keys
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Duplicate Keys',
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                    'size' => 256,
+                ],
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                    'size' => 128,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+
+        // Test: Index on system attribute ($id)
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'System Attr Index',
+            'attributes' => [],
+            'indexes' => [
+                [
+                    'key' => 'idx_id',
+                    'type' => Database::INDEX_KEY,
+                    'attributes' => ['$id'],
+                ],
+            ],
+        ]);
+
+        // Should succeed - system attributes can be indexed
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
+    public function testCreateCollectionWithEnumAttribute(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Enum',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Test: Create collection with enum attribute
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::custom('status_collection'),
+            'name' => 'Status Collection',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'status',
+                    'type' => Database::VAR_STRING,
+                    'size' => 32,
+                    'required' => true,
+                    'format' => 'enum',
+                    'elements' => ['pending', 'active', 'completed', 'cancelled'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        // Verify attribute
+        $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/status_collection/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attributes['headers']['status-code']);
+        $this->assertEquals(1, $attributes['body']['total']);
+        $this->assertEquals('available', $attributes['body']['attributes'][0]['status']);
+        $this->assertEquals('enum', $attributes['body']['attributes'][0]['format']);
+        $this->assertEquals(['pending', 'active', 'completed', 'cancelled'], $attributes['body']['attributes'][0]['elements']);
+
+        // Test creating document with valid enum value
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/status_collection/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'status' => 'active',
+            ],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals('active', $document['body']['status']);
+
+        // Test creating document with invalid enum value
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/status_collection/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'status' => 'invalid_status',
+            ],
+        ]);
+
+        $this->assertEquals(400, $document['headers']['status-code']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
 }
