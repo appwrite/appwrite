@@ -124,13 +124,25 @@ App::get('/v1/health/db')
                         ]);
                     } else {
                         $failures[] = $database;
+                        // Add failure to output instead of throwing
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'fail',
+                            'ping' => 0
+                        ]);
                     }
-                } catch (\Throwable) {
+                } catch (\Throwable $e) {
                     $failures[] = $database;
+                    // Add failure to output instead of throwing
+                    $output[] = new Document([
+                        'name' => $key . " ($database)",
+                        'status' => 'fail',
+                        'ping' => 0
+                    ]);
                 }
             }
         }
-
+        
         if (!empty($failures)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
