@@ -126,14 +126,14 @@ App::get('/v1/health/db')
                         $failures[] = $database;
                     }
                 } catch (\Throwable) {
-                    var_dump($key . " ($database)",);
+                    var_dump($key . " ($database)");
                     $failures[] = $database;
                 }
             }
         }
 
         if (!empty($failures)) {
-           
+            var_dump($failures);
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
 
