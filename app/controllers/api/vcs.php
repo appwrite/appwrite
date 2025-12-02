@@ -436,7 +436,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 }
             }
 
-
             if ($resource->getCollection() === 'sites' && !empty($latestCommentId) && !empty($previewRuleId)) {
                 $retries = 0;
                 $lockAcquired = false;
@@ -1799,7 +1798,8 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = $authorization->skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
+        $repository = $authorization->skip(fn () => $dbForPlatform->findOne('repositories', [
+            Query::equal('$id', [$repositoryId]),
             Query::equal('projectInternalId', [$project->getSequence()])
         ]));
 
