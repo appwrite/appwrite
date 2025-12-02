@@ -565,6 +565,7 @@ class Migrations extends Action
             'fileId' => $fileId,
             'projectId' => $project->getId(),
             'internal' => true,
+            'disposition' => 'attachment',
         ]);
 
         // Generate download URL with JWT

@@ -1315,7 +1315,7 @@ trait MigrationsBase
             $this->assertEquals('CSV', $response['body']['destination']);
 
             return true;
-        }, 30000, 500);
+        }, 30_000, 500);
 
         // Check that email was sent with download link
         $lastEmail = $this->getLastEmail();

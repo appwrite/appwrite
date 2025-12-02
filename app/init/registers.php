@@ -41,6 +41,7 @@ if (!App::isProduction()) {
     PublicDomain::allow(['request-catcher-sms']);
     PublicDomain::allow(['request-catcher-webhook']);
 }
+
 $register->set('logger', function () {
     // Register error logger
     $providerName = System::getEnv('_APP_LOGGING_PROVIDER', '');
@@ -70,6 +71,51 @@ $register->set('logger', function () {
             default => ['key' => $providerConfig],
         };
     }
+
+    if (empty($providerName) || empty($providerConfig)) {
+        return;
+    }
+
+    if (!Logger::hasProvider($providerName)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
+    }
+
+    try {
+        $adapter = match ($providerName) {
+            'sentry' => new Sentry($providerConfig['projectId'], $providerConfig['key'], $providerConfig['host']),
+            'logowl' => new LogOwl($providerConfig['ticket'], $providerConfig['host']),
+            'raygun' => new Raygun($providerConfig['key']),
+            'appsignal' => new AppSignal($providerConfig['key']),
+            default => null
+        };
+    } catch (Throwable $th) {
+        $adapter = null;
+    }
+
+    if ($adapter === null) {
+        Console::error("Logging provider not supported. Logging is disabled");
+        return;
+    }
+
+    return new Logger($adapter);
+});
+
+$register->set('realtimeLogger', function () {
+    // Register error logger for realtime, falls back to default logging config
+    $providerConfig = System::getEnv('_APP_LOGGING_CONFIG_REALTIME', '')
+        ?: System::getEnv('_APP_LOGGING_CONFIG', '');
+
+    if (empty($providerConfig)) {
+        return;
+    }
+
+    $loggingProvider = new DSN($providerConfig);
+    $providerName = $loggingProvider->getScheme();
+    $providerConfig = match ($providerName) {
+        'sentry' => ['key' => $loggingProvider->getPassword(), 'projectId' => $loggingProvider->getUser() ?? '', 'host' => 'https://' . $loggingProvider->getHost()],
+        'logowl' => ['ticket' => $loggingProvider->getUser() ?? '', 'host' => $loggingProvider->getHost()],
+        default => ['key' => $loggingProvider->getHost()],
+    };
 
     if (empty($providerName) || empty($providerConfig)) {
         return;
@@ -371,7 +417,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2024-09.mmdb');
+    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2025-12.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/../assets/security/10k-common-passwords');

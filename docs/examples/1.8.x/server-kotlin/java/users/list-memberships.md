@@ -11,7 +11,7 @@ Users users = new Users(client);
 
 users.listMemberships(
     "<USER_ID>", // userId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {

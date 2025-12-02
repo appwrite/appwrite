@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -10,6 +9,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -91,7 +91,7 @@ class Create extends Action
 
         $token = $dbForProject->createDocument('resourceTokens', new Document([
             '$id' => ID::unique(),
-            'secret' => Auth::tokenGenerator(128),
+            'secret' => (new Token(128))->generate(),
             'resourceId' => $bucketId . ':' . $fileId,
             'resourceInternalId' => $bucket->getSequence() . ':' . $file->getSequence(),
             'resourceType' => TOKENS_RESOURCE_TYPE_FILES,
