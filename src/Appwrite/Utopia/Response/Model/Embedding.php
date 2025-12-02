@@ -24,16 +24,24 @@ class Embedding extends Model
                 'description' => 'Embedding model used to generate embeddings.',
                 'example' => 'embeddinggemma'
             ])
-            ->addRule('dimensions', [
+            ->addRule('dimension', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of dimensions for each embedding vector.',
                 'example' => 768
             ])
-            ->addRule('embeddings', [
+            ->addRule('embedding', [
                 'type' => self::TYPE_FLOAT,
                 'array' => true,
-                'description' => 'Embedding vector values.',
+                'default' => [],
+                'description' => 'Embedding vector values. If an error occurs, this will be an empty array.',
                 'example' => [0.01, 0.02, 0.03]
+            ])
+            ->addRule('error', [
+                'type' => self::TYPE_STRING,
+                'array' => false,
+                'default' => '',
+                'description' => 'Error message if embedding generation fails. Empty string if no error.',
+                'example' => 'Error message'
             ]);
     }
 }

@@ -127,7 +127,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $public = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -142,7 +142,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $private = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Private Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::users()),
                 Permission::create(Role::users()),
@@ -157,7 +157,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $doconly = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Document Only Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [],
             'documentSecurity' => true,
         ]);

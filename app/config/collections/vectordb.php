@@ -41,7 +41,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('dimensions'),
+                '$id' => ID::custom('dimension'),
                 'type' => Database::VAR_INTEGER,
                 'size' => 0,
                 'required' => true,

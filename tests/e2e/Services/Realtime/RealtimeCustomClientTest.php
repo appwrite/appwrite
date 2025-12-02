@@ -4347,7 +4347,7 @@ class RealtimeCustomClientTest extends Scope
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
         ]);
 
         $actorsId = $actors['body']['$id'];

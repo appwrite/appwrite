@@ -154,7 +154,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
         ]);
         $this->assertEquals(201, $col1['headers']['status-code']);
         // Validate collection response model on create
@@ -163,7 +163,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertArrayHasKey('$updatedAt', $col1['body']);
         $this->assertArrayHasKey('enabled', $col1['body']);
         $this->assertArrayHasKey('documentSecurity', $col1['body']);
-        $this->assertArrayHasKey('dimensions', $col1['body']);
+        $this->assertArrayHasKey('dimension', $col1['body']);
 
         $col2 = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
             'content-type' => 'application/json',
@@ -179,7 +179,7 @@ class DatabasesCustomServerTest extends Scope
                 Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
         ]);
         $this->assertEquals(201, $col2['headers']['status-code']);
         $this->assertArrayHasKey('$id', $col2['body']);
@@ -198,7 +198,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertIsArray($list['body']['collections']);
         $this->assertArrayHasKey('$id', $list['body']['collections'][0]);
         $this->assertArrayHasKey('name', $list['body']['collections'][0]);
-        $this->assertArrayHasKey('dimensions', $list['body']['collections'][0]);
+        $this->assertArrayHasKey('dimension', $list['body']['collections'][0]);
 
         // Get collection
         $get = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $col1['body']['$id'], [
@@ -209,7 +209,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals($col1['body']['$id'], $get['body']['$id']);
         $this->assertEquals('Test 1', $get['body']['name']);
-        $this->assertEquals(3, $get['body']['dimensions']);
+        $this->assertEquals(3, $get['body']['dimension']);
 
         // Update collection (name only)
         $upd = $this->client->call(Client::METHOD_PUT, '/vectordb/' . $databaseId . '/collections/' . $col1['body']['$id'], [
@@ -253,11 +253,11 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'name' => 'Test 1 Renamed',
-            'dimensions' => 4,
+            'dimension' => 4,
         ]);
         $this->assertEquals(200, $upd['headers']['status-code']);
         $this->assertEquals('Test 1 Renamed', $upd['body']['name']);
-        $this->assertEquals(4, $upd['body']['dimensions']);
+        $this->assertEquals(4, $upd['body']['dimension']);
 
         // Read back to confirm
         $get = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId, [
@@ -267,7 +267,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals('Test 1 Renamed', $get['body']['name']);
-        $this->assertEquals(4, $get['body']['dimensions']);
+        $this->assertEquals(4, $get['body']['dimension']);
 
         return $data;
     }
@@ -506,7 +506,7 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'BulkColCreate',
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::read(Role::any())]
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -582,7 +582,7 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'EmbedCol',
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::read(Role::any())]
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -594,10 +594,11 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'documents' => [
-                ['text' => 'hello world', 'embeddingModel' => 'embeddinggemma'],
-                ['text' => 'second sentence', 'embeddingModel' => 'embeddinggemma'],
-            ]
+            'embeddingModel' => 'embeddinggemma',
+            'texts' => [
+                'hello world',
+                'second sentence',
+            ],
         ]);
         $this->assertEquals(200, $ok['headers']['status-code']);
         $this->assertIsInt($ok['body']['total'] ?? 0);
@@ -606,48 +607,33 @@ class DatabasesCustomServerTest extends Scope
         $this->assertCount(2, $ok['body']['embeddings']);
         foreach ($ok['body']['embeddings'] as $embed) {
             $this->assertIsString($embed['model']);
-            $this->assertIsInt($embed['dimensions']);
-            $this->assertIsArray($embed['embeddings']);
-            $this->assertGreaterThan(0, count($embed['embeddings']));
+            $this->assertIsInt($embed['dimension']);
+            $this->assertIsArray($embed['embedding']);
+            $this->assertGreaterThan(0, count($embed['embedding']));
+            $this->assertArrayHasKey('error', $embed);
         }
 
-        // Error: missing documents
-        $missingDocs = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
+        // Error: missing texts payload
+        $missingTexts = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], []);
-        $this->assertEquals(400, $missingDocs['headers']['status-code']);
+        $this->assertEquals(400, $missingTexts['headers']['status-code']);
 
-        // Error: invalid item structure (not an object)
+        // Error: invalid texts item type (must be strings)
         $invalidItem = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'documents' => [ 'oops' ]
+            'embeddingModel' => 'embeddinggemma',
+            'texts' => [
+                'valid text',
+                123, // invalid, not a string
+            ],
         ]);
         $this->assertEquals(400, $invalidItem['headers']['status-code']);
-
-        // Error: missing text
-        $missingText = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'documents' => [ ['embeddingModel' => 'embeddinggemma'] ]
-        ]);
-        $this->assertEquals(400, $missingText['headers']['status-code']);
-
-        // Error: missing embeddingModel
-        $missingModel = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'documents' => [ ['text' => 'no model'] ]
-        ]);
-        $this->assertEquals(400, $missingModel['headers']['status-code']);
 
         // Error: unknown embedding model
         $unknownModel = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
@@ -655,7 +641,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'documents' => [ ['text' => 'hello', 'embeddingModel' => 'nonexistent-model'] ]
+            'embeddingModel' => 'nonexistent-model',
+            'texts' => ['hello'],
         ]);
         $this->assertEquals(400, $unknownModel['headers']['status-code']);
     }
@@ -679,7 +666,7 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'BulkColUpsert',
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::read(Role::any())]
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -772,7 +759,7 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'BulkColUpdate',
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::read(Role::any())]
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -840,7 +827,7 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'BulkColDelete',
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::read(Role::any())]
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -905,7 +892,7 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'TimestampTestCollection',
             'documentSecurity' => true,
-            'dimensions' => 1536,
+            'dimension' => 1536,
             'permissions' => [Permission::read(Role::any())]
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);

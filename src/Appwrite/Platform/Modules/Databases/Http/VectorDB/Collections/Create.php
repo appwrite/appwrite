@@ -69,7 +69,7 @@ class Create extends CollectionAction
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-            ->param('dimensions', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimensions.')
+            ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimension.')
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
@@ -80,7 +80,7 @@ class Create extends CollectionAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, int $dimensions, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $name, int $dimension, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -102,7 +102,7 @@ class Create extends CollectionAction
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
-                'dimensions' => $dimensions,
+                'dimension' => $dimension,
                 'search' => \implode(' ', [$collectionId, $name]),
             ]));
 
@@ -121,7 +121,7 @@ class Create extends CollectionAction
         $collections = (Config::getParam('collections', [])['vectordb'] ?? [])['collections'] ?? [];
         foreach ($collections['defaultAttributes'] as $attribute) {
             if ($attribute['$id'] === 'embeddings') {
-                $attribute['size'] = $dimensions;
+                $attribute['size'] = $dimension;
             }
             $attributes[] = new Document($attribute);
         }
@@ -142,7 +142,7 @@ class Create extends CollectionAction
             );
             // Create attribute and indexes metadata documents in the attributes and indexes collections
             // needed for the get and list calls
-            $attributeDocs = array_map(function ($attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimensions) {
+            $attributeDocs = array_map(function ($attributeConfig) use ($database, $collection, $databaseId, $collectionId, $dimension) {
                 $key = \is_string($attributeConfig['$id']) ? $attributeConfig['$id'] : (string) $attributeConfig['$id'];
                 return new Document([
                     '$id' => ID::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
@@ -153,7 +153,7 @@ class Create extends CollectionAction
                     'collectionId' => $collectionId,
                     'type' => $attributeConfig['type'],
                     'status' => 'available',
-                    'size' => $dimensions,
+                    'size' => $dimension,
                     'required' => $attributeConfig['required'] ?? false,
                     'signed' => $attributeConfig['signed'] ?? false,
                     'default' => $attributeConfig['default'] ?? null,

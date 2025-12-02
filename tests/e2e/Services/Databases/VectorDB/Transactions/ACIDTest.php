@@ -48,7 +48,7 @@ class ACIDTest extends Scope
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'AtomicityTest',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -160,7 +160,7 @@ class ACIDTest extends Scope
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'ConsistencyTest',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -268,7 +268,7 @@ class ACIDTest extends Scope
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'IsolationTest',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -416,7 +416,7 @@ class ACIDTest extends Scope
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'DurabilityTest',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),

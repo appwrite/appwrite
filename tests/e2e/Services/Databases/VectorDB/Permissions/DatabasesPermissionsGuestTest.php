@@ -34,7 +34,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $publicMovies = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -45,7 +45,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $privateMovies = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [],
             'documentSecurity' => true,
         ]);
@@ -239,7 +239,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $movies = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
             ],

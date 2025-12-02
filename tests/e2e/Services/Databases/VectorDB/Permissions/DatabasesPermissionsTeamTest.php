@@ -47,7 +47,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $collection1 = $this->client->call(Client::METHOD_POST, '/vectordb/' . $this->databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::custom('collection1'),
             'name' => 'Collection 1',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::team($teams['team1']['$id'])),
                 Permission::create(Role::team($teams['team1']['$id'], 'admin')),
@@ -61,7 +61,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $collection2 = $this->client->call(Client::METHOD_POST, '/vectordb/' . $this->databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::custom('collection2'),
             'name' => 'Collection 2',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::team($teams['team2']['$id'])),
                 Permission::create(Role::team($teams['team2']['$id'], 'owner')),

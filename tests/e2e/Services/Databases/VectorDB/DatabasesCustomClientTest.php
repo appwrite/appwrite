@@ -42,7 +42,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => true,
             'permissions' => [
                 Permission::write(Role::user($this->getUser()['$id'])),
@@ -129,7 +129,7 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'collectionId' => ID::custom('permissionCheck'),
             'name' => 'permissionCheck',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [],
             'documentSecurity' => true,
         ]);

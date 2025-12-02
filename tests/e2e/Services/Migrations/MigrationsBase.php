@@ -1406,7 +1406,7 @@ trait MigrationsBase
             ], [
                 'collectionId' => ID::unique(),
                 'name' => 'Vector CSV Import Collection',
-                'dimensions' => 3,
+                'dimension' => 3,
                 'documentSecurity' => true,
             ]);
 
@@ -1527,7 +1527,7 @@ trait MigrationsBase
             ], [
                 'collectionId' => ID::unique(),
                 'name' => 'Vector CSV Export Collection',
-                'dimensions' => 3,
+                'dimension' => 3,
                 'documentSecurity' => true,
             ]);
 
@@ -1761,7 +1761,7 @@ trait MigrationsBase
         ], [
             'collectionId' => ID::unique(),
             'name' => 'VDB - Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
         ]);
 
         $this->assertEquals(201, $collection['headers']['status-code']);
@@ -2207,7 +2207,7 @@ trait MigrationsBase
         ], [
             'collectionId' => ID::unique(),
             'name' => 'Products',
-            'dimensions' => 3,
+            'dimension' => 3,
         ]);
 
         $this->assertEquals(201, $vectorCollection['headers']['status-code']);

@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Embeddings\Text;
 
-use Appwrite\Auth\Auth;
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,14 +9,13 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Database;
+use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Agent;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\JSON;
-
-// Agent is dynamically provided via container; avoid strict type to pass lints
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Create extends CreateDocumentAction
 {
@@ -58,7 +55,7 @@ class Create extends CreateDocumentAction
                     name: 'createTextEmbeddings',
                     desc: 'Create Text Embedding',
                     description: '/docs/references/vectordb/create-document.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,
@@ -73,73 +70,44 @@ class Create extends CreateDocumentAction
                     ]
                 )
             ])
-            ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
+            ->param('embeddingModel', Ollama::MODEL_EMBEDDING_GEMMA, new WhiteList(Ollama::MODELS), 'The embedding model to use for generating vector embeddings.', false)
+            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', true, ['plan'])
             ->inject('response')
             ->inject('embeddingAgent')
-            ->inject('dbForProject')
-            ->inject('getDatabasesDB')
             ->callback($this->action(...));
     }
 
-    public function action(array $documents, UtopiaResponse $response, $embeddingAgent, Database $dbForProject, callable $getDatabasesDB): void
+    public function action(string $embeddingModel, array $texts, UtopiaResponse $response, Agent $embeddingAgent): void
     {
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-
-        if (!$isAPIKey && !$isPrivilegedUser) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-        }
-
-        if (empty($documents)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-
-        // Validate and process each document
-        $availableModels = [];
-        $availableModels = $embeddingAgent->getAdapter()->getModels();
-
         $results = [];
+        $embeddingAgent->getAdapter()->setModel($embeddingModel);
+        $dimension = $embeddingAgent->getAdapter()->getEmbeddingDimension();
 
-        // validating all documents first
-        foreach ($documents as $index => $item) {
-            if (!\is_array($item)) {
-                throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Invalid item at index ' . $index);
-            }
+        foreach ($texts as $text) {
 
-            $text = $item['text'] ?? '';
-            $model = $item['embeddingModel'] ?? ($item['embeddingModel'] ?? null);
-
-            if (!\is_string($text) || $text === '') {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing or invalid "text" at index ' . $index);
+            $embedding = [];
+            $error = '';
+            try {
+                $embedResult = $embeddingAgent->embed($text);
+                $embedding = $embedResult['embedding'] ?? [];
+            } catch (\Exception $e) {
+                $error = 'Error while generating embedding';
             }
-            if (!\is_string($model) || $model === '') {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing or invalid "embeddingModel" at index ' . $index);
-            }
-            if (!empty($availableModels) && !\in_array($model, $availableModels, true)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Unknown embedding model: ' . $model);
-            }
-        }
-        foreach ($documents as $index => $item) {
-            $embeddingAgent->getAdapter()->setModel($model);
-
-            $embedResult = $embeddingAgent->embed($text);
-            $vector = $embedResult['embedding'] ?? [];
-            $dimensions = \is_array($vector) ? \count($vector) : 0;
 
             $results[] = new Document([
-                'model' => $model,
-                'dimensions' => $dimensions,
-                'embeddings' => $vector,
+                'model' => $embeddingModel,
+                'dimension' => $dimension,
+                'embedding' => $embedding,
+                'error' => $error
             ]);
-
         }
-        $list = new Document([
-            'embeddings' => array_map(fn ($d) => $d, $results),
+        $embeddings = new Document([
+            'embeddings' => $results,
             'total' => \count($results),
         ]);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
-            ->dynamic($list, $this->getBulkResponseModel());
+            ->dynamic($embeddings, $this->getBulkResponseModel());
     }
 }

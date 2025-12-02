@@ -504,7 +504,7 @@ trait DatabasesBase
             'collectionId' => ID::unique(),
             'name' => 'Movies',
             'documentSecurity' => true,
-            'dimensions' => 1536,
+            'dimension' => 1536,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -521,7 +521,7 @@ trait DatabasesBase
             'collectionId' => ID::unique(),
             'name' => 'Actors',
             'documentSecurity' => true,
-            'dimensions' => 1536,
+            'dimension' => 1536,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
             ],
@@ -570,7 +570,7 @@ trait DatabasesBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Sample Collection',
-            'dimensions' => 1536,
+            'dimension' => 1536,
             'documentSecurity' => true,
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -579,7 +579,7 @@ trait DatabasesBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
         $this->assertEquals('Sample Collection', $collection['body']['name']);
-        $this->assertEquals(1536, $collection['body']['dimensions']);
+        $this->assertEquals(1536, $collection['body']['dimension']);
 
         return [
             'databaseId' => $databaseId,
@@ -626,7 +626,7 @@ trait DatabasesBase
                 'collectionId' => ID::unique(),
                 'name' => $name,
                 'documentSecurity' => true,
-                'dimensions' => $dimensions,
+                'dimension' => $dimensions,
                 'permissions' => [
                     Permission::create(Role::user($userId)),
                 ],
@@ -702,7 +702,7 @@ trait DatabasesBase
             'collectionId' => ID::unique(),
             'name' => 'ZeroDims',
             'documentSecurity' => true,
-            'dimensions' => 0,
+            'dimension' => 0,
             'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
         ]);
         $this->assertGreaterThanOrEqual(400, $col['headers']['status-code']);
@@ -717,7 +717,7 @@ trait DatabasesBase
             'collectionId' => ID::unique(),
             'name' => 'HugeDims',
             'documentSecurity' => true,
-            'dimensions' => 16001,
+            'dimension' => 16001,
             'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
         ]);
         $this->assertGreaterThanOrEqual(400, $col2['headers']['status-code']);
@@ -745,7 +745,7 @@ trait DatabasesBase
             'collectionId' => ID::unique(),
             'name' => 'OneDim',
             'documentSecurity' => true,
-            'dimensions' => 1,
+            'dimension' => 1,
             'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -802,7 +802,7 @@ trait DatabasesBase
             'collectionId' => ID::unique(),
             'name' => 'Docs',
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -859,7 +859,7 @@ trait DatabasesBase
             'collectionId' => ID::unique(),
             'name' => 'Zeros',
             'documentSecurity' => true,
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
         ]);
         $this->assertEquals(201, $col['headers']['status-code']);
@@ -900,7 +900,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimensions' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
+        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 
@@ -932,7 +932,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimensions' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
+        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 
@@ -959,7 +959,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimensions' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
+        ], [ 'collectionId' => ID::unique(), 'name' => 'Docs', 'documentSecurity' => true, 'dimension' => 3, 'permissions' => [Permission::create(Role::user($this->getUser()['$id']))] ]);
         $this->assertEquals(201, $col['headers']['status-code']);
         $collectionId = $col['body']['$id'];
 

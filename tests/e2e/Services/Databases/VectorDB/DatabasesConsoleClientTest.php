@@ -40,7 +40,7 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -72,7 +72,7 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'collectionId' => ID::unique(),
             'name' => 'TvShows',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),

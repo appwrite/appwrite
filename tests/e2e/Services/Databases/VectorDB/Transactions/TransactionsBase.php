@@ -128,7 +128,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TransactionOperationsTest',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -267,7 +267,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TransactionCommitTest',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -409,7 +409,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TransactionRollbackTest',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -489,7 +489,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -575,7 +575,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::create(Role::any())],
         ]);
 
@@ -690,7 +690,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -821,7 +821,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -919,7 +919,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -1079,7 +1079,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -1220,7 +1220,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [Permission::create(Role::any())],
         ]);
 
@@ -1331,7 +1331,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::update(Role::any()),
@@ -1421,7 +1421,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'documentSecurity' => false,
             'permissions' => [
                 Permission::create(Role::any()),
@@ -1515,7 +1515,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -1624,7 +1624,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -1733,7 +1733,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -1829,7 +1829,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -1959,7 +1959,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
@@ -2064,7 +2064,7 @@ trait TransactionsBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'TestCollection',
-            'dimensions' => 3,
+            'dimension' => 3,
             'permissions' => [
                 Permission::create(Role::any()),
                 Permission::read(Role::any()),
