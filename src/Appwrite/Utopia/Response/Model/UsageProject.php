@@ -216,6 +216,27 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('embeddingsText', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of text embedding calls per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('embeddingsTextTokens', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of tokens processed by text embeddings per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('embeddingsTextDuration', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated duration spent generating text embeddings per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
         ;
     }
 

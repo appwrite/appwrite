@@ -1589,6 +1589,63 @@ class UsageTest extends Scope
         });
     }
 
+    public function testEmbeddingsTextUsageDoesNotBreakProjectUsage(): void
+    {
+        // Trigger embeddings endpoint a few times so stats usage worker has data to aggregate
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->client->call(
+                Client::METHOD_POST,
+                '/vectordb/embeddings/text',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], $this->getHeaders()),
+                [
+                    'embeddingModel' => 'embeddinggemma',
+                    'texts' => [
+                        'usage test text ' . $i,
+                    ],
+                ]
+            );
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertIsArray($response['body']['embeddings']);
+            $this->assertGreaterThan(0, $response['body']['total']);
+        }
+
+        // Ensure project usage endpoint still responds correctly after embeddings calls
+        $this->assertEventually(function () {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1h',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey('requests', $response['body']);
+            $this->assertArrayHasKey('network', $response['body']);
+            $this->assertArrayHasKey('executionsTotal', $response['body']);
+
+            // New embeddings metrics should be present after calls above
+            $this->assertArrayHasKey('embeddingsText', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextTokens', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextDuration', $response['body']);
+            $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsText']);
+            $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsTextTokens']);
+            $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsTextDuration']);
+
+            $this->validateDates($response['body']['embeddingsText']);
+            $this->validateDates($response['body']['embeddingsTextTokens']);
+            $this->validateDates($response['body']['embeddingsTextDuration']);
+        });
+    }
+
     public function tearDown(): void
     {
         $this->projectId = '';

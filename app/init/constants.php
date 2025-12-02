@@ -274,6 +274,9 @@ const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+const METRIC_EMBEDDINGS_TEXT = 'embeddings.text.{embeddingModel}';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -286,6 +289,7 @@ const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
+const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';

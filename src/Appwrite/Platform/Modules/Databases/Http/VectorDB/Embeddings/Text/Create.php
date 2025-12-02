@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Embeddings\Text;
 
+use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -41,8 +42,8 @@ class Create extends CreateDocumentAction
             ->setHttpPath('/v1/vectordb/embeddings/text')
             ->desc('Create Text Embeddings')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.read')
-            ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('scope', 'documents.write')
+            ->label('resourceType', RESOURCE_TYPE_EMBEDDINGS_TEXT)
             ->label('audits.event', 'embedding.create')
             ->label('audits.resource', 'vectordb/embeddings/text')
             ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -74,23 +75,27 @@ class Create extends CreateDocumentAction
             ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', true, ['plan'])
             ->inject('response')
             ->inject('embeddingAgent')
+            ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 
-    public function action(string $embeddingModel, array $texts, UtopiaResponse $response, Agent $embeddingAgent): void
+    public function action(string $embeddingModel, array $texts, UtopiaResponse $response, Agent $embeddingAgent, StatsUsage $queueForStatsUsage): void
     {
         $results = [];
         $embeddingAgent->getAdapter()->setModel($embeddingModel);
         $dimension = $embeddingAgent->getAdapter()->getEmbeddingDimension();
 
+        $totalDuration = 0;
+        $totalTokens = 0;
         foreach ($texts as $text) {
-
             $embedding = [];
             $error = '';
             try {
                 $embedResult = $embeddingAgent->embed($text);
                 $embedding = $embedResult['embedding'] ?? [];
-            } catch (\Exception $e) {
+                $totalDuration += $embedResult['totalDuration'] ?? 0;
+                $totalTokens += $embedResult['tokensProcessed'] ?? 0;
+            } catch (\Exception) {
                 $error = 'Error while generating embedding';
             }
 
@@ -109,5 +114,33 @@ class Create extends CreateDocumentAction
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($embeddings, $this->getBulkResponseModel());
+
+        $queueForStatsUsage
+            ->addMetric(
+                \str_replace(
+                    '{embeddingModel}',
+                    $embeddingModel,
+                    METRIC_EMBEDDINGS_TEXT
+                ),
+                \count($texts)
+            )
+            ->addMetric(
+                \str_replace(
+                    '{embeddingModel}',
+                    $embeddingModel,
+                    METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS
+                ),
+                $totalTokens
+            )
+            ->addMetric(
+                \str_replace(
+                    '{embeddingModel}',
+                    $embeddingModel,
+                    METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION
+                ),
+                $totalDuration
+            )
+            ->trigger();
+        $queueForStatsUsage->reset();
     }
 }
