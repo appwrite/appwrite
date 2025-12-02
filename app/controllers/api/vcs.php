@@ -1796,7 +1796,8 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId, [
+        $repository = Authorization::skip(fn () => $dbForPlatform->findOne('repositories', [
+            Query::equal('$id', [$repositoryId]),
             Query::equal('projectInternalId', [$project->getSequence()])
         ]));
 
