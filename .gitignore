@@ -18,3 +18,5 @@ dev/yasd_init.php
 Makefile
 appwrite.config.json
 /.zed/
+playwright-report
+test-results

@@ -1,0 +1,832 @@
+<?php
+$isUpgrade = $isUpgrade ?? false;
+$lockedDatabase = $lockedDatabase ?? null;
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $isUpgrade ? 'Appwrite Upgrade' : 'Appwrite Installation'; ?></title>
+    <link rel="stylesheet" href="https://unpkg.com/@appwrite.io/pink" />
+    <link rel="stylesheet" href="https://unpkg.com/@appwrite.io/pink-icons" />
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            font-family: var(--content-font, 'Inter', sans-serif);
+        }
+
+        .installer-container {
+            font-family: var(--content-font, 'Inter', sans-serif);
+        }
+
+        .installer-header h1 {
+            font-family: var(--heading-font, 'Poppins', sans-serif);
+            font-weight: 400;
+            letter-spacing: -0.144px;
+        }
+
+        .installer-header p {
+            font-family: var(--content-font, 'Inter', sans-serif);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+        }
+
+        .installer-container {
+            width: 100%;
+            max-width: 540px;
+        }
+
+        .installer-header {
+            text-align: center;
+            margin-block-end: 2rem;
+        }
+
+        .installer-logo {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step-section {
+            padding-block: 1.5rem;
+            border-block-start: 1px solid hsl(var(--color-border));
+        }
+
+        .step-section:first-of-type {
+            border-block-start: none;
+            padding-block-start: 0;
+        }
+
+        .section-header {
+            margin-block-end: 1rem;
+        }
+
+        .database-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .database-option {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        .database-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .database-option:hover {
+            border-color: hsl(var(--color-primary-100));
+        }
+
+        .database-option.selected {
+            border-color: hsl(var(--color-primary-100));
+            background: hsl(var(--color-primary-100) / 0.04);
+        }
+
+        .database-logo {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-block-end: 0.75rem;
+        }
+
+        .database-logo img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .installation-log {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: hsl(var(--color-neutral-100));
+            border: 1px solid hsl(var(--color-border));
+            border-radius: var(--border-radius-small);
+            font-family: var(--code-font);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-block-end: 1rem;
+        }
+
+        .next-steps {
+            padding: 1.25rem;
+            border: 1px solid hsl(var(--color-border));
+            border-radius: var(--border-radius-small);
+            text-align: left;
+            margin-block-start: 1.5rem;
+        }
+
+        .next-steps ol {
+            padding-inline-start: 1.5rem;
+            line-height: 1.8;
+            margin-block-start: 0.75rem;
+        }
+
+        .next-steps li {
+            margin-block-end: 0.5rem;
+        }
+
+        #reviewContent {
+            padding: 1.25rem;
+            border: 1px solid hsl(var(--color-border));
+            border-radius: var(--border-radius-small);
+        }
+
+        #reviewContent > div {
+            line-height: 2;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease-in-out infinite;
+            margin-inline-end: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-block-start: 2rem;
+        }
+
+        .input-text-wrapper.is-with-end-button {
+            position: relative;
+        }
+
+        .input-text-wrapper.is-with-end-button .input-text {
+            padding-right: 2.75rem;
+        }
+
+        .input-text-wrapper.is-with-end-button .button {
+            position: absolute;
+            right: 0.375rem;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0.375rem;
+            margin: 0;
+            min-width: auto;
+            height: auto;
+        }
+    </style>
+</head>
+<body class="theme-dark">
+    <div class="theme-toggle">
+        <button class="button is-only-icon is-secondary" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme">
+            <span class="icon-sun u-only-light" aria-hidden="true"></span>
+            <span class="icon-moon u-only-dark" aria-hidden="true"></span>
+        </button>
+    </div>
+
+    <div class="installer-container">
+        <article class="card">
+            <div class="installer-header">
+                <div class="installer-logo">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_28_719)">
+                            <path d="M24.4429 17.4322V22.9096H10.7519C6.76318 22.9096 3.28044 20.7067 1.4171 17.4322C1.14622 16.9561 0.909137 16.4567 0.710264 15.9383C0.319864 14.9225 0.0744552 13.8325 0 12.6952V11.2143C0.0161646 10.9609 0.0416361 10.7094 0.0749451 10.4609C0.143032 9.95105 0.245898 9.45211 0.381093 8.96711C1.66006 4.36909 5.81877 1 10.7519 1C15.6851 1 19.8433 4.36909 21.1223 8.96711H15.2682C14.3072 7.4683 12.6437 6.4774 10.7519 6.4774C8.86017 6.4774 7.19668 7.4683 6.23562 8.96711C5.9427 9.42274 5.71542 9.92516 5.56651 10.4609C5.43425 10.936 5.36371 11.4369 5.36371 11.9548C5.36371 13.5248 6.01324 14.94 7.05463 15.9383C8.01961 16.865 9.32061 17.4322 10.7519 17.4322H24.4429Z" fill="#FD366E" />
+                            <path d="M24.4429 10.4609V15.9383H14.4492C15.4906 14.94 16.1401 13.5248 16.1401 11.9548C16.1401 11.4369 16.0696 10.936 15.9373 10.4609H24.4429Z" fill="#FD366E" />
+                        </g>
+                        <defs>
+                            <clipPath id="clip0_28_719">
+                                <rect width="24" height="24" fill="white" />
+                            </clipPath>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="heading-level-4"><?php echo $isUpgrade ? 'Appwrite Upgrade' : 'Appwrite Installation'; ?></h1>
+                <p class="body-text-2 u-margin-block-start-8"><?php echo $isUpgrade ? 'Upgrade your Appwrite instance to the latest version' : 'Let\'s get your Appwrite instance up and running'; ?></p>
+            </div>
+
+            <section class="progress-bar u-margin-block-end-32">
+                <div class="progress-bar-container" id="progressBar" style="--graph-size:17%"></div>
+            </section>
+
+            <p class="body-text-2 u-text-center u-margin-block-end-16" id="wizardStepLabel">Step 1 of 6</p>
+
+            <div id="alertContainer" class="u-margin-block-end-24"></div>
+
+            <!-- Step 1: Server Configuration -->
+            <div class="step active" data-step="1">
+                <div class="step-section">
+                    <div class="section-header">
+                        <h2 class="eyebrow-heading-3 u-margin-block-end-4">Configuration</h2>
+                    </div>
+
+                    <form class="form u-width-full-line">
+                        <ul class="form-list">
+                            <li class="form-item">
+                                <label class="label" for="httpPort">HTTP port</label>
+                                <div class="input-text-wrapper">
+                                    <input type="text" id="httpPort" class="input-text" value="<?php echo $defaultHttpPort; ?>" placeholder="80">
+                                </div>
+                                <p class="helper u-margin-block-start-4">The port for HTTP connections (default: 80)</p>
+                            </li>
+                            <li class="form-item">
+                                <label class="label" for="httpsPort">HTTPS port</label>
+                                <div class="input-text-wrapper">
+                                    <input type="text" id="httpsPort" class="input-text" value="<?php echo $defaultHttpsPort; ?>" placeholder="443">
+                                </div>
+                                <p class="helper u-margin-block-start-4">The port for HTTPS connections (default: 443)</p>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+
+                <div class="button-group">
+                    <button class="button" id="primaryButton" onclick="nextStep()">
+                        <span class="text">Next</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Database Selection -->
+            <?php if (!$isUpgrade): ?>
+            <div class="step" data-step="2">
+                <div class="step-section">
+                    <div class="section-header">
+                        <h2 class="eyebrow-heading-3 u-margin-block-end-4">Database</h2>
+                        <p class="body-text-2">Choose your preferred database engine</p>
+                    </div>
+
+                    <div class="database-options">
+                        <label class="card is-allow-focus database-option selected" data-database="mongodb">
+                            <input type="radio" name="database" value="mongodb" checked>
+                            <div class="database-logo">
+                                <img src="/images/logos/mongodb.svg" alt="MongoDB logo" />
+                            </div>
+                            <div class="u-bold u-margin-block-end-4">MongoDB</div>
+                            <div class="body-text-2 u-color-text-offline">Document based database</div>
+                        </label>
+
+                        <label class="card is-allow-focus database-option" data-database="mariadb">
+                            <input type="radio" name="database" value="mariadb">
+                            <div class="database-logo">
+                                <img src="/images/logos/mariadb.svg" alt="MariaDB logo" />
+                            </div>
+                            <div class="u-bold u-margin-block-end-4">MariaDB</div>
+                            <div class="body-text-2 u-color-text-offline">Relational SQL database</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="button is-secondary" id="backButton" onclick="prevStep()">
+                        <span class="text">Back</span>
+                    </button>
+                    <button class="button" id="primaryButton" onclick="nextStep()">
+                        <span class="text">Next</span>
+                    </button>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Step 3: Domain Configuration -->
+            <div class="step" data-step="3">
+                <div class="step-section">
+                    <div class="section-header">
+                        <h2 class="eyebrow-heading-3 u-margin-block-end-4">Domain</h2>
+                    </div>
+
+                    <form class="form u-width-full-line">
+                        <ul class="form-list">
+                            <li class="form-item">
+                                <label class="label" for="appDomain">Appwrite hostname</label>
+                                <div class="input-text-wrapper">
+                                    <input type="text" id="appDomain" class="input-text" placeholder="localhost">
+                                </div>
+                                <p class="helper u-margin-block-start-4">Your Appwrite domain address (e.g., appwrite.example.com)</p>
+                            </li>
+                            <li class="form-item">
+                                <label class="label" for="emailCertificates">SSL certificate email</label>
+                                <div class="input-text-wrapper">
+                                    <input type="email" id="emailCertificates" class="input-text" placeholder="admin@example.com">
+                                </div>
+                                <p class="helper u-margin-block-start-4">Email address for SSL certificate registration</p>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+
+                <div class="button-group">
+                    <button class="button is-secondary" id="backButton" onclick="prevStep()">
+                        <span class="text">Back</span>
+                    </button>
+                    <button class="button" id="primaryButton" onclick="nextStep()">
+                        <span class="text">Next</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Security Configuration -->
+            <div class="step" data-step="4">
+                <div class="step-section">
+                    <div class="section-header">
+                        <h2 class="eyebrow-heading-3 u-margin-block-end-4">Security</h2>
+                    </div>
+
+                    <form class="form u-width-full-line">
+                        <ul class="form-list">
+                            <li class="form-item">
+                                <label class="label" for="opensslKey">Secret API key</label>
+                                <div class="input-text-wrapper is-with-end-button u-width-full-line">
+                                    <input type="text" id="opensslKey" class="input-text" placeholder="Enter or generate a secure key">
+                                    <button type="button" class="button is-text is-only-icon" onclick="generateSecretKey(); event.preventDefault();">
+                                        <span class="icon-refresh" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <p class="helper u-margin-block-start-4">Your server private secret key for encryption. Keep this safe!</p>
+                            </li>
+                        </ul>
+                    </form>
+
+                    <div class="alert is-info u-margin-block-start-16">
+                        <p class="body-text-2"><strong>Note:</strong> Use the Generate button for a secure random key, or provide your own. Make sure to back it up in a secure location.</p>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="button is-secondary" id="backButton" onclick="prevStep()">
+                        <span class="text">Back</span>
+                    </button>
+                    <button class="button" id="primaryButton" onclick="nextStep()">
+                        <span class="text">Review & Install</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Review and Install -->
+            <div class="step" data-step="5">
+                <div class="step-section">
+                    <div class="section-header">
+                        <h2 class="eyebrow-heading-3 u-margin-block-end-4">Review</h2>
+                        <p class="body-text-2">Please review your settings before installation</p>
+                    </div>
+
+                    <div id="reviewContent"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="button is-secondary" id="reviewBackButton" onclick="prevStep()">
+                        <span class="text">Back</span>
+                    </button>
+                    <button class="button" id="installButton" onclick="startInstallation()">
+                        <span class="text" id="installButtonText"><?php echo $isUpgrade ? 'Upgrade Appwrite' : 'Install Appwrite'; ?></span>
+                    </button>
+                </div>
+
+                <div id="installationLog" class="installation-log u-margin-block-start-24" style="display: none;"></div>
+            </div>
+
+            <!-- Step 6: Complete -->
+            <div class="step" data-step="6">
+                <div class="u-text-center">
+                    <h2 class="heading-level-5 u-margin-block-end-8"><?php echo $isUpgrade ? 'Upgrade complete' : 'Installation complete'; ?></h2>
+                    <p class="body-text-2">Your Appwrite instance has been successfully <?php echo $isUpgrade ? 'upgraded' : 'installed'; ?> and is now running.</p>
+
+                    <div class="next-steps u-margin-block-start-24">
+                        <p class="body-text-1 u-bold u-margin-block-end-8">Next Steps:</p>
+                        <ol class="body-text-2">
+                            <li>Access your Appwrite console at: <strong style="color: hsl(var(--p-primary-100-hsl))">http://<?php echo $defaultHttpPort === '80' ? 'localhost' : 'localhost:'.$defaultHttpPort; ?>/console</strong></li>
+                            <li>Create your first project and start building!</li>
+                        </ol>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="button" onclick="window.close()">
+                            <span class="text">Close window</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <script>
+        const isUpgrade = <?php echo $isUpgrade ? 'true' : 'false'; ?>;
+        const lockedDatabase = <?php echo $lockedDatabase ? "'" . $lockedDatabase . "'" : 'null'; ?>;
+        const existingVars = <?php echo json_encode($vars ?? []); ?>;
+
+        let currentStep = 1;
+        const totalSteps = 6;
+        const skipSteps = isUpgrade ? [2, 4] : []; // Skip database selection and security during upgrade
+        let isInstalling = false;
+
+        // Helper function to get existing value or default
+        function getExistingValue(key, defaultValue = '') {
+            return existingVars[key]?.default ?? defaultValue;
+        }
+
+        const formData = {
+            httpPort: '<?php echo $defaultHttpPort; ?>',
+            httpsPort: '<?php echo $defaultHttpsPort; ?>',
+            database: lockedDatabase || 'mongodb',
+            appDomain: getExistingValue('_APP_DOMAIN', 'localhost'),
+            emailCertificates: getExistingValue('_APP_EMAIL_CERTIFICATES', ''),
+            opensslKey: getExistingValue('_APP_OPENSSL_KEY_V1', ''),
+            organization: 'appwrite',
+            image: 'appwrite'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            populateFormFields();
+            // For upgrades, preserve existing key in formData (but step 4 is skipped)
+            // For fresh installs, leave key empty - user can generate or enter manually
+            updateProgress();
+            updateButtonIds();
+            initializeDatabaseSelection();
+            initializeTheme();
+        });
+
+        function populateFormFields() {
+            // Populate all form fields with existing values
+            const httpPortInput = document.getElementById('httpPort');
+            const httpsPortInput = document.getElementById('httpsPort');
+            const appDomainInput = document.getElementById('appDomain');
+            const emailCertificatesInput = document.getElementById('emailCertificates');
+
+            if (httpPortInput) httpPortInput.value = formData.httpPort;
+            if (httpsPortInput) httpsPortInput.value = formData.httpsPort;
+            if (appDomainInput) appDomainInput.value = formData.appDomain;
+            if (emailCertificatesInput) emailCertificatesInput.value = formData.emailCertificates;
+        }
+
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            setTheme(theme);
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.classList.contains('theme-dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            const body = document.body;
+
+            if (theme === 'dark') {
+                body.classList.remove('theme-light');
+                body.classList.add('theme-dark');
+            } else {
+                body.classList.remove('theme-dark');
+                body.classList.add('theme-light');
+            }
+
+            localStorage.setItem('theme', theme);
+        }
+
+        function initializeDatabaseSelection() {
+            const databaseOptions = document.querySelectorAll('.database-option');
+            databaseOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    databaseOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    this.querySelector('input[type="radio"]').checked = true;
+                    formData.database = this.dataset.database;
+                });
+            });
+        }
+
+        function generateSecretKey() {
+            const array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            const key = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+            const input = document.getElementById('opensslKey');
+            if (input) {
+                input.value = key;
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert is-${type}`;
+            alert.innerHTML = `<p class="body-text-2">${message}</p>`;
+            container.innerHTML = '';
+            container.appendChild(alert);
+
+            if (type !== 'error') {
+                setTimeout(() => {
+                    alert.remove();
+                }, 5000);
+            }
+        }
+
+        function clearAlerts() {
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        function validateStep(step) {
+            clearAlerts();
+
+            switch(step) {
+                case 1:
+                    const httpPort = document.getElementById('httpPort').value;
+                    const httpsPort = document.getElementById('httpsPort').value;
+
+                    if (!httpPort || isNaN(httpPort) || httpPort < 1 || httpPort > 65535) {
+                        showAlert('Please enter a valid HTTP port (1-65535)', 'error');
+                        return false;
+                    }
+                    if (!httpsPort || isNaN(httpsPort) || httpsPort < 1 || httpsPort > 65535) {
+                        showAlert('Please enter a valid HTTPS port (1-65535)', 'error');
+                        return false;
+                    }
+
+                    formData.httpPort = httpPort;
+                    formData.httpsPort = httpsPort;
+                    return true;
+
+                case 2:
+                    return true;
+
+                case 3:
+                    const appDomain = document.getElementById('appDomain').value;
+                    const emailCertificates = document.getElementById('emailCertificates').value;
+
+                    if (!appDomain || appDomain.trim() === '') {
+                        showAlert('Please enter your Appwrite hostname', 'error');
+                        return false;
+                    }
+                    if (!emailCertificates || emailCertificates.trim() === '') {
+                        showAlert('Please enter an email address for SSL certificates', 'error');
+                        return false;
+                    }
+                    if (!isValidEmail(emailCertificates)) {
+                        showAlert('Please enter a valid email address', 'error');
+                        return false;
+                    }
+
+                    formData.appDomain = appDomain;
+                    formData.emailCertificates = emailCertificates;
+                    return true;
+
+                case 4:
+                    const opensslKey = document.getElementById('opensslKey').value;
+                    if (!opensslKey || opensslKey.trim() === '') {
+                        showAlert('Please enter or generate a secret API key.', 'error');
+                        return false;
+                    }
+                    if (opensslKey.length < 32) {
+                        showAlert('Secret API key must be at least 32 characters long.', 'error');
+                        return false;
+                    }
+                    formData.opensslKey = opensslKey;
+                    return true;
+
+                case 5:
+                    return true;
+
+                default:
+                    return true;
+            }
+        }
+
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function nextStep() {
+            if (!validateStep(currentStep)) {
+                return;
+            }
+
+            if (currentStep < totalSteps) {
+                document.querySelector(`.step[data-step="${currentStep}"]`)?.classList.remove('active');
+                currentStep++;
+
+                // Skip steps that should be skipped (e.g., database selection during upgrade)
+                while (skipSteps.includes(currentStep) && currentStep < totalSteps) {
+                    currentStep++;
+                }
+
+                document.querySelector(`.step[data-step="${currentStep}"]`)?.classList.add('active');
+                updateProgress();
+                updateButtonIds();
+
+                if (currentStep === 4) {
+                    // Auto-generate secret key if not already set
+                    const opensslKeyInput = document.getElementById('opensslKey');
+                    if (opensslKeyInput && (!opensslKeyInput.value || opensslKeyInput.value.trim() === '')) {
+                        generateSecretKey();
+                    }
+                }
+
+                if (currentStep === 5) {
+                    populateReview();
+                }
+
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function prevStep() {
+            if (isInstalling) {
+                return; // Don't allow going back during installation
+            }
+
+            if (currentStep > 1) {
+                document.querySelector(`.step[data-step="${currentStep}"]`)?.classList.remove('active');
+                currentStep--;
+
+                // Skip steps that should be skipped (e.g., database selection during upgrade)
+                while (skipSteps.includes(currentStep) && currentStep > 1) {
+                    currentStep--;
+                }
+
+                document.querySelector(`.step[data-step="${currentStep}"]`)?.classList.add('active');
+                updateProgress();
+                updateButtonIds();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function updateProgress() {
+            const progress = Math.round((currentStep / totalSteps) * 100);
+            document.getElementById('progressBar').style.setProperty('--graph-size', `${progress}%`);
+
+            // Update step label
+            const stepLabel = document.getElementById('wizardStepLabel');
+            if (stepLabel) {
+                stepLabel.textContent = `Step ${currentStep} of ${totalSteps}`;
+            }
+        }
+
+        function updateButtonIds() {
+            // Remove IDs from buttons that have primaryButton or backButton IDs only
+            document.querySelectorAll('#primaryButton, #backButton').forEach(btn => {
+                btn.removeAttribute('id');
+            });
+
+            // Add IDs to buttons in the current active step
+            // Skip buttons that already have specific IDs (like installButton, reviewBackButton)
+            const activeStep = document.querySelector(`.step[data-step="${currentStep}"]`);
+            if (activeStep) {
+                const buttons = activeStep.querySelectorAll('.button-group .button');
+                buttons.forEach((button, index) => {
+                    // Don't override existing specific button IDs
+                    if (button.id && button.id !== 'primaryButton' && button.id !== 'backButton') {
+                        return;
+                    }
+                    if (button.classList.contains('is-secondary')) {
+                        button.id = 'backButton';
+                    } else {
+                        button.id = 'primaryButton';
+                    }
+                });
+            }
+        }
+
+        function populateReview() {
+            const reviewContent = document.getElementById('reviewContent');
+            const databaseName = formData.database === 'mongodb' ? 'MongoDB' : 'MariaDB';
+            reviewContent.innerHTML = `
+                <div class="body-text-2" style="line-height: 2;">
+                    <strong>HTTP Port:</strong> ${formData.httpPort}<br>
+                    <strong>HTTPS Port:</strong> ${formData.httpsPort}<br>
+                    <strong>Database:</strong> ${databaseName}<br>
+                    <strong>Appwrite Hostname:</strong> ${formData.appDomain}<br>
+                    <strong>SSL Certificate Email:</strong> ${formData.emailCertificates}<br>
+                    <strong>Secret Key:</strong> ${formData.opensslKey.substring(0, 16)}... (hidden)
+                </div>
+            `;
+        }
+
+        async function startInstallation() {
+            const button = document.getElementById('installButton');
+            const buttonText = document.getElementById('installButtonText');
+            const logContainer = document.getElementById('installationLog');
+            const backButton = document.getElementById('reviewBackButton');
+
+            isInstalling = true;
+            button.disabled = true;
+            if (backButton) {
+                backButton.disabled = true;
+            }
+            buttonText.innerHTML = `<span class="spinner"></span> ${isUpgrade ? 'Upgrading...' : 'Installing...'}`;
+
+
+            logContainer.style.display = 'block';
+            logContainer.innerHTML = '';
+
+            try {
+                addLog(`Starting Appwrite ${isUpgrade ? 'upgrade' : 'installation'}...`);
+
+                const response = await fetch('/install', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result.message || `Installation failed: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addLog('✓ Configuration files created successfully');
+                    addLog('✓ Docker Compose file generated');
+                    addLog('✓ Environment variables configured');
+                    addLog('✓ Docker containers started');
+                    addLog(`${isUpgrade ? 'Upgrade' : 'Installation'} completed successfully!`);
+
+                    setTimeout(() => {
+                        document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+                        currentStep = 6;
+                        document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+                        updateProgress();
+                    }, 3000);
+                } else {
+                    throw new Error(result.message || 'Installation failed');
+                }
+            } catch (error) {
+                console.error(`${isUpgrade ? 'Upgrade' : 'Installation'} error:`, error);
+                addLog(`✗ Error: ${error.message}`, 'error');
+                showAlert(`${isUpgrade ? 'Upgrade' : 'Installation'} failed: ${error.message}`, 'error');
+
+                // Re-enable buttons on error
+                isInstalling = false;
+                button.disabled = false;
+                if (backButton) {
+                    backButton.disabled = false;
+                }
+                buttonText.textContent = `Retry ${isUpgrade ? 'Upgrade' : 'Installation'}`;
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('installationLog');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+
+            if (type === 'error') {
+                logEntry.style.color = '#ff6b6b';
+            } else if (type === 'success') {
+                logEntry.style.color = '#51cf66';
+            }
+
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        window.addEventListener('popstate', (event) => {
+            if (currentStep > 1 && currentStep < 6) {
+                prevStep();
+            }
+        });
+    </script>
+</body>
+</html>

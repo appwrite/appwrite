@@ -39,6 +39,7 @@ COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
 COPY ./dev /usr/src/code/dev
+COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
@@ -101,5 +102,6 @@ RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20230831/xdebug.so; fi
 
 EXPOSE 80
+EXPOSE 8080
 
 CMD [ "php", "app/http.php" ]

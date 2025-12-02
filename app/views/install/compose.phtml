@@ -11,6 +11,9 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
+$dbService = $this->getParam('database');
+$hostPath = $this->getParam('hostPath', '');
+
 ?>services:
   traefik:
     image: traefik:2.11
@@ -69,7 +72,7 @@ $image = $this->getParam('image', '');
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
 #      - clamav
     environment:
@@ -221,7 +224,7 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -251,7 +254,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -277,7 +280,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -305,7 +308,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -368,7 +371,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -394,7 +397,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
@@ -462,7 +465,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -499,7 +502,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - openruntimes-executor
     environment:
       - _APP_ENV
@@ -624,7 +627,7 @@ $image = $this->getParam('image', '');
     volumes:
       - appwrite-imports:/storage/imports:rw
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -698,7 +701,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -727,7 +730,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -755,7 +758,7 @@ $image = $this->getParam('image', '');
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -782,7 +785,7 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -807,7 +810,7 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -832,7 +835,7 @@ $image = $this->getParam('image', '');
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -918,6 +921,7 @@ $image = $this->getParam('image', '');
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
+<?php if ($dbService === 'mariadb'): ?>
   mariadb:
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
@@ -927,6 +931,8 @@ $image = $this->getParam('image', '');
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
+    ports:
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -934,6 +940,24 @@ $image = $this->getParam('image', '');
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
+<?php else: ?>
+  mongodb:
+    image: mongo:8.0.8
+    container_name: appwrite-mongodb
+    <<: *x-logging
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db:rw
+      - appwrite-mongodb-config:/data/configdb:rw
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+<?php endif; ?>
 
   redis:
     image: redis:7.2.4-alpine
@@ -968,7 +992,12 @@ networks:
     name: runtimes
 
 volumes:
+<?php if ($dbService === 'mariadb'): ?>
   appwrite-mariadb:
+<?php else: ?>
+  appwrite-mongodb:
+  appwrite-mongodb-config:
+<?php endif; ?>
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:

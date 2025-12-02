@@ -102,11 +102,9 @@ class Get extends Action
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
                 $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId, $queries);
-            } elseif (! empty($selects)) {
-                // has selects, allow relationship on documents!
+            } elseif (!empty($selects)) {
                 $document = $dbForProject->getDocument($collectionTableId, $documentId, $queries);
             } else {
-                // has no selects, disable relationship looping on documents!
                 $document = $dbForProject->skipRelationships(fn () => $dbForProject->getDocument($collectionTableId, $documentId, $queries));
             }
         } catch (QueryException $e) {

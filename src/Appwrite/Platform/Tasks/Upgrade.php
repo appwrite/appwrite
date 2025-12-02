@@ -8,6 +8,8 @@ use Utopia\Validator\Text;
 
 class Upgrade extends Install
 {
+    private ?string $lockedDatabase = null;
+
     public static function getName(): string
     {
         return 'upgrade';
@@ -15,6 +17,8 @@ class Upgrade extends Install
 
     public function __construct()
     {
+        parent::__construct();
+
         $this
             ->desc('Upgrade Appwrite')
             ->param('http-port', '', new Text(4), 'Server HTTP port', true)
@@ -39,6 +43,15 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart);
+
+        $database = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+        $this->lockedDatabase = $database;
+
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
+    }
+
+    protected function startWebServer(string $defaultHTTPPort, string $defaultHTTPSPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
+    {
+        parent::startWebServer($defaultHTTPPort, $defaultHTTPSPort, $organization, $image, $noStart, $vars, true, $this->lockedDatabase);
     }
 }
