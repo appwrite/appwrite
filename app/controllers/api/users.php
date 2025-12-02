@@ -118,18 +118,17 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
 
         $isHashed = !$hash instanceof Plaintext;
 
+        $defaultHash = new ProofsPassword();
         if (!empty($password)) {
             if (!$isHashed) { // Password was never hashed, hash it with the default hash
-                $defaultHash = new ProofsPassword();
                 $hashedPassword = $defaultHash->hash($password);
                 $hash = $defaultHash->getHash();
             } else {
                 $hashedPassword = $password;
             }
         } else {
-            // when password is not provided, plaintext was set as the
-            $defaultProof = new ProofsPassword();
-            $hash = $defaultProof->getHash();
+            // when password is not provided, plaintext was set as the default hash causing the issue
+            $hash = $defaultHash->getHash();
             $isHashed = !$hash instanceof Plaintext;
         }
 
@@ -250,7 +249,7 @@ App::post('/v1/users')
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', null, new Nullable(new EmailValidator()), 'User email.', true)
     ->param('phone', null, new Nullable(new Phone()), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Plain text user password. Must be at least 8 chars.', true, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -1331,7 +1330,7 @@ App::patch('/v1/users/:userId/password')
         ]
     ))
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
