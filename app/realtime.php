@@ -583,6 +583,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
+        
+        $realtime->connections[$connection]['authorization'] = $authorization;
 
         $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
@@ -641,12 +643,29 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
         $response = new Response(new SwooleResponse());
-        $projectId = $realtime->connections[$connection]['projectId'];
+        $projectId = $realtime->connections[$connection]['projectId'] ?? null;
+        
+        if (empty($projectId)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing project ID in connection');
+        }
+        
+        // Get authorization from connection (stored during onOpen)
+        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+
+        if (empty($projectId)) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Aurhorization not found in connection');
+        }
+
         $database = getConsoleDB();
+        $database->setAuthorization($authorization);
 
         if ($projectId !== 'console') {
-            $authorization = $database->getAuthorization();
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
+            
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Project not found: ' . $projectId);
+            }
+            
             $database = getProjectDB($project);
             $database->setAuthorization($authorization);
         } else {
