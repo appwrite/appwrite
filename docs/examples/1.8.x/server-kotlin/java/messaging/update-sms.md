@@ -11,9 +11,9 @@ Messaging messaging = new Messaging(client);
 
 messaging.updateSMS(
     "<MESSAGE_ID>", // messageId
-    listOf(), // topics (optional)
-    listOf(), // users (optional)
-    listOf(), // targets (optional)
+    List.of(), // topics (optional)
+    List.of(), // users (optional)
+    List.of(), // targets (optional)
     "<CONTENT>", // content (optional)
     false, // draft (optional)
     "", // scheduledAt (optional)

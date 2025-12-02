@@ -24,9 +24,9 @@ ENV _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
 RUN \
-  if [ "$DEBUG" == "true" ]; then \
+    if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
-  fi
+    fi
 
 WORKDIR /usr/src/code
 

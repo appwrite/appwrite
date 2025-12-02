@@ -1,4 +1,4 @@
-import { Client, Functions, VCSDeploymentType } from "@appwrite.io/console";
+import { Client, Functions, VCSReferenceType } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -8,7 +8,7 @@ const functions = new Functions(client);
 
 const result = await functions.createVcsDeployment({
     functionId: '<FUNCTION_ID>',
-    type: VCSDeploymentType.Branch,
+    type: VCSReferenceType.Branch,
     reference: '<REFERENCE>',
     activate: false // optional
 });

@@ -15,7 +15,7 @@ Deployment result = await functions.CreateTemplateDeployment(
     repository: "<REPOSITORY>",
     owner: "<OWNER>",
     rootDirectory: "<ROOT_DIRECTORY>",
-    type: .Commit,
+    type: TemplateReferenceType.Commit,
     reference: "<REFERENCE>",
     activate: false // optional
 );
