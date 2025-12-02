@@ -133,7 +133,7 @@ App::get('/v1/health/db')
 
         // Only throw error if ALL databases failed (no successful pings)
         // This allows partial failures in environments where not all DBs are ready
-        if (!empty($failures) && empty($output)) {
+        if (!empty($failures)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
 
