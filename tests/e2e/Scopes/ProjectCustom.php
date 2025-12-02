@@ -36,7 +36,7 @@ trait ProjectCustom
         $this->assertEquals(201, $team['headers']['status-code']);
         $this->assertEquals('Demo Project Team', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
-
+        var_dump(['region' => System::getEnv('_APP_REGION', 'default')]);
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',

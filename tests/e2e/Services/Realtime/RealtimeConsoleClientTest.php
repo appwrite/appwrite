@@ -47,7 +47,7 @@ class RealtimeConsoleClientTest extends Scope
         ]));
 
         $response = json_decode($client->receive(), true);
-
+        var_dump($response);
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('response', $response['type']);
