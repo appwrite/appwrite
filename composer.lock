@@ -4508,16 +4508,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.6",
+            "version": "1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "4abe70cc242bbffebfa377e4126ee2a4a1c9ef7e"
+                "reference": "8e3f2569101d1a8bba0f6081fc3fc9c0979fc069"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/4abe70cc242bbffebfa377e4126ee2a4a1c9ef7e",
-                "reference": "4abe70cc242bbffebfa377e4126ee2a4a1c9ef7e",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8e3f2569101d1a8bba0f6081fc3fc9c0979fc069",
+                "reference": "8e3f2569101d1a8bba0f6081fc3fc9c0979fc069",
                 "shasum": ""
             },
             "require": {
