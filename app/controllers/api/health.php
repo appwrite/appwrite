@@ -110,9 +110,6 @@ App::get('/v1/health/db')
         ];
 
         foreach ($configs as $key => $config) {
-            if (!is_array($config)) {
-                continue;
-            }
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
@@ -123,8 +120,6 @@ App::get('/v1/health/db')
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
-                            'checkStart' => $checkStart,
-                            'now' => \microtime(true),
                             'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
@@ -177,9 +172,6 @@ App::get('/v1/health/cache')
         ];
 
         foreach ($configs as $key => $config) {
-            if (!is_array($config)) {
-                continue;
-            }
             foreach ($config as $cache) {
                 try {
                     $adapter = new CachePool($pools->get($cache));
@@ -240,9 +232,6 @@ App::get('/v1/health/pubsub')
         ];
 
         foreach ($configs as $key => $config) {
-            if (!is_array($config)) {
-                continue;
-            }
             foreach ($config as $pubsub) {
                 try {
                     $adapter = new PubSubPool($pools->get($pubsub));
