@@ -117,6 +117,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
         $hashedPassword = null;
 
         $isHashed = !$hash instanceof Plaintext;
+
         if (!empty($password)) {
             if (!$isHashed) { // Password was never hashed, hash it with the default hash
                 $defaultHash = new ProofsPassword();
@@ -125,6 +126,11 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             } else {
                 $hashedPassword = $password;
             }
+        } else {
+            // when password is not provided, plaintext was set as the
+            $defaultProof = new ProofsPassword();
+            $hash = $defaultProof->getHash();
+            $isHashed = !$hash instanceof Plaintext;
         }
 
         $user = new Document([
@@ -160,7 +166,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             'emailIsFree' => $emailCanonical?->isFree(),
         ]);
 
-        if (!$isHashed) {
+        if (!$isHashed && !empty($password)) {
             $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
@@ -2627,7 +2633,8 @@ App::post('/v1/users/:userId/jwts')
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {
             // Find by ID
-            foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
+            foreach ($sessions as $loopSession) {
+                /** @var Utopia\Database\Document $loopSession */
                 if ($loopSession->getId() == $sessionId) {
                     $session = $loopSession;
                     break;
