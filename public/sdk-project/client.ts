@@ -89,7 +89,17 @@ class AppwriteException extends Error {
         this.response = response;
     }
 }
+export function isDesktopRuntime(): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    const hasTauri = !!(window as any).__TAURI__ || navigator.userAgent.includes('Tauri');
+    const hasElectron = !!(window as any).process?.versions?.electron || navigator.userAgent.includes('Electron');
 
+    return Boolean(hasTauri || hasElectron);
+  } catch {
+    return false;
+  }
+}
 class Client {
     config = {
         endpoint: 'https://HOSTNAME/v1',
@@ -97,6 +107,7 @@ class Client {
         project: '',
         jwt: '',
         locale: '',
+        allowCustomSchemes: false,
     };
     headers: Headers = {
         'x-sdk-name': 'Web',
@@ -165,6 +176,8 @@ class Client {
         return this;
     }
 
+
+
     /**
      * Set Locale
      *
@@ -175,6 +188,20 @@ class Client {
     setLocale(value: string): this {
         this.headers['X-Appwrite-Locale'] = value;
         this.config.locale = value;
+        return this;
+    }
+
+        /**
+     * Allow custom schemes
+     *
+     * When enabled, the SDK will permit non-http(s) callback schemes.
+     * Use carefully — only enable for trusted desktop runtimes (Tauri/Electron).
+     *
+     * @param value boolean
+     * @returns {this}
+     */
+    setAllowCustomSchemes(value: boolean): this {
+        this.config.allowCustomSchemes = value;
         return this;
     }
 
