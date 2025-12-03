@@ -183,6 +183,30 @@ class Attributes extends Validator
                     $this->message = "Relationship attribute '" . $attribute['key'] . "' must have valid 'relationType'";
                     return false;
                 }
+
+                // Validate twoWay if provided
+                if (isset($attribute['twoWay']) && !is_bool($attribute['twoWay'])) {
+                    $this->message = "Invalid 'twoWay' value for relationship attribute '" . $attribute['key'] . "': must be a boolean";
+                    return false;
+                }
+
+                // Validate twoWayKey if provided
+                if (isset($attribute['twoWayKey']) && !empty($attribute['twoWayKey'])) {
+                    if (!$keyValidator->isValid($attribute['twoWayKey'])) {
+                        $this->message = "Invalid 'twoWayKey' for relationship attribute '" . $attribute['key'] . "': " . $keyValidator->getDescription();
+                        return false;
+                    }
+                }
+
+                // Validate onDelete if provided
+                if (isset($attribute['onDelete']) && !in_array($attribute['onDelete'], [
+                    Database::RELATION_MUTATE_CASCADE,
+                    Database::RELATION_MUTATE_RESTRICT,
+                    Database::RELATION_MUTATE_SET_NULL,
+                ])) {
+                    $this->message = "Invalid 'onDelete' value for relationship attribute '" . $attribute['key'] . "': must be 'cascade', 'restrict', or 'setNull'";
+                    return false;
+                }
             }
         }
 
