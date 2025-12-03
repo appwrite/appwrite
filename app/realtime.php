@@ -614,6 +614,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $code = 500;
         }
 
+     
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
@@ -645,26 +646,14 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'] ?? null;
 
-        if (empty($projectId)) {
-            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing project ID in connection');
-        }
-
         // Get authorization from connection (stored during onOpen)
         $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-
-        if (empty($projectId)) {
-            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Aurhorization not found in connection');
-        }
 
         $database = getConsoleDB();
         $database->setAuthorization($authorization);
 
         if ($projectId !== 'console') {
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
-
-            if ($project->isEmpty()) {
-                throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Project not found: ' . $projectId);
-            }
 
             $database = getProjectDB($project);
             $database->setAuthorization($authorization);
@@ -677,7 +666,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimitRedis('url:{url},connection:{connection}', 32, 60, getRedis());
+        $timeLimit = getTimelimit('url:{url},connection:{connection}', 32, 60);
 
         $timeLimit
             ->setParam('{connection}', $connection)
@@ -733,7 +722,16 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $roles = $user->getRoles($database->getAuthorization());
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
+                
+                // Preserve authorization before subscribe overwrites the connection array
+                $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
+                
+                // Restore authorization after subscribe
+                if ($authorization !== null) {
+                    $realtime->connections[$connection]['authorization'] = $authorization;
+                }
 
                 $user = $response->output($user, Response::MODEL_ACCOUNT);
                 $server->send([$connection], json_encode([
