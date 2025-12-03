@@ -87,8 +87,6 @@ class Base extends Queries
             $allAttributes[] = $attribute;
         }
 
-
-
         $validators = [
             new Limit(),
             new Offset(),
