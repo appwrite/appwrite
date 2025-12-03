@@ -7454,6 +7454,24 @@ class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertEquals(400, $collection['headers']['status-code']);
 
+        // Test: Format on non-string type (format is only allowed for strings)
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Format On Integer',
+            'attributes' => [
+                [
+                    'key' => 'count',
+                    'type' => Database::VAR_INTEGER,
+                    'format' => 'enum',
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $collection['headers']['status-code']);
+
         // Test: Valid integer with min/max range and default within range (should succeed)
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',

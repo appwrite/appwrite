@@ -6,7 +6,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Validator;
-use Utopia\Validator\Boolean as BooleanValidator;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
@@ -135,6 +134,11 @@ class Attributes extends Validator
 
             // Validate format if provided
             if (isset($attribute['format']) && $attribute['format'] !== '') {
+                // Format is only allowed for string type
+                if ($attribute['type'] !== Database::VAR_STRING) {
+                    $this->message = "Format is only allowed for string type for attribute '" . $attribute['key'] . "'";
+                    return false;
+                }
                 if (!in_array($attribute['format'], $this->supportedFormats)) {
                     $this->message = "Invalid format for attribute '" . $attribute['key'] . "': " . $attribute['format'];
                     return false;
