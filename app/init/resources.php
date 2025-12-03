@@ -529,8 +529,8 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
 
         // Register database event listeners for usage stats collection
         $documentsMetric = METRIC_DOCUMENTS;
-        if ($databaseType !== DATABASE_TYPE_LEGACY || $databaseType !== DATABASE_TYPE_TABLESDB) {
-            $documentsMetric = $documentsMetric . '_' . $databaseType;
+        if ($databaseType !== DATABASE_TYPE_LEGACY && $databaseType !== DATABASE_TYPE_TABLESDB) {
+            $documentsMetric = $documentsMetric . '.' . $databaseType;
         }
         $database
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage, $documentsMetric) {

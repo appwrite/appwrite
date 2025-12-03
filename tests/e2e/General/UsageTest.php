@@ -1087,6 +1087,7 @@ class UsageTest extends Scope
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
         $this->assertEquals($databasesTotal, $response['body']['databasesTotal']);
+        $this->assertEquals($documentsTotal, $response['body']['documentsdbDocumentsTotal']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
