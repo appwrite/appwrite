@@ -204,12 +204,6 @@ if (!function_exists('getRealtime')) {
             return $ctx['getRealtime'];
         }
 
-        static $realtime = null;
-
-        if ($realtime !== null) {
-            return $realtime;
-        }
-
         return $ctx['getRealtime'] = new Realtime();
     }
 }
