@@ -614,7 +614,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $code = 500;
         }
 
-     
+
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
@@ -722,12 +722,12 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $roles = $user->getRoles($database->getAuthorization());
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
-                
+
                 // Preserve authorization before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                
+
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
-                
+
                 // Restore authorization after subscribe
                 if ($authorization !== null) {
                     $realtime->connections[$connection]['authorization'] = $authorization;
