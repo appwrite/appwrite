@@ -237,6 +237,13 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('embeddingsTextErrors', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of errors while generating text embeddings per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
         ;
     }
 

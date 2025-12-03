@@ -1634,13 +1634,16 @@ class UsageTest extends Scope
 
             // New embeddings metrics should be present after calls above
             $this->assertArrayHasKey('embeddingsText', $response['body']);
+            $this->assertArrayHasKey('embeddingsTextErrors', $response['body']);
             $this->assertArrayHasKey('embeddingsTextTokens', $response['body']);
             $this->assertArrayHasKey('embeddingsTextDuration', $response['body']);
-            $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsText']);
-            $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsTextTokens']);
-            $this->assertGreaterThanOrEqual(0, $response['body']['embeddingsTextDuration']);
+            $this->assertGreaterThanOrEqual(0, count($response['body']['embeddingsText']));
+            $this->assertGreaterThanOrEqual(0, count($response['body']['embeddingsTextErrors']));
+            $this->assertGreaterThanOrEqual(0, count($response['body']['embeddingsTextTokens']));
+            $this->assertGreaterThanOrEqual(0, count($response['body']['embeddingsTextDuration']));
 
             $this->validateDates($response['body']['embeddingsText']);
+            $this->validateDates($response['body']['embeddingsTextErrors']);
             $this->validateDates($response['body']['embeddingsTextTokens']);
             $this->validateDates($response['body']['embeddingsTextDuration']);
         });

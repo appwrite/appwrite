@@ -13,7 +13,10 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Agents\Adapters\Ollama;
 use Utopia\Agents\Agent;
 use Utopia\Database\Document;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -71,22 +74,26 @@ class Create extends CreateDocumentAction
                     ]
                 )
             ])
-            ->param('embeddingModel', Ollama::MODEL_EMBEDDING_GEMMA, new WhiteList(Ollama::MODELS), 'The embedding model to use for generating vector embeddings.', false)
-            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', true, ['plan'])
+            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'])
+            ->param('model', Ollama::MODEL_EMBEDDING_GEMMA, new WhiteList(Ollama::MODELS), 'The embedding model to use for generating vector embeddings.', true)
             ->inject('response')
+            ->inject('project')
             ->inject('embeddingAgent')
             ->inject('queueForStatsUsage')
+            ->inject('log')
+            ->inject('logger')
             ->callback($this->action(...));
     }
 
-    public function action(string $embeddingModel, array $texts, UtopiaResponse $response, Agent $embeddingAgent, StatsUsage $queueForStatsUsage): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, StatsUsage $queueForStatsUsage, Log $log, ?Logger $logger): void
     {
         $results = [];
-        $embeddingAgent->getAdapter()->setModel($embeddingModel);
+        $embeddingAgent->getAdapter()->setModel($model);
         $dimension = $embeddingAgent->getAdapter()->getEmbeddingDimension();
 
         $totalDuration = 0;
         $totalTokens = 0;
+        $totalErrors = 0;
         foreach ($texts as $text) {
             $embedding = [];
             $error = '';
@@ -95,12 +102,30 @@ class Create extends CreateDocumentAction
                 $embedding = $embedResult['embedding'] ?? [];
                 $totalDuration += $embedResult['totalDuration'] ?? 0;
                 $totalTokens += $embedResult['tokensProcessed'] ?? 0;
-            } catch (\Exception) {
+            } catch (\Exception $e) {
                 $error = 'Error while generating embedding';
+                $totalErrors += 1;
+                if ($logger) {
+                    $log->setNamespace("http");
+                    $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                    $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                    $log->setType(Log::TYPE_ERROR);
+                    $log->setMessage($e->getMessage());
+
+                    $log->addTag('embeddingModel', $model);
+                    $log->addTag('code', $e->getCode());
+                    $log->addTag('projectId', $project->getId());
+
+                    $log->addExtra('file', $e->getFile());
+                    $log->addExtra('line', $e->getLine());
+                    $log->addExtra('trace', $e->getTraceAsString());
+
+                    $logger->addLog($log);
+                }
             }
 
             $results[] = new Document([
-                'model' => $embeddingModel,
+                'model' => $model,
                 'dimension' => $dimension,
                 'embedding' => $embedding,
                 'error' => $error
@@ -119,7 +144,7 @@ class Create extends CreateDocumentAction
             ->addMetric(
                 \str_replace(
                     '{embeddingModel}',
-                    $embeddingModel,
+                    $model,
                     METRIC_EMBEDDINGS_TEXT
                 ),
                 \count($texts)
@@ -127,7 +152,7 @@ class Create extends CreateDocumentAction
             ->addMetric(
                 \str_replace(
                     '{embeddingModel}',
-                    $embeddingModel,
+                    $model,
                     METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS
                 ),
                 $totalTokens
@@ -135,10 +160,18 @@ class Create extends CreateDocumentAction
             ->addMetric(
                 \str_replace(
                     '{embeddingModel}',
-                    $embeddingModel,
+                    $model,
                     METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION
                 ),
                 $totalDuration
+            )
+            ->addMetric(
+                \str_replace(
+                    '{embeddingModel}',
+                    $model,
+                    METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
+                ),
+                $totalErrors
             )
             ->trigger();
         $queueForStatsUsage->reset();

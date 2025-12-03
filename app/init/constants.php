@@ -338,6 +338,7 @@ const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 const METRIC_EMBEDDINGS_TEXT = 'embeddings.text.{embeddingModel}';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR = 'embeddings.text.{embeddingModel}.totalErrors';
 const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
 const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
