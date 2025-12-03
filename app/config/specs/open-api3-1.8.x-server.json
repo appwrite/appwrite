@@ -4811,7 +4811,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "x-example": "America\/New_York",
+                            "x-example": "america\/new_york",
                             "enum": [
                                 "africa\/abidjan",
                                 "africa\/accra",

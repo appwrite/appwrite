@@ -4942,7 +4942,7 @@
                         "description": "IANA timezone identifier (e.g., \"America\/New_York\", \"Europe\/London\"). Defaults to browser default.",
                         "required": false,
                         "type": "string",
-                        "x-example": "America\/New_York",
+                        "x-example": "america\/new_york",
                         "enum": [
                             "africa\/abidjan",
                             "africa\/accra",
