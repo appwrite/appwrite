@@ -19,7 +19,6 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
@@ -440,6 +439,7 @@ class OpenAPI3 extends Format
                     $subclass = \get_class($validator->getValidator());
                     switch ($subclass) {
                         case 'Appwrite\Utopia\Database\Validator\Operation':
+                        case 'Utopia\Validator\WhiteList':
                             $class = $subclass;
                             break;
                     }
@@ -601,30 +601,63 @@ class OpenAPI3 extends Format
                         }
                         break;
                     case 'Utopia\Validator\WhiteList':
-                        /** @var WhiteList $validator */
-                        $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+                        if ($array) {
+                            $validator = $validator->getValidator();
 
-                        // Iterate from the blackList. If it matches with the current one, then it is a blackList
-                        // Do not add the enum
-                        $allowed = true;
-                        foreach ($this->enumBlacklist as $blacklist) {
-                            if (
-                                $blacklist['namespace'] == $sdk->getNamespace()
-                                && $blacklist['method'] == $methodName
-                                && $blacklist['parameter'] == $name
-                            ) {
-                                $allowed = false;
-                                break;
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = [
+                                'type' => $validator->getType(),
+                            ];
+                            if (!empty($param['example'])) {
+                                $node['schema']['x-example'] = $param['example'];
                             }
-                        }
-                        if ($allowed && $validator->getType() === 'string') {
-                            $node['schema']['enum'] = $validator->getList();
-                            $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                            $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
-                        }
-                        if ($validator->getType() === 'integer') {
-                            $node['format'] = 'int32';
+
+                            // Iterate from the blackList. If it matches with the current one, then it is a blackList
+                            // Do not add the enum
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if (
+                                    $blacklist['namespace'] == $sdk->getNamespace()
+                                    && $blacklist['method'] == $methodName
+                                    && $blacklist['parameter'] == $name
+                                ) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['schema']['items']['enum'] = $validator->getList();
+                                $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
+                                $node['schema']['items']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['schema']['items']['format'] = 'int32';
+                            }
+                        } else {
+                            $node['schema']['type'] = $validator->getType();
+                            $node['schema']['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+
+                            // Iterate from the blackList. If it matches with the current one, then it is a blackList
+                            // Do not add the enum
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if (
+                                    $blacklist['namespace'] == $sdk->getNamespace()
+                                    && $blacklist['method'] == $methodName
+                                    && $blacklist['parameter'] == $name
+                                ) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['schema']['enum'] = $validator->getList();
+                                $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
+                                $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['format'] = 'int32';
+                            }
                         }
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CompoundUID':

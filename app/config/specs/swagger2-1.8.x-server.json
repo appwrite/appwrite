@@ -5415,7 +5415,31 @@
                         "type": "array",
                         "collectionFormat": "multi",
                         "items": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "geolocation",
+                                "camera",
+                                "microphone",
+                                "notifications",
+                                "midi",
+                                "push",
+                                "clipboard-read",
+                                "clipboard-write",
+                                "payment-handler",
+                                "usb",
+                                "bluetooth",
+                                "accelerometer",
+                                "gyroscope",
+                                "magnetometer",
+                                "ambient-light-sensor",
+                                "background-sync",
+                                "persistent-storage",
+                                "screen-wake-lock",
+                                "web-share",
+                                "xr-spatial-tracking"
+                            ],
+                            "x-enum-name": "BrowserPermission",
+                            "x-enum-keys": []
                         },
                         "x-example": "[\"geolocation\",\"notifications\"]",
                         "default": [],
@@ -11760,7 +11784,13 @@
                                     "default": [],
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "asc",
+                                            "desc"
+                                        ],
+                                        "x-enum-name": "OrderBy",
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "lengths": {
@@ -12222,7 +12252,66 @@
                                     "default": [],
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "sessions.write",
+                                            "users.read",
+                                            "users.write",
+                                            "teams.read",
+                                            "teams.write",
+                                            "databases.read",
+                                            "databases.write",
+                                            "collections.read",
+                                            "collections.write",
+                                            "tables.read",
+                                            "tables.write",
+                                            "attributes.read",
+                                            "attributes.write",
+                                            "columns.read",
+                                            "columns.write",
+                                            "indexes.read",
+                                            "indexes.write",
+                                            "documents.read",
+                                            "documents.write",
+                                            "rows.read",
+                                            "rows.write",
+                                            "files.read",
+                                            "files.write",
+                                            "buckets.read",
+                                            "buckets.write",
+                                            "functions.read",
+                                            "functions.write",
+                                            "sites.read",
+                                            "sites.write",
+                                            "log.read",
+                                            "log.write",
+                                            "execution.read",
+                                            "execution.write",
+                                            "locale.read",
+                                            "avatars.read",
+                                            "health.read",
+                                            "providers.read",
+                                            "providers.write",
+                                            "messages.read",
+                                            "messages.write",
+                                            "topics.read",
+                                            "topics.write",
+                                            "subscribers.read",
+                                            "subscribers.write",
+                                            "targets.read",
+                                            "targets.write",
+                                            "rules.read",
+                                            "rules.write",
+                                            "migrations.read",
+                                            "migrations.write",
+                                            "vcs.read",
+                                            "vcs.write",
+                                            "assistant.read",
+                                            "tokens.read",
+                                            "tokens.write"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "installationId": {
@@ -12639,7 +12728,66 @@
                                     "default": [],
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "sessions.write",
+                                            "users.read",
+                                            "users.write",
+                                            "teams.read",
+                                            "teams.write",
+                                            "databases.read",
+                                            "databases.write",
+                                            "collections.read",
+                                            "collections.write",
+                                            "tables.read",
+                                            "tables.write",
+                                            "attributes.read",
+                                            "attributes.write",
+                                            "columns.read",
+                                            "columns.write",
+                                            "indexes.read",
+                                            "indexes.write",
+                                            "documents.read",
+                                            "documents.write",
+                                            "rows.read",
+                                            "rows.write",
+                                            "files.read",
+                                            "files.write",
+                                            "buckets.read",
+                                            "buckets.write",
+                                            "functions.read",
+                                            "functions.write",
+                                            "sites.read",
+                                            "sites.write",
+                                            "log.read",
+                                            "log.write",
+                                            "execution.read",
+                                            "execution.write",
+                                            "locale.read",
+                                            "avatars.read",
+                                            "health.read",
+                                            "providers.read",
+                                            "providers.write",
+                                            "messages.read",
+                                            "messages.write",
+                                            "topics.read",
+                                            "topics.write",
+                                            "subscribers.read",
+                                            "subscribers.write",
+                                            "targets.read",
+                                            "targets.write",
+                                            "rules.read",
+                                            "rules.write",
+                                            "migrations.read",
+                                            "migrations.write",
+                                            "vcs.read",
+                                            "vcs.write",
+                                            "assistant.read",
+                                            "tokens.read",
+                                            "tokens.write"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "installationId": {
@@ -30043,7 +30191,13 @@
                                     "default": [],
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "asc",
+                                            "desc"
+                                        ],
+                                        "x-enum-name": "OrderBy",
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "lengths": {
@@ -32090,7 +32244,14 @@
                                     "default": null,
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": {
+                                            "2": "admin",
+                                            "3": "developer",
+                                            "4": "owner"
+                                        },
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "url": {
@@ -32265,7 +32426,14 @@
                                     "default": null,
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": {
+                                            "2": "admin",
+                                            "3": "developer",
+                                            "4": "owner"
+                                        },
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 }
                             },

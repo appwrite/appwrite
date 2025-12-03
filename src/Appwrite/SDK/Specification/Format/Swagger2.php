@@ -20,7 +20,6 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
 
 class Swagger2 extends Format
 {
@@ -445,6 +444,7 @@ class Swagger2 extends Format
                     $subclass = \get_class($validator->getValidator());
                     switch ($subclass) {
                         case 'Appwrite\Utopia\Database\Validator\Operation':
+                        case 'Utopia\Validator\WhiteList':
                             $class = $subclass;
                             break;
                     }
@@ -590,25 +590,54 @@ class Swagger2 extends Format
                         }
                         break;
                     case 'Utopia\Validator\WhiteList':
-                        /** @var WhiteList $validator */
-                        $node['type'] = $validator->getType();
-                        $node['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+                        if ($array) {
+                            $validator = $validator->getValidator();
 
-                        // Iterate the blackList. If it matches with the current one, then it is blackListed
-                        $allowed = true;
-                        foreach ($this->enumBlacklist as $blacklist) {
-                            if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                $allowed = false;
-                                break;
+                            $node['type'] = 'array';
+                            $node['collectionFormat'] = 'multi';
+                            $node['items'] = [
+                                'type' => $validator->getType(),
+                            ];
+                            if (!empty($param['example'])) {
+                                $node['x-example'] = $param['example'];
                             }
-                        }
-                        if ($allowed && $validator->getType() === 'string') {
-                            $node['enum'] = $validator->getList();
-                            $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                            $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
-                        }
-                        if ($validator->getType() === 'integer') {
-                            $node['format'] = 'int32';
+
+                            // Iterate the blackList. If it matches with the current one, then it is blackListed
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['items']['enum'] = $validator->getList();
+                                $node['items']['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
+                                $node['items']['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['items']['format'] = 'int32';
+                            }
+                        } else {
+                            $node['type'] = $validator->getType();
+                            $node['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+
+                            // Iterate the blackList. If it matches with the current one, then it is blackListed
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['enum'] = $validator->getList();
+                                $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
+                                $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['format'] = 'int32';
+                            }
                         }
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CompoundUID':

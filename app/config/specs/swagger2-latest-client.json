@@ -5688,7 +5688,31 @@
                         "type": "array",
                         "collectionFormat": "multi",
                         "items": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "geolocation",
+                                "camera",
+                                "microphone",
+                                "notifications",
+                                "midi",
+                                "push",
+                                "clipboard-read",
+                                "clipboard-write",
+                                "payment-handler",
+                                "usb",
+                                "bluetooth",
+                                "accelerometer",
+                                "gyroscope",
+                                "magnetometer",
+                                "ambient-light-sensor",
+                                "background-sync",
+                                "persistent-storage",
+                                "screen-wake-lock",
+                                "web-share",
+                                "xr-spatial-tracking"
+                            ],
+                            "x-enum-name": "BrowserPermission",
+                            "x-enum-keys": []
                         },
                         "x-example": "[\"geolocation\",\"notifications\"]",
                         "default": [],
@@ -10789,7 +10813,14 @@
                                     "default": null,
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": {
+                                            "2": "admin",
+                                            "3": "developer",
+                                            "4": "owner"
+                                        },
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "url": {
@@ -10960,7 +10991,14 @@
                                     "default": null,
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": {
+                                            "2": "admin",
+                                            "3": "developer",
+                                            "4": "owner"
+                                        },
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 }
                             },

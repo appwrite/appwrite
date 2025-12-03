@@ -5577,7 +5577,31 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "geolocation",
+                                    "camera",
+                                    "microphone",
+                                    "notifications",
+                                    "midi",
+                                    "push",
+                                    "clipboard-read",
+                                    "clipboard-write",
+                                    "payment-handler",
+                                    "usb",
+                                    "bluetooth",
+                                    "accelerometer",
+                                    "gyroscope",
+                                    "magnetometer",
+                                    "ambient-light-sensor",
+                                    "background-sync",
+                                    "persistent-storage",
+                                    "screen-wake-lock",
+                                    "web-share",
+                                    "xr-spatial-tracking"
+                                ],
+                                "x-enum-name": "BrowserPermission",
+                                "x-enum-keys": []
                             },
                             "x-example": "[\"geolocation\",\"notifications\"]",
                             "default": []
@@ -12380,7 +12404,13 @@
                                         "description": "Array of index orders. Maximum of 100 orders are allowed.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "asc",
+                                                "desc"
+                                            ],
+                                            "x-enum-name": "OrderBy",
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "lengths": {
@@ -13240,7 +13270,66 @@
                                         "description": "List of scopes allowed for API key auto-generated for every execution. Maximum of 100 scopes are allowed.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "sessions.write",
+                                                "users.read",
+                                                "users.write",
+                                                "teams.read",
+                                                "teams.write",
+                                                "databases.read",
+                                                "databases.write",
+                                                "collections.read",
+                                                "collections.write",
+                                                "tables.read",
+                                                "tables.write",
+                                                "attributes.read",
+                                                "attributes.write",
+                                                "columns.read",
+                                                "columns.write",
+                                                "indexes.read",
+                                                "indexes.write",
+                                                "documents.read",
+                                                "documents.write",
+                                                "rows.read",
+                                                "rows.write",
+                                                "files.read",
+                                                "files.write",
+                                                "buckets.read",
+                                                "buckets.write",
+                                                "functions.read",
+                                                "functions.write",
+                                                "sites.read",
+                                                "sites.write",
+                                                "log.read",
+                                                "log.write",
+                                                "execution.read",
+                                                "execution.write",
+                                                "locale.read",
+                                                "avatars.read",
+                                                "health.read",
+                                                "providers.read",
+                                                "providers.write",
+                                                "messages.read",
+                                                "messages.write",
+                                                "topics.read",
+                                                "topics.write",
+                                                "subscribers.read",
+                                                "subscribers.write",
+                                                "targets.read",
+                                                "targets.write",
+                                                "rules.read",
+                                                "rules.write",
+                                                "migrations.read",
+                                                "migrations.write",
+                                                "vcs.read",
+                                                "vcs.write",
+                                                "assistant.read",
+                                                "tokens.read",
+                                                "tokens.write"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "installationId": {
@@ -13438,7 +13527,78 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "node-14.5",
+                                    "node-16.0",
+                                    "node-18.0",
+                                    "node-19.0",
+                                    "node-20.0",
+                                    "node-21.0",
+                                    "node-22",
+                                    "php-8.0",
+                                    "php-8.1",
+                                    "php-8.2",
+                                    "php-8.3",
+                                    "ruby-3.0",
+                                    "ruby-3.1",
+                                    "ruby-3.2",
+                                    "ruby-3.3",
+                                    "python-3.8",
+                                    "python-3.9",
+                                    "python-3.10",
+                                    "python-3.11",
+                                    "python-3.12",
+                                    "python-ml-3.11",
+                                    "python-ml-3.12",
+                                    "deno-1.21",
+                                    "deno-1.24",
+                                    "deno-1.35",
+                                    "deno-1.40",
+                                    "deno-1.46",
+                                    "deno-2.0",
+                                    "dart-2.15",
+                                    "dart-2.16",
+                                    "dart-2.17",
+                                    "dart-2.18",
+                                    "dart-2.19",
+                                    "dart-3.0",
+                                    "dart-3.1",
+                                    "dart-3.3",
+                                    "dart-3.5",
+                                    "dart-3.8",
+                                    "dart-3.9",
+                                    "dotnet-6.0",
+                                    "dotnet-7.0",
+                                    "dotnet-8.0",
+                                    "java-8.0",
+                                    "java-11.0",
+                                    "java-17.0",
+                                    "java-18.0",
+                                    "java-21.0",
+                                    "java-22",
+                                    "swift-5.5",
+                                    "swift-5.8",
+                                    "swift-5.9",
+                                    "swift-5.10",
+                                    "kotlin-1.6",
+                                    "kotlin-1.8",
+                                    "kotlin-1.9",
+                                    "kotlin-2.0",
+                                    "cpp-17",
+                                    "cpp-20",
+                                    "bun-1.0",
+                                    "bun-1.1",
+                                    "go-1.23",
+                                    "static-1",
+                                    "flutter-3.24",
+                                    "flutter-3.27",
+                                    "flutter-3.29",
+                                    "flutter-3.32",
+                                    "flutter-3.35"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             },
                             "default": []
                         },
@@ -13451,7 +13611,17 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "dev-tools",
+                                    "starter",
+                                    "databases",
+                                    "ai",
+                                    "messaging",
+                                    "utilities"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             },
                             "default": []
                         },
@@ -13883,7 +14053,66 @@
                                         "description": "List of scopes allowed for API Key auto-generated for every execution. Maximum of 100 scopes are allowed.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "sessions.write",
+                                                "users.read",
+                                                "users.write",
+                                                "teams.read",
+                                                "teams.write",
+                                                "databases.read",
+                                                "databases.write",
+                                                "collections.read",
+                                                "collections.write",
+                                                "tables.read",
+                                                "tables.write",
+                                                "attributes.read",
+                                                "attributes.write",
+                                                "columns.read",
+                                                "columns.write",
+                                                "indexes.read",
+                                                "indexes.write",
+                                                "documents.read",
+                                                "documents.write",
+                                                "rows.read",
+                                                "rows.write",
+                                                "files.read",
+                                                "files.write",
+                                                "buckets.read",
+                                                "buckets.write",
+                                                "functions.read",
+                                                "functions.write",
+                                                "sites.read",
+                                                "sites.write",
+                                                "log.read",
+                                                "log.write",
+                                                "execution.read",
+                                                "execution.write",
+                                                "locale.read",
+                                                "avatars.read",
+                                                "health.read",
+                                                "providers.read",
+                                                "providers.write",
+                                                "messages.read",
+                                                "messages.write",
+                                                "topics.read",
+                                                "topics.write",
+                                                "subscribers.read",
+                                                "subscribers.write",
+                                                "targets.read",
+                                                "targets.write",
+                                                "rules.read",
+                                                "rules.write",
+                                                "migrations.read",
+                                                "migrations.write",
+                                                "vcs.read",
+                                                "vcs.write",
+                                                "assistant.read",
+                                                "tokens.read",
+                                                "tokens.write"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "installationId": {
@@ -22910,7 +23139,27 @@
                                         "description": "List of resources to migrate",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "user",
+                                                "team",
+                                                "membership",
+                                                "database",
+                                                "table",
+                                                "column",
+                                                "index",
+                                                "row",
+                                                "document",
+                                                "attribute",
+                                                "collection",
+                                                "bucket",
+                                                "file",
+                                                "function",
+                                                "deployment",
+                                                "environment-variable"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "endpoint": {
@@ -22995,7 +23244,27 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "user",
+                                    "team",
+                                    "membership",
+                                    "database",
+                                    "table",
+                                    "column",
+                                    "index",
+                                    "row",
+                                    "document",
+                                    "attribute",
+                                    "collection",
+                                    "bucket",
+                                    "file",
+                                    "function",
+                                    "deployment",
+                                    "environment-variable"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             }
                         },
                         "in": "query"
@@ -23289,7 +23558,21 @@
                                         "description": "List of resources to migrate",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "user",
+                                                "database",
+                                                "table",
+                                                "column",
+                                                "row",
+                                                "document",
+                                                "attribute",
+                                                "collection",
+                                                "bucket",
+                                                "file"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "serviceAccount": {
@@ -23362,7 +23645,21 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "user",
+                                    "database",
+                                    "table",
+                                    "column",
+                                    "row",
+                                    "document",
+                                    "attribute",
+                                    "collection",
+                                    "bucket",
+                                    "file"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             }
                         },
                         "in": "query"
@@ -23437,7 +23734,22 @@
                                         "description": "List of resources to migrate",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "user",
+                                                "database",
+                                                "table",
+                                                "column",
+                                                "index",
+                                                "row",
+                                                "document",
+                                                "attribute",
+                                                "collection",
+                                                "bucket",
+                                                "file"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "subdomain": {
@@ -23545,7 +23857,22 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "user",
+                                    "database",
+                                    "table",
+                                    "column",
+                                    "index",
+                                    "row",
+                                    "document",
+                                    "attribute",
+                                    "collection",
+                                    "bucket",
+                                    "file"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             }
                         },
                         "in": "query"
@@ -23681,7 +24008,22 @@
                                         "description": "List of resources to migrate",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "user",
+                                                "database",
+                                                "table",
+                                                "column",
+                                                "index",
+                                                "row",
+                                                "document",
+                                                "attribute",
+                                                "collection",
+                                                "bucket",
+                                                "file"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "endpoint": {
@@ -23783,7 +24125,22 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "user",
+                                    "database",
+                                    "table",
+                                    "column",
+                                    "index",
+                                    "row",
+                                    "document",
+                                    "attribute",
+                                    "collection",
+                                    "bucket",
+                                    "file"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             }
                         },
                         "in": "query"
@@ -26529,7 +26886,66 @@
                                         "description": "List of scopes allowed for JWT key. Maximum of 100 scopes are allowed.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "sessions.write",
+                                                "users.read",
+                                                "users.write",
+                                                "teams.read",
+                                                "teams.write",
+                                                "databases.read",
+                                                "databases.write",
+                                                "collections.read",
+                                                "collections.write",
+                                                "tables.read",
+                                                "tables.write",
+                                                "attributes.read",
+                                                "attributes.write",
+                                                "columns.read",
+                                                "columns.write",
+                                                "indexes.read",
+                                                "indexes.write",
+                                                "documents.read",
+                                                "documents.write",
+                                                "rows.read",
+                                                "rows.write",
+                                                "files.read",
+                                                "files.write",
+                                                "buckets.read",
+                                                "buckets.write",
+                                                "functions.read",
+                                                "functions.write",
+                                                "sites.read",
+                                                "sites.write",
+                                                "log.read",
+                                                "log.write",
+                                                "execution.read",
+                                                "execution.write",
+                                                "locale.read",
+                                                "avatars.read",
+                                                "health.read",
+                                                "providers.read",
+                                                "providers.write",
+                                                "messages.read",
+                                                "messages.write",
+                                                "topics.read",
+                                                "topics.write",
+                                                "subscribers.read",
+                                                "subscribers.write",
+                                                "targets.read",
+                                                "targets.write",
+                                                "rules.read",
+                                                "rules.write",
+                                                "migrations.read",
+                                                "migrations.write",
+                                                "vcs.read",
+                                                "vcs.write",
+                                                "assistant.read",
+                                                "tokens.read",
+                                                "tokens.write"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "duration": {
@@ -26690,7 +27106,66 @@
                                         "description": "Key scopes list. Maximum of 100 scopes are allowed.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "sessions.write",
+                                                "users.read",
+                                                "users.write",
+                                                "teams.read",
+                                                "teams.write",
+                                                "databases.read",
+                                                "databases.write",
+                                                "collections.read",
+                                                "collections.write",
+                                                "tables.read",
+                                                "tables.write",
+                                                "attributes.read",
+                                                "attributes.write",
+                                                "columns.read",
+                                                "columns.write",
+                                                "indexes.read",
+                                                "indexes.write",
+                                                "documents.read",
+                                                "documents.write",
+                                                "rows.read",
+                                                "rows.write",
+                                                "files.read",
+                                                "files.write",
+                                                "buckets.read",
+                                                "buckets.write",
+                                                "functions.read",
+                                                "functions.write",
+                                                "sites.read",
+                                                "sites.write",
+                                                "log.read",
+                                                "log.write",
+                                                "execution.read",
+                                                "execution.write",
+                                                "locale.read",
+                                                "avatars.read",
+                                                "health.read",
+                                                "providers.read",
+                                                "providers.write",
+                                                "messages.read",
+                                                "messages.write",
+                                                "topics.read",
+                                                "topics.write",
+                                                "subscribers.read",
+                                                "subscribers.write",
+                                                "targets.read",
+                                                "targets.write",
+                                                "rules.read",
+                                                "rules.write",
+                                                "migrations.read",
+                                                "migrations.write",
+                                                "vcs.read",
+                                                "vcs.write",
+                                                "assistant.read",
+                                                "tokens.read",
+                                                "tokens.write"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         },
                                         "x-nullable": true
                                     },
@@ -26863,7 +27338,66 @@
                                         "description": "Key scopes list. Maximum of 100 events are allowed.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "sessions.write",
+                                                "users.read",
+                                                "users.write",
+                                                "teams.read",
+                                                "teams.write",
+                                                "databases.read",
+                                                "databases.write",
+                                                "collections.read",
+                                                "collections.write",
+                                                "tables.read",
+                                                "tables.write",
+                                                "attributes.read",
+                                                "attributes.write",
+                                                "columns.read",
+                                                "columns.write",
+                                                "indexes.read",
+                                                "indexes.write",
+                                                "documents.read",
+                                                "documents.write",
+                                                "rows.read",
+                                                "rows.write",
+                                                "files.read",
+                                                "files.write",
+                                                "buckets.read",
+                                                "buckets.write",
+                                                "functions.read",
+                                                "functions.write",
+                                                "sites.read",
+                                                "sites.write",
+                                                "log.read",
+                                                "log.write",
+                                                "execution.read",
+                                                "execution.write",
+                                                "locale.read",
+                                                "avatars.read",
+                                                "health.read",
+                                                "providers.read",
+                                                "providers.write",
+                                                "messages.read",
+                                                "messages.write",
+                                                "topics.read",
+                                                "topics.write",
+                                                "subscribers.read",
+                                                "subscribers.write",
+                                                "targets.read",
+                                                "targets.write",
+                                                "rules.read",
+                                                "rules.write",
+                                                "migrations.read",
+                                                "migrations.write",
+                                                "vcs.read",
+                                                "vcs.write",
+                                                "assistant.read",
+                                                "tokens.read",
+                                                "tokens.write"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         },
                                         "x-nullable": true
                                     },
@@ -31345,7 +31879,26 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "analog",
+                                    "angular",
+                                    "nextjs",
+                                    "react",
+                                    "nuxt",
+                                    "vue",
+                                    "sveltekit",
+                                    "astro",
+                                    "tanstack-start",
+                                    "remix",
+                                    "lynx",
+                                    "flutter",
+                                    "react-native",
+                                    "vite",
+                                    "other"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             },
                             "default": []
                         },
@@ -31358,7 +31911,17 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "dev-tools",
+                                    "starter",
+                                    "databases",
+                                    "ai",
+                                    "messaging",
+                                    "utilities"
+                                ],
+                                "x-enum-name": null,
+                                "x-enum-keys": []
                             },
                             "default": []
                         },
@@ -39764,7 +40327,13 @@
                                         "description": "Array of index orders. Maximum of 100 orders are allowed.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "asc",
+                                                "desc"
+                                            ],
+                                            "x-enum-name": "OrderBy",
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "lengths": {
@@ -42310,7 +42879,14 @@
                                         "description": "Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions). Maximum of 100 roles are allowed, each 32 characters long.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": {
+                                                "2": "admin",
+                                                "3": "developer",
+                                                "4": "owner"
+                                            },
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "url": {
@@ -42488,7 +43064,14 @@
                                         "description": "An array of strings. Use this param to set the user's roles in the team. A role can be any string. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions). Maximum of 100 roles are allowed, each 32 characters long.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": {
+                                                "2": "admin",
+                                                "3": "developer",
+                                                "4": "owner"
+                                            },
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     }
                                 },
