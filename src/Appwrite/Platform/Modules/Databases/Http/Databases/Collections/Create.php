@@ -234,11 +234,11 @@ class Create extends Action
             $formatOptions = ['elements' => $attributeDef['elements']];
         }
 
-        if (isset($attributeDef['min']) && isset($attributeDef['max'])) {
+        if (isset($attributeDef['min']) || isset($attributeDef['max'])) {
             $format = $type === Database::VAR_INTEGER ? APP_DATABASE_ATTRIBUTE_INT_RANGE : APP_DATABASE_ATTRIBUTE_FLOAT_RANGE;
             $formatOptions = [
-                'min' => $attributeDef['min'],
-                'max' => $attributeDef['max'],
+                'min' => $attributeDef['min'] ?? ($type === Database::VAR_INTEGER ? \PHP_INT_MIN : -\PHP_FLOAT_MAX),
+                'max' => $attributeDef['max'] ?? ($type === Database::VAR_INTEGER ? \PHP_INT_MAX : \PHP_FLOAT_MAX),
             ];
         }
 

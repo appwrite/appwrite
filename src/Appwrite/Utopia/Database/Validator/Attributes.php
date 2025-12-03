@@ -182,13 +182,14 @@ class Attributes extends Validator
             }
 
             // Validate min/max range for integer/float
-            if (isset($attribute['min']) && isset($attribute['max'])) {
+            if (isset($attribute['min']) || isset($attribute['max'])) {
                 if (!in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_FLOAT])) {
                     $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer or float types";
                     return false;
                 }
 
-                if ($attribute['min'] > $attribute['max']) {
+                // If both are set, validate ordering
+                if (isset($attribute['min']) && isset($attribute['max']) && $attribute['min'] > $attribute['max']) {
                     $this->message = "Attribute '" . $attribute['key'] . "': minimum value must be less than or equal to maximum value";
                     return false;
                 }
