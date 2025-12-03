@@ -119,36 +119,55 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        $databaseKey = 'database_' . $database->getSequence();
+
         $collectionAttributes = [];
         $attributeDocuments = [];
-        foreach ($attributes as $attributeDef) {
-            $attrDoc = $this->buildAttributeDocument($database, $collection, $attributeDef, $dbForProject);
-            $collectionAttributes[] = $attrDoc['collection'];
-            $attributeDocuments[] = $attrDoc['document'];
+        try {
+            foreach ($attributes as $attributeDef) {
+                $attrDoc = $this->buildAttributeDocument($database, $collection, $attributeDef, $dbForProject);
+                $collectionAttributes[] = $attrDoc['collection'];
+                $attributeDocuments[] = $attrDoc['document'];
+            }
+        } catch (\Throwable $e) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw $e;
         }
 
         $collectionIndexes = [];
         $indexDocuments = [];
-        foreach ($indexes as $indexDef) {
-            $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes);
-            $collectionIndexes[] = $idxDoc['collection'];
-            $indexDocuments[] = $idxDoc['document'];
+        try {
+            foreach ($indexes as $indexDef) {
+                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes);
+                $collectionIndexes[] = $idxDoc['collection'];
+                $indexDocuments[] = $idxDoc['document'];
+            }
+        } catch (\Throwable $e) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw $e;
         }
 
         try {
             $dbForProject->createCollection(
-                id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                id: $collectionKey,
                 attributes: $collectionAttributes,
                 indexes: $collectionIndexes,
                 permissions: $permissions,
                 documentSecurity: $documentSecurity
             );
         } catch (DuplicateException) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getDuplicateException());
         } catch (IndexException $e) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getInvalidIndexException(), $e->getMessage());
         } catch (LimitException) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getLimitException());
+        } catch (\Throwable $e) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw $e;
         }
 
         // Create documents in attributes and indexes collections
@@ -160,7 +179,11 @@ class Create extends Action
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
+            $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
             throw new Exception($this->getDuplicateException());
+        } catch (\Throwable $e) {
+            $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
+            throw $e;
         }
 
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
@@ -361,5 +384,23 @@ class Create extends Action
             'collection' => $collectionDoc,
             'document' => $document,
         ];
+    }
+
+    /**
+     * Cleanup on failure: delete the collection document and the underlying DB collection
+     */
+    protected function cleanup(Database $dbForProject, string $databaseKey, string $collectionKey, string $collectionId): void
+    {
+        try {
+            $dbForProject->deleteCollection($collectionKey);
+        } catch (\Throwable) {
+            // Ignore cleanup errors for collection deletion
+        }
+
+        try {
+            $dbForProject->deleteDocument($databaseKey, $collectionId);
+        } catch (\Throwable) {
+            // Ignore cleanup errors for document deletion
+        }
     }
 }

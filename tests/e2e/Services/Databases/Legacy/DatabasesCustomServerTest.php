@@ -7110,6 +7110,76 @@ class DatabasesCustomServerTest extends Scope
         ]));
     }
 
+    public function testCreateCollectionCleanupOnFailure(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Cleanup',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collectionId = ID::unique();
+
+        // Test: Create collection with invalid index referencing non-existent attribute (should fail)
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => $collectionId,
+            'name' => 'Should Fail',
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                    'size' => 256,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'idx_invalid',
+                    'type' => Database::INDEX_KEY,
+                    'attributes' => ['nonexistent'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+
+        // Verify collection was cleaned up - creating with same ID should succeed
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => $collectionId,
+            'name' => 'Should Succeed',
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => Database::VAR_STRING,
+                    'size' => 256,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
     public function testCreateCollectionWithEnumAttribute(): void
     {
         // Create database
