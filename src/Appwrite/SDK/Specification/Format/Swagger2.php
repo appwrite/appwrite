@@ -611,7 +611,7 @@ class Swagger2 extends Format
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['items']['enum'] = $validator->getList();
+                                $node['items']['enum'] = \array_values($validator->getList());
                                 $node['items']['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
                                 $node['items']['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                             }
@@ -631,7 +631,7 @@ class Swagger2 extends Format
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['enum'] = $validator->getList();
+                                $node['enum'] = \array_values($validator->getList());
                                 $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
                                 $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                             }
@@ -901,13 +901,13 @@ class Swagger2 extends Format
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
-                        $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = $rule['enum'];
+                        $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
                         $enumName = $this->getResponseEnumName($model->getType(), $name);
                         if ($enumName) {
                             $output['definitions'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
                         }
                     } else {
-                        $output['definitions'][$model->getType()]['properties'][$name]['enum'] = $rule['enum'];
+                        $output['definitions'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
                         $enumName = $this->getResponseEnumName($model->getType(), $name);
                         if ($enumName) {
                             $output['definitions'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;

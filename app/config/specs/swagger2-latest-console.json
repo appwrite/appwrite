@@ -42726,11 +42726,11 @@
                                     "x-example": null,
                                     "items": {
                                         "type": "string",
-                                        "enum": {
-                                            "2": "admin",
-                                            "3": "developer",
-                                            "4": "owner"
-                                        },
+                                        "enum": [
+                                            "admin",
+                                            "developer",
+                                            "owner"
+                                        ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
                                     }
@@ -42904,11 +42904,11 @@
                                     "x-example": null,
                                     "items": {
                                         "type": "string",
-                                        "enum": {
-                                            "2": "admin",
-                                            "3": "developer",
-                                            "4": "owner"
-                                        },
+                                        "enum": [
+                                            "admin",
+                                            "developer",
+                                            "owner"
+                                        ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
                                     }
