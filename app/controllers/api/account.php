@@ -1774,9 +1774,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $query['secret'] = Auth::encodeSession($user->getId(), $secret);
             }
 
+            // For OAuth2 redirects, use SameSite=Lax instead of SameSite=None to improve compatibility
+            // with modern browsers and SPA frameworks like React Router v7
+            // Ref: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+            // Ref: https://web.dev/articles/samesite-cookies-explained
+            $oauthSameSite = Config::getParam('cookieSamesite');
+            if ($oauthSameSite === Response::COOKIE_SAMESITE_NONE) {
+                $oauthSameSite = Response::COOKIE_SAMESITE_LAX;
+            }
+
             $response
                 ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, $oauthSameSite);
         }
 
         if (isset($sessionUpgrade) && $sessionUpgrade) {
