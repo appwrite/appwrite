@@ -7017,7 +7017,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(400, $collection['headers']['status-code']);
 
-        // Test: String attribute without size
+        // Test: String attribute without size (should fail - size is required for strings)
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -7033,8 +7033,7 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        // Should succeed with default size
-        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals(400, $collection['headers']['status-code']);
 
         // Test: Required attribute with default value (should fail)
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
