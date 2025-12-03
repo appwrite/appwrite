@@ -3,8 +3,12 @@
 namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Validator;
+use Utopia\Validator\Boolean as BooleanValidator;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 
 class Attributes extends Validator
 {
@@ -65,12 +69,12 @@ class Attributes extends Validator
      */
     public function isValid($value): bool
     {
-        if (!is_array($value)) {
+        if (!\is_array($value)) {
             $this->message = 'Attributes must be an array';
             return false;
         }
 
-        if (count($value) > $this->maxAttributes) {
+        if (\count($value) > $this->maxAttributes) {
             $this->message = 'Maximum of ' . $this->maxAttributes . ' attributes allowed';
             return false;
         }
@@ -79,7 +83,7 @@ class Attributes extends Validator
         $keys = [];
 
         foreach ($value as $index => $attribute) {
-            if (!is_array($attribute)) {
+            if (!\is_array($attribute)) {
                 $this->message = "Attribute at index $index must be an object";
                 return false;
             }
@@ -107,6 +111,13 @@ class Attributes extends Validator
                 return false;
             }
             $keys[] = $attribute['key'];
+
+            // Check for reserved keys
+            $reservedKeys = ['$id', '$createdAt', '$updatedAt', '$permissions', '$collection'];
+            if (in_array($attribute['key'], $reservedKeys)) {
+                $this->message = "Attribute key '" . $attribute['key'] . "' is reserved and cannot be used";
+                return false;
+            }
 
             // Validate type
             if (!in_array($attribute['type'], $this->supportedTypes)) {
@@ -148,6 +159,12 @@ class Attributes extends Validator
                 return false;
             }
 
+            // Validate signed only for integer/float types
+            if (isset($attribute['signed']) && !in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_FLOAT])) {
+                $this->message = "Attribute '" . $attribute['key'] . "': 'signed' can only be used with integer or float types";
+                return false;
+            }
+
             // Validate required and default conflict
             if (isset($attribute['required']) && $attribute['required'] === true && isset($attribute['default']) && $attribute['default'] !== null) {
                 $this->message = "Attribute '" . $attribute['key'] . "' cannot have a default value when required is true";
@@ -160,20 +177,137 @@ class Attributes extends Validator
                 return false;
             }
 
+            // Validate min/max range for integer/float
+            if (isset($attribute['min']) && isset($attribute['max'])) {
+                if (!in_array($attribute['type'], [Database::VAR_INTEGER, Database::VAR_FLOAT])) {
+                    $this->message = "Attribute '" . $attribute['key'] . "': min/max can only be used with integer or float types";
+                    return false;
+                }
+
+                if ($attribute['min'] > $attribute['max']) {
+                    $this->message = "Attribute '" . $attribute['key'] . "': minimum value must be less than or equal to maximum value";
+                    return false;
+                }
+            }
+
+            // Validate default value matches attribute type
+            if (isset($attribute['default'])) {
+                switch ($attribute['type']) {
+                    case Database::VAR_STRING:
+                        if (!is_string($attribute['default'])) {
+                            $this->message = "Default value for string attribute '" . $attribute['key'] . "' must be a string";
+                            return false;
+                        }
+
+                        // Validate string size
+                        $size = $attribute['size'] ?? 0;
+                        if ($size > 0) {
+                            $textValidator = new Text($size, 0);
+                            if (!$textValidator->isValid($attribute['default'])) {
+                                $this->message = "Default value for attribute '" . $attribute['key'] . "' exceeds maximum size of $size characters";
+                                return false;
+                            }
+                        }
+                        break;
+
+                    case Database::VAR_INTEGER:
+                        if (!is_int($attribute['default'])) {
+                            $this->message = "Default value for integer attribute '" . $attribute['key'] . "' must be an integer";
+                            return false;
+                        }
+                        // Validate within range if min/max specified
+                        if (isset($attribute['min']) || isset($attribute['max'])) {
+                            $min = $attribute['min'] ?? \PHP_INT_MIN;
+                            $max = $attribute['max'] ?? \PHP_INT_MAX;
+                            $rangeValidator = new Range($min, $max, Database::VAR_INTEGER);
+                            if (!$rangeValidator->isValid($attribute['default'])) {
+                                $this->message = "Default value for integer attribute '" . $attribute['key'] . "' must be between $min and $max";
+                                return false;
+                            }
+                        }
+                        break;
+
+                    case Database::VAR_FLOAT:
+                        if (!is_float($attribute['default']) && !is_int($attribute['default'])) {
+                            $this->message = "Default value for float attribute '" . $attribute['key'] . "' must be a number";
+                            return false;
+                        }
+                        // Validate within range if min/max specified
+                        if (isset($attribute['min']) || isset($attribute['max'])) {
+                            $min = $attribute['min'] ?? -\PHP_FLOAT_MAX;
+                            $max = $attribute['max'] ?? \PHP_FLOAT_MAX;
+                            $rangeValidator = new Range($min, $max, Database::VAR_FLOAT);
+                            if (!$rangeValidator->isValid((float)$attribute['default'])) {
+                                $this->message = "Default value for float attribute '" . $attribute['key'] . "' must be between $min and $max";
+                                return false;
+                            }
+                        }
+                        break;
+
+                    case Database::VAR_BOOLEAN:
+                        if (!is_bool($attribute['default'])) {
+                            $this->message = "Default value for boolean attribute '" . $attribute['key'] . "' must be a boolean";
+                            return false;
+                        }
+                        break;
+
+                    case Database::VAR_DATETIME:
+                        if (!is_string($attribute['default'])) {
+                            $this->message = "Default value for datetime attribute '" . $attribute['key'] . "' must be a string in ISO 8601 format";
+                            return false;
+                        }
+                        // Basic datetime format validation
+                        $datetimeValidator = new DatetimeValidator();
+                        if (!$datetimeValidator->isValid($attribute['default'])) {
+                            $this->message = "Default value for datetime attribute '" . $attribute['key'] . "' must be in valid ISO 8601 format";
+                            return false;
+                        }
+                        break;
+                }
+            }
+
             // Validate enum elements if format is enum
             if (isset($attribute['format']) && $attribute['format'] === APP_DATABASE_ATTRIBUTE_ENUM) {
                 if (!isset($attribute['elements']) || !is_array($attribute['elements']) || empty($attribute['elements'])) {
                     $this->message = "Attribute '" . $attribute['key'] . "' with enum format must have 'elements' array";
                     return false;
                 }
+
+                // Validate each enum element
+                foreach ($attribute['elements'] as $elementIndex => $element) {
+                    if (!is_string($element) || empty($element)) {
+                        $this->message = "Enum element at index $elementIndex for attribute '" . $attribute['key'] . "' must be a non-empty string";
+                        return false;
+                    }
+                    if (strlen($element) > Database::LENGTH_KEY) {
+                        $this->message = "Enum element at index $elementIndex for attribute '" . $attribute['key'] . "' exceeds maximum length of " . Database::LENGTH_KEY . " characters";
+                        return false;
+                    }
+                }
+
+                // Validate default exists in elements
+                if (isset($attribute['default']) && $attribute['default'] !== null) {
+                    if (!in_array($attribute['default'], $attribute['elements'], true)) {
+                        $this->message = "Default value for enum attribute '" . $attribute['key'] . "' must be one of the provided elements";
+                        return false;
+                    }
+                }
             }
 
             // Validate relationship options
             if ($attribute['type'] === Database::VAR_RELATIONSHIP) {
-                if (!isset($attribute['relatedCollection']) || empty($attribute['relatedCollection'])) {
+                // Validate array cannot be true for relationship
+                if (isset($attribute['array']) && $attribute['array'] === true) {
+                    $this->message = "Relationship attribute '" . $attribute['key'] . "' cannot be an array type";
+                    return false;
+                }
+
+                // Validate required fields for relationship
+                if (empty($attribute['relatedCollection'])) {
                     $this->message = "Relationship attribute '" . $attribute['key'] . "' must have 'relatedCollection'";
                     return false;
                 }
+
                 if (!isset($attribute['relationType']) || !in_array($attribute['relationType'], [
                     Database::RELATION_ONE_TO_ONE,
                     Database::RELATION_ONE_TO_MANY,
@@ -191,7 +325,7 @@ class Attributes extends Validator
                 }
 
                 // Validate twoWayKey if provided
-                if (isset($attribute['twoWayKey']) && !empty($attribute['twoWayKey'])) {
+                if (!empty($attribute['twoWayKey'])) {
                     if (!$keyValidator->isValid($attribute['twoWayKey'])) {
                         $this->message = "Invalid 'twoWayKey' for relationship attribute '" . $attribute['key'] . "': " . $keyValidator->getDescription();
                         return false;

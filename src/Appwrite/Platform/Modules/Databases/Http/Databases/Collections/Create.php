@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
@@ -135,11 +136,17 @@ class Create extends Action
             throw $e;
         }
 
+        $indexLimit = $dbForProject->getLimitForIndexes();
+        if (\count($indexes) > $indexLimit) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw new Exception($this->getLimitException(), "Cannot create more than $indexLimit indexes for a collection");
+        }
+
         $collectionIndexes = [];
         $indexDocuments = [];
         try {
             foreach ($indexes as $indexDef) {
-                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes);
+                $idxDoc = $this->buildIndexDocument($database, $collection, $indexDef, $collectionAttributes, $dbForProject);
                 $collectionIndexes[] = $idxDoc['collection'];
                 $indexDocuments[] = $idxDoc['document'];
             }
@@ -260,6 +267,12 @@ class Create extends Action
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
         }
 
+        if (\in_array($type, Database::SPATIAL_TYPES)) {
+            if (!$dbForProject->getAdapter()->getSupportForSpatialIndex()) {
+                throw new Exception($this->getFormatUnsupportedException(), "Spatial attributes are not supported by the current database");
+            }
+        }
+
         if ($type === Database::VAR_RELATIONSHIP) {
             $options['side'] = Database::RELATION_SIDE_PARENT;
             $relatedCollection = $dbForProject->getDocument('database_' . $database->getSequence(), $options['relatedCollection'] ?? '');
@@ -315,7 +328,7 @@ class Create extends Action
      *
      * @return array{collection: Document, document: Document}
      */
-    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments): array
+    protected function buildIndexDocument(Document $database, Document $collection, array $indexDef, array $attributeDocuments, Database $dbForProject): array
     {
         $key = $indexDef['key'];
         $type = $indexDef['type'];
@@ -379,6 +392,24 @@ class Create extends Action
             'lengths' => $lengths,
             'orders' => $orders,
         ]);
+
+        $indexValidator = new IndexValidator(
+            $attributeDocuments,
+            [],
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
+            $dbForProject->getAdapter()->getSupportForIndexArray(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForProject->getAdapter()->getSupportForVectors(),
+            $dbForProject->getAdapter()->getSupportForAttributes(),
+            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
+        );
+
+        if (!$indexValidator->isValid($collectionDoc)) {
+            throw new Exception($this->getInvalidIndexException(), $indexValidator->getDescription());
+        }
 
         return [
             'collection' => $collectionDoc,
