@@ -115,36 +115,7 @@ abstract class ScheduleBase extends Action
 
     private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate, callable $isResourceBlocked): void
     {
-        // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
-
-        /**
-         * Extract only necessary attributes to lower memory used.
-         *
-         * @return  array
-         * @throws Exception
-         * @var Document $schedule
-         */
-        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
-            $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
-
-            $resource = $getProjectDB($project)->getDocument(
-                static::getCollectionId(),
-                $schedule->getAttribute('resourceId')
-            );
-
-            return [
-                '$sequence' => $schedule->getSequence(),
-                '$id' => $schedule->getId(),
-                'resourceId' => $schedule->getAttribute('resourceId'),
-                'schedule' => $schedule->getAttribute('schedule'),
-                'active' => $schedule->getAttribute('active'),
-                'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-                'project' => $project, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
-                'resource' => $resource, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
-            ];
-        };
-
         $loadStart = microtime(true);
         $time = DateTime::now();
 
@@ -152,6 +123,9 @@ abstract class ScheduleBase extends Action
         $sum = $limit;
         $total = 0;
         $latestDocument = null;
+        $collectionId = static::getCollectionId();
+
+        $schedulesToProcess = [];
 
         while ($sum === $limit) {
             $paginationQueries = [Query::limit($limit)];
@@ -160,8 +134,6 @@ abstract class ScheduleBase extends Action
                 $paginationQueries[] = Query::cursorAfter($latestDocument);
             }
 
-            // Temporarly accepting both 'fra' and 'default'
-            // When all migrated, only use _APP_REGION with 'default' as default value
             $regions = [System::getEnv('_APP_REGION', 'default')];
             if (!in_array('default', $regions)) {
                 $regions[] = 'default';
@@ -179,7 +151,6 @@ abstract class ScheduleBase extends Action
                 $paginationQueries[] = Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate);
             }
 
-            $collectionId = static::getCollectionId();
             $schedules = $dbForPlatform->find('schedules', $paginationQueries);
             $sum = count($schedules);
             $total += $sum;
@@ -189,30 +160,81 @@ abstract class ScheduleBase extends Action
                 $updated = strtotime($existing['resourceUpdatedAt'] ?? '0') !== strtotime($schedule['resourceUpdatedAt'] ?? '0');
 
                 if ($existing === null || $updated) {
-                    try {
-                        $candidate = $getSchedule($schedule);
-                    } catch (\Throwable $th) {
-                        Console::error("Failed to load schedule for project {$schedule['projectId']} {$collectionId} {$schedule['resourceId']}");
-                        Console::error($th->getMessage());
-                        continue;
-                    }
-
-                    if (!$candidate['active']) {
+                    // Early filtering: skip if not active (only for updates, initial load already filters)
+                    if (!$initialLoad && !$schedule->getAttribute('active', true)) {
                         unset($this->schedules[$schedule->getSequence()]);
                         continue;
                     }
 
-                    if ($isResourceBlocked($candidate['project'], $collectionId, $candidate['resourceId'])) {
-                        unset($this->schedules[$schedule->getSequence()]);
-                        continue;
-                    }
-
-                    Console::info("Updating: {$schedule['resourceType']}::{$schedule['resourceId']}");
-                    $this->schedules[$schedule->getSequence()] = $candidate;
+                    $schedulesToProcess[] = $schedule;
                 }
             }
 
             $latestDocument = \end($schedules);
+        }
+
+        if (empty($schedulesToProcess)) {
+            $lastSyncUpdate = $time;
+            $duration = microtime(true) - $loadStart;
+            $this->collectSchedulesTelemetryDuration->record($duration, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
+            $this->collectSchedulesTelemetryCount->record($total, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
+            Console::success("{$total} resources were loaded in " . $duration . " seconds");
+            return;
+        }
+
+        // Cache projects to avoid fetching the same project multiple times
+        $projectsCache = [];
+
+        foreach ($schedulesToProcess as $schedule) {
+            $projectId = $schedule->getAttribute('projectId');
+            
+            // Fetch project if not already cached
+            if (!isset($projectsCache[$projectId])) {
+                try {
+                    $projectsCache[$projectId] = $dbForPlatform->getDocument('projects', $projectId);
+                } catch (\Throwable $th) {
+                    Console::error("Failed to load project {$projectId}: " . $th->getMessage());
+                    continue;
+                }
+            }
+
+            $project = $projectsCache[$projectId];
+            if ($project === null) {
+                continue;
+            }
+
+            try {
+                $dbForProject = $getProjectDB($project);
+                $resourceId = $schedule->getAttribute('resourceId');
+                $resource = $dbForProject->getDocument($collectionId, $resourceId);
+
+                $candidate = [
+                    '$sequence' => $schedule->getSequence(),
+                    '$id' => $schedule->getId(),
+                    'resourceId' => $resourceId,
+                    'schedule' => $schedule->getAttribute('schedule'),
+                    'active' => $schedule->getAttribute('active'),
+                    'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                    'project' => $project,
+                    'resource' => $resource,
+                ];
+
+                // Early filtering checks
+                if (!$candidate['active']) {
+                    unset($this->schedules[$schedule->getSequence()]);
+                    continue;
+                }
+
+                if ($isResourceBlocked($candidate['project'], $collectionId, $candidate['resourceId'])) {
+                    unset($this->schedules[$schedule->getSequence()]);
+                    continue;
+                }
+
+                Console::info("loading: project:: " . $candidate['project']->getId() . " " . static::getSupportedResource() . "::{$candidate['resourceId']}");
+                $this->schedules[$schedule->getSequence()] = $candidate;
+            } catch (\Throwable $th) {
+                Console::error("Failed to load schedule for project {$project->getId()} {$collectionId} {$schedule->getAttribute('resourceId')}: " . $th->getMessage());
+            }
         }
 
         $lastSyncUpdate = $time;
