@@ -475,6 +475,9 @@ class Event
         $patterns = [];
 
         $parsed = self::parseEventPattern($pattern);
+        // to switch the resource types from databases to the required prefix
+        // eg; all databases events get fired with databases. prefix which mainly depicts legacy type
+        // so a projection from databases to the actual prefix(documentsdb, vectordb,etc)
         if ((str_contains($pattern, 'databases.') && $database && $database->getAttribute('type') !== 'legacy')) {
             $parsed = self::getDatabaseTypeEvents($database, $parsed);
         }

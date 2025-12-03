@@ -257,6 +257,7 @@ const METRIC_DATABASES_STORAGE = 'databases.storage';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
 const METRIC_DATABASE_ID_STORAGE = '{databaseInternalId}.databases.storage';
 const METRIC_DOCUMENTS = 'documents';
+const METRIC_DOCUMENTS_DOCUMENTSDB = 'documentsdb.documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
@@ -365,9 +366,9 @@ const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 
 // Database types
-const DATABASE_LEGACY_TYPE = 'legacy';
-const DATABASE_TABLESDB_TYPE = 'tablesdb';
-const DATABASE_DOCUMENTSDB_TYPE = 'documentsdb';
+const DATABASE_TYPE_LEGACY = 'legacy';
+const DATABASE_TYPE_TABLESDB = 'tablesdb';
+const DATABASE_TYPE_DOCUMENTSDB = 'documentsdb';
 
 // CSV import/export allowed database types
-const CSV_ALLOWED_DATABASE_TYPES = [DATABASE_LEGACY_TYPE, DATABASE_LEGACY_TYPE];
+const CSV_ALLOWED_DATABASE_TYPES = [DATABASE_TYPE_LEGACY, DATABASE_TYPE_LEGACY];

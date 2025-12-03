@@ -483,13 +483,14 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache) {
 App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, StatsUsage $queueForStatsUsage) {
 
     return function (Document $database) use ($pools, $cache, $project, $request, $queueForStatsUsage): Database {
-        $databaseType = $database->getAttribute('database', '');
+        $databaseDSN = $database->getAttribute('database', '');
+        $databaseType = $database->getAttribute('type', '');
         try {
-            $databaseDSN = new DSN($databaseType);
+            $databaseDSN = new DSN($databaseDSN);
         } catch (\InvalidArgumentException) {
             // for old databases migrated through patch script
-            // databaseType determines the adapter
-            $databaseDSN = new DSN('mysql://'.$databaseType);
+            // databaseDSN determines the adapter
+            $databaseDSN = new DSN('mysql://'.$databaseDSN);
         }
         try {
             $dsn = new DSN($project->getAttribute('database'));
@@ -527,8 +528,12 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
         }
 
         // Register database event listeners for usage stats collection
+        $documentsMetric = METRIC_DOCUMENTS;
+        if ($databaseType !== DATABASE_TYPE_LEGACY || $databaseType !== DATABASE_TYPE_TABLESDB) {
+            $documentsMetric = $documentsMetric . '_' . $databaseType;
+        }
         $database
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage, $documentsMetric) {
                 $value = 1;
 
                 if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
@@ -536,12 +541,12 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
                     $databaseInternalId   = $parts[1] ?? 0;
                     $collectionInternalId = $parts[3] ?? 0;
                     $queueForStatsUsage
-                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric($documentsMetric, $value)  // per project
                         ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
                         ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
                 }
             })
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage, $documentsMetric) {
                 $value = -1;
 
                 if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
@@ -549,12 +554,12 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
                     $databaseInternalId   = $parts[1] ?? 0;
                     $collectionInternalId = $parts[3] ?? 0;
                     $queueForStatsUsage
-                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric($documentsMetric, $value)  // per project
                         ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
                         ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
                 }
             })
-            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage, $documentsMetric) {
                 $value = $document->getAttribute('modified', 0);
 
                 if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
@@ -562,12 +567,12 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
                     $databaseInternalId   = $parts[1] ?? 0;
                     $collectionInternalId = $parts[3] ?? 0;
                     $queueForStatsUsage
-                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric($documentsMetric, $value)  // per project
                         ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
                         ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
                 }
             })
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage, $documentsMetric) {
                 $value = -1 * $document->getAttribute('modified', 0);
 
                 if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
@@ -575,12 +580,12 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
                     $databaseInternalId   = $parts[1] ?? 0;
                     $collectionInternalId = $parts[3] ?? 0;
                     $queueForStatsUsage
-                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric($documentsMetric, $value)  // per project
                         ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
                         ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
                 }
             })
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage) {
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', function ($event, $document) use ($queueForStatsUsage, $documentsMetric) {
                 $value = $document->getAttribute('created', 0);
 
                 if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
@@ -588,7 +593,7 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
                     $databaseInternalId   = $parts[1] ?? 0;
                     $collectionInternalId = $parts[3] ?? 0;
                     $queueForStatsUsage
-                        ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                        ->addMetric($documentsMetric, $value)  // per project
                         ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
                         ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
                 }

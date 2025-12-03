@@ -18,7 +18,13 @@ class UsageProject extends Model
             ])
             ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated  number of documents.',
+                'description' => 'Total aggregated  number of documents in legacy/tablesdb.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsdbDocumentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated  number of documents in documentsdb.',
                 'default' => 0,
                 'example' => 0,
             ])

@@ -75,7 +75,6 @@ class XList extends Action
             ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
-            ->inject('transactionState')
             ->callback($this->action(...));
     }
 

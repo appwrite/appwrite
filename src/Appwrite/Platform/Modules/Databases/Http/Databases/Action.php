@@ -10,7 +10,7 @@ use Utopia\Database\Operator;
 
 class Action extends AppwriteAction
 {
-    private string $context = 'legacy';
+    private string $context = DATABASE_TYPE_LEGACY;
 
     public function getDatabaseType(): string
     {
@@ -20,10 +20,10 @@ class Action extends AppwriteAction
     public function setHttpPath(string $path): AppwriteAction
     {
         if (\str_contains($path, '/tablesdb')) {
-            $this->context = 'tablesdb';
+            $this->context = DATABASE_TYPE_TABLESDB;
         }
         if (\str_contains($path, '/documentsdb')) {
-            $this->context = 'documentsdb';
+            $this->context = DATABASE_TYPE_DOCUMENTSDB;
         }
         return parent::setHttpPath($path);
     }

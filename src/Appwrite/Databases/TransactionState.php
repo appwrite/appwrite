@@ -52,9 +52,9 @@ class TransactionState
         ?string $transactionId = null,
         array $queries = []
     ): Document {
-        $databasesDB = ($this->getDatabasesDB)($database);
+        $dbForDatabases = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return $databasesDB->getDocument($collectionId, $documentId, $queries);
+            return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
         }
 
         $state = $this->getTransactionState($transactionId);
@@ -72,7 +72,7 @@ class TransactionState
 
             if ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
                 // Merge with committed version
-                $committedDoc = $databasesDB->getDocument($collectionId, $documentId, $queries);
+                $committedDoc = $dbForDatabases->getDocument($collectionId, $documentId, $queries);
                 if (!$committedDoc->isEmpty()) {
                     foreach ($docState['document']->getAttributes() as $key => $value) {
                         if ($key !== '$id') {
@@ -86,7 +86,7 @@ class TransactionState
                 }
             }
         }
-        return $databasesDB->getDocument($collectionId, $documentId, $queries);
+        return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
     }
 
     /**
@@ -107,14 +107,14 @@ class TransactionState
         ?string $transactionId = null,
         array $queries = []
     ): array {
-        $databasesDB = ($this->getDatabasesDB)($database);
+        $dbForDatabases = ($this->getDatabasesDB)($database);
         // If no transaction, use normal database retrieval
         if ($transactionId === null) {
-            return $databasesDB->find($collectionId, $queries);
+            return $dbForDatabases->find($collectionId, $queries);
         }
 
         $state = $this->getTransactionState($transactionId);
-        $committedDocs = $databasesDB->find($collectionId, $queries);
+        $committedDocs = $dbForDatabases->find($collectionId, $queries);
         $documentMap = [];
 
         // Build map of committed documents
@@ -170,18 +170,18 @@ class TransactionState
         ?string $transactionId = null,
         array $queries = []
     ): int {
-        $databasesDB = ($this->getDatabasesDB)($database);
+        $dbForDatabases = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return $databasesDB->count($collectionId, $queries, APP_LIMIT_COUNT);
+            return $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
         $state = $this->getTransactionState($transactionId);
-        $baseCount = $databasesDB->count($collectionId, $queries, APP_LIMIT_COUNT);
+        $baseCount = $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
 
         if (!isset($state[$collectionId])) {
             return $baseCount;
         }
-        $committedDocs = $databasesDB->find($collectionId, $queries);
+        $committedDocs = $dbForDatabases->find($collectionId, $queries);
         $committedDocIds = [];
         foreach ($committedDocs as $doc) {
             $committedDocIds[$doc->getId()] = true;

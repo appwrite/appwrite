@@ -92,8 +92,6 @@ class Upsert extends Action
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
-            ->inject('transactionState')
-            ->inject('plan')
             ->callback($this->action(...));
     }
 
