@@ -362,7 +362,7 @@ return [
     ],
     [
         'name' => '_APP_DB_ADAPTER',
-        'description' => 'To switch between mariadb and mongoDB',
+        'description' => 'Which database engine to use. Possible options are "mariadb" or "mongodb"',
         'introduction' => '1.8.0',
         'default' => 'mongoDB',
         'required' => true,
