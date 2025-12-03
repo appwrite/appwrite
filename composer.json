@@ -55,6 +55,7 @@
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "1.*.*",
         "utopia-php/database": "3.*",
+        "utopia-php/agents": "0.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "0.9.*",
         "utopia-php/emails": "0.6.*",

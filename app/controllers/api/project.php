@@ -71,6 +71,10 @@ App::get('/v1/project/usage')
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_FILES_IMAGES_TRANSFORMED,
+                METRIC_EMBEDDINGS_TEXT,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
@@ -84,6 +88,10 @@ App::get('/v1/project/usage')
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_FILES_IMAGES_TRANSFORMED,
+                METRIC_EMBEDDINGS_TEXT,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
             ]
         ];
 
@@ -379,6 +387,10 @@ App::get('/v1/project/usage')
             'authPhoneCountryBreakdown' => $authPhoneCountryBreakdown,
             'imageTransformations' => $usage[METRIC_FILES_IMAGES_TRANSFORMED],
             'imageTransformationsTotal' => $total[METRIC_FILES_IMAGES_TRANSFORMED],
+            'embeddingsText' => $usage[METRIC_EMBEDDINGS_TEXT] ?? [],
+            'embeddingsTextTokens' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS] ?? [],
+            'embeddingsTextDuration' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION] ?? [],
+            'embeddingsTextErrors' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR] ?? [],
         ]), Response::MODEL_USAGE_PROJECT);
     });
 

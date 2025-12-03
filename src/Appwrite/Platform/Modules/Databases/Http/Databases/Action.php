@@ -25,6 +25,9 @@ class Action extends AppwriteAction
         if (\str_contains($path, '/documentsdb')) {
             $this->context = 'documentsdb';
         }
+        if (\str_contains($path, '/vectordb')) {
+            $this->context = 'vectordb';
+        }
         return parent::setHttpPath($path);
     }
 

@@ -337,6 +337,10 @@ const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+const METRIC_EMBEDDINGS_TEXT = 'embeddings.text.{embeddingModel}';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR = 'embeddings.text.{embeddingModel}.totalErrors';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -349,6 +353,7 @@ const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
+const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
@@ -368,6 +373,7 @@ const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 const DATABASE_LEGACY_TYPE = 'legacy';
 const DATABASE_TABLESDB_TYPE = 'tablesdb';
 const DATABASE_DOCUMENTSDB_TYPE = 'documentsdb';
+const DATABASE_VECTORDB_TYPE = 'vectordb';
 
 // CSV import/export allowed database types
-const CSV_ALLOWED_DATABASE_TYPES = [DATABASE_LEGACY_TYPE, DATABASE_LEGACY_TYPE];
+const CSV_ALLOWED_DATABASE_TYPES = [DATABASE_LEGACY_TYPE, DATABASE_LEGACY_TYPE, DATABASE_VECTORDB_TYPE];
