@@ -61,6 +61,7 @@ class Delete extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -70,7 +71,8 @@ class Delete extends Base
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Authorization $authorization
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -108,7 +110,7 @@ class Delete extends Base
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('active', false);
 
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
         }
 

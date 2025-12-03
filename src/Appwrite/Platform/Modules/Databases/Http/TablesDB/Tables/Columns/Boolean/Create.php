@@ -60,6 +60,7 @@ class Create extends BooleanCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

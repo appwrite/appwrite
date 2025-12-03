@@ -292,7 +292,7 @@ abstract class Action extends UtopiaAction
         };
     }
 
-    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
+    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');
         $type = $attribute->getAttribute('type', '');
@@ -310,7 +310,7 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getSpatialTypeNotSupportedException());
         }
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -371,7 +371,7 @@ abstract class Action extends UtopiaAction
                 \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
                 $attribute->getAttribute('required')
             ) {
-                $hasData = !Authorization::skip(fn () => $dbForProject
+                $hasData = !$authorization->skip(fn () => $dbForProject
                     ->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence()))
                     ->isEmpty();
 
@@ -472,9 +472,9 @@ abstract class Action extends UtopiaAction
         return $attribute;
     }
 
-    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, string $type, int $size = null, string $filter = null, string|bool|int|float|array $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, int $size = null, string $filter = null, string|bool|int|float|array $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
     {
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);

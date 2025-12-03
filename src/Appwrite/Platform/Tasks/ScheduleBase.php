@@ -9,7 +9,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
@@ -62,7 +61,7 @@ abstract class ScheduleBase extends Action
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+                $dbForPlatform->updateDocument('projects', $project->getId(), $project);
             }
         }
     }

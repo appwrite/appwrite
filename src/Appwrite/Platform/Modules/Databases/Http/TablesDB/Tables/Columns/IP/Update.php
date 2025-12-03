@@ -62,6 +62,7 @@ class Update extends IPUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

@@ -61,6 +61,7 @@ class Create extends LineCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }
