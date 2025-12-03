@@ -616,7 +616,7 @@ class Swagger2 extends Format
                                 $node['items']['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                             }
                             if ($validator->getType() === 'integer') {
-                                $node['items']['format'] = 'int32';
+                                $node['schema']['format'] = 'int32';
                             }
                         } else {
                             $node['type'] = $validator->getType();
