@@ -40,6 +40,12 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('documentsdbTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of documentsdb.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('databasesStorageTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated sum of databases storage size (in bytes).',

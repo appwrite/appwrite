@@ -110,7 +110,7 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
     }
 };
 
-$usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
+$usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage, string $databaseType) {
     $value = 1;
 
     switch ($event) {
@@ -142,7 +142,8 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
             break;
         case $document->getCollection() === 'databases': // databases
-            $queueForStatsUsage->addMetric(METRIC_DATABASES, $value); // per project
+            $metric = implode('.', array_filter([METRIC_DATABASES, $databaseType]));
+            $queueForStatsUsage->addMetric($metric, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $queueForStatsUsage->addReduce($document);
@@ -151,14 +152,17 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
         case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
             $parts = explode('_', $document->getCollection());
             $databaseInternalId = $parts[1] ?? 0;
+            $metric = implode('.', array_filter([METRIC_COLLECTIONS, $databaseType]));
             $queueForStatsUsage
-                ->addMetric(METRIC_COLLECTIONS, $value) // per project
+                ->addMetric($metric, $value) // per project
                 ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value);
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $queueForStatsUsage->addReduce($document);
             }
             break;
+            // for databases route documents are getting created via getDatabasesDB and stats are maintained in the resources
+            // but keeping it since other routes might created documents still directly via dbForProject
         case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
             $parts = explode('_', $document->getCollection());
             $databaseInternalId   = $parts[1] ?? 0;
@@ -506,6 +510,11 @@ App::init()
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
+        $path = $route->getMatchedPath();
+        $databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            default => '',
+        };
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
@@ -622,11 +631,11 @@ App::init()
         $queueForRealtime = new Realtime();
 
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
                 $project,
                 $document,
