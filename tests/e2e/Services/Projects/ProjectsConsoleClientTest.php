@@ -561,9 +561,13 @@ class ProjectsConsoleClientTest extends Scope
      * @group smtpAndTemplates
      * @depends testCreateProject
      */
-    public function testUpdateProjectSMTP($data): array
+   public function testUpdateProjectSMTP($data): array
     {
         $id = $data['projectId'];
+        
+        /**
+         * Test for SUCCESS: Valid Credentials
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -602,6 +606,41 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('user', $response['body']['smtpUsername']);
         $this->assertEquals('password', $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
+        
+        
+        // ---------------------------------------------------------------------
+        // FIX: Test for FAILURE - Missing or Invalid Credentials
+        // ---------------------------------------------------------------------
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+            'senderEmail' => 'fail@appwrite.io',
+            'senderName' => 'Failing Mailer',
+            'host' => 'maildev',    // Valid host/port
+            'port' => 1025,         // Valid host/port
+            'username' => 'invalid-user', // Invalid credential (or empty string)
+            'password' => 'bad-password', // Invalid credential (or empty string)
+        ]);
+        
+        // Expect failure (400) and the specific validation exception
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::PROJECT_SMTP_CONFIG_INVALID, $response['body']['type']);
+        $this->assertStringContainsStringIgnoringCase('SMTP authentication failed.', $response['body']['message']);
+
+        // Test to ensure the project settings were NOT saved after failure
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        // Assert that the successful previous settings are still active
+        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSenderEmail']);
+        
+        // ---------------------------------------------------------------------
 
         return $data;
     }
