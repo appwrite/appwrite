@@ -29,6 +29,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {

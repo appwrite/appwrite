@@ -7119,7 +7119,7 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        $this->assertEquals(400, $collection['headers']['status-code'], 'Got ' . $collection['headers']['status-code'] . ': ' . json_encode($collection['body']));
+        $this->assertEquals(400, $collection['headers']['status-code']);
         $this->assertStringContainsString('Invalid type', $collection['body']['message']);
 
         // Cleanup
