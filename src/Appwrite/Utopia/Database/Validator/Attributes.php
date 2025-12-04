@@ -6,8 +6,11 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Validator;
+use Utopia\Validator\Email;
+use Utopia\Validator\IP;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 
 class Attributes extends Validator
 {
@@ -23,7 +26,6 @@ class Attributes extends Validator
         Database::VAR_FLOAT,
         Database::VAR_BOOLEAN,
         Database::VAR_DATETIME,
-        Database::VAR_RELATIONSHIP,
         Database::VAR_POINT,
         Database::VAR_LINESTRING,
         Database::VAR_POLYGON,
@@ -42,9 +44,12 @@ class Attributes extends Validator
 
     /**
      * @param int $maxAttributes Maximum number of attributes allowed
+     * @param bool $supportForSpatialAttributes Whether DB supports spatial attributes
      */
-    public function __construct(int $maxAttributes = APP_LIMIT_ARRAY_PARAMS_SIZE)
-    {
+    public function __construct(
+        int $maxAttributes = APP_LIMIT_ARRAY_PARAMS_SIZE,
+        protected bool $supportForSpatialAttributes = true,
+    ) {
         $this->maxAttributes = $maxAttributes;
     }
 
@@ -113,14 +118,20 @@ class Attributes extends Validator
 
             // Check for reserved keys
             $reservedKeys = ['$id', '$createdAt', '$updatedAt', '$permissions', '$collection'];
-            if (in_array($attribute['key'], $reservedKeys)) {
+            if (\in_array($attribute['key'], $reservedKeys)) {
                 $this->message = "Attribute key '" . $attribute['key'] . "' is reserved and cannot be used";
                 return false;
             }
 
             // Validate type
-            if (!in_array($attribute['type'], $this->supportedTypes)) {
+            if (!\in_array($attribute['type'], $this->supportedTypes)) {
                 $this->message = "Invalid type for attribute '" . $attribute['key'] . "': " . $attribute['type'];
+                return false;
+            }
+
+            // Validate spatial type support
+            if (\in_array($attribute['type'], Database::SPATIAL_TYPES) && !$this->supportForSpatialAttributes) {
+                $this->message = "Spatial attributes are not supported by the current database";
                 return false;
             }
 
@@ -213,6 +224,28 @@ class Attributes extends Validator
                                 return false;
                             }
                         }
+
+                        // Validate format-specific defaults
+                        $format = $attribute['format'] ?? '';
+                        if ($format === APP_DATABASE_ATTRIBUTE_EMAIL) {
+                            $emailValidator = new Email();
+                            if (!$emailValidator->isValid($attribute['default'])) {
+                                $this->message = "Default value for email attribute '" . $attribute['key'] . "' must be a valid email address";
+                                return false;
+                            }
+                        } elseif ($format === APP_DATABASE_ATTRIBUTE_IP) {
+                            $ipValidator = new IP();
+                            if (!$ipValidator->isValid($attribute['default'])) {
+                                $this->message = "Default value for IP attribute '" . $attribute['key'] . "' must be a valid IP address";
+                                return false;
+                            }
+                        } elseif ($format === APP_DATABASE_ATTRIBUTE_URL) {
+                            $urlValidator = new URL();
+                            if (!$urlValidator->isValid($attribute['default'])) {
+                                $this->message = "Default value for URL attribute '" . $attribute['key'] . "' must be a valid URL";
+                                return false;
+                            }
+                        }
                         break;
 
                     case Database::VAR_INTEGER:
@@ -296,55 +329,6 @@ class Attributes extends Validator
                         $this->message = "Default value for enum attribute '" . $attribute['key'] . "' must be one of the provided elements";
                         return false;
                     }
-                }
-            }
-
-            // Validate relationship options
-            if ($attribute['type'] === Database::VAR_RELATIONSHIP) {
-                // Validate array cannot be true for relationship
-                if (isset($attribute['array']) && $attribute['array'] === true) {
-                    $this->message = "Relationship attribute '" . $attribute['key'] . "' cannot be an array type";
-                    return false;
-                }
-
-                // Validate required fields for relationship
-                if (empty($attribute['relatedCollection'])) {
-                    $this->message = "Relationship attribute '" . $attribute['key'] . "' must have 'relatedCollection'";
-                    return false;
-                }
-
-                if (!isset($attribute['relationType']) || !in_array($attribute['relationType'], [
-                    Database::RELATION_ONE_TO_ONE,
-                    Database::RELATION_ONE_TO_MANY,
-                    Database::RELATION_MANY_TO_ONE,
-                    Database::RELATION_MANY_TO_MANY,
-                ])) {
-                    $this->message = "Relationship attribute '" . $attribute['key'] . "' must have valid 'relationType'";
-                    return false;
-                }
-
-                // Validate twoWay if provided
-                if (isset($attribute['twoWay']) && !is_bool($attribute['twoWay'])) {
-                    $this->message = "Invalid 'twoWay' value for relationship attribute '" . $attribute['key'] . "': must be a boolean";
-                    return false;
-                }
-
-                // Validate twoWayKey if provided
-                if (!empty($attribute['twoWayKey'])) {
-                    if (!$keyValidator->isValid($attribute['twoWayKey'])) {
-                        $this->message = "Invalid 'twoWayKey' for relationship attribute '" . $attribute['key'] . "': " . $keyValidator->getDescription();
-                        return false;
-                    }
-                }
-
-                // Validate onDelete if provided
-                if (isset($attribute['onDelete']) && !in_array($attribute['onDelete'], [
-                    Database::RELATION_MUTATE_CASCADE,
-                    Database::RELATION_MUTATE_RESTRICT,
-                    Database::RELATION_MUTATE_SET_NULL,
-                ])) {
-                    $this->message = "Invalid 'onDelete' value for relationship attribute '" . $attribute['key'] . "': must be 'cascade', 'restrict', or 'setNull'";
-                    return false;
                 }
             }
         }

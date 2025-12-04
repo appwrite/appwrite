@@ -7101,6 +7101,27 @@ class DatabasesCustomServerTest extends Scope
         // Should succeed - system attributes can be indexed
         $this->assertEquals(201, $collection['headers']['status-code']);
 
+        // Test: Relationship attributes not supported inline (rejected as invalid type)
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Relationship Test',
+            'attributes' => [
+                [
+                    'key' => 'related',
+                    'type' => 'relationship',
+                    'relatedCollection' => 'some_collection',
+                    'relationType' => 'oneToOne',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code'], 'Got ' . $collection['headers']['status-code'] . ': ' . json_encode($collection['body']));
+        $this->assertStringContainsString('Invalid type', $collection['body']['message']);
+
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
             'content-type' => 'application/json',
