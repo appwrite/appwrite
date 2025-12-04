@@ -96,8 +96,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
-        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-
+        $oAuthProviders = Config::getParam('oAuthProviders');
+        $className = $oAuthProviders[$provider]['class'];
         if (!\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
