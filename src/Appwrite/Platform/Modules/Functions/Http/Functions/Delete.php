@@ -61,7 +61,7 @@ class Delete extends Base
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

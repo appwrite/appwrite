@@ -19,5 +19,6 @@ mutation {
         _updatedAt
         size
         default
+        encrypt
     }
 }

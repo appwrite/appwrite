@@ -1470,9 +1470,24 @@ class DatabasesCustomServerTest extends Scope
         $this->assertCount(64, $collection['body']['attributes']);
         $this->assertCount(0, $collection['body']['indexes']);
 
-        foreach ($collection['body']['attributes'] as $attribute) {
-            $this->assertEquals('available', $attribute['status'], 'attribute: ' . $attribute['key']);
-        }
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+
+            foreach ($collection['body']['attributes'] ?? [] as $attribute) {
+                $this->assertEquals(
+                    'available',
+                    $attribute['status'],
+                    'attribute: ' . $attribute['key']
+                );
+            }
+
+            return true;
+        }, 60000, 500);
+
 
         // Test indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 6 indexes per new collection

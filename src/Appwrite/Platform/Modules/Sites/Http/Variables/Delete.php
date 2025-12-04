@@ -54,7 +54,7 @@ class Delete extends Base
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $variableId, Response $response, Database $dbForProject)

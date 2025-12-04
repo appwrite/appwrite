@@ -11,6 +11,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -50,7 +51,6 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\Host;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -466,7 +466,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
         return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
     }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
-    ->param('url', '', fn ($clients, $devKey) => $devKey->isEmpty() ? new Host($clients) : new URL(), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients', 'devKey']) // TODO add our own built-in confirm page
+    ->param('url', '', fn ($platforms, $devKey) => $devKey->isEmpty() ? new Redirect($platforms) : new URL(), 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['platforms', 'devKey']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -657,6 +657,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
                 $body = $locale->getText("emails.invitation.body");
+                $preview = $locale->getText("emails.invitation.preview");
                 $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
@@ -666,6 +667,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                    ->setParam('{{buttonText}}', $locale->getText("emails.invitation.buttonText"))
                     ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
                 $body = $message->render();
 
@@ -728,6 +730,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $queueForMails
                     ->setSubject($subject)
                     ->setBody($body)
+                    ->setPreview($preview)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name', ''))
                     ->setVariables($emailVariables)

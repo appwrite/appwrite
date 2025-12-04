@@ -24,6 +24,7 @@ abstract class Format
     protected array $services;
     protected array $keys;
     protected int $authCount;
+    protected string $platform;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -50,7 +51,7 @@ abstract class Format
         ]
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
         $this->app = $app;
         $this->services = $services;
@@ -58,6 +59,7 @@ abstract class Format
         $this->models = $models;
         $this->keys = $keys;
         $this->authCount = $authCount;
+        $this->platform = $platform;
     }
 
     /**

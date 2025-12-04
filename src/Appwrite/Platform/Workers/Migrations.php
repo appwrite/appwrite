@@ -69,7 +69,7 @@ class Migrations extends Action
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForImports')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -314,6 +314,7 @@ class Migrations extends Action
                     $migration->getAttribute('resourceType')
                 );
             }
+
             $destination->shutDown();
             $source->shutDown();
 

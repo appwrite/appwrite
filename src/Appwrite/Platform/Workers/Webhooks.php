@@ -38,7 +38,7 @@ class Webhooks extends Action
             ->inject('queueForStatsUsage')
             ->inject('log')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -241,6 +241,7 @@ class Webhooks extends Action
 
         // TODO: Use setbodyTemplate once #7307 is merged
         $subject = 'Webhook deliveries have been paused';
+        $preview = 'Webhook deliveries to your endpoint have been paused.';
         $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
         $body
@@ -250,6 +251,7 @@ class Webhooks extends Action
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body->render());
 
         foreach ($users as $user) {

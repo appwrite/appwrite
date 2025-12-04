@@ -49,7 +49,7 @@ class StatsResources extends Action
             ->inject('getLogsDB')
             ->inject('dbForPlatform')
             ->inject('logError')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**

@@ -119,7 +119,7 @@ class StatsUsage extends Action
             ->inject('getProjectDB')
             ->inject('getLogsDB')
             ->inject('register')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
 
         $this->lastTriggeredTime = time();
     }

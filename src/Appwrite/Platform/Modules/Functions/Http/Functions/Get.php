@@ -49,7 +49,7 @@ class Get extends Base
             ->param('functionId', '', new UID(), 'Function ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

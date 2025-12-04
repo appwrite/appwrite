@@ -45,7 +45,7 @@ class Audits extends Action
             ->inject('message')
             ->inject('getProjectDB')
             ->inject('project')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
 
         $this->lastTriggeredTime = time();
     }

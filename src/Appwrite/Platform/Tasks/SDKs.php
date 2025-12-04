@@ -46,7 +46,7 @@ class SDKs extends Action
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
             ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message): void
@@ -98,7 +98,7 @@ class SDKs extends Action
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
                 $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
-                $changelog = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
+                $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
                 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';
@@ -272,6 +272,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
                 }
 
+                $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
@@ -279,8 +280,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git init && \
                         git remote add origin ' . $gitUrl . ' && \
                         git fetch origin && \
-                        git checkout main || git checkout -b main && \
-                        git pull origin main && \
+                        git checkout ' . $repoBranch . ' || git checkout -b ' . $repoBranch . ' && \
+                        git pull origin ' . $repoBranch . ' && \
                         git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
                         git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \

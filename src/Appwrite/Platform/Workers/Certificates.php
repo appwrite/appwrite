@@ -337,6 +337,19 @@ class Certificates extends Action
 
                 throw new Exception('Failed to verify domain DNS records.');
             }
+
+            // Ensure CAA won't block certificate issuance
+            if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
+                $validationStart = \microtime(true);
+                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+                if (!$validator->isValid($domain->get())) {
+                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
+                    $log->addTag('dnsDomain', $domain->get());
+                    $error = $validator->getDescription();
+                    $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+                    throw new Exception('Failed to verify domain DNS records. CAA records do not allow Appwrite\'s certificate issuer.');
+                }
+            }
         } else {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
@@ -360,6 +373,7 @@ class Certificates extends Action
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
 
         // Send mail to administrator mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
@@ -382,12 +396,14 @@ class Certificates extends Action
         ];
 
         $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
+        $preview = \sprintf($locale->getText("emails.certificate.preview"), $domain);
 
         $queueForMails
             ->setSubject($subject)
+            ->setPreview($preview)
             ->setBody($body)
             ->setName('Appwrite Administrator')
-            ->setbodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
+            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
             ->setVariables($emailVariables)
             ->setRecipient(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')))
             ->trigger();

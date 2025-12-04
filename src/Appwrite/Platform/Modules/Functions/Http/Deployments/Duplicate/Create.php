@@ -62,7 +62,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForFunctions')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

@@ -5,7 +5,7 @@
  */
 
 use Appwrite\Auth\Auth;
-use Appwrite\Network\Validator\Origin;
+use Appwrite\Network\Platform;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
@@ -23,7 +23,7 @@ $console = [
         [
             '$collection' => ID::custom('platforms'),
             'name' => 'Localhost',
-            'type' => Origin::CLIENT_TYPE_WEB,
+            'type' => Platform::TYPE_WEB,
             'hostname' => 'localhost',
         ], // Current host is added on app init
     ],

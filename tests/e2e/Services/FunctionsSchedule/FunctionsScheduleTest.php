@@ -25,8 +25,8 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -36,8 +36,7 @@ class FunctionsScheduleTest extends Scope
         ]);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -77,14 +76,13 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
             'logging' => true,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -179,15 +177,14 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
             'logging' => true,
         ]);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
