@@ -24,7 +24,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Permissions;
-use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
@@ -252,19 +251,6 @@ class Create extends Action
             ];
         }
 
-        if (!empty($format)) {
-            if (!Structure::hasFormat($format, $type)) {
-                throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type attributes.");
-            }
-        }
-
-        if ($required && isset($default) && $default !== null) {
-            throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for required ' . $this->getContext());
-        }
-
-        if ($array && isset($default) && $default !== null) {
-            throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
-        }
 
         if (\in_array($type, Database::SPATIAL_TYPES)) {
             if (!$dbForProject->getAdapter()->getSupportForSpatialIndex()) {
@@ -419,16 +405,20 @@ class Create extends Action
     /**
      * Cleanup on failure: delete the collection document and the underlying DB collection
      */
-    protected function cleanup(Database $dbForProject, string $databaseKey, string $collectionKey, string $collectionId): void
-    {
+    protected function cleanup(
+        Database $dbForProject,
+        string $databaseId,
+        string $collectionId,
+        string $collectionDocumentId
+    ): void {
         try {
-            $dbForProject->deleteCollection($collectionKey);
+            $dbForProject->deleteCollection($collectionId);
         } catch (\Throwable) {
             // Ignore cleanup errors for collection deletion
         }
 
         try {
-            $dbForProject->deleteDocument($databaseKey, $collectionId);
+            $dbForProject->deleteDocument($databaseId, $collectionDocumentId);
         } catch (\Throwable) {
             // Ignore cleanup errors for document deletion
         }
