@@ -56,7 +56,7 @@
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "0.9.*",
         "utopia-php/emails": "0.6.*",
-        "utopia-php/dns": "dev-ser-650",
+        "utopia-php/dns": "1.4.*",
         "utopia-php/dsn": "0.2.1",
         "utopia-php/framework": "0.33.*",
         "utopia-php/fetch": "0.4.*",
@@ -108,11 +108,5 @@
             "php-http/discovery": true,
             "tbachert/spi": true
         }
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/dns"
-        }
-    ]
+    }
 }
