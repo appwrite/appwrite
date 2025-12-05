@@ -422,7 +422,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'useCases' => ['starter', 'ai'],
-            'runtimes' => ['bun-1.0', 'dart-2.16']
+            'runtimes' => ['node-22']
         ]);
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThanOrEqual(3, $templates['body']['total']);
@@ -436,8 +436,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertThat(
                 \array_column($template['runtimes'], 'name'),
                 $this->logicalOr(
-                    $this->containsEqual('bun-1.0'),
-                    $this->containsEqual('dart-2.16'),
+                    $this->containsEqual('node-22'),
                 ),
             );
         }
