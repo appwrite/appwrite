@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -150,6 +151,13 @@ class Create extends Action
         } catch (\Throwable $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw $e;
+        }
+
+        // Validate indexes
+        $indexesValidator = new IndexesValidator($dbForProject->getLimitForIndexes());
+        if (!$indexesValidator->isValid($indexes)) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $indexesValidator->getDescription());
         }
 
         $collectionIndexes = [];
