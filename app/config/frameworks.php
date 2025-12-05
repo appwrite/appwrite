@@ -200,7 +200,7 @@ return [
         'name' => 'TanStack Start',
         'screenshotSleep' => 3000,
         'buildRuntime' => 'node-22',
-        'runtimes' => getVersions($templateRuntimes['NODE']['versions'], 'node'),
+        'runtimes' => $templateRuntimes['NODE'],
         'bundleCommand' => 'bash /usr/local/server/helpers/tanstack-start/bundle.sh',
         'envCommand' => 'source /usr/local/server/helpers/tanstack-start/env.sh',
         'adapters' => [
