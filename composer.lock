@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9414555d68323735b92757acd966e51",
+    "content-hash": "7c9cb03eb5267f1e7a3ffc037ae22b6a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4030,20 +4030,7 @@
                     "Utopia\\DNS\\": "src/DNS"
                 }
             },
-            "scripts": {
-                "lint": [
-                    "./vendor/bin/pint --test --config pint.json"
-                ],
-                "format": [
-                    "./vendor/bin/pint --config pint.json"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 8 -c phpstan.neon src tests"
-                ],
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4062,8 +4049,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/dns/tree/1.4.0",
-                "issues": "https://github.com/utopia-php/dns/issues"
+                "issues": "https://github.com/utopia-php/dns/issues",
+                "source": "https://github.com/utopia-php/dns/tree/1.4.0"
             },
             "time": "2025-12-05T10:09:00+00:00"
         },
