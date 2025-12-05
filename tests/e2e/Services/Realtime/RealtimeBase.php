@@ -35,7 +35,7 @@ trait RealtimeBase
         /**
          * Test for SUCCESS
          */
-        $client = $this->getWebsocket(["documents"]);
+        $client = $this->getWebsocket(["rows"]);
         $this->assertNotEmpty($client->receive());
         $client->close();
     }
@@ -51,7 +51,7 @@ trait RealtimeBase
         $this->assertEquals(1008, $payload["data"]["code"]);
         $this->assertEquals("Missing channels", $payload["data"]["message"]);
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
 
@@ -69,7 +69,7 @@ trait RealtimeBase
             $payload["data"]["message"]
         );
         \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
 }

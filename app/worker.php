@@ -17,6 +17,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
@@ -55,7 +56,7 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register)
     $adapter = new DatabasePool($pools->get('console'));
     $dbForPlatform = new Database($adapter, $cache);
     $dbForPlatform->setNamespace('_console');
-
+    $dbForPlatform->setDocumentType('users', User::class);
     return $dbForPlatform;
 }, ['cache', 'register']);
 
@@ -86,6 +87,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
+    $database->setDocumentType('users', User::class);
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -275,10 +277,6 @@ Server::setResource('consumerDatabases', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);
 
-Server::setResource('consumerFunctions', function (BrokerPool $consumer) {
-    return $consumer;
-}, ['consumer']);
-
 Server::setResource('consumerMigrations', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);
@@ -353,7 +351,7 @@ Server::setResource('deviceForSites', function (Document $project, Telemetry $te
     return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 
-Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
+Server::setResource('deviceForMigrations', function (Document $project, Telemetry $telemetry) {
     return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 

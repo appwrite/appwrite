@@ -1,5 +1,37 @@
 # Change Log
 
+## 13.5.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 13.4.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 13.3.1
+
+* Fix `onOpen` callback not being called when the websocket connection is established
+* Fix add missing `scheduled` value to `ExecutionStatus` enum
+
+## 13.3.0
+
+* Add `onOpen`, `onClose` and `onError` callbacks to `Realtime` service
+
+## 13.2.2
+
+* Fix issue: Missing AppwriteEnums dependency causing build failure
+
+## 13.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 13.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 10.2.0
 
 * Update sdk to use swift-native doc comments instead of jsdoc styled comments as per [Swift Documentation Comments](https://github.com/swiftlang/swift/blob/main/docs/DocumentationComments.md)

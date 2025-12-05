@@ -18,6 +18,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -354,6 +355,7 @@ App::get('/v1/project/usage')
             'executionsMbSecondsTotal' => $total[METRIC_EXECUTIONS_MB_SECONDS],
             'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
+            'rowsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
             'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
             'usersTotal' => $total[METRIC_USERS],
@@ -525,8 +527,8 @@ App::put('/v1/project/variables/:variableId')
     ))
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
-    ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
+    ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
+    ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')

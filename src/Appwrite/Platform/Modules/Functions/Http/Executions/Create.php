@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -11,14 +10,16 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Tasks\ScheduleExecutions;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -37,6 +38,7 @@ use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -80,9 +82,9 @@ class Create extends Base
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
-            ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
+            ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true)
             ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-            ->param('scheduledAt', null, new Text(100), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
+            ->param('scheduledAt', null, new Nullable(new Text(100)), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
             ->inject('request')
             ->inject('project')
@@ -93,6 +95,8 @@ class Create extends Base
             ->inject('queueForStatsUsage')
             ->inject('queueForFunctions')
             ->inject('geodb')
+            ->inject('store')
+            ->inject('proofForToken')
             ->inject('executor')
             ->callback($this->action(...));
     }
@@ -115,6 +119,8 @@ class Create extends Base
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
         Reader $geodb,
+        Store $store,
+        Token $proofForToken,
         Executor $executor
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
@@ -155,8 +161,8 @@ class Create extends Base
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -199,7 +205,7 @@ class Create extends Base
 
             foreach ($sessions as $session) {
                 /** @var Utopia\Database\Document $session */
-                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // Find most recent active session for user ID and JWT headers
                     $current = $session;
                 }
             }
@@ -221,6 +227,8 @@ class Create extends Base
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -228,8 +236,9 @@ class Create extends Base
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
+        $ip = $request->getIP();
+        $headers['x-appwrite-client-ip'] = $ip;
 
-        $ip = $headers['x-real-ip'] ?? '';
         if (!empty($ip)) {
             $record = $geodb->get($ip);
 
@@ -249,7 +258,7 @@ class Create extends Base
             }
         }
 
-        $executionId = ID::unique();
+
 
         $status = $async ? 'waiting' : 'processing';
 
@@ -310,7 +319,7 @@ class Create extends Base
 
                 $schedule = $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
-                    'resourceType' => ScheduleExecutions::getSupportedResource(),
+                    'resourceType' => SCHEDULE_RESOURCE_TYPE_EXECUTION,
                     'resourceId' => $execution->getId(),
                     'resourceInternalId' => $execution->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -480,6 +489,8 @@ class Create extends Base
 
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
+
+        $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
 
         $headers = [];
         foreach (($executionResponse['headers'] ?? []) as $key => $value) {

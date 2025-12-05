@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.10.1 AS final
+FROM appwrite/base:0.10.5 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -24,11 +24,9 @@ ENV _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
 RUN \
-  if [ "$DEBUG" == "true" ]; then \
+    if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
-  fi
-
-RUN apk add libwebp
+    fi
 
 WORKDIR /usr/src/code
 
@@ -50,13 +48,13 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
-    chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
-    chown -Rf www-data.www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
-    chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
-    chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
-    chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
-    chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
-    chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
+    chown -Rf www-data:www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
+    chown -Rf www-data:www-data /storage/imports && chmod -Rf 0755 /storage/imports && \
+    chown -Rf www-data:www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
+    chown -Rf www-data:www-data /storage/config && chmod -Rf 0755 /storage/config && \
+    chown -Rf www-data:www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
+    chown -Rf www-data:www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
+    chown -Rf www-data:www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
@@ -98,6 +96,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 # Enable Extensions
 RUN if [ "$DEBUG" = "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
 RUN if [ "$DEBUG" = "true" ]; then mkdir -p /tmp/xdebug; fi
+RUN if [ "$DEBUG" = "true" ]; then apk add --update --no-cache openssh-client github-cli; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
 RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20230831/xdebug.so; fi
 

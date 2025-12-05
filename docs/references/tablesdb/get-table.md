@@ -1,0 +1,1 @@
+Get a table by its unique ID. This endpoint response returns a JSON object with the table metadata.

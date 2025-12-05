@@ -32,6 +32,41 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
         $this->assertEquals(401, $function['headers']['status-code']);
+
+
+        /**
+         * Test for DUPLICATE functionId
+         */
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'timeout' => 10,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'functionId' => $functionId,
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(409, $response['headers']['status-code']);
     }
 
     public function testCreateExecution()
@@ -142,6 +177,19 @@ class FunctionsCustomClientTest extends Scope
         ]);
         $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
+
+        $this->assertNotEmpty($execution['body']['responseHeaders']);
+
+        $executionIdHeader = null;
+        foreach ($execution['body']['responseHeaders'] as $header) {
+            if ($header['name'] === 'x-appwrite-execution-id') {
+                $executionIdHeader = $header['value'];
+                break;
+            }
+        }
+        $this->assertNotEmpty($executionIdHeader);
+        $this->assertEquals($execution['body']['$id'], $executionIdHeader);
+
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertGreaterThan(0, $execution['body']['duration']);
         $this->assertEquals('completed', $execution['body']['status']);
@@ -158,6 +206,11 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
+
+        $executionId = $execution['body']['$id'] ?? '';
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertEquals($executionId, $output['APPWRITE_FUNCTION_EXECUTION_ID']);
+        $this->assertNotEmpty($output['APPWRITE_FUNCTION_CLIENT_IP']);
 
         $execution = $this->createExecution($functionId, [
             'body' => 'foobar',
@@ -323,6 +376,23 @@ class FunctionsCustomClientTest extends Scope
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
 
+        /**
+         * Test for SUCCESS with total=false
+         */
+        $templatesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $templatesWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($templatesWithIncludeTotalFalse['body']);
+        $this->assertIsArray($templatesWithIncludeTotalFalse['body']['templates']);
+        $this->assertIsInt($templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($templatesWithIncludeTotalFalse['body']['templates']));
+
         foreach ($templates['body']['templates'] as $template) {
             $this->assertArrayHasKey('name', $template);
             $this->assertArrayHasKey('id', $template);
@@ -352,7 +422,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'useCases' => ['starter', 'ai'],
-            'runtimes' => ['bun-1.0', 'dart-2.16']
+            'runtimes' => ['node-22']
         ]);
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThanOrEqual(3, $templates['body']['total']);
@@ -366,8 +436,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertThat(
                 \array_column($template['runtimes'], 'name'),
                 $this->logicalOr(
-                    $this->containsEqual('bun-1.0'),
-                    $this->containsEqual('dart-2.16'),
+                    $this->containsEqual('node-22'),
                 ),
             );
         }

@@ -1,5 +1,38 @@
 # Change Log
 
+## 14.0.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `create_template_deployment` method signature: replace `version` parameter with `type` (TemplateReferenceType) and `reference` parameters
+* Add `get_screenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+* Add support for dart39 and flutter335 runtimes
+
+## 13.6.1
+
+* Fix passing of `None` to nullable parameters
+
+## 13.6.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 13.5.0
+
+* Add `create_resend_provider` and `update_resend_provider` methods to `Messaging` service
+* Improve deprecation warnings
+* Fix adding `Optional[]` to optional parameters
+* Fix passing of `None` to nullable parameters
+
+## 13.4.1
+
+* Add transaction support for Databases and TablesDB
+
+## 13.3.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
 ## 11.1.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service

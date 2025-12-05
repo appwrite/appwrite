@@ -10,9 +10,27 @@ class Index extends Model
     public function __construct()
     {
         $this
+            ->addRule('$id', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Index ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Index creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Index update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Index Key.',
+                'description' => 'Index key.',
                 'default' => '',
                 'example' => 'index1',
             ])
@@ -23,10 +41,11 @@ class Index extends Model
                 'example' => 'primary',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Index status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`',
                 'default' => '',
                 'example' => 'available',
+                'enum' => ['available', 'processing', 'deleting', 'stuck', 'failed'],
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
@@ -55,18 +74,6 @@ class Index extends Model
                 'example' => [],
                 'array' => true,
                 'required' => false,
-            ])
-            ->addRule('$createdAt', [
-                'type' => self::TYPE_DATETIME,
-                'description' => 'Index creation date in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
-            ->addRule('$updatedAt', [
-                'type' => self::TYPE_DATETIME,
-                'description' => 'Index update date in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
     }
 

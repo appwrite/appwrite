@@ -2,7 +2,7 @@
     "settings.inspire": "\"ਬੁੱਧੀਮਾਨ ਬਣਨ ਦੀ ਕਲਾ ਇਹ ਜਾਣਨ ਦੀ ਕਲਾ ਹੈ ਕਿ ਕਿਸ ਨੂੰ ਨਜ਼ਰਅੰਦਾਜ਼ ਕਰਨਾ ਹੈ.\"",
     "settings.locale": "pa",
     "settings.direction": "ltr",
-    "emails.sender": "%s ਟੀਮ",
+    "emails.sender": "{{project}} ਟੀਮ",
     "emails.verification.subject": "",
     "emails.verification.hello": ",",
     "emails.verification.body": "",
