@@ -163,6 +163,7 @@ class Create extends Base
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
             'buildCommands' => \implode(' && ', $commands),
+            'startCommand' => $site->getAttribute('startCommand', ''),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'providerRepositoryName' => $repository,
             'providerRepositoryOwner' => $owner,
