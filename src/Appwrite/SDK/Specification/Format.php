@@ -171,6 +171,12 @@ abstract class Format
                         return 'CreditCard';
                     case 'getFlag':
                         return  'Flag';
+                    case 'getScreenshot':
+                        switch ($param) {
+                            case 'permissions':
+                                return 'BrowserPermission';
+                        }
+                        break;
                 }
                 break;
             case 'databases':
@@ -263,7 +269,13 @@ abstract class Format
                     case 'createVcsDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'VCSDeploymentType';
+                                return 'VCSReferenceType';
+                        }
+                        break;
+                    case 'createTemplateDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }
@@ -286,7 +298,13 @@ abstract class Format
                     case 'createVcsDeployment':
                         switch ($param) {
                             case 'type':
-                                return 'VCSDeploymentType';
+                                return 'VCSReferenceType';
+                        }
+                        break;
+                    case 'createTemplateDeployment':
+                        switch ($param) {
+                            case 'type':
+                                return 'TemplateReferenceType';
                         }
                         break;
                 }

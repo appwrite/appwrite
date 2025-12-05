@@ -13,15 +13,15 @@ sites = Sites.new(client)
 result = sites.update(
     site_id: '<SITE_ID>',
     name: '<NAME>',
-    framework: ::ANALOG,
+    framework: Framework::ANALOG,
     enabled: false, # optional
     logging: false, # optional
     timeout: 1, # optional
     install_command: '<INSTALL_COMMAND>', # optional
     build_command: '<BUILD_COMMAND>', # optional
     output_directory: '<OUTPUT_DIRECTORY>', # optional
-    build_runtime: ::NODE_14_5, # optional
-    adapter: ::STATIC, # optional
+    build_runtime: BuildRuntime::NODE_14_5, # optional
+    adapter: Adapter::STATIC, # optional
     fallback_file: '<FALLBACK_FILE>', # optional
     installation_id: '<INSTALLATION_ID>', # optional
     provider_repository_id: '<PROVIDER_REPOSITORY_ID>', # optional

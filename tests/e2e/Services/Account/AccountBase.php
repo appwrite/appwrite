@@ -55,7 +55,7 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'x-forwarded-for' => '103.152.127.250' // Test IP for denied access region
+            'x-forwarded-for' => '31.6.14.220' // Test IP for denied access region
         ]), [
             'userId' => ID::unique(),
             'email' => $email,

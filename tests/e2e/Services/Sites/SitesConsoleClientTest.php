@@ -74,8 +74,11 @@ class SitesConsoleClientTest extends Scope
         $this->assertGreaterThan(1, $file['headers']['content-length']);
         $this->assertEquals('image/png', $file['headers']['content-type']);
 
-        $screenshotHash = \md5($file['body']);
-        $this->assertNotEmpty($screenshotHash);
+        // Compare with reference screenshots
+        $referencePath = \realpath(__DIR__ . '/../../../resources/sites/static-themed');
+        $referenceScreenshotLight = $referencePath . '/screenshot-light.png';
+        $this->assertFileExists($referenceScreenshotLight, 'Reference light screenshot not found');
+        $this->assertSamePixels($referenceScreenshotLight, $file['body']);
 
         $screenshotId = $deployment['body']['screenshotDark'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge($this->getHeaders(), [
@@ -87,10 +90,9 @@ class SitesConsoleClientTest extends Scope
         $this->assertGreaterThan(1, $file['headers']['content-length']);
         $this->assertEquals('image/png', $file['headers']['content-type']);
 
-        $screenshotDarkHash = \md5($file['body']);
-        $this->assertNotEmpty($screenshotDarkHash);
-
-        $this->assertNotEquals($screenshotDarkHash, $screenshotHash);
+        $referenceScreenshotDark = $referencePath . '/screenshot-dark.png';
+        $this->assertFileExists($referenceScreenshotDark, 'Reference dark screenshot not found');
+        $this->assertSamePixels($referenceScreenshotDark, $file['body']);
 
         $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console");

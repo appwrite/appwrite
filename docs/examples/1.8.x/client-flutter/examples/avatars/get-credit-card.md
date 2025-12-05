@@ -7,7 +7,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 // Downloading file
-UInt8List bytes = await avatars.getCreditCard(
+Uint8List bytes = await avatars.getCreditCard(
     code: CreditCard.americanExpress,
     width: 0, // optional
     height: 0, // optional

@@ -15,9 +15,9 @@ databases.createIndex(
     "<COLLECTION_ID>", // collectionId
     "", // key
     IndexType.KEY, // type
-    listOf(), // attributes
-    listOf(), // orders (optional)
-    listOf(), // lengths (optional)
+    List.of(), // attributes
+    List.of(), // orders (optional)
+    List.of(), // lengths (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

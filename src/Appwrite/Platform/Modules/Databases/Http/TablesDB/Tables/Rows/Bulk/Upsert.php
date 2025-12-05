@@ -12,6 +12,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Nullable;
 
 class Upsert extends DocumentsUpsert
 {
@@ -58,7 +59,7 @@ class Upsert extends DocumentsUpsert
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('rows', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of row data as JSON objects. May contain partial rows.', false, ['plan'])
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')

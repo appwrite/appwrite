@@ -14,9 +14,12 @@ use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
+use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -28,7 +31,10 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Detector\Detection\Framework\Analog;
 use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
@@ -957,6 +963,46 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
                 throw new Exception(Exception::FUNCTION_RUNTIME_NOT_DETECTED);
             }
         }
+
+        $wg = new WaitGroup();
+        $envs = [];
+        foreach ($files as $file) {
+            if (!(\str_starts_with($file, '.env'))) {
+                continue;
+            }
+
+            $wg->add();
+            go(function () use ($github, $owner, $repositoryName, $providerRootDirectory, $file, $wg, &$envs) {
+                try {
+                    $contentResponse = $github->getRepositoryContent($owner, $repositoryName, \rtrim($providerRootDirectory, '/') . '/' . $file);
+                    $envFile = $contentResponse['content'] ?? '';
+
+                    $configAdapter = new ConfigDotenv();
+                    try {
+                        $envObject = $configAdapter->parse($envFile);
+                        foreach ($envObject as $envName => $envValue) {
+                            $envs[$envName] = $envValue;
+                        }
+                    } catch (Parse $err) {
+                        // Silence error, so rest of endpoint can return
+                    }
+                } finally {
+                    $wg->done();
+                }
+            });
+        }
+        $wg->wait();
+
+        $variables = [];
+        foreach ($envs as $key => $value) {
+            $variables[] = [
+                'name' => $key,
+                'value' => $value,
+            ];
+        }
+
+        $output->setAttribute('variables', $variables);
+
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     });
 
@@ -984,10 +1030,11 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('gitHub')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $installationId, string $type, string $search, GitHub $github, Response $response, Database $dbForPlatform) {
+    ->action(function (string $installationId, string $type, string $search, array $queries, GitHub $github, Response $response, Database $dbForPlatform) {
         if (empty($search)) {
             $search = "";
         }
@@ -1003,11 +1050,20 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
-        $page = 1;
-        $perPage = 4;
+        $queries = Query::parseQueries($queries);
+        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
+        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET));
 
+        $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
+        $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;
+
+        if ($offset % $limit !== 0) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'offset must be a multiple of the limit');
+        }
+
+        $page = ($offset / $limit) + 1;
         $owner = $github->getOwnerName($providerInstallationId);
-        $repos = $github->searchRepositories($owner, $page, $perPage, $search);
+        ['items' => $repos, 'total' => $total] = $github->searchRepositories($owner, $page, $limit, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id'] ?? '');
@@ -1131,6 +1187,44 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                         $repo['runtime'] = $runtimeWithVersion ?? '';
                     }
                 }
+
+                $wg = new WaitGroup();
+                $envs = [];
+                foreach ($files as $file) {
+                    if (!(\str_starts_with($file, '.env'))) {
+                        continue;
+                    }
+
+                    $wg->add();
+                    go(function () use ($github, $repo, $file, $wg, &$envs) {
+                        try {
+                            $contentResponse = $github->getRepositoryContent($repo['organization'], $repo['name'], $file);
+                            $envFile = $contentResponse['content'] ?? '';
+
+                            $configAdapter = new ConfigDotenv();
+                            try {
+                                $envObject = $configAdapter->parse($envFile);
+                                foreach ($envObject as $envName => $envValue) {
+                                    $envs[$envName] = $envValue;
+                                }
+                            } catch (Parse) {
+                                // Silence error, so rest of endpoint can return
+                            }
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+                $wg->wait();
+
+                $repo['variables'] = [];
+                foreach ($envs as $key => $value) {
+                    $repo['variables'][] = [
+                        'name' => $key,
+                        'value' => $value,
+                    ];
+                }
+
                 return $repo;
             };
         }, $repos));
@@ -1141,7 +1235,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
         $response->dynamic(new Document([
             $type === 'framework' ? 'frameworkProviderRepositories' : 'runtimeProviderRepositories' => $repos,
-            'total' => \count($repos),
+            'total' => $total,
         ]), ($type === 'framework') ? Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST : Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST);
     });
 
@@ -1696,7 +1790,10 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = Authorization::skip(fn () => $dbForPlatform->getDocument('repositories', $repositoryId));
+        $repository = Authorization::skip(fn () => $dbForPlatform->findOne('repositories', [
+            Query::equal('$id', [$repositoryId]),
+            Query::equal('projectInternalId', [$project->getSequence()])
+        ]));
 
         if ($repository->isEmpty()) {
             throw new Exception(Exception::REPOSITORY_NOT_FOUND);

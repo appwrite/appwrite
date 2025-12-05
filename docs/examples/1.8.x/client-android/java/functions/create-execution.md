@@ -1,6 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
+import io.appwrite.enums.ExecutionMethod;
 
 Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,7 +15,7 @@ functions.createExecution(
     false, // async (optional)
     "<PATH>", // path (optional)
     ExecutionMethod.GET, // method (optional)
-    mapOf( "a" to "b" ), // headers (optional)
+    Map.of("a", "b"), // headers (optional)
     "<SCHEDULED_AT>", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

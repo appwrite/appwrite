@@ -12,7 +12,7 @@ Tokens tokens = new Tokens(client);
 tokens.list(
     "<BUCKET_ID>", // bucketId
     "<FILE_ID>", // fileId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

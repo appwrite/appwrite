@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia;
 
-use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -59,6 +59,7 @@ use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
+use Appwrite\Utopia\Response\Model\DetectionVariable;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
@@ -145,8 +146,8 @@ use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
-use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
+use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -316,6 +317,7 @@ class Response extends SwooleResponse
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
+    public const MODEL_DETECTION_VARIABLE = 'detectionVariable';
     public const MODEL_DETECTION_RUNTIME = 'detectionRuntime';
     public const MODEL_VCS_CONTENT = 'vcsContent';
     public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
@@ -563,6 +565,7 @@ class Response extends SwooleResponse
             ->setModel(new ProviderRepositoryRuntime())
             ->setModel(new DetectionFramework())
             ->setModel(new DetectionRuntime())
+            ->setModel(new DetectionVariable())
             ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())
@@ -810,8 +813,8 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = Authorization::getRoles();
-                $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-                $isAppUser = Auth::isAppUser($roles);
+                $isPrivilegedUser = DBUser::isPrivileged($roles);
+                $isAppUser = DBUser::isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
                     $data->setAttribute($key, '');

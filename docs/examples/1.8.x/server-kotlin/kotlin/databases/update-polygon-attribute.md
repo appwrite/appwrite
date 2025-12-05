@@ -14,6 +14,6 @@ val response = databases.updatePolygonAttribute(
     collectionId = "<COLLECTION_ID>",
     key = "",
     required = false,
-    default = listOf([[1, 2], [3, 4], [5, 6], [1, 2]]), // optional
+    default = listOf(listOf(listOf(1, 2), listOf(3, 4), listOf(5, 6), listOf(1, 2))), // optional
     newKey = "" // optional
 )

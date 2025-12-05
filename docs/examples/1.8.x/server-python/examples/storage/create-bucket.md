@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.storage import Storage
+from appwrite.enums import Compression
 from appwrite.permission import Permission
 from appwrite.role import Role
 
@@ -18,7 +19,8 @@ result = storage.create_bucket(
     enabled = False, # optional
     maximum_file_size = 1, # optional
     allowed_file_extensions = [], # optional
-    compression = .NONE, # optional
+    compression = Compression.NONE, # optional
     encryption = False, # optional
-    antivirus = False # optional
+    antivirus = False, # optional
+    transformations = False # optional
 )

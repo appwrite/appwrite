@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Auth\Auth;
+use Utopia\Auth\Hashes\Argon2;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
@@ -173,7 +173,7 @@ return [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => Auth::DEFAULT_ALGO,
+                'default' => (new Argon2())->getName(),
                 'array' => false,
                 'filters' => [],
             ],
@@ -184,7 +184,7 @@ return [
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => Auth::DEFAULT_ALGO_OPTIONS,
+                'default' => (new Argon2())->getOptions(),
                 'array' => false,
                 'filters' => ['json'],
             ],
@@ -1581,6 +1581,17 @@ return [
                 'filters' => [],
                 'required' => true,
                 'array' => false,
+            ],
+            [
+                '$id' => ID::custom('transformations'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+                'default' => true,
             ],
             [
                 '$id' => ID::custom('search'),

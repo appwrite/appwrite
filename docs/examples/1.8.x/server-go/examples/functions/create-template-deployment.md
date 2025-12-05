@@ -19,6 +19,7 @@ response, error := service.CreateTemplateDeployment(
     "<REPOSITORY>",
     "<OWNER>",
     "<ROOT_DIRECTORY>",
-    "<VERSION>",
+    "commit",
+    "<REFERENCE>",
     functions.WithCreateTemplateDeploymentActivate(false),
 )

@@ -26,27 +26,34 @@ Before releasing SDKs, you need to:
 
 To enable SDK releases via GitHub, you need to mount SSH keys and configure GitHub authentication in your Docker environment.
 
-#### Update docker-compose.override.yml
+#### Update Dockerfile
 
-Update `docker-compose.override.yml` to mount SSH keys and set environment variables for the `appwrite` service:
+Add the following configuration to your `Dockerfile`:
+
+```dockerfile
+ARG GH_TOKEN
+ENV GH_TOKEN=your_github_token_here
+RUN git config --global user.email "your-email@example.com"
+RUN apk add --update --no-cache openssh-client github-cli
+```
+
+Replace:
+- `your_github_token_here` with your GitHub personal access token (with appropriate permissions)
+- `your-email@example.com` with your Git email address
+
+#### Update docker-compose.yml
+
+Add the SSH key volume mount to the `appwrite` service in `docker-compose.yml`:
 
 ```yaml
 services:
   appwrite:
     volumes:
       - ~/.ssh:/root/.ssh
-    environment:
-      - GH_TOKEN=your_github_token_here
-      - GIT_EMAIL=your-email@example.com
+      # ... other volumes
 ```
 
-Uncomment the volumes section.
-
-Replace:
-- `your_github_token_here` with your GitHub personal access token (with appropriate permissions)
-- `your-email@example.com` with your Git email address
-
-This mounts your SSH keys from the host machine and sets the GitHub token and email as environment variables, allowing the container to authenticate with GitHub. The git configuration is handled automatically at runtime.
+This mounts your SSH keys from the host machine, allowing the container to authenticate with GitHub.
 
 ### Updating Specs
 

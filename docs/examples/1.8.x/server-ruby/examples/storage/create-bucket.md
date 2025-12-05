@@ -1,6 +1,7 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Enums
 include Appwrite::Permission
 include Appwrite::Role
 
@@ -19,7 +20,8 @@ result = storage.create_bucket(
     enabled: false, # optional
     maximum_file_size: 1, # optional
     allowed_file_extensions: [], # optional
-    compression: ::NONE, # optional
+    compression: Compression::NONE, # optional
     encryption: false, # optional
-    antivirus: false # optional
+    antivirus: false, # optional
+    transformations: false # optional
 )
