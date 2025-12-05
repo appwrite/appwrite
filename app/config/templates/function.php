@@ -4,7 +4,7 @@ use Utopia\Config\Config;
 use Utopia\System\System;
 
 $templateRuntimes = Config::getParam('template-runtimes');
-$allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+$allowList = \array_map('trim', \explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
 function getRuntimes($runtimes, $commands, $entrypoint, $providerRootDirectory, $allowList)
 {
