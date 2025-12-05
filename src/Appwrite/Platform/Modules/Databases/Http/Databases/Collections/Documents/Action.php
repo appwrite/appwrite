@@ -48,7 +48,7 @@ abstract class Action extends DatabasesAction
 
     protected function getDatabasesOperationReadMetric(): string
     {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY) {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
             return METRIC_DATABASES_OPERATIONS_READS;
         }
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_READS;
@@ -56,7 +56,7 @@ abstract class Action extends DatabasesAction
 
     protected function getDatabasesIdOperationReadMetric(): string
     {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY) {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
             return METRIC_DATABASE_ID_OPERATIONS_READS;
         }
         return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_READS;
@@ -64,7 +64,7 @@ abstract class Action extends DatabasesAction
 
     protected function getDatabasesOperationWriteMetric(): string
     {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY) {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
             return METRIC_DATABASES_OPERATIONS_WRITES;
         }
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
@@ -73,7 +73,7 @@ abstract class Action extends DatabasesAction
 
     protected function getDatabasesIdOperationWriteMetric(): string
     {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY) {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
             return METRIC_DATABASE_ID_OPERATIONS_WRITES;
         }
         return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;

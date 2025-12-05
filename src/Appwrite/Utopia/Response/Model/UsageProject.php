@@ -52,6 +52,12 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('documentsdbDatabasesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of documentsdb databases storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('usersTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of users.',
@@ -109,6 +115,18 @@ class UsageProject extends Model
             ->addRule('databasesWritesTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of databases writes.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsdbDatabasesReadsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of documentsdb databases reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsdbDatabasesWritesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of documentsdb databases writes.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -211,6 +229,27 @@ class UsageProject extends Model
             ->addRule('databasesWrites', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'An array of aggregated number of database writes.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('documentsdbDatabasesReads', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of documentsdb database reads.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('documentsdbDatabasesWrites', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of documentsdb database writes.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('documentsdbDatabasesStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated sum of documentsdb databases storage size (in bytes) per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

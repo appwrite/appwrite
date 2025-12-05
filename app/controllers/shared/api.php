@@ -73,6 +73,18 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 };
 
 /**
+ * Get database type prefixed metric
+ * Prefixes the metric with database type if it's not legacy or tablesdb
+ *
+ * @param string $databaseType Database type (e.g., 'documentsdb', 'tablesdb', 'legacy', '')
+ * @param string $metric Base metric constant (e.g., METRIC_DATABASES, METRIC_COLLECTIONS)
+ * @return string Prefixed metric or original metric if no prefix needed
+ */
+$getDatabaseTypePrefixedMetric = function (string $databaseType, string $metric): string {
+    return implode('.', array_filter([$databaseType, $metric]));
+};
+
+/**
  * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
  *
  * Accounts can be created in many ways beyond `createAccount`
@@ -110,7 +122,7 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
     }
 };
 
-$usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage, string $databaseType) {
+$usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage, string $databaseType) use ($getDatabaseTypePrefixedMetric) {
     $value = 1;
 
     switch ($event) {
@@ -142,7 +154,7 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
             break;
         case $document->getCollection() === 'databases': // databases
-            $metric = implode('.', array_filter([$databaseType,METRIC_DATABASES]));
+            $metric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASES);
             $queueForStatsUsage->addMetric($metric, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -152,8 +164,8 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
         case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
             $parts = explode('_', $document->getCollection());
             $databaseInternalId = $parts[1] ?? 0;
-            $collectionMetric = implode('.', array_filter([$databaseType,METRIC_COLLECTIONS]));
-            $databaseIdCollectionMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_COLLECTIONS]));
+            $collectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_COLLECTIONS);
+            $databaseIdCollectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTIONS);
             $queueForStatsUsage
                 ->addMetric($collectionMetric, $value) // per project
                 ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdCollectionMetric), $value);
@@ -168,10 +180,13 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             $parts = explode('_', $document->getCollection());
             $databaseInternalId   = $parts[1] ?? 0;
             $collectionInternalId = $parts[3] ?? 0;
+            $documentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DOCUMENTS);
+            $databaseIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_DOCUMENTS);
+            $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
             $queueForStatsUsage
-                ->addMetric(METRIC_DOCUMENTS, $value)  // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
-                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                ->addMetric($documentsMetric, $value)  // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
+                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
             break;
         case $document->getCollection() === 'buckets': //buckets
             $queueForStatsUsage
