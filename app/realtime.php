@@ -55,8 +55,8 @@ if (!function_exists('getConsoleDB')) {
     {
         $ctx = Coroutine::getContext();
 
-        if (isset($ctx['consoleDB'])) {
-            return $ctx['consoleDB'];
+        if (isset($ctx['dbForPlatform'])) {
+            return $ctx['dbForPlatform'];
         }
 
         global $register;
@@ -71,7 +71,7 @@ if (!function_exists('getConsoleDB')) {
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');
         $database->setDocumentType('users', User::class);
-        return $ctx['consoleDB'] = $database;
+        return $ctx['dbForPlatform'] = $database;
     }
 }
 
@@ -81,12 +81,12 @@ if (!function_exists('getProjectDB')) {
     {
         $ctx = Coroutine::getContext();
 
-        if (!isset($ctx['getProjectDB'])) {
-            $ctx['getProjectDB'] = [];
+        if (!isset($ctx['dbForProject'])) {
+            $ctx['dbForProject'] = [];
         }
 
-        if (isset($ctx['getProjectDB'][$project->getSequence()])) {
-            return $ctx['getProjectDB'][$project->getSequence()];
+        if (isset($ctx['dbForProject'][$project->getSequence()])) {
+            return $ctx['dbForProject'][$project->getSequence()];
         }
 
         global $register;
@@ -128,7 +128,7 @@ if (!function_exists('getProjectDB')) {
 
         $database->setDocumentType('users', User::class);
 
-        return $ctx['getProjectDB'][$project->getSequence()] = $database;
+        return $ctx['dbForProject'][$project->getSequence()] = $database;
     }
 }
 
@@ -138,8 +138,8 @@ if (!function_exists('getCache')) {
     {
         $ctx = Coroutine::getContext();
 
-        if (isset($ctx['getCache'])) {
-            return $ctx['getCache'];
+        if (isset($ctx['cache'])) {
+            return $ctx['cache'];
         }
 
         global $register;
@@ -153,7 +153,7 @@ if (!function_exists('getCache')) {
             $adapters[] = new CachePool($pools->get($value));
         }
 
-        return $ctx['getCache'] = new Cache(new Sharding($adapters));
+        return $ctx['cache'] = new Cache(new Sharding($adapters));
     }
 }
 
@@ -163,8 +163,8 @@ if (!function_exists('getRedis')) {
     {
         $ctx = Coroutine::getContext();
 
-        if (isset($ctx['getRedis'])) {
-            return $ctx['getRedis'];
+        if (isset($ctx['redis'])) {
+            return $ctx['redis'];
         }
 
         $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
@@ -178,20 +178,20 @@ if (!function_exists('getRedis')) {
         }
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-        return $ctx['getRedis'] = $redis;
+        return $ctx['redis'] = $redis;
     }
 }
 
 if (!function_exists('getTimelimit')) {
-    function getTimelimit(): TimeLimitRedis
+    function getTimelimit(string $key = "", int $limit = 0, int $seconds = 1): TimeLimitRedis
     {
         $ctx = Coroutine::getContext();
 
-        if (isset($ctx['getTimelimit'])) {
-            return $ctx['getTimelimit'];
+        if (isset($ctx['timelimit'])) {
+            return $ctx['timelimit'];
         }
 
-        return $ctx['getTimelimit'] = new TimeLimitRedis("", 0, 1, getRedis());
+        return $ctx['timelimit'] = new TimeLimitRedis($key, $limit, $seconds, getRedis());
     }
 }
 
@@ -200,24 +200,24 @@ if (!function_exists('getRealtime')) {
     {
         $ctx = Coroutine::getContext();
 
-        if (isset($ctx['getRealtime'])) {
-            return $ctx['getRealtime'];
+        if (isset($ctx['realtime'])) {
+            return $ctx['realtime'];
         }
 
-        return $ctx['getRealtime'] = new Realtime();
+        return $ctx['realtime'] = new Realtime();
     }
 }
 
 if (!function_exists('getTelemetry')) {
     function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
     {
-        static $telemetry = null;
+        $ctx = Coroutine::getContext();
 
-        if ($telemetry !== null) {
-            return $telemetry;
+        if (isset($ctx['telemetry'])) {
+            return $ctx['telemetry'];
         }
 
-        return $telemetry = new NoTelemetry();
+        return $ctx['telemetry'] = new NoTelemetry();
     }
 }
 
