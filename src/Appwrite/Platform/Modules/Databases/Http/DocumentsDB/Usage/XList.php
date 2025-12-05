@@ -18,6 +18,11 @@ class XList extends DatabaseUsageXList
         return 'listDocumentsDBUsage';
     }
 
+    public function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_USAGE_DOCUMENTSDBS;
+    }
+
     public function __construct()
     {
         $this

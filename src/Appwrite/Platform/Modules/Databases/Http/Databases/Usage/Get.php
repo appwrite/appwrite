@@ -26,6 +26,42 @@ class Get extends Action
         return 'getDatabaseUsage';
     }
 
+    protected $databaseType = DATABASE_TYPE_LEGACY;
+
+    public function setHttpPath(string $path): Action
+    {
+        $this->databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            default => DATABASE_TYPE_LEGACY,
+        };
+
+        return parent::setHttpPath($path);
+    }
+
+    protected function getMetrics(): array
+    {
+        $metrics = [
+            METRIC_DATABASE_ID_COLLECTIONS,
+            METRIC_DATABASE_ID_DOCUMENTS,
+            METRIC_DATABASE_ID_STORAGE,
+            METRIC_DATABASE_ID_OPERATIONS_READS,
+            METRIC_DATABASE_ID_OPERATIONS_WRITES
+        ];
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return $metrics;
+        }
+
+        return array_map(
+            fn ($metric) => "{$this->databaseType}.{$metric}",
+            $metrics
+        );
+    }
+
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_USAGE_DATABASE;
+    }
+
     public function __construct()
     {
         $this
@@ -73,13 +109,10 @@ class Get extends Action
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_COLLECTIONS),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_DOCUMENTS),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_STORAGE),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS),
-            str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES)
-        ];
+        $metrics = array_map(
+            fn ($metric) => str_replace('{databaseInternalId}', $database->getSequence(), $metric),
+            $this->getMetrics()
+        );
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
@@ -141,6 +174,6 @@ class Get extends Action
             'storage' => $usage[$metrics[2]]['data'],
             'databaseReads' => $usage[$metrics[3]]['data'],
             'databaseWrites' => $usage[$metrics[4]]['data'],
-        ]), UtopiaResponse::MODEL_USAGE_DATABASE);
+        ]), $this->getResponseModel());
     }
 }

@@ -252,14 +252,11 @@ const METRIC_MESSAGES_TYPE_PROVIDER_SENT  = METRIC_MESSAGES . '.{type}.{provider
 const METRIC_MESSAGES_TYPE_PROVIDER_FAILED  = METRIC_MESSAGES . '.{type}.{provider}.failed';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
-const METRIC_DATABASES_DOCUMENTSDB = 'databases.documentsdb';
 const METRIC_COLLECTIONS = 'collections';
-const METRIC_COLLECTIONS_DOCUMENTSDB = 'collections.documentsdb';
 const METRIC_DATABASES_STORAGE = 'databases.storage';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
 const METRIC_DATABASE_ID_STORAGE = '{databaseInternalId}.databases.storage';
 const METRIC_DOCUMENTS = 'documents';
-const METRIC_DOCUMENTS_DOCUMENTSDB = 'documents.documentsdb';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE = '{databaseInternalId}.{collectionInternalId}.databases.storage';
@@ -267,6 +264,22 @@ const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
 const METRIC_DATABASE_ID_OPERATIONS_READS = '{databaseInternalId}.databases.operations.reads';
 const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
 const METRIC_DATABASE_ID_OPERATIONS_WRITES = '{databaseInternalId}.databases.operations.writes';
+
+// documentsdb
+const METRIC_DATABASES_DOCUMENTSDB = 'documentsdb.databases';
+const METRIC_COLLECTIONS_DOCUMENTSDB = 'documentsdb.collections';
+const METRIC_DATABASES_STORAGE_DOCUMENTSDB = 'documentsdb.databases.storage';
+const METRIC_DATABASE_ID_COLLECTIONS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.storage';
+const METRIC_DOCUMENTS_DOCUMENTSDB = 'documentsdb.documents';
+const METRIC_DATABASE_ID_DOCUMENTS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB  = 'documentsdb.databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB  = 'documentsdb.databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.writes';
+
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';

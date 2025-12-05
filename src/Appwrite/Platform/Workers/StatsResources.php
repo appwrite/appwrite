@@ -123,7 +123,8 @@ class StatsResources extends Action
             ]);
 
 
-            $databases = $dbForProject->count('databases');
+            $databases = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB])]);
+            $documentsdb = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB])]);
             $buckets = $dbForProject->count('buckets');
             $users = $dbForProject->count('users');
 
@@ -158,6 +159,7 @@ class StatsResources extends Action
 
             $metrics = [
                 METRIC_DATABASES => $databases,
+                METRIC_DATABASES_DOCUMENTSDB => $documentsdb,
                 METRIC_BUCKETS => $buckets,
                 METRIC_USERS => $users,
                 METRIC_FUNCTIONS => $functions,
@@ -259,48 +261,83 @@ class StatsResources extends Action
     {
         $totalCollections = 0;
         $totalDocuments = 0;
-
         $totalDatabaseStorage = 0;
 
-        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $getDatabasesDB, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage) {
+        // documentsdb
+        $totalCollectionsDocumentsdb = 0;
+        $totalDocumentsDocumentsdb = 0;
+        $totalDatabaseStorageDocumentsdb = 0;
+
+
+        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $getDatabasesDB, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage, &$totalCollectionsDocumentsdb, &$totalDocumentsDocumentsdb, &$totalDatabaseStorageDocumentsdb) {
             $dbForDatabases = $getDatabasesDB($database);
             $collections = $dbForProject->count('database_' . $database->getSequence());
 
-            $metric = str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_COLLECTIONS);
+            $databaseType = $database->getAttribute('type');
+            $collectionsMetric = METRIC_DATABASE_ID_COLLECTIONS;
+            if (!empty($databaseType) && $databaseType !== DATABASE_TYPE_LEGACY && $databaseType !== DATABASE_TYPE_TABLESDB) {
+                $collectionsMetric = $databaseType . '.' . $collectionsMetric;
+            }
+            $metric = str_replace('{databaseInternalId}', $database->getSequence(), $collectionsMetric);
             $this->createStatsDocuments($region, $metric, $collections);
 
             [$documents, $storage] = $this->countForCollections($dbForProject, $dbForDatabases, $database, $region);
 
-            $totalDatabaseStorage += $storage;
-            $totalDocuments += $documents;
-            $totalCollections += $collections;
+            switch ($database->getAttribute('type')) {
+                case DATABASE_TYPE_DOCUMENTSDB:
+                    $totalDatabaseStorageDocumentsdb += $storage;
+                    $totalDocumentsDocumentsdb += $documents;
+                    $totalCollectionsDocumentsdb += $collections;
+                    break;
+                default:
+                    $totalDatabaseStorage += $storage;
+                    $totalDocuments += $documents;
+                    $totalCollections += $collections;
+            }
         });
 
         $this->createStatsDocuments($region, METRIC_COLLECTIONS, $totalCollections);
         $this->createStatsDocuments($region, METRIC_DOCUMENTS, $totalDocuments);
         $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE, $totalDatabaseStorage);
+
+        $this->createStatsDocuments($region, METRIC_COLLECTIONS_DOCUMENTSDB, $totalCollectionsDocumentsdb);
+        $this->createStatsDocuments($region, METRIC_DOCUMENTS_DOCUMENTSDB, $totalDocumentsDocumentsdb);
+        $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE_DOCUMENTSDB, $totalDatabaseStorageDocumentsdb);
     }
     protected function countForCollections(Database $dbForProject, Database $dbForDatabases, Document $database, string $region): array
     {
         $databaseDocuments = 0;
         $databaseStorage = 0;
-        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $dbForDatabases, $database, $region, &$databaseStorage, &$databaseDocuments) {
+        $databaseType = $database->getAttribute('type');
+        $databaseIdCollectionIdDocumentsMetric = METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS;
+        $databaseIdCollectionIdStorageMetric = METRIC_DATABASE_ID_COLLECTION_ID_STORAGE;
+        $databaseIdDocumentsMetric = METRIC_DATABASE_ID_DOCUMENTS;
+        $databaseIdStorageMetric = METRIC_DATABASE_ID_STORAGE;
+
+        if ($databaseType !== DATABASE_TYPE_LEGACY && $databaseType !== DATABASE_TYPE_TABLESDB) {
+            $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
+            $databaseIdCollectionIdStorageMetric = $databaseType . '.' . $databaseIdCollectionIdStorageMetric;
+            $databaseIdDocumentsMetric = $databaseType . '.' . $databaseIdDocumentsMetric;
+            $databaseIdStorageMetric = $databaseType . '.' . $databaseIdStorageMetric;
+        }
+
+        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $dbForDatabases, $database, $region, &$databaseStorage, &$databaseDocuments, $databaseIdCollectionIdDocumentsMetric, $databaseIdCollectionIdStorageMetric) {
             $documents = $dbForDatabases->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
-            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
+            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], $databaseIdCollectionIdDocumentsMetric);
             $this->createStatsDocuments($region, $metric, $documents);
             $databaseDocuments += $documents;
 
             $collectionStorage = $dbForDatabases->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
-            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
+            $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], $databaseIdCollectionIdStorageMetric);
             $this->createStatsDocuments($region, $metric, $collectionStorage);
             $databaseStorage += $collectionStorage;
 
         });
 
-        $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], METRIC_DATABASE_ID_DOCUMENTS);
+        $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], $databaseIdDocumentsMetric);
         $this->createStatsDocuments($region, $metric, $databaseDocuments);
 
-        $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], METRIC_DATABASE_ID_STORAGE);
+        $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], $databaseIdStorageMetric);
         $this->createStatsDocuments($region, $metric, $databaseStorage);
 
         return [$databaseDocuments, $databaseStorage];

@@ -142,7 +142,7 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
             break;
         case $document->getCollection() === 'databases': // databases
-            $metric = implode('.', array_filter([METRIC_DATABASES, $databaseType]));
+            $metric = implode('.', array_filter([$databaseType,METRIC_DATABASES]));
             $queueForStatsUsage->addMetric($metric, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -152,10 +152,11 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
         case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
             $parts = explode('_', $document->getCollection());
             $databaseInternalId = $parts[1] ?? 0;
-            $metric = implode('.', array_filter([METRIC_COLLECTIONS, $databaseType]));
+            $collectionMetric = implode('.', array_filter([$databaseType,METRIC_COLLECTIONS]));
+            $databaseIdCollectionMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_COLLECTIONS]));
             $queueForStatsUsage
-                ->addMetric($metric, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value);
+                ->addMetric($collectionMetric, $value) // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdCollectionMetric), $value);
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $queueForStatsUsage->addReduce($document);
@@ -630,6 +631,8 @@ App::init()
         $queueForWebhooks = new Webhook($publisherWebhooks);
         $queueForRealtime = new Realtime();
 
+        // to get consumed in the stats worker without calling to database
+        $queueForStatsUsage->setContext('database', new Document(['type' => $databaseType]));
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
             ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))

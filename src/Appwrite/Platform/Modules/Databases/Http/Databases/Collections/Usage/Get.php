@@ -31,6 +31,11 @@ class Get extends Action
         return UtopiaResponse::MODEL_USAGE_COLLECTION;
     }
 
+    protected function getMetric(): string
+    {
+        return METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS;
+    }
+
     public function __construct()
     {
         $this
@@ -82,7 +87,7 @@ class Get extends Action
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
+            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], $this->getMetric()),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
