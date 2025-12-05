@@ -83,6 +83,7 @@ class StatsUsage extends Event
                 }
                 return true;
             }),
+            'context' => $this->context,
         ];
     }
 }

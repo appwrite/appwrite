@@ -31,6 +31,11 @@ class Get extends Action
         return UtopiaResponse::MODEL_USAGE_COLLECTION;
     }
 
+    protected function getMetric(): string
+    {
+        return METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS;
+    }
+
     public function __construct()
     {
         $this
@@ -58,19 +63,21 @@ class Get extends Action
                     replaceWith: 'tablesDB.getTableUsage',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
-            ->param('collectionId', '', new UID(), 'Collection ID.')
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $range, string $collectionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
-        $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
+        $dbForDatabases = $getDatabasesDB($database);
+        $collection = $dbForDatabases->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
 
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException());
@@ -80,7 +87,7 @@ class Get extends Action
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
+            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collectionDocument->getSequence()], $this->getMetric()),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {

@@ -10,11 +10,41 @@ abstract class Action extends DatabasesAction
      * The current API context (either 'table' or 'collection').
      */
     private ?string $context = COLLECTIONS;
+    private ?string $databaseType = TABLESDB;
+
+    public function getDatabaseType(): string
+    {
+        return $this->databaseType;
+    }
+
+    protected function getDatabasesOperationWriteMetric(): string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === TABLESDB) {
+            return METRIC_DATABASES_OPERATIONS_WRITES;
+        }
+        return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
+
+    }
+    protected function getDatabasesIdOperationWriteMetric(): string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === TABLESDB) {
+            return METRIC_DATABASE_ID_OPERATIONS_WRITES;
+        }
+        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
+    }
 
     public function setHttpPath(string $path): DatabasesAction
     {
-        if (\str_contains($path, '/tablesdb')) {
-            $this->context = TABLES;
+        switch (true) {
+            case str_contains($path, '/tablesdb'):
+                $this->context = TABLES;
+                $this->databaseType = TABLESDB;
+                break;
+
+            case str_contains($path, '/documentsdb'):
+                $this->context = COLLECTIONS;
+                $this->databaseType = DOCUMENTSDB;
+                break;
         }
         return parent::setHttpPath($path);
     }

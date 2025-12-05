@@ -61,15 +61,20 @@ App::get('/v1/project/usage')
                 METRIC_EXECUTIONS_MB_SECONDS,
                 METRIC_BUILDS_MB_SECONDS,
                 METRIC_DOCUMENTS,
+                METRIC_DOCUMENTS_DOCUMENTSDB,
                 METRIC_DATABASES,
+                METRIC_DATABASES_DOCUMENTSDB,
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE,
                 METRIC_DATABASES_STORAGE,
+                METRIC_DATABASES_STORAGE_DOCUMENTSDB,
                 METRIC_DEPLOYMENTS_STORAGE,
                 METRIC_BUILDS_STORAGE,
                 METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
                 METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
                 METRIC_FILES_IMAGES_TRANSFORMED,
             ],
             'period' => [
@@ -79,10 +84,13 @@ App::get('/v1/project/usage')
                 METRIC_USERS,
                 METRIC_EXECUTIONS,
                 METRIC_DATABASES_STORAGE,
+                METRIC_DATABASES_STORAGE_DOCUMENTSDB,
                 METRIC_EXECUTIONS_MB_SECONDS,
                 METRIC_BUILDS_MB_SECONDS,
                 METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
                 METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
                 METRIC_FILES_IMAGES_TRANSFORMED,
             ]
         ];
@@ -356,8 +364,11 @@ App::get('/v1/project/usage')
             'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'rowsTotal' => $total[METRIC_DOCUMENTS],
+            'documentsdbDocumentsTotal' => $total[METRIC_DOCUMENTS_DOCUMENTSDB],
             'databasesTotal' => $total[METRIC_DATABASES],
+            'documentsdbTotal' => $total[METRIC_DATABASES_DOCUMENTSDB],
             'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
+            'documentsdbDatabasesStorageTotal' => $total[METRIC_DATABASES_STORAGE_DOCUMENTSDB],
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
@@ -366,10 +377,15 @@ App::get('/v1/project/usage')
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'databasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS],
             'databasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES],
+            'documentsdbDatabasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB],
+            'documentsdbDatabasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB],
             'executionsBreakdown' => $executionsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'databasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS],
             'databasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES],
+            'documentsdbDatabasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB],
+            'documentsdbDatabasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB],
+            'documentsdbDatabasesStorage' => $usage[METRIC_DATABASES_STORAGE_DOCUMENTSDB],
             'databasesStorageBreakdown' => $databasesStorageBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
@@ -495,7 +511,7 @@ App::get('/v1/project/variables/:variableId')
             )
         ]
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -525,7 +541,7 @@ App::put('/v1/project/variables/:variableId')
             )
         ]
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
     ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
@@ -584,7 +600,7 @@ App::delete('/v1/project/variables/:variableId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
