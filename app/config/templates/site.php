@@ -25,6 +25,8 @@ class UseCases
     public const DOCUMENTATION = 'documentation';
     public const BLOG = 'blog';
     public const AI = 'artificial intelligence';
+    public const FORMS = 'forms';
+    public const DASHBOARD = 'dashboard';
 }
 
 const TEMPLATE_FRAMEWORKS = [
@@ -1473,23 +1475,25 @@ return [
         ]
     ],
     [
-        'key' => 'template-for-react-admin-dashboard',
-        'name' => 'React Admin Dashboard',
-        'tagline' => 'A React-based admin dashboard template with order management features.',
-        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
-        'useCases' => [UseCases::STARTER], // TODO: Check if this needs to have a new category
-        'screenshotDark' => $url . '/images/sites/templates/template-for-react-admin-dashboard-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/template-for-react-admin-dashboard-light.png',
+        'key' => 'crm-dashboard-react-admin',
+        'name' => 'CRM dashboard with React Admin',
+        'tagline' => 'A React-based admin dashboard template with CRM features.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DASHBOARD],
+        'screenshotDark' => $url . '/images/sites/templates/crm-dashboard-react-admin-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/crm-dashboard-react-admin-light.png',
         'frameworks' => [
             getFramework('REACT', [
                 'providerRootDirectory' => './react/react-admin',
+                'installCommand' => 'pnpm install && pnpm db-seed',
+                'buildCommand' => 'pnpm build',
                 'outputDirectory' => './dist',
             ]),
         ],
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.4.*',
+        'providerVersion' => '0.7.*',
         'variables' => [
             [
                 'name' => 'VITE_APPWRITE_ENDPOINT',
@@ -1508,23 +1512,79 @@ return [
                 'type' => 'text'
             ],
             [
-                'name' => 'VITE_APPWRITE_PROJECT_NAME',
-                'description' => 'Your Appwrite project name',
-                'value' => '{projectName}',
-                'placeholder' => '{projectName}',
+                'name' => 'APPWRITE_API_KEY',
+                'description' => 'Your Appwrite API key (for seeding only)',
+                'value' => '',
+                'placeholder' => 'a0b1...',
                 'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_DATABASE_ID',
+                'description' => 'Database ID (default: admin)',
+                'value' => 'admin',
+                'placeholder' => 'admin',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_REVIEWS',
+                'description' => 'Table ID for reviews table',
+                'value' => 'reviews',
+                'placeholder' => 'reviews',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_INVOICES',
+                'description' => 'Table ID for invoices table',
+                'value' => 'invoices',
+                'placeholder' => 'invoices',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_ORDERS',
+                'description' => 'Table ID for orders table',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_PRODUCTS',
+                'description' => 'Table ID for products table',
+                'value' => 'products',
+                'placeholder' => 'products',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_CATEGORIES',
+                'description' => 'Table ID for categories table',
+                'value' => 'categories',
+                'placeholder' => 'categories',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_CUSTOMERS',
+                'description' => 'Table ID for customers table',
+                'value' => 'customers',
+                'placeholder' => 'customers',
+                'required' => false,
                 'type' => 'text'
             ],
         ]
     ],
     [
-        'key' => 'template-for-formspree',
-        'name' => 'Formspree template',
+        'key' => 'job-applications-formspree',
+        'name' => 'Job applications form with Formspree',
         'tagline' => 'A simple form submission template using Formspree.',
-        'score' => 1, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
-        'useCases' => [UseCases::STARTER],// TODO: Check if this needs to have a new category
-        'screenshotDark' => $url . '/images/sites/templates/template-for-formspree-dark.png',
-        'screenshotLight' => $url . '/images/sites/templates/template-for-formspree-light.png',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::FORMS],
+        'screenshotDark' => $url . '/images/sites/templates/job-applications-formspree-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/job-applications-formspree-light.png',
         'frameworks' => [
             getFramework('REACT', [
                 'providerRootDirectory' => './react/formspree',
@@ -1533,7 +1593,16 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.4.*',
-        'variables' => [] // TODO: Add env vars once added to template
+        'providerVersion' => '0.7.*',
+        'variables' => [
+            [
+                'name' => 'VITE_FORMSPREE_FORM_ID',
+                'description' => 'Your Formspree form ID',
+                'value' => '',
+                'placeholder' => 'xrgkpqld',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
     ]
 ];
