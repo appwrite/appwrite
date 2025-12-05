@@ -1,6 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
+import io.appwrite.enums.TemplateReferenceType
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,6 +15,7 @@ val response = sites.createTemplateDeployment(
     repository = "<REPOSITORY>",
     owner = "<OWNER>",
     rootDirectory = "<ROOT_DIRECTORY>",
-    version = "<VERSION>",
+    type =  TemplateReferenceType.BRANCH,
+    reference = "<REFERENCE>",
     activate = false // optional
 )

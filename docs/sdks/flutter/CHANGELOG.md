@@ -1,5 +1,15 @@
 # Change Log
 
+## 20.3.2
+
+* Fix OAuth2 browser infinite redirect issue
+
+## 20.3.1
+
+* Fix passing of `null` values and stripping only non-nullable optional parameters from the request body
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
 ## 20.3.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance

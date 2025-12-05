@@ -20,7 +20,6 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
 
 class Swagger2 extends Format
 {
@@ -264,11 +263,20 @@ class Swagger2 extends Format
                     }
 
                     foreach ($methodObj->getResponses() as $response) {
-                        /** @var Response $response */
-                        if (\is_array($response->getModel())) {
+                        /** @var Response|array $response */
+                        $responseModel = $response->getModel();
+                        if (\is_array($responseModel)) {
+                            foreach ($responseModel as $modelName) {
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $modelName) {
+                                        $usedModels[] = $modelName;
+                                        break;
+                                    }
+                                }
+                            }
                             $additionalMethod['responses'][] = [
                                 'code' => $response->getCode(),
-                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $response->getModel())
+                                'model' => \array_map(fn ($m) => '#/definitions/' . $m, $responseModel)
                             ];
                         } else {
                             $responseData = [
@@ -277,7 +285,13 @@ class Swagger2 extends Format
 
                             // lets not assume stuff here!
                             if ($response->getCode() !== 204) {
-                                $responseData['model'] = '#/definitions/' . $response->getModel();
+                                $responseData['model'] = '#/definitions/' . $responseModel;
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $responseModel) {
+                                        $usedModels[] = $responseModel;
+                                        break;
+                                    }
+                                }
                             }
 
                             $additionalMethod['responses'][] = $responseData;
@@ -430,6 +444,7 @@ class Swagger2 extends Format
                     $subclass = \get_class($validator->getValidator());
                     switch ($subclass) {
                         case 'Appwrite\Utopia\Database\Validator\Operation':
+                        case 'Utopia\Validator\WhiteList':
                             $class = $subclass;
                             break;
                     }
@@ -439,23 +454,23 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Text':
                     case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Validator\Boolean':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = false;
+                        $node['x-example'] = ($param['example'] ?? '') ?: false;
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
                         if ($sdk->getType() === MethodType::UPLOAD) {
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'datetime';
-                        $node['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
+                        $node['x-example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
                         break;
                     case 'Utopia\Database\Validator\Spatial':
                         /** @var Spatial $validator */
@@ -465,7 +480,7 @@ class Swagger2 extends Format
                                 ['type' => 'array']
                             ]
                         ];
-                        $node['x-example'] = match ($validator->getSpatialType()) {
+                        $node['x-example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
                             Database::VAR_POINT => '[1, 2]',
                             Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
                             Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
@@ -474,14 +489,14 @@ class Swagger2 extends Format
                     case 'Appwrite\Network\Validator\Email':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'email';
-                        $node['x-example'] = 'email@example.com';
+                        $node['x-example'] = ($param['example'] ?? '') ?: 'email@example.com';
                         break;
                     case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
                     case 'Appwrite\Network\Validator\Redirect':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
-                        $node['x-example'] = 'https://example.com';
+                        $node['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
                     case 'Utopia\Validator\ArrayList':
                         /** @var ArrayList $validator */
@@ -490,6 +505,9 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => $validator->getValidator()->getType(),
                         ];
+                        if (!empty($param['example'])) {
+                            $node['x-example'] = $param['example'];
+                        }
                         break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
@@ -524,7 +542,7 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['x-example'] = ($param['example'] ?? '') ?: '["' . Permission::read(Role::any()) . '"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['type'] = $validator->getType();
@@ -532,61 +550,99 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . Role::any()->toString() . '"]';
+                        $node['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'password';
-                        $node['x-example'] = 'password';
+                        $node['x-example'] = ($param['example'] ?? '') ?: 'password';
                         break;
                     case 'Appwrite\Auth\Validator\Phone':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'phone';
-                        $node['x-example'] = '+12065550100';
+                        $node['x-example'] = ($param['example'] ?? '') ?: '+12065550100';
                         break;
                     case 'Utopia\Validator\Range':
                         /** @var Range $validator */
                         $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
-                        $node['x-example'] = $validator->getMin();
+                        $node['x-example'] = ($param['example'] ?? '') ?: $validator->getMin();
                         break;
                     case 'Utopia\Validator\Integer':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'int32';
+                        if (!empty($param['example'])) {
+                            $node['x-example'] = $param['example'];
+                        }
                         break;
                     case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\FloatValidator':
                         $node['type'] = 'number';
                         $node['format'] = 'float';
+                        if (!empty($param['example'])) {
+                            $node['x-example'] = $param['example'];
+                        }
                         break;
                     case 'Utopia\Validator\Length':
                         $node['type'] = $validator->getType();
+                        if (!empty($param['example'])) {
+                            $node['x-example'] = $param['example'];
+                        }
                         break;
                     case 'Utopia\Validator\WhiteList':
-                        /** @var WhiteList $validator */
-                        $node['type'] = $validator->getType();
-                        $node['x-example'] = $validator->getList()[0];
+                        if ($array) {
+                            $validator = $validator->getValidator();
 
-                        // Iterate the blackList. If it matches with the current one, then it is blackListed
-                        $allowed = true;
-                        foreach ($this->enumBlacklist as $blacklist) {
-                            if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                $allowed = false;
-                                break;
+                            $node['type'] = 'array';
+                            $node['collectionFormat'] = 'multi';
+                            $node['items'] = [
+                                'type' => $validator->getType(),
+                            ];
+                            if (!empty($param['example'])) {
+                                $node['x-example'] = $param['example'];
                             }
-                        }
-                        if ($allowed && $validator->getType() === 'string') {
-                            $node['enum'] = $validator->getList();
-                            $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                            $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
-                        }
-                        if ($validator->getType() === 'integer') {
-                            $node['format'] = 'int32';
+
+                            // Iterate the blackList. If it matches with the current one, then it is blackListed
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['items']['enum'] = \array_values($validator->getList());
+                                $node['items']['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
+                                $node['items']['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['items']['format'] = 'int32';
+                            }
+                        } else {
+                            $node['type'] = $validator->getType();
+                            $node['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+
+                            // Iterate the blackList. If it matches with the current one, then it is blackListed
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['enum'] = \array_values($validator->getList());
+                                $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
+                                $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['format'] = 'int32';
+                            }
                         }
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CompoundUID':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '<ID1:ID2>';
+                        $node['x-example'] = ($param['example'] ?? '') ?: '<ID1:ID2>';
                         break;
                     case 'Appwrite\Utopia\Database\Validator\Operation':
                         if ($array) {
@@ -603,22 +659,29 @@ class Swagger2 extends Format
                         } else {
                             $node['type'] = 'object';
                         }
-                        $example = [
-                            'action' => 'create',
-                            'databaseId' => '<DATABASE_ID>',
-                            $collectionIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)).'>',
-                            $documentIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($documentIdKey)).'>',
-                            'data' => [
-                                'name' => 'Walter O\'Brien',
-                            ],
-                        ];
-                        if ($array) {
-                            $example = [$example];
+                        if (empty($param['example'])) {
+                            $example = [
+                                'action' => 'create',
+                                'databaseId' => '<DATABASE_ID>',
+                                $collectionIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)).'>',
+                                $documentIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($documentIdKey)).'>',
+                                'data' => [
+                                    'name' => 'Walter O\'Brien',
+                                ],
+                            ];
+                            if ($array) {
+                                $example = [$example];
+                            }
+                            $node['x-example'] = \str_replace("\n", "\n\t", \json_encode($example, JSON_PRETTY_PRINT));
+                        } else {
+                            $node['x-example'] = $param['example'];
                         }
-                        $node['x-example'] = \str_replace("\n", "\n\t", \json_encode($example, JSON_PRETTY_PRINT));
                         break;
                     default:
                         $node['type'] = 'string';
+                        if (!empty($param['example'])) {
+                            $node['x-example'] = $param['example'];
+                        }
                         break;
                 }
 
@@ -838,13 +901,13 @@ class Swagger2 extends Format
                 }
                 if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
                     if ($rule['array']) {
-                        $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = $rule['enum'];
+                        $output['definitions'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
                         $enumName = $this->getResponseEnumName($model->getType(), $name);
                         if ($enumName) {
                             $output['definitions'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
                         }
                     } else {
-                        $output['definitions'][$model->getType()]['properties'][$name]['enum'] = $rule['enum'];
+                        $output['definitions'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
                         $enumName = $this->getResponseEnumName($model->getType(), $name);
                         if ($enumName) {
                             $output['definitions'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;

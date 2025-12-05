@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
@@ -12,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -28,6 +28,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Nullable;
 
 class Upsert extends Action
 {
@@ -80,8 +81,8 @@ class Upsert extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documentId', '', new CustomId(), 'Document ID.')
             ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.')
-            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('user')
@@ -105,8 +106,8 @@ class Upsert extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
@@ -118,7 +119,9 @@ class Upsert extends Action
             throw new Exception($this->getParentNotFoundException());
         }
 
-        $data = $this->parseOperators($data, $collection);
+        if ($transactionId === null) {
+            $data = $this->parseOperators($data, $collection);
+        }
 
         $allowedPermissions = [
             Database::PERMISSION_READ,
@@ -301,6 +304,8 @@ class Upsert extends Action
                     1
                 );
             });
+
+            $queueForEvents->reset();
 
             // Return successful response without actually upserting document
             $groupId = $this->getGroupId();

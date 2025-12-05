@@ -10,7 +10,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.listIdentities(
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

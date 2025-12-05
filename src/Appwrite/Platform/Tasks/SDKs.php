@@ -427,16 +427,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
                         git init && \
+                        git config core.ignorecase false && \
+                        git config pull.rebase false && \
                         git remote add origin ' . $gitUrl . ' && \
                         git fetch origin && \
-                        git checkout ' . $repoBranch . ' || git checkout -b ' . $repoBranch . ' && \
+                        (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
                         git pull origin ' . $repoBranch . ' && \
-                        git checkout ' . $gitBranch . ' || git checkout -b ' . $gitBranch . ' && \
-                        git fetch origin ' . $gitBranch . ' || git push -u origin ' . $gitBranch . ' && \
-                        git pull origin ' . $gitBranch . ' && \
-                        find . -mindepth 1 ! -path "./.git*" -delete && \
+                        (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
+                        (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
+                        git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true && \
+                        (test -d .github && cp -r .github /tmp/.github-backup-$$ || true) && \
+                        git rm -rf --cached . && \
+                        git clean -fdx -e .git -e .github && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
-                        git add . && \
+                        (test -d /tmp/.github-backup-$$ && cp -r /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
+                        git add -A && \
                         git commit -m "' . $message . '" && \
                         git push -u origin ' . $gitBranch . '
                     ');

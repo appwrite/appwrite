@@ -1,8 +1,9 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.Storage;
 import io.appwrite.Permission;
 import io.appwrite.Role;
+import io.appwrite.services.Storage;
+import io.appwrite.enums.Compression;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,14 +15,15 @@ Storage storage = new Storage(client);
 storage.updateBucket(
     "<BUCKET_ID>", // bucketId
     "<NAME>", // name
-    listOf(Permission.read(Role.any())), // permissions (optional)
+    List.of(Permission.read(Role.any())), // permissions (optional)
     false, // fileSecurity (optional)
     false, // enabled (optional)
     1, // maximumFileSize (optional)
-    listOf(), // allowedFileExtensions (optional)
-    .NONE, // compression (optional)
+    List.of(), // allowedFileExtensions (optional)
+    Compression.NONE, // compression (optional)
     false, // encryption (optional)
     false, // antivirus (optional)
+    false, // transformations (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

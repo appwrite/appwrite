@@ -208,7 +208,7 @@ return [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
-                'outputDirectory' => './dist',
+                'outputDirectory' => './.output',
                 'startCommand' => 'bash helpers/tanstack-start/server.sh',
             ],
             'static' => [
@@ -266,7 +266,7 @@ return [
         'key' => 'flutter',
         'name' => 'Flutter',
         'screenshotSleep' => 5000,
-        'buildRuntime' => 'flutter-3.29',
+        'buildRuntime' => 'flutter-3.35',
         'runtimes' => $templateRuntimes['FLUTTER'],
         'adapters' => [
             'static' => [
@@ -275,6 +275,7 @@ return [
                 'installCommand' => 'flutter pub get',
                 'outputDirectory' => './build/web',
                 'startCommand' => 'bash helpers/server.sh',
+                'fallbackFile' => 'index.html'
             ],
         ],
     ],

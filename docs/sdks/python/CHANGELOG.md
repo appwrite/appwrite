@@ -1,5 +1,17 @@
 # Change Log
 
+## 14.0.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `create_template_deployment` method signature: replace `version` parameter with `type` (TemplateReferenceType) and `reference` parameters
+* Add `get_screenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+* Add support for dart39 and flutter335 runtimes
+
+## 13.6.1
+
+* Fix passing of `None` to nullable parameters
+
 ## 13.6.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance

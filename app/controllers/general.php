@@ -4,7 +4,6 @@ require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
@@ -17,12 +16,14 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Transformation\Adapter\Preview;
 use Appwrite\Transformation\Transformation;
+use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Request\Filters\V18 as RequestV18;
 use Appwrite\Utopia\Request\Filters\V19 as RequestV19;
 use Appwrite\Utopia\Request\Filters\V20 as RequestV20;
+use Appwrite\Utopia\Request\Filters\V21 as RequestV21;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
@@ -222,7 +223,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         */
         $requirePreview = \is_null($apiKey) || !$apiKey->isPreviewAuthDisabled();
         if ($isPreview && $requirePreview) {
-            $cookie = $request->getCookie(Auth::$cookieNamePreview, '');
+            $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
 
             // Security checks to mark authorized true
@@ -906,6 +907,9 @@ App::init()
                 $dbForProject = $getProjectDB($project);
                 $request->addFilter(new RequestV20($dbForProject, $route->getPathValues($request)));
             }
+            if (version_compare($requestFormat, '1.9.0', '<')) {
+                $request->addFilter(new RequestV21());
+            }
         }
 
         $domain = $request->getHostname();
@@ -1256,7 +1260,7 @@ App::error()
          * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
-            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            if (!DBUser::isPrivileged(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
@@ -1613,7 +1617,7 @@ App::get('/_appwrite/authorize')
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie(Auth::$cookieNamePreview, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
+            ->addCookie(COOKIE_NAME_PREVIEW, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $host . $path);

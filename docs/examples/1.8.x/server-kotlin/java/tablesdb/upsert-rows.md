@@ -12,7 +12,7 @@ TablesDB tablesDB = new TablesDB(client);
 tablesDB.upsertRows(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
-    listOf(), // rows
+    List.of(), // rows
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

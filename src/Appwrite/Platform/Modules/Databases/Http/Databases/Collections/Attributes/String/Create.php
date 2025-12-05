@@ -19,6 +19,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
@@ -68,7 +69,7 @@ class Create extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('default', null, new Text(0, 0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
             ->inject('response')
