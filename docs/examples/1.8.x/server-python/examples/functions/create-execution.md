@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.functions import Functions
+from appwrite.enums import ExecutionMethod
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint

@@ -1,4 +1,4 @@
-import { Client, Storage } from "react-native-appwrite";
+import { Client, Storage, Permission, Role } from "react-native-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint

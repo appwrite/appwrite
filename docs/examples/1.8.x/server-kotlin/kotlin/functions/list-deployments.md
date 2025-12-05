@@ -12,5 +12,6 @@ val functions = Functions(client)
 val response = functions.listDeployments(
     functionId = "<FUNCTION_ID>",
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )

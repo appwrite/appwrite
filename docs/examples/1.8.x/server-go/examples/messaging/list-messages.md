@@ -17,4 +17,5 @@ service := messaging.New(client)
 response, error := service.ListMessages(
     messaging.WithListMessagesQueries([]interface{}{}),
     messaging.WithListMessagesSearch("<SEARCH>"),
+    messaging.WithListMessagesTotal(false),
 )

@@ -11,4 +11,5 @@ FileList result = await storage.listFiles(
     bucketId: '<BUCKET_ID>',
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

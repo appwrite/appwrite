@@ -7,6 +7,7 @@ let client = Client()
 let account = Account(client)
 
 let identityList = try await account.listIdentities(
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 )
 

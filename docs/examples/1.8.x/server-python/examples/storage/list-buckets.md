@@ -10,5 +10,6 @@ storage = Storage(client)
 
 result = storage.list_buckets(
     queries = [], # optional
-    search = '<SEARCH>' # optional
+    search = '<SEARCH>', # optional
+    total = False # optional
 )

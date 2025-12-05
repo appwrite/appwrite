@@ -900,7 +900,7 @@ trait MigrationsBase
     /**
      * Import documents from a CSV file.
      */
-    public function testCreateCsvMigration(): void
+    public function testCreateCSVImport(): void
     {
         // Make a database
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -1193,5 +1193,166 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $body);
+    }
+
+    /**
+     * Test CSV export with email notification
+     */
+    public function testCreateCSVExport(): void
+    {
+        // Create a database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Export Database'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create a collection
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'Test Export Collection',
+            'permissions' => []
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create a simple attribute like the basic test
+        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $name['headers']['status-code']);
+
+        // Create a simple attribute like the basic test
+        $email = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'email',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $email['headers']['status-code']);
+
+        \sleep(3);
+
+        // Create sample documents
+        for ($i = 1; $i <= 10; $i++) {
+            $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'name' => 'Test User ' . $i,
+                    'email' => 'user' . $i . '@appwrite.io'
+                ]
+            ]);
+
+            $this->assertEquals(201, $doc['headers']['status-code'], 'Failed to create document ' . $i);
+        }
+
+        // Verify documents were created
+        $docs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $docs['headers']['status-code']);
+        $this->assertEquals(10, $docs['body']['total'], 'Expected 10 documents but got ' . $docs['body']['total']);
+
+        // Perform CSV export with notification enabled (uses internal bucket)
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'resourceId' => $databaseId . ':' . $collectionId,
+            'filename' => 'test-export',
+            'columns' => [],
+            'delimiter' => ',',
+            'enclosure' => '"',
+            'escape' => '\\',
+            'header' => true,
+            'notify' => true
+        ]);
+
+        $this->assertEquals(202, $migration['headers']['status-code']);
+        $this->assertNotEmpty($migration['body']['$id']);
+        $migrationId = $migration['body']['$id'];
+
+        $this->assertEventually(function () use ($migrationId) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('finished', $response['body']['stage']);
+            $this->assertEquals('completed', $response['body']['status']);
+            $this->assertEquals('Appwrite', $response['body']['source']);
+            $this->assertEquals('CSV', $response['body']['destination']);
+
+            return true;
+        }, 30_000, 500);
+
+        // Check that email was sent with download link
+        $lastEmail = $this->getLastEmail();
+        $this->assertNotEmpty($lastEmail);
+        $this->assertEquals('Your CSV export is ready', $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Your data export has been completed successfully', $lastEmail['text']);
+
+        // Extract download URL from email HTML
+        \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $lastEmail['html'], $matches);
+        $this->assertNotEmpty($matches[1], 'Download URL not found in email');
+        $downloadUrl = html_entity_decode($matches[1]);
+
+        // Parse the URL to extract components
+        $components = \parse_url($downloadUrl);
+        $this->assertNotEmpty($components);
+        \parse_str($components['query'] ?? '', $queryParams);
+        $this->assertArrayHasKey('jwt', $queryParams, 'JWT not found in download URL');
+        $this->assertNotEmpty($queryParams['jwt']);
+        $this->assertArrayHasKey('project', $queryParams, 'Project not found in download URL');
+        $this->assertStringContainsString('/storage/buckets/default/files/', $downloadUrl);
+
+        // Test download with JWT
+        $path = \str_replace('/v1', '', $components['path']);
+        $downloadWithJwt = $this->client->call(Client::METHOD_GET, $path . '?project=' . $queryParams['project'] . '&jwt=' . $queryParams['jwt']);
+        $this->assertEquals(200, $downloadWithJwt['headers']['status-code'], 'Failed to download file with JWT');
+
+        // Verify the downloaded content is valid CSV
+        $csvData = $downloadWithJwt['body'];
+        $this->assertNotEmpty($csvData, 'CSV export should not be empty');
+        $this->assertStringContainsString('name', $csvData, 'CSV should contain the name column header');
+        $this->assertStringContainsString('email', $csvData, 'CSV should contain the email column header');
+        $this->assertStringContainsString('Test User 1', $csvData, 'CSV should contain test data');
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
     }
 }

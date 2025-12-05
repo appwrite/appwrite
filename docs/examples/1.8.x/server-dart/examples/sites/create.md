@@ -10,15 +10,15 @@ Sites sites = Sites(client);
 Site result = await sites.create(
     siteId: '<SITE_ID>',
     name: '<NAME>',
-    framework: .analog,
-    buildRuntime: .node145,
+    framework: Framework.analog,
+    buildRuntime: BuildRuntime.node145,
     enabled: false, // (optional)
     logging: false, // (optional)
     timeout: 1, // (optional)
     installCommand: '<INSTALL_COMMAND>', // (optional)
     buildCommand: '<BUILD_COMMAND>', // (optional)
     outputDirectory: '<OUTPUT_DIRECTORY>', // (optional)
-    adapter: .static, // (optional)
+    adapter: Adapter.static, // (optional)
     installationId: '<INSTALLATION_ID>', // (optional)
     fallbackFile: '<FALLBACK_FILE>', // (optional)
     providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // (optional)

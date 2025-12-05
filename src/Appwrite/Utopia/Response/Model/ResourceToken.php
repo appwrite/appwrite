@@ -64,7 +64,7 @@ class ResourceToken extends Model
         $expire = $document->getAttribute('expire');
 
         // Use a large but reasonable maxAge to avoid auto-exp when we set explicit exp
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // 10 years
 
         $payload = [
             'tokenId' => $document->getId(),
@@ -73,13 +73,13 @@ class ResourceToken extends Model
             'resourceInternalId' => $document->getAttribute('resourceInternalId'),
         ];
 
+        $createdDate = new \DateTime($document->getCreatedAt());
+        $payload['iat'] = $createdDate->getTimestamp();
+
         // Set explicit expiration in JWT payload if we have an expiry date
         if ($expire !== null) {
             $expiryDate = new \DateTime($expire);
             $payload['exp'] = $expiryDate->getTimestamp();
-        } else {
-            // For infinite expiry, set 'iat' to prevent JWT library from auto-adding 'exp'
-            $payload['iat'] = time();
         }
 
         $secret = $jwt->encode($payload);

@@ -11,4 +11,5 @@ MembershipList result = await teams.listMemberships(
     teamId: '<TEAM_ID>',
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

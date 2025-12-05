@@ -7,7 +7,7 @@ Client client = Client()
 
 Sites sites = Sites(client);
 
-UInt8List result = await sites.getDeploymentDownload(
+Uint8List result = await sites.getDeploymentDownload(
     siteId: '<SITE_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
     type: DeploymentDownloadType.source, // (optional)

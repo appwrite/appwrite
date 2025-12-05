@@ -1,4 +1,5 @@
 import Appwrite
+import AppwriteEnums
 
 let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +13,8 @@ let deployment = try await sites.createTemplateDeployment(
     repository: "<REPOSITORY>",
     owner: "<OWNER>",
     rootDirectory: "<ROOT_DIRECTORY>",
-    version: "<VERSION>",
+    type: .branch,
+    reference: "<REFERENCE>",
     activate: false // optional
 )
 

@@ -11,6 +11,6 @@ val client = Client()
 val health = Health(client)
 
 val response = health.getFailedJobs(
-    name =  .V1_DATABASE,
+    name =  Name.V1_DATABASE,
     threshold = 0 // optional
 )

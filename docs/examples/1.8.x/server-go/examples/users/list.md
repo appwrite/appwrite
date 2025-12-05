@@ -17,4 +17,5 @@ service := users.New(client)
 response, error := service.List(
     users.WithListQueries([]interface{}{}),
     users.WithListSearch("<SEARCH>"),
+    users.WithListTotal(false),
 )

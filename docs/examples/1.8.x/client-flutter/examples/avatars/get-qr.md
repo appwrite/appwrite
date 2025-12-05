@@ -7,7 +7,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 // Downloading file
-UInt8List bytes = await avatars.getQR(
+Uint8List bytes = await avatars.getQR(
     text: '<TEXT>',
     size: 1, // optional
     margin: 0, // optional

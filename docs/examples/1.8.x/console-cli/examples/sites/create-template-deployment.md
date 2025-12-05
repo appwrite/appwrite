@@ -3,4 +3,5 @@ appwrite sites create-template-deployment \
     --repository <REPOSITORY> \
     --owner <OWNER> \
     --root-directory <ROOT_DIRECTORY> \
-    --version <VERSION>
+    --type branch \
+    --reference <REFERENCE>

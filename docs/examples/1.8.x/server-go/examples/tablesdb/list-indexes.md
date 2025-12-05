@@ -18,4 +18,5 @@ response, error := service.ListIndexes(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     tablesdb.WithListIndexesQueries([]interface{}{}),
+    tablesdb.WithListIndexesTotal(false),
 )

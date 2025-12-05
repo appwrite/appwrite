@@ -10,5 +10,6 @@ messaging = Messaging(client)
 
 result = messaging.list_subscriber_logs(
     subscriber_id = '<SUBSCRIBER_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

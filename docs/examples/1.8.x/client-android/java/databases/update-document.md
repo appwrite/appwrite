@@ -1,5 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.Permission;
+import io.appwrite.Role;
 import io.appwrite.services.Databases;
 
 Client client = new Client(context)
@@ -12,8 +14,8 @@ databases.updateDocument(
     "<DATABASE_ID>", // databaseId 
     "<COLLECTION_ID>", // collectionId 
     "<DOCUMENT_ID>", // documentId 
-    mapOf( "a" to "b" ), // data (optional)
-    listOf("read("any")"), // permissions (optional)
+    Map.of("a", "b"), // data (optional)
+    List.of(Permission.read(Role.any())), // permissions (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

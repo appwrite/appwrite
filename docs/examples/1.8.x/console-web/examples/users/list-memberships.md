@@ -9,7 +9,8 @@ const users = new Users(client);
 const result = await users.listMemberships({
     userId: '<USER_ID>',
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

@@ -95,6 +95,7 @@ class Maintenance extends Action
             $this->renewCertificates($dbForPlatform, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
+            $this->notifyDeleteCSVExports($queueForDeletes);
         }, $interval, $delay);
     }
 
@@ -103,6 +104,13 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_REALTIME)
             ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -60))
+            ->trigger();
+    }
+
+    private function notifyDeleteCSVExports(Delete $queueForDeletes): void
+    {
+        $queueForDeletes
+            ->setType(DELETE_TYPE_CSV_EXPORTS)
             ->trigger();
     }
 

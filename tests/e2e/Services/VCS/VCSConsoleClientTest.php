@@ -10,6 +10,7 @@ use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
@@ -316,6 +317,43 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['name'], 'appwrite');
         $this->assertEquals($searchedRepositories['body']['runtimeProviderRepositories'][0]['runtime'], 'other');
 
+        // with limit and offset
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => Query::limit(1)->toString(),
+            'offset' => Query::offset(0)->toString()
+        ]);
+        $this->assertSame(200, $repositories['headers']['status-code']);
+        $this->assertSame(4, $repositories['body']['total']);
+        $this->assertCount(1, $repositories['body']['runtimeProviderRepositories']);
+        $this->assertSame('starter-for-svelte', $repositories['body']['runtimeProviderRepositories'][0]['name']);
+
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => Query::limit(2)->toString(),
+            'offset' => Query::offset(2)->toString()
+        ]);
+        $this->assertSame(200, $repositories['headers']['status-code']);
+        $this->assertSame(4, $repositories['body']['total']);
+        $this->assertCount(2, $repositories['body']['runtimeProviderRepositories']);
+        $this->assertSame('appwrite', $repositories['body']['runtimeProviderRepositories'][0]['name']);
+        $this->assertSame('ruby-starter', $repositories['body']['runtimeProviderRepositories'][1]['name']);
+
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => Query::limit(2)->toString(),
+            'offset' => Query::offset(100)->toString()
+        ]);
+        $this->assertSame(200, $repositories['headers']['status-code']);
+        $this->assertSame(4, $repositories['body']['total']);
+        $this->assertCount(0, $repositories['body']['runtimeProviderRepositories']);
+
         // TODO: If you are about to add another check, rewrite this to @provideScenarios
 
         /**
@@ -337,6 +375,17 @@ class VCSConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $repositories['headers']['status-code']);
+
+        // invalid offset
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'runtime',
+            'limit' => Query::limit(2)->toString(),
+            'offset' => Query::offset(1)->toString()
+        ]);
+        $this->assertEquals(400, $repositories['headers']['status-code']);
+        $this->assertEquals('offset must be a multiple of the limit', $repositories['body']['message']);
 
         $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],

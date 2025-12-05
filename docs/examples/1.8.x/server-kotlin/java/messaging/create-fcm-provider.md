@@ -12,7 +12,7 @@ Messaging messaging = new Messaging(client);
 messaging.createFCMProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name
-    mapOf( "a" to "b" ), // serviceAccountJSON (optional)
+    Map.of("a", "b"), // serviceAccountJSON (optional)
     false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

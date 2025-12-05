@@ -12,7 +12,7 @@ Messaging messaging = new Messaging(client);
 messaging.updateTopic(
     "<TOPIC_ID>", // topicId
     "<NAME>", // name (optional)
-    listOf("any"), // subscribe (optional)
+    List.of("any"), // subscribe (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

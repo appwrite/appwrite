@@ -10,5 +10,6 @@ sites = Sites(client)
 
 result = sites.list_logs(
     site_id = '<SITE_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

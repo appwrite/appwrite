@@ -18,4 +18,5 @@ response, error := service.ListTables(
     "<DATABASE_ID>",
     tablesdb.WithListTablesQueries([]interface{}{}),
     tablesdb.WithListTablesSearch("<SEARCH>"),
+    tablesdb.WithListTablesTotal(false),
 )

@@ -14,7 +14,7 @@ databases.updatePointAttribute(
     "<COLLECTION_ID>", // collectionId
     "", // key
     false, // required
-    listOf(1, 2), // default (optional)
+    List.of(1, 2), // default (optional)
     "", // newKey (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

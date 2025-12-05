@@ -322,6 +322,23 @@ trait TeamsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        /**
+         * Test for SUCCESS with total=false
+         */
+        $teamsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $teamsWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($teamsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($teamsWithIncludeTotalFalse['body']['teams']);
+        $this->assertIsInt($teamsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $teamsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($teamsWithIncludeTotalFalse['body']['teams']));
+
         return [];
     }
 

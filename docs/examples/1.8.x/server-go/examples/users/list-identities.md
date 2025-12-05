@@ -17,4 +17,5 @@ service := users.New(client)
 response, error := service.ListIdentities(
     users.WithListIdentitiesQueries([]interface{}{}),
     users.WithListIdentitiesSearch("<SEARCH>"),
+    users.WithListIdentitiesTotal(false),
 )

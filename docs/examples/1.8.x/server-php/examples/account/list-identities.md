@@ -11,5 +11,6 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->listIdentities(
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

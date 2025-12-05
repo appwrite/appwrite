@@ -17,4 +17,5 @@ service := teams.New(client)
 response, error := service.List(
     teams.WithListQueries([]interface{}{}),
     teams.WithListSearch("<SEARCH>"),
+    teams.WithListTotal(false),
 )

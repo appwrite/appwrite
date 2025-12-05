@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.sites import Sites
+from appwrite.enums import TemplateReferenceType
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -13,6 +14,7 @@ result = sites.create_template_deployment(
     repository = '<REPOSITORY>',
     owner = '<OWNER>',
     root_directory = '<ROOT_DIRECTORY>',
-    version = '<VERSION>',
+    type = TemplateReferenceType.BRANCH,
+    reference = '<REFERENCE>',
     activate = False # optional
 )

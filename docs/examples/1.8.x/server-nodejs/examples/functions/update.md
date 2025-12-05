@@ -10,7 +10,7 @@ const functions = new sdk.Functions(client);
 const result = await functions.update({
     functionId: '<FUNCTION_ID>',
     name: '<NAME>',
-    runtime: sdk..Node145, // optional
+    runtime: sdk.Runtime.Node145, // optional
     execute: ["any"], // optional
     events: [], // optional
     schedule: '', // optional

@@ -11,5 +11,6 @@ functions = Functions.new(client)
 
 result = functions.list_executions(
     function_id: '<FUNCTION_ID>',
-    queries: [] # optional
+    queries: [], # optional
+    total: false # optional
 )

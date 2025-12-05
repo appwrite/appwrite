@@ -37,7 +37,6 @@ App::get('/v1/locale')
         $currencies = Config::getParam('locale-currencies');
         $output = [];
         $ip = $request->getIP();
-        $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $output['ip'] = $ip;
 
@@ -68,10 +67,6 @@ App::get('/v1/locale')
             $output['currency'] = $currency;
         }
 
-        $response
-            ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-        ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 

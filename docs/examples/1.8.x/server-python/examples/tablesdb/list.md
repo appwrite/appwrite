@@ -10,5 +10,6 @@ tables_db = TablesDB(client)
 
 result = tables_db.list(
     queries = [], # optional
-    search = '<SEARCH>' # optional
+    search = '<SEARCH>', # optional
+    total = False # optional
 )

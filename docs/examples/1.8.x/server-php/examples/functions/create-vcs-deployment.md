@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Functions;
-use Appwrite\Enums\VCSDeploymentType;
+use Appwrite\Enums\VCSReferenceType;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -13,7 +13,7 @@ $functions = new Functions($client);
 
 $result = $functions->createVcsDeployment(
     functionId: '<FUNCTION_ID>',
-    type: VCSDeploymentType::BRANCH(),
+    type: VCSReferenceType::BRANCH(),
     reference: '<REFERENCE>',
     activate: false // optional
 );

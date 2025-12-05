@@ -9,6 +9,7 @@ let sites = Sites(client)
 
 let executionList = try await sites.listLogs(
     siteId: "<SITE_ID>",
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 )
 

@@ -1,4 +1,5 @@
 using Appwrite;
+using Appwrite.Enums;
 using Appwrite.Models;
 using Appwrite.Services;
 
@@ -14,6 +15,7 @@ Deployment result = await functions.CreateTemplateDeployment(
     repository: "<REPOSITORY>",
     owner: "<OWNER>",
     rootDirectory: "<ROOT_DIRECTORY>",
-    version: "<VERSION>",
+    type: TemplateReferenceType.Commit,
+    reference: "<REFERENCE>",
     activate: false // optional
 );

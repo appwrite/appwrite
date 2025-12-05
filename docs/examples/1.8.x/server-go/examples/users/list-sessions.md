@@ -16,4 +16,5 @@ service := users.New(client)
 
 response, error := service.ListSessions(
     "<USER_ID>",
+    users.WithListSessionsTotal(false),
 )

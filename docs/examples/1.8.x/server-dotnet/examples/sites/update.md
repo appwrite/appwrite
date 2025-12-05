@@ -13,15 +13,15 @@ Sites sites = new Sites(client);
 Site result = await sites.Update(
     siteId: "<SITE_ID>",
     name: "<NAME>",
-    framework: .Analog,
+    framework: Framework.Analog,
     enabled: false, // optional
     logging: false, // optional
     timeout: 1, // optional
     installCommand: "<INSTALL_COMMAND>", // optional
     buildCommand: "<BUILD_COMMAND>", // optional
     outputDirectory: "<OUTPUT_DIRECTORY>", // optional
-    buildRuntime: .Node145, // optional
-    adapter: .Static, // optional
+    buildRuntime: BuildRuntime.Node145, // optional
+    adapter: Adapter.Static, // optional
     fallbackFile: "<FALLBACK_FILE>", // optional
     installationId: "<INSTALLATION_ID>", // optional
     providerRepositoryId: "<PROVIDER_REPOSITORY_ID>", // optional

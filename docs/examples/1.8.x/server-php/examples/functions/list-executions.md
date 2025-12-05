@@ -12,5 +12,6 @@ $functions = new Functions($client);
 
 $result = $functions->listExecutions(
     functionId: '<FUNCTION_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

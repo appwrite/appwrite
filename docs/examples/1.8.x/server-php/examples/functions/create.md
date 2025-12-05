@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Functions;
-use Appwrite\Enums\;
+use Appwrite\Enums\Runtime;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -14,7 +14,7 @@ $functions = new Functions($client);
 $result = $functions->create(
     functionId: '<FUNCTION_ID>',
     name: '<NAME>',
-    runtime: ::NODE145(),
+    runtime: Runtime::NODE145(),
     execute: ["any"], // optional
     events: [], // optional
     schedule: '', // optional

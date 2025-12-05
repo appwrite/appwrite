@@ -9,7 +9,7 @@ Client client = new Client(context)
 TablesDB tablesDB = new TablesDB(client);
 
 tablesDB.listTransactions(
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

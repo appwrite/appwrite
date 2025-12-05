@@ -9,7 +9,8 @@ const functions = new Functions(client);
 const result = await functions.listDeployments({
     functionId: '<FUNCTION_ID>',
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);
