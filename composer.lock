@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0cad126c9b41c0d496462ba03ff36d7b",
+    "content-hash": "7c9cb03eb5267f1e7a3ffc037ae22b6a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3999,16 +3999,16 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "1.1.4",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "eea6b9299a1420ae6c574f16eb1e9da8689ac56b"
+                "reference": "dce3453364a4524b7250db8d8eb74820b814409e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/eea6b9299a1420ae6c574f16eb1e9da8689ac56b",
-                "reference": "eea6b9299a1420ae6c574f16eb1e9da8689ac56b",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/dce3453364a4524b7250db8d8eb74820b814409e",
+                "reference": "dce3453364a4524b7250db8d8eb74820b814409e",
                 "shasum": ""
             },
             "require": {
@@ -4050,9 +4050,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/1.1.4"
+                "source": "https://github.com/utopia-php/dns/tree/1.4.0"
             },
-            "time": "2025-11-26T13:38:10+00:00"
+            "time": "2025-12-05T10:09:00+00:00"
         },
         {
             "name": "utopia-php/domains",
