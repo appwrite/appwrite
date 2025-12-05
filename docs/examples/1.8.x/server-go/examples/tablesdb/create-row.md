@@ -26,4 +26,5 @@ response, error := service.CreateRow(
         "isAdmin": false
     },
     tablesdb.WithCreateRowPermissions(interface{}{"read("any")"}),
+    tablesdb.WithCreateRowTransactionId("<TRANSACTION_ID>"),
 )

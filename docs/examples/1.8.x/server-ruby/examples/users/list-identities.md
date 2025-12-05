@@ -11,5 +11,6 @@ users = Users.new(client)
 
 result = users.list_identities(
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

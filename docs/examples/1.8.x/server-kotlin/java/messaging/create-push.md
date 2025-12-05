@@ -1,6 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Messaging;
+import io.appwrite.enums.MessagePriority;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,12 +14,12 @@ messaging.createPush(
     "<MESSAGE_ID>", // messageId
     "<TITLE>", // title (optional)
     "<BODY>", // body (optional)
-    listOf(), // topics (optional)
-    listOf(), // users (optional)
-    listOf(), // targets (optional)
-    mapOf( "a" to "b" ), // data (optional)
+    List.of(), // topics (optional)
+    List.of(), // users (optional)
+    List.of(), // targets (optional)
+    Map.of("a", "b"), // data (optional)
     "<ACTION>", // action (optional)
-    "[ID1:ID2]", // image (optional)
+    "<ID1:ID2>", // image (optional)
     "<ICON>", // icon (optional)
     "<SOUND>", // sound (optional)
     "<COLOR>", // color (optional)

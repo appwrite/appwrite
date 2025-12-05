@@ -18,4 +18,5 @@ response, error := service.UpsertRows(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     []interface{}{},
+    tablesdb.WithUpsertRowsTransactionId("<TRANSACTION_ID>"),
 )

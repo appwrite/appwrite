@@ -12,7 +12,8 @@ TablesDB tablesDB = new TablesDB(client);
 tablesDB.deleteRows(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
+    "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

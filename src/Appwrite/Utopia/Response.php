@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia;
 
-use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -59,6 +59,7 @@ use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\DetectionFramework;
 use Appwrite\Utopia\Response\Model\DetectionRuntime;
+use Appwrite\Utopia\Response\Model\DetectionVariable;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Error;
@@ -126,6 +127,7 @@ use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Topic;
+use Appwrite\Utopia\Response\Model\Transaction;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -144,8 +146,8 @@ use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
-use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
+use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -230,6 +232,10 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_LINE = 'columnLine';
     public const MODEL_COLUMN_POLYGON = 'columnPolygon';
 
+    // Transactions
+    public const MODEL_TRANSACTION = 'transaction';
+    public const MODEL_TRANSACTION_LIST = 'transactionList';
+
     // Users
     public const MODEL_ACCOUNT = 'account';
     public const MODEL_USER = 'user';
@@ -311,6 +317,7 @@ class Response extends SwooleResponse
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION_FRAMEWORK = 'detectionFramework';
+    public const MODEL_DETECTION_VARIABLE = 'detectionVariable';
     public const MODEL_DETECTION_RUNTIME = 'detectionRuntime';
     public const MODEL_VCS_CONTENT = 'vcsContent';
     public const MODEL_VCS_CONTENT_LIST = 'vcsContentList';
@@ -478,6 +485,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Topic list', self::MODEL_TOPIC_LIST, 'topics', self::MODEL_TOPIC))
             ->setModel(new BaseList('Subscriber list', self::MODEL_SUBSCRIBER_LIST, 'subscribers', self::MODEL_SUBSCRIBER))
             ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
+            ->setModel(new BaseList('Transaction List', self::MODEL_TRANSACTION_LIST, 'transactions', self::MODEL_TRANSACTION))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             ->setModel(new BaseList('Specifications List', self::MODEL_SPECIFICATION_LIST, 'specifications', self::MODEL_SPECIFICATION))
@@ -557,6 +565,7 @@ class Response extends SwooleResponse
             ->setModel(new ProviderRepositoryRuntime())
             ->setModel(new DetectionFramework())
             ->setModel(new DetectionRuntime())
+            ->setModel(new DetectionVariable())
             ->setModel(new VcsContent())
             ->setModel(new Branch())
             ->setModel(new Runtime())
@@ -610,6 +619,7 @@ class Response extends SwooleResponse
             ->setModel(new Provider())
             ->setModel(new Message())
             ->setModel(new Topic())
+            ->setModel(new Transaction())
             ->setModel(new Subscriber())
             ->setModel(new Target())
             ->setModel(new Migration())
@@ -803,8 +813,8 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = Authorization::getRoles();
-                $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-                $isAppUser = Auth::isAppUser($roles);
+                $isPrivilegedUser = DBUser::isPrivileged($roles);
+                $isAppUser = DBUser::isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
                     $data->setAttribute($key, '');

@@ -1,5 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.Permission;
+import io.appwrite.Role;
 import io.appwrite.services.TablesDB;
 
 Client client = new Client()
@@ -13,8 +15,9 @@ tablesDB.updateRow(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "<ROW_ID>", // rowId
-    mapOf( "a" to "b" ), // data (optional)
-    listOf("read("any")"), // permissions (optional)
+    Map.of("a", "b"), // data (optional)
+    List.of(Permission.read(Role.any())), // permissions (optional)
+    "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

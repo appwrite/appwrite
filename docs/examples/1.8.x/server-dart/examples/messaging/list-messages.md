@@ -10,4 +10,5 @@ Messaging messaging = Messaging(client);
 MessageList result = await messaging.listMessages(
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

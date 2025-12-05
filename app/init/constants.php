@@ -31,6 +31,7 @@ const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate 
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_LIMIT_DATABASE_BATCH = 100; // Default maximum batch size for database operations
+const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
@@ -55,6 +56,10 @@ const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
 const APP_DATABASE_TIMEOUT_MILLISECONDS_TASK = 300 * 1000; // 5 minutes
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
 const APP_DATABASE_ENCRYPT_SIZE_MIN = 150;
+const APP_DATABASE_TXN_TTL_MIN = 60; // 1 minute
+const APP_DATABASE_TXN_TTL_MAX = 3600; // 1 hour
+const APP_DATABASE_TXN_TTL_DEFAULT = 300; // 5 minutes
+const APP_DATABASE_TXN_MAX_OPERATIONS = 100; // Maximum operations per transaction
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -85,6 +90,71 @@ const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
+const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
+const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
+
+/**
+ * JWT for Resource Tokens.
+ */
+const RESOURCE_TOKEN_ALGORITHM = 'HS256';
+const RESOURCE_TOKEN_MAX_AGE = 86400 * 365 * 10; /* 10 years */
+const RESOURCE_TOKEN_LEEWAY = 10; // 10 seconds
+
+/**
+ * Token Expiration times.
+ */
+const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
+const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
+const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
+const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
+const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+
+/**
+ * Token Lengths.
+ */
+const TOKEN_LENGTH_MAGIC_URL = 64;
+const TOKEN_LENGTH_VERIFICATION = 256;
+const TOKEN_LENGTH_RECOVERY = 256;
+const TOKEN_LENGTH_OAUTH2 = 64;
+const TOKEN_LENGTH_SESSION = 256;
+
+/**
+ * Token Types.
+ */
+const TOKEN_TYPE_LOGIN = 1; // Deprecated
+const TOKEN_TYPE_VERIFICATION = 2;
+const TOKEN_TYPE_RECOVERY = 3;
+const TOKEN_TYPE_INVITE = 4;
+const TOKEN_TYPE_MAGIC_URL = 5;
+const TOKEN_TYPE_PHONE = 6;
+const TOKEN_TYPE_OAUTH2 = 7;
+const TOKEN_TYPE_GENERIC = 8;
+const TOKEN_TYPE_EMAIL = 9; // OTP
+
+/**
+ * Session Providers.
+ */
+const SESSION_PROVIDER_EMAIL = 'email';
+const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+const SESSION_PROVIDER_PHONE = 'phone';
+const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_TOKEN = 'token';
+const SESSION_PROVIDER_SERVER = 'server';
+
+/**
+ * Activity associated with user or the app.
+ */
+const ACTIVITY_TYPE_APP = 'app';
+const ACTIVITY_TYPE_USER = 'user';
+const ACTIVITY_TYPE_GUEST = 'guest';
+
+/**
+ * MFA
+ */
+const MFA_RECENT_DURATION = 1800; // 30 mins
+
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -104,8 +174,11 @@ const BUILD_TYPE_RETRY = 'retry';
 
 // Deletion Types
 const DELETE_TYPE_DATABASES = 'databases';
+
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
+const DELETE_TYPE_TRANSACTION = 'transaction';
+const DELETE_TYPE_EXPIRED_TRANSACTIONS = 'expired_transactions';
 const DELETE_TYPE_PROJECTS = 'projects';
 const DELETE_TYPE_SITES = 'sites';
 const DELETE_TYPE_FUNCTIONS = 'functions';
@@ -128,6 +201,7 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
 // Message types
@@ -260,6 +334,9 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_SITES_ID_REQUESTS = 'sites.{siteInternalId}.requests';
 const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
+const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
+const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
+const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -283,3 +360,6 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
+
+/** Preview cookie */
+const COOKIE_NAME_PREVIEW = 'a_jwt_console';

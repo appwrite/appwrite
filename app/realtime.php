@@ -1,11 +1,11 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
@@ -16,6 +16,9 @@ use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Auth\Hashes\Sha;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -67,6 +70,8 @@ if (!function_exists('getConsoleDB')) {
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');
 
+        $database->setDocumentType('users', User::class);
+
         return $database;
     }
 }
@@ -117,6 +122,8 @@ if (!function_exists('getProjectDB')) {
         $database
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
+
+        $database->setDocumentType('users', User::class);
 
         return $databases[$project->getSequence()] = $database;
     }
@@ -236,7 +243,7 @@ $adapter
 $server = new Server($adapter);
 
 $logError = function (Throwable $error, string $action) use ($register) {
-    $logger = $register->get('logger');
+    $logger = $register->get('realtimeLogger');
 
     if ($logger && !$error instanceof Exception) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
@@ -457,9 +464,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
+                        /** @var Appwrite\Utopia\Database\Documents\User $user */
                         $user = $database->getDocument('users', $userId);
 
-                        $roles = Auth::getRoles($user);
+                        $roles = $user->getRoles();
                         $channels = $realtime->connections[$connection]['channels'];
 
                         $realtime->unsubscribe($connection);
@@ -526,14 +534,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
         $timelimit = $app->getResource('timelimit');
         $platforms = $app->getResource('platforms');
-        $user = $app->getResource('user'); /** @var Document $user */
+        $user = $app->getResource('user'); /** @var User $user */
 
         /*
          * Abuse Check
@@ -563,7 +571,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = Auth::getRoles($user);
+        $roles = $user->getRoles();
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
 
@@ -604,11 +612,18 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $code = 500;
         }
 
+        $message = $th->getMessage();
+
+        // sanitize 0 && 5xx errors
+        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+            $message = 'Error: Server Error';
+        }
+
         $response = [
             'type' => 'error',
             'data' => [
                 'code' => $code,
-                'message' => $th->getMessage()
+                'message' => $message
             ]
         ];
 
@@ -671,21 +686,31 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
                 }
 
-                $session = Auth::decodeSession($message['data']['session']);
-                Auth::$unique = $session['id'] ?? '';
-                Auth::$secret = $session['secret'] ?? '';
+                $store = new Store();
 
-                $user = $database->getDocument('users', Auth::$unique);
+                $store->decode($message['data']['session']);
+
+                /** @var User $user */
+                $user = $database->getDocument('users', $store->getProperty('id', ''));
+
+                /**
+                 * TODO:
+                 * Moving forward, we should try to use our dependency injection container
+                 * to inject the proof for token.
+                 * This way we will have one source of truth for the proof for token.
+                 */
+                $proofForToken = new Token();
+                $proofForToken->setHash(new Sha());
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
+                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
                 }
 
-                $roles = Auth::getRoles($user);
+                $roles = $user->getRoles();
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
@@ -705,11 +730,23 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
     } catch (Throwable $th) {
+        $code = $th->getCode();
+        if (!is_int($code)) {
+            $code = 500;
+        }
+
+        $message = $th->getMessage();
+
+        // sanitize 0 && 5xx errors
+        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+            $message = 'Error: Server Error';
+        }
+
         $response = [
             'type' => 'error',
             'data' => [
-                'code' => $th->getCode(),
-                'message' => $th->getMessage()
+                'code' => $code,
+                'message' => $message
             ]
         ];
 

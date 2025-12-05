@@ -12,5 +12,6 @@ Databases databases = new Databases(client);
 CollectionList result = await databases.ListCollections(
     databaseId: "<DATABASE_ID>",
     queries: new List<string>(), // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 );

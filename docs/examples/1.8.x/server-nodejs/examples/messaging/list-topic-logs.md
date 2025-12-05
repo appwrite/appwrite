@@ -9,5 +9,6 @@ const messaging = new sdk.Messaging(client);
 
 const result = await messaging.listTopicLogs({
     topicId: '<TOPIC_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 });

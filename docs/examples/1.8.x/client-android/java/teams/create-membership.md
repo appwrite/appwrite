@@ -10,7 +10,7 @@ Teams teams = new Teams(client);
 
 teams.createMembership(
     "<TEAM_ID>", // teamId 
-    listOf(), // roles 
+    List.of(), // roles 
     "email@example.com", // email (optional)
     "<USER_ID>", // userId (optional)
     "+12065550100", // phone (optional)

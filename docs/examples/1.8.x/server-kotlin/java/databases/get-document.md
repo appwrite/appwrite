@@ -13,7 +13,8 @@ databases.getDocument(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
     "<DOCUMENT_ID>", // documentId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
+    "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

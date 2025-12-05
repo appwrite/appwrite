@@ -13,12 +13,12 @@ messaging.createEmail(
     "<MESSAGE_ID>", // messageId
     "<SUBJECT>", // subject
     "<CONTENT>", // content
-    listOf(), // topics (optional)
-    listOf(), // users (optional)
-    listOf(), // targets (optional)
-    listOf(), // cc (optional)
-    listOf(), // bcc (optional)
-    listOf(), // attachments (optional)
+    List.of(), // topics (optional)
+    List.of(), // users (optional)
+    List.of(), // targets (optional)
+    List.of(), // cc (optional)
+    List.of(), // bcc (optional)
+    List.of(), // attachments (optional)
     false, // draft (optional)
     false, // html (optional)
     "", // scheduledAt (optional)

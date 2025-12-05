@@ -211,6 +211,11 @@ return [
         'description' => 'User with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::USER_EMAIL_NOT_FOUND => [
+        'name' => Exception::USER_EMAIL_NOT_FOUND,
+        'description' => 'User email could not be found.',
+        'code' => 400,
+    ],
     Exception::USER_EMAIL_ALREADY_EXISTS => [
         'name' => Exception::USER_EMAIL_ALREADY_EXISTS,
         'description' => 'A user with the same email already exists in the current project.',
@@ -312,10 +317,20 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_EMAIL_NOT_VERIFIED => [
+        'name' => Exception::USER_EMAIL_NOT_VERIFIED,
+        'description' => 'User email is not verified',
+        'code' => 400,
+    ],
     Exception::USER_EMAIL_ALREADY_VERIFIED => [
         'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
         'description' => 'User email is already verified',
         'code' => 409,
+    ],
+    Exception::USER_PHONE_NOT_VERIFIED => [
+        'name' => Exception::USER_PHONE_NOT_VERIFIED,
+        'description' => 'User phone is not verified',
+        'code' => 400,
     ],
     Exception::USER_PHONE_ALREADY_VERIFIED => [
         'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
@@ -507,6 +522,11 @@ return [
         'description' => 'The requested file is not publicly readable.',
         'code' => 403,
     ],
+    Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED => [
+        'name' => Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED,
+        'description' => 'Image transformations are disabled for the requested bucket.',
+        'code' => 403,
+    ],
 
     /** Tokens */
     Exception::TOKEN_NOT_FOUND => [
@@ -562,6 +582,11 @@ return [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
         'description' => 'The requested runtime is either inactive or unsupported. Please check the value of the _APP_FUNCTIONS_RUNTIMES environment variable.',
         'code' => 404,
+    ],
+    Exception::FUNCTION_ALREADY_EXISTS => [
+        'name' => Exception::FUNCTION_ALREADY_EXISTS,
+        'description' => 'Function with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
         'name' => Exception::FUNCTION_ENTRYPOINT_MISSING,
@@ -964,6 +989,48 @@ return [
         'name' => Exception::COLUMN_INDEX_DEPENDENCY,
         'description' => 'Column cannot be renamed or deleted. Please remove the associated index first.',
         'code' => 409,
+    ],
+
+    /** Transactions */
+    Exception::TRANSACTION_NOT_FOUND => [
+        'name' => Exception::TRANSACTION_NOT_FOUND,
+        'description' => 'Transaction with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TRANSACTION_ALREADY_EXISTS => [
+        'name' => Exception::TRANSACTION_ALREADY_EXISTS,
+        'description' => 'Transaction with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+    Exception::TRANSACTION_INVALID => [
+        'name' => Exception::TRANSACTION_INVALID,
+        'description' => 'The transaction is invalid. Please check the transaction state and try again.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_FAILED => [
+        'name' => Exception::TRANSACTION_FAILED,
+        'description' => 'The transaction has errored. Please check the transaction data and try again.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_EXPIRED => [
+        'name' => Exception::TRANSACTION_EXPIRED,
+        'description' => 'The transaction has expired. Please create a new transaction and try again.',
+        'code' => 410,
+    ],
+    Exception::TRANSACTION_CONFLICT => [
+        'name' => Exception::TRANSACTION_CONFLICT,
+        'description' => 'The transaction has a conflict. Please resolve the conflict and try again.',
+        'code' => 409,
+    ],
+    Exception::TRANSACTION_LIMIT_EXCEEDED => [
+        'name' => Exception::TRANSACTION_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of operations per transaction has been exceeded.',
+        'code' => 400,
+    ],
+    Exception::TRANSACTION_NOT_READY => [
+        'name' => Exception::TRANSACTION_NOT_READY,
+        'description' => 'The transaction is not ready yet. Please try again later.',
+        'code' => 400,
     ],
 
     /** Project Errors */

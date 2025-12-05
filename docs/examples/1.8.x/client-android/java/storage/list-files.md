@@ -10,8 +10,9 @@ Storage storage = new Storage(client);
 
 storage.listFiles(
     "<BUCKET_ID>", // bucketId 
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

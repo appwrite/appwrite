@@ -9,6 +9,7 @@ use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
+use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Swoole\Timer;
@@ -76,6 +77,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
                 ->setNamespace('_console')
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', 'console');
+            $dbForPlatform->setDocumentType('users', User::class);
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
@@ -102,6 +104,11 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
 CLI::setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
+
+CLI::setResource(
+    'isResourceBlocked',
+    fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false
+);
 
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools

@@ -10,6 +10,7 @@ let databases = Databases(client)
 let collectionList = try await databases.listCollections(
     databaseId: "<DATABASE_ID>",
     queries: [], // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 )
 

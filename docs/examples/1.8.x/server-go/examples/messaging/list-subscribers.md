@@ -18,4 +18,5 @@ response, error := service.ListSubscribers(
     "<TOPIC_ID>",
     messaging.WithListSubscribersQueries([]interface{}{}),
     messaging.WithListSubscribersSearch("<SEARCH>"),
+    messaging.WithListSubscribersTotal(false),
 )

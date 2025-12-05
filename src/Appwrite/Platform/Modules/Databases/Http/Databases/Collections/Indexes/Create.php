@@ -51,8 +51,8 @@ class Create extends Action
             ->label('audits.event', 'index.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('sdk', new Method(
-                namespace: $this->getSdkNamespace(),
-                group: $this->getSdkGroup(),
+                namespace: $this->getSDKNamespace(),
+                group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-index.md',
                 auth: [AuthType::KEY],
@@ -160,7 +160,7 @@ class Create extends Action
                 throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // ensure attribute is available
+            // Ensure attribute is available
             if ($attributeStatus !== 'available') {
                 $contextType = ucfirst($contextType);
                 throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
@@ -171,7 +171,7 @@ class Create extends Action
             }
 
             if ($attributeArray === true) {
-                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
                 $orders[$i] = null;
             }
         }
@@ -190,21 +190,18 @@ class Create extends Action
             'orders' => $orders,
         ]);
 
-        $maxIndexLength = $dbForProject->getAdapter()->getMaxIndexLength();
-        $internalIndexesKeys = $dbForProject->getAdapter()->getInternalIndexesKeys();
-        $supportForIndexArray = $dbForProject->getAdapter()->getSupportForIndexArray();
-        $supportForSpatialAttributes = $dbForProject->getAdapter()->getSupportForSpatialAttributes();
-        $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
-        $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
-
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
-            $maxIndexLength,
-            $internalIndexesKeys,
-            $supportForIndexArray,
-            $supportForSpatialAttributes,
-            $supportForSpatialIndexNull,
-            $supportForSpatialIndexOrder
+            $collection->getAttribute('indexes'),
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
+            $dbForProject->getAdapter()->getSupportForIndexArray(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForProject->getAdapter()->getSupportForVectors(),
+            $dbForProject->getAdapter()->getSupportForAttributes(),
+            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
         );
 
         if (!$validator->isValid($index)) {

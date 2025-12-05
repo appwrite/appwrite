@@ -1,4 +1,4 @@
-import { Client, Functions,  } from "@appwrite.io/console";
+import { Client, Functions, Runtime } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -9,7 +9,7 @@ const functions = new Functions(client);
 const result = await functions.create({
     functionId: '<FUNCTION_ID>',
     name: '<NAME>',
-    runtime: .Node145,
+    runtime: Runtime.Node145,
     execute: ["any"], // optional
     events: [], // optional
     schedule: '', // optional

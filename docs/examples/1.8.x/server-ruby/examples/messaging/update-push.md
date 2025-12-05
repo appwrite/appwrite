@@ -1,6 +1,7 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Enums
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -18,7 +19,7 @@ result = messaging.update_push(
     body: '<BODY>', # optional
     data: {}, # optional
     action: '<ACTION>', # optional
-    image: '[ID1:ID2]', # optional
+    image: '<ID1:ID2>', # optional
     icon: '<ICON>', # optional
     sound: '<SOUND>', # optional
     color: '<COLOR>', # optional
