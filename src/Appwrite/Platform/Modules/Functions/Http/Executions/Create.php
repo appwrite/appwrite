@@ -367,8 +367,7 @@ class Create extends Base
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
+        $endpoint = "$protocol://{$request->getHostname()}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [

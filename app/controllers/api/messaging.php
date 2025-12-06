@@ -23,6 +23,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Providers;
 use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
@@ -3494,8 +3495,9 @@ App::post('/v1/messaging/messages/push')
     ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
+    ->inject('request')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Request $request, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3551,7 +3553,6 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = System::getEnv('_APP_DOMAIN', 'localhost');
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
@@ -3572,7 +3573,7 @@ App::post('/v1/messaging/messages/push')
             $image = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
+                'url' => "{$protocol}://{$request->getHostname()}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 
@@ -4377,8 +4378,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('dbForPlatform')
     ->inject('project')
     ->inject('queueForMessaging')
+    ->inject('request')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Request $request, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4546,7 +4548,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = System::getEnv('_APP_DOMAIN', 'localhost');
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
@@ -4567,7 +4568,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
             $pushData['image'] = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}"
+                'url' => "{$protocol}://{$request->getHost()}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}"
             ];
         }
 

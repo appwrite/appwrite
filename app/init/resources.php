@@ -839,23 +839,12 @@ App::setResource('schema', function ($utopia, $dbForProject) {
     );
 }, ['utopia', 'dbForProject']);
 
-App::setResource('contributors', function () {
-    $path = 'app/config/contributors.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
-App::setResource('employees', function () {
-    $path = 'app/config/employees.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
-App::setResource('heroes', function () {
-    $path = 'app/config/heroes.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
+App::setResource('domains', fn () => array_unique([
+    'localhost',
+    APP_HOSTNAME_INTERNAL,
+    ...\explode(',', System::getEnv('_APP_DOMAIN', 'localhost')),
+    ...\explode(',', System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'))
+]));
 
 App::setResource('gitHub', function (Cache $cache) {
     return new VcsGitHub($cache);
