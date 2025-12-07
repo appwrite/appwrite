@@ -34,7 +34,8 @@ class ScheduleExecutions extends ScheduleBase
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
     {
-        $intervalEnd = (new \DateTime())->modify('+' . self::ENQUEUE_TIMER . ' seconds');
+        $now = new \DateTime();
+        $intervalEnd = (clone $now)->modify('+' . self::ENQUEUE_TIMER . ' seconds');
 
         $queueForFunctions = new Func($this->publisherFunctions);
 
@@ -50,7 +51,10 @@ class ScheduleExecutions extends ScheduleBase
             }
 
             $scheduledAt = new \DateTime($schedule['schedule']);
-            if ($scheduledAt <= $intervalEnd) {
+
+            // Only process schedules that fall within the enqueue window.
+            // If the scheduled time is after the window, skip it for now.
+            if ($scheduledAt > $intervalEnd) {
                 continue;
             }
 
@@ -59,7 +63,10 @@ class ScheduleExecutions extends ScheduleBase
                 $schedule['$id'],
             )->getAttribute('data', []);
 
-            $delay = $scheduledAt->getTimestamp() - (new \DateTime())->getTimestamp();
+            $delay = $scheduledAt->getTimestamp() - $now->getTimestamp();
+            if ($delay < 0) {
+                $delay = 0;
+            }
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
@@ -67,8 +74,6 @@ class ScheduleExecutions extends ScheduleBase
                 Co::sleep($delay);
 
                 $queueForFunctions->setType('schedule')
-                    // Set functionId instead of function as we don't have $dbForProject
-                    // TODO: Refactor to use function instead of functionId
                     ->setFunctionId($schedule['resource']['resourceId'])
                     ->setExecution($schedule['resource'])
                     ->setMethod($data['method'] ?? 'POST')
