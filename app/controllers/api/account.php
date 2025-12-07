@@ -3530,7 +3530,7 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $projectName = ($project->isEmpty() || $project->getId() === 'console') ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
         $preview = $locale->getText("emails.recovery.preview");
@@ -3818,7 +3818,7 @@ App::post('/v1/account/verifications/email')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $projectName = ($project->isEmpty() || $project->getId() === 'console') ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $body = $locale->getText("emails.verification.body");
         $preview = $locale->getText("emails.verification.preview");
         $subject = $locale->getText("emails.verification.subject");
