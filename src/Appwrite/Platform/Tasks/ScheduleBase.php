@@ -7,7 +7,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
@@ -159,7 +158,7 @@ abstract class ScheduleBase extends Action
             foreach ($schedules as $schedule) {
                 $existing = $this->schedules[$schedule->getSequence()] ?? null;
                 $updated = strtotime($existing['resourceUpdatedAt'] ?? '0') !== strtotime($schedule->getAttribute('resourceUpdatedAt') ?? '0');
-                
+
                 if ($existing === null || $updated) {
                     try {
                         $candidate = [
@@ -186,7 +185,7 @@ abstract class ScheduleBase extends Action
 
                     Console::info("Updating: {$candidate['resourceType']}::{$candidate['resourceId']}");
                     $this->schedules[$schedule->getSequence()] = $candidate;
-                    
+
                     // Track projectId  for updated/new schedules
                     $updatedProjectIds[] = $candidate['projectId'];
                 }
@@ -201,12 +200,12 @@ abstract class ScheduleBase extends Action
 
         // On initial load: load all projects from all schedules
         if ($initialLoad) {
-            $projectIds = array_unique(array_map(fn($schedule) => $schedule['projectId'], $this->schedules));
+            $projectIds = array_unique(array_map(fn ($schedule) => $schedule['projectId'], $this->schedules));
         } else {
             // Only load projects for updated/new schedules
             $projectIds = array_unique($updatedProjectIds);
         }
-        
+
         // Build existing project map from schedules that already have projects loaded
         $map = [];
         foreach ($this->schedules as $schedule) {
@@ -214,16 +213,16 @@ abstract class ScheduleBase extends Action
                 $map[$schedule['projectId']] = $schedule['project'];
             }
         }
-        
+
         // Only load projects that we don't already have in memory
-        $projectIdsToLoad = array_filter($projectIds, fn($projectId) => !isset($map[$projectId]));
-        
+        $projectIdsToLoad = array_filter($projectIds, fn ($projectId) => !isset($map[$projectId]));
+
         if (!empty($projectIdsToLoad)) {
             $projectIdsToLoad = array_values($projectIdsToLoad);
             $batchSize = 10_000;
             $batches = array_chunk($projectIdsToLoad, $batchSize);
             $projectsLoadStart = microtime(true);
-    
+
             foreach ($batches as $batch) {
                 $documents = $dbForPlatform->find('projects', [
                     Query::equal('$id', $batch),
@@ -240,10 +239,10 @@ abstract class ScheduleBase extends Action
         } else {
             Console::success("No new projects to load (using " . count($map) . " cached projects)");
         }
-       
+
         foreach ($this->schedules as $sequence => $schedule) {
             $project = $map[$schedule['projectId']];
-            
+
             // In case the resource is blocked.
             if ($isResourceBlocked($project, $collectionId, $schedule['resourceId'])) {
                 Console::error("Resource blocked: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
@@ -256,7 +255,7 @@ abstract class ScheduleBase extends Action
                 unset($this->schedules[$sequence]);
                 continue;
             }
-       
+
             $this->schedules[$sequence]['project'] = $project;
 
             // In case the resource is not found (project deleted).
@@ -268,7 +267,7 @@ abstract class ScheduleBase extends Action
                 unset($this->schedules[$sequence]);
                 continue;
             }
-           
+
             if (empty($resource)) {
                 Console::error("Resource not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 unset($this->schedules[$sequence]);
