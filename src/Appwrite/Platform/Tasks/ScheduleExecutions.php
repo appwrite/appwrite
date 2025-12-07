@@ -50,7 +50,7 @@ class ScheduleExecutions extends ScheduleBase
             }
 
             $scheduledAt = new \DateTime($schedule['schedule']);
-            if ($scheduledAt <= $intervalEnd) {
+            if ($scheduledAt > $intervalEnd) {
                 continue;
             }
 
