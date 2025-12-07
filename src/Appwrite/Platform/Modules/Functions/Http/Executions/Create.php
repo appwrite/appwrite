@@ -98,6 +98,7 @@ class Create extends Base
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -121,7 +122,8 @@ class Create extends Base
         Reader $geodb,
         Store $store,
         Token $proofForToken,
-        Executor $executor
+        Executor $executor,
+        array $platform
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -366,12 +368,9 @@ class Create extends Base
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $endpoint = "$protocol://{$request->getHostname()}/v1";
-
         // Appwrite vars
         $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),

@@ -1,5 +1,6 @@
 <?php
 
+use Utopia\Config\Config;
 use Utopia\System\System;
 
 /**
@@ -7,7 +8,8 @@ use Utopia\System\System;
  */
 
 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-$hostname = System::getEnv('_APP_CONSOLE_DOMAIN', '');
+$platform = Config::getParam('platform', []);
+$hostname = $platform['consoleDomain'] ?? '';
 
 $url = $protocol . '://' . $hostname;
 
