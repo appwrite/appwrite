@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "550eeceb7ea32af6eed190a4e3357f17",
+    "content-hash": "0cad126c9b41c0d496462ba03ff36d7b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4264,16 +4264,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-request-model",
+            "version": "0.33.34",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "32f2a93d5aa3794c4565c225ecaf97b0861dc6bf"
+                "reference": "76def92594c32504ec80eaacdb60ff8fad73c856"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/32f2a93d5aa3794c4565c225ecaf97b0861dc6bf",
-                "reference": "32f2a93d5aa3794c4565c225ecaf97b0861dc6bf",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/76def92594c32504ec80eaacdb60ff8fad73c856",
+                "reference": "76def92594c32504ec80eaacdb60ff8fad73c856",
                 "shasum": ""
             },
             "require": {
@@ -4306,9 +4306,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/feat-request-model"
+                "source": "https://github.com/utopia-php/http/tree/0.33.34"
             },
-            "time": "2025-11-27T11:11:33+00:00"
+            "time": "2025-12-08T07:55:31+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4513,16 +4513,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.7",
+            "version": "1.3.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "409983bc2a9cf53a8a3dc6c23d8b1dee1950b499"
+                "reference": "f7b4823bff22edf83b63720cf2165a830b98d6b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/409983bc2a9cf53a8a3dc6c23d8b1dee1950b499",
-                "reference": "409983bc2a9cf53a8a3dc6c23d8b1dee1950b499",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f7b4823bff22edf83b63720cf2165a830b98d6b5",
+                "reference": "f7b4823bff22edf83b63720cf2165a830b98d6b5",
                 "shasum": ""
             },
             "require": {
@@ -4562,9 +4562,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.3.7"
+                "source": "https://github.com/utopia-php/migration/tree/1.3.8"
             },
-            "time": "2025-12-05T05:02:31+00:00"
+            "time": "2025-12-08T07:37:32+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8940,18 +8940,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-feat-request-model",
-            "alias": "0.33.33",
-            "alias_normalized": "0.33.33.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
