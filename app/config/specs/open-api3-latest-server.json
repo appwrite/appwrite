@@ -6558,6 +6558,22 @@
                                         "type": "boolean",
                                         "description": "Is collection enabled? When set to 'disabled', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.",
                                         "x-example": false
+                                    },
+                                    "attributes": {
+                                        "type": "array",
+                                        "description": "Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "indexes": {
+                                        "type": "array",
+                                        "description": "Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC\/DESC, optional), and lengths (array of integers, optional).",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "required": [
@@ -26348,6 +26364,22 @@
                                         "type": "boolean",
                                         "description": "Is table enabled? When set to 'disabled', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.",
                                         "x-example": false
+                                    },
+                                    "columns": {
+                                        "type": "array",
+                                        "description": "Array of column definitions to create. Each column should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "indexes": {
+                                        "type": "array",
+                                        "description": "Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of column keys), orders (array of ASC\/DESC, optional), and lengths (array of integers, optional).",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "required": [
