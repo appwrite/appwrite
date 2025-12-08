@@ -4679,16 +4679,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.7.12",
+            "version": "0.7.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "04255de21db75e90b170040f4d1b457ba721e7a5"
+                "reference": "77a863a920122e2c6a6bc6ee5548d366a3f4c6c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/04255de21db75e90b170040f4d1b457ba721e7a5",
-                "reference": "04255de21db75e90b170040f4d1b457ba721e7a5",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/77a863a920122e2c6a6bc6ee5548d366a3f4c6c7",
+                "reference": "77a863a920122e2c6a6bc6ee5548d366a3f4c6c7",
                 "shasum": ""
             },
             "require": {
@@ -4701,6 +4701,7 @@
             },
             "require-dev": {
                 "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
                 "phpunit/phpunit": "9.*"
             },
             "type": "library",
@@ -4723,9 +4724,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.7.12"
+                "source": "https://github.com/utopia-php/platform/tree/0.7.13"
             },
-            "time": "2025-09-05T15:53:12+00:00"
+            "time": "2025-12-08T10:02:40+00:00"
         },
         {
             "name": "utopia-php/pools",

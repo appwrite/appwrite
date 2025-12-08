@@ -108,8 +108,10 @@ class Create extends Action
             throw new Exception($this->getLimitException(), 'Index limit exceeded');
         }
 
-        // Convert Document array to array of attribute metadata
-        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+        $oldAttributes = \array_map(
+            fn ($a) => $a->getArrayCopy(),
+            $collection->getAttribute('attributes')
+        );
 
         $oldAttributes[] = [
             'key' => '$id',
@@ -120,7 +122,6 @@ class Create extends Action
             'default' => null,
             'size' => Database::LENGTH_KEY
         ];
-
         $oldAttributes[] = [
             'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
@@ -131,7 +132,6 @@ class Create extends Action
             'default' => null,
             'size' => 0
         ];
-
         $oldAttributes[] = [
             'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
@@ -145,7 +145,6 @@ class Create extends Action
 
         $contextType = $this->getParentContext();
         foreach ($attributes as $i => $attribute) {
-            // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
             if ($attributeIndex === false) {
@@ -160,7 +159,6 @@ class Create extends Action
                 throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // Ensure attribute is available
             if ($attributeStatus !== 'available') {
                 $contextType = ucfirst($contextType);
                 throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
@@ -171,8 +169,8 @@ class Create extends Action
             }
 
             if ($attributeArray === true) {
-                $lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
-                $orders[$i] = null;
+                // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
             }
         }
 
