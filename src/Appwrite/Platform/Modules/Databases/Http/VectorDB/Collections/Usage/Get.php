@@ -24,6 +24,11 @@ class Get extends CollectionUsageGet
         return UtopiaResponse::MODEL_USAGE_COLLECTION;
     }
 
+    protected function getMetric(): string
+    {
+        return METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORDB;
+    }
+
     public function __construct()
     {
         $this

@@ -19,6 +19,11 @@ class Get extends DatabaseUsageGet
         return 'getVectorDBUsage';
     }
 
+    public function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_USAGE_VECTORDB;
+    }
+
     public function __construct()
     {
         $this
@@ -38,7 +43,7 @@ class Get extends DatabaseUsageGet
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_USAGE_DATABASE,
+                            model: UtopiaResponse::MODEL_USAGE_VECTORDB,
                         )
                     ],
                     contentType: ContentType::JSON,

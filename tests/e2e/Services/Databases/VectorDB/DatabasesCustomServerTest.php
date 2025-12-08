@@ -594,7 +594,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'embeddingModel' => 'embeddinggemma',
+            'model' => 'embeddinggemma',
             'texts' => [
                 'hello world',
                 'second sentence',
@@ -627,7 +627,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'embeddingModel' => 'embeddinggemma',
+            'model' => 'embeddinggemma',
             'texts' => [
                 'valid text',
                 123, // invalid, not a string
@@ -641,7 +641,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'embeddingModel' => 'nonexistent-model',
+            'model' => 'nonexistent-model',
             'texts' => ['hello'],
         ]);
         $this->assertEquals(400, $unknownModel['headers']['status-code']);

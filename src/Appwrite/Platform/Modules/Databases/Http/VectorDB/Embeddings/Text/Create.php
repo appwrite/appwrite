@@ -141,39 +141,16 @@ class Create extends CreateDocumentAction
             ->dynamic($embeddings, $this->getBulkResponseModel());
 
         $queueForStatsUsage
-            ->addMetric(
-                \str_replace(
-                    '{embeddingModel}',
-                    $model,
-                    METRIC_EMBEDDINGS_TEXT
-                ),
-                \count($texts)
-            )
-            ->addMetric(
-                \str_replace(
-                    '{embeddingModel}',
-                    $model,
-                    METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS
-                ),
-                $totalTokens
-            )
-            ->addMetric(
-                \str_replace(
-                    '{embeddingModel}',
-                    $model,
-                    METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION
-                ),
-                $totalDuration
-            )
-            ->addMetric(
-                \str_replace(
-                    '{embeddingModel}',
-                    $model,
-                    METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
-                ),
-                $totalErrors
-            )
+            ->addMetric(METRIC_EMBEDDINGS_TEXT, \count($texts))
+            ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT), \count($texts))
+            ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS, $totalTokens)
+            ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS), $totalTokens)
+            ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION, $totalDuration)
+            ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION), $totalDuration)
+            ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR, $totalErrors)
+            ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_ERROR), $totalErrors)
             ->trigger();
+
         $queueForStatsUsage->reset();
     }
 }

@@ -26,7 +26,7 @@ class Action extends AppwriteAction
             $this->context = DATABASE_TYPE_DOCUMENTSDB;
         }
         if (\str_contains($path, '/vectordb')) {
-            $this->context = 'vectordb';
+            $this->context = DATABASE_TYPE_VECTORDB;
         }
         return parent::setHttpPath($path);
     }

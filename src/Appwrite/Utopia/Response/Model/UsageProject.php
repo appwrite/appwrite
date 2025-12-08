@@ -267,33 +267,108 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('embeddingsText', [
+            // VectorDB aggregates
+            ->addRule('vectordbDatabasesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB databases.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbCollectionsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB collections.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDocumentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB documents.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabasesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated VectorDB storage (bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabasesReadsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabasesWritesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB writes.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabases', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of text embedding calls per period.',
+                'description' => 'Aggregated VectorDB databases per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
+            ])
+            ->addRule('vectordbCollections', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB collections per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDocuments', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDatabasesStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB storage per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDatabasesReads', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB reads per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDatabasesWrites', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB writes per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('embeddingsText', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of text embedding calls per period.',
+                'default' => 0,
+                'example' => 0
             ])
             ->addRule('embeddingsTextTokens', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of tokens processed by text embeddings per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0
             ])
             ->addRule('embeddingsTextDuration', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated duration spent generating text embeddings per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0
             ])
             ->addRule('embeddingsTextErrors', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of errors while generating text embeddings per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0
             ])
         ;
     }

@@ -145,6 +145,8 @@ use Appwrite\Utopia\Response\Model\UsageSites;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageTable;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\UsageVectorDB;
+use Appwrite\Utopia\Response\Model\UsageVectorDBs;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
@@ -179,6 +181,8 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
     public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
     public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
+    public const MODEL_USAGE_VECTORDBS = 'usageVectorDBs';
+    public const MODEL_USAGE_VECTORDB = 'usageVectorDB';
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
@@ -618,6 +622,8 @@ class Response extends SwooleResponse
             ->setModel(new UsageDatabase())
             ->setModel(new UsageDocumentsDBs())
             ->setModel(new UsageDocumentsDB())
+            ->setModel(new UsageVectorDBs())
+            ->setModel(new UsageVectorDB())
             ->setModel(new UsageTable())
             ->setModel(new UsageCollection())
             ->setModel(new UsageUsers())
