@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7c9cb03eb5267f1e7a3ffc037ae22b6a",
+    "content-hash": "51d293b5ffae82523da7b15cd0a942dd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4508,16 +4508,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.9",
+            "version": "1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "c55ec67c74663190cda10fd79297422147be7e85"
+                "reference": "f84a064b451ad688c313b6a0b6cc46664b449f0b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c55ec67c74663190cda10fd79297422147be7e85",
-                "reference": "c55ec67c74663190cda10fd79297422147be7e85",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f84a064b451ad688c313b6a0b6cc46664b449f0b",
+                "reference": "f84a064b451ad688c313b6a0b6cc46664b449f0b",
                 "shasum": ""
             },
             "require": {
@@ -4557,9 +4557,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.3.9"
+                "source": "https://github.com/utopia-php/migration/tree/1.4.1"
             },
-            "time": "2025-12-08T08:45:09+00:00"
+            "time": "2025-11-25T10:26:11+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8937,9 +8937,9 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": [],
-    "prefer-stable": false,
+    "minimum-stability": "dev",
+    "stability-flags": {},
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.3.0",
