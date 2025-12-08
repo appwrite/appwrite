@@ -8,7 +8,6 @@ use Appwrite\SDK\Specification\Format\OpenAPI3;
 use Appwrite\SDK\Specification\Format\Swagger2;
 use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
-use Appwrite\Utopia\Request\Model as RequestModel;
 use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
 use Swoole\Http\Request as SwooleRequest;

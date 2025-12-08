@@ -764,7 +764,7 @@ class OpenAPI3 extends Format
                     }
 
                     if ($isNullable) {
-                        $property['nullable'] = true;
+                        $property['x-nullable'] = true;
                     }
                 }
 
@@ -1019,7 +1019,7 @@ class OpenAPI3 extends Format
                 }
 
                 if (!in_array($name, $required)) {
-                    $property['nullable'] = true;
+                    $property['x-nullable'] = true;
                 }
             }
 
