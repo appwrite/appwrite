@@ -2,6 +2,7 @@
 
 namespace Appwrite\SDK\Specification;
 
+use Appwrite\Utopia\Request\Model as RequestModel;
 use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -9,22 +10,6 @@ use Utopia\Route;
 
 abstract class Format
 {
-    protected App $app;
-
-    /**
-     * @var array<Route>
-     */
-    protected array $routes;
-
-    /**
-     * @var array<Model>
-     */
-    protected array $models;
-
-    protected array $services;
-    protected array $keys;
-    protected int $authCount;
-    protected string $platform;
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -51,15 +36,16 @@ abstract class Format
         ]
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
-    {
-        $this->app = $app;
-        $this->services = $services;
-        $this->routes = $routes;
-        $this->models = $models;
-        $this->keys = $keys;
-        $this->authCount = $authCount;
-        $this->platform = $platform;
+    public function __construct(
+        protected App $app,
+        protected array $services,
+        protected array $routes,
+        protected array $requestModels,
+        protected array $responseModels,
+        protected array $keys,
+        protected int $authCount,
+        protected string $platform,
+    ) {
     }
 
     /**
@@ -740,9 +726,29 @@ abstract class Format
             foreach ($types as $ruleType) {
                 if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
                     $usedModels[] = $ruleType;
-                    foreach ($this->models as $m) {
+                    foreach ($this->responseModels as $m) {
                         if ($m->getType() === $ruleType) {
                             $this->getNestedModels($m, $usedModels);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    protected function getNestedRequestModels(RequestModel $model, array &$usedModels): void
+    {
+        foreach ($model->getRules() as $rule) {
+            if (!in_array($model->getType(), $usedModels)) {
+                continue;
+            }
+            $types = (array)$rule['type'];
+            foreach ($types as $ruleType) {
+                if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float', 'double', 'datetime', 'payload', 'array', 'enum'])) {
+                    $usedModels[] = $ruleType;
+                    foreach ($this->requestModels as $m) {
+                        if ($m->getType() === $ruleType) {
+                            $this->getNestedRequestModels($m, $usedModels);
                         }
                     }
                 }

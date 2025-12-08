@@ -8,6 +8,7 @@ use Appwrite\SDK\Specification\Format\OpenAPI3;
 use Appwrite\SDK\Specification\Format\Swagger2;
 use Appwrite\SDK\Specification\Specification;
 use Appwrite\Utopia\Request as AppwriteRequest;
+use Appwrite\Utopia\Request\Model as RequestModel;
 use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
 use Swoole\Http\Request as SwooleRequest;
@@ -192,7 +193,8 @@ class Specs extends Action
 
         foreach ($platforms as $platform) {
             $routes = [];
-            $models = [];
+            $requestModels = [];
+            $responseModels = [];
             $services = [];
 
             foreach ($appRoutes as $key => $method) {
@@ -264,9 +266,9 @@ class Specs extends Action
 
             foreach (Config::getParam('services', []) as $service) {
                 if (
-                    !isset($service['docs']) // Skip service if not part of the public API
-                    || !isset($service['sdk'])
+                    !isset($service['docs'])    // Skip service if not part of the public API
                     || !$service['docs']
+                    || !isset($service['sdk'])
                     || !$service['sdk']
                 ) {
                     continue;
@@ -278,11 +280,21 @@ class Specs extends Action
                 ];
             }
 
-            $models = $response->getModels();
+            $responseModels = $response->getModels();
 
-            foreach ($models as $key => $value) {
+            foreach ($responseModels as $key => $value) {
                 if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
-                    unset($models[$key]);
+                    unset($responseModels[$key]);
+                }
+            }
+
+            foreach ($routes as $route) {
+                foreach ($route->getParams() as $param) {
+                    $model = $param['model'] ?? null;
+                    if ($model !== null && \class_exists($model)) {
+                        $instance = new $model();
+                        $requestModels[$instance->getType()] = $instance;
+                    }
                 }
             }
 
@@ -290,10 +302,11 @@ class Specs extends Action
                 new App('UTC'),
                 $services,
                 $routes,
-                $models,
+                $requestModels,
+                $responseModels,
                 $keys[$platform],
                 $authCounts[$platform] ?? 0,
-                $platforms[$platform]
+                $platforms[$platform],
             ];
 
             foreach (['swagger2', 'open-api3'] as $format) {
