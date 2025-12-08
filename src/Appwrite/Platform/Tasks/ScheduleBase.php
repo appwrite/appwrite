@@ -241,17 +241,17 @@ abstract class ScheduleBase extends Action
         }
 
         foreach ($this->schedules as $sequence => $schedule) {
-            $project = $map[$schedule['projectId']];
+            $project = $map[$schedule['projectId']] ?? null;
 
-            // In case the resource is blocked.
-            if ($isResourceBlocked($project, $collectionId, $schedule['resourceId'])) {
-                Console::error("Resource blocked: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
+            if ($project === null || $project->isEmpty()) {
+                Console::error("Project not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 unset($this->schedules[$sequence]);
                 continue;
             }
 
-            if (empty($project)) {
-                Console::error("Project not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
+            // In case the resource is blocked.
+            if ($isResourceBlocked($project, $collectionId, $schedule['resourceId'])) {
+                Console::error("Resource blocked: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 unset($this->schedules[$sequence]);
                 continue;
             }
@@ -268,7 +268,7 @@ abstract class ScheduleBase extends Action
                 continue;
             }
 
-            if (empty($resource)) {
+            if ($resource->isEmpty()) {
                 Console::error("Resource not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
                 unset($this->schedules[$sequence]);
                 continue;
