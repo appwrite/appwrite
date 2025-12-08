@@ -1366,7 +1366,7 @@ trait DatabasesBase
         if ($this->isMongoDB()) {
             $this->assertEquals('There is already a fulltext index in the collection', $fulltextArray['body']['message']);
         } else {
-            $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+            $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
         }
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
@@ -1379,7 +1379,8 @@ trait DatabasesBase
             'columns' => ['actors'],
         ]);
 
-        $this->assertEquals(202, $actorsArray['headers']['status-code']);
+        $this->assertEquals(400, $actorsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $actorsArray['body']['message']);
 
         $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1392,7 +1393,8 @@ trait DatabasesBase
             'orders' => ['DESC', 'DESC'],
         ]);
 
-        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $twoLevelsArray['body']['message']);
 
         $unknown = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1418,7 +1420,8 @@ trait DatabasesBase
             'orders' => ['DESC'], // Check order is removed in API
         ]);
 
-        $this->assertEquals(202, $index1['headers']['status-code']);
+        $this->assertEquals(400, $index1['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index1['body']['message']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1430,7 +1433,8 @@ trait DatabasesBase
             'columns' => ['integers2'], // array column
         ]);
 
-        $this->assertEquals(202, $index2['headers']['status-code']);
+        $this->assertEquals(400, $index2['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index2['body']['message']);
 
         /**
          * Create Indexes by worker
@@ -1444,7 +1448,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertCount(4, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);

@@ -7,6 +7,8 @@ require_once __DIR__ . '/../config/storage/resource_limits.php';
 
 $configAdapter = new PHP();
 
+Config::load('runtimes', __DIR__ . '/../config/runtimes.php', $configAdapter);
+Config::load('runtimes-v2', __DIR__ . '/../config/runtimes-v2.php', $configAdapter);
 Config::load('template-runtimes', __DIR__ . '/../config/template-runtimes.php', $configAdapter);
 Config::load('events', __DIR__ . '/../config/events.php', $configAdapter);
 Config::load('auth', __DIR__ . '/../config/auth.php', $configAdapter);
@@ -17,8 +19,6 @@ Config::load('platforms', __DIR__ . '/../config/platforms.php', $configAdapter);
 Config::load('console', __DIR__ . '/../config/console.php', $configAdapter);
 Config::load('collections', __DIR__ . '/../config/collections.php', $configAdapter);
 Config::load('frameworks', __DIR__ . '/../config/frameworks.php', $configAdapter);
-Config::load('runtimes', __DIR__ . '/../config/runtimes.php', $configAdapter);
-Config::load('runtimes-v2', __DIR__ . '/../config/runtimes-v2.php', $configAdapter);
 Config::load('usage', __DIR__ . '/../config/usage.php', $configAdapter);
 Config::load('roles', __DIR__ . '/../config/roles.php', $configAdapter);  // User roles and scopes
 Config::load('scopes', __DIR__ . '/../config/scopes.php', $configAdapter);  // User roles and scopes

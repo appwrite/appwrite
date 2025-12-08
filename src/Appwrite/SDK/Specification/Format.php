@@ -171,6 +171,12 @@ abstract class Format
                         return 'CreditCard';
                     case 'getFlag':
                         return  'Flag';
+                    case 'getScreenshot':
+                        switch ($param) {
+                            case 'permissions':
+                                return 'BrowserPermission';
+                        }
+                        break;
                 }
                 break;
             case 'databases':
