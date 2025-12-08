@@ -8,7 +8,15 @@ use Utopia\Validator;
 
 class Indexes extends Validator
 {
+    public const TYPE_LEGACY = 'legacy';
+    public const TYPE_TABLESDB = 'tablesdb';
+
     protected string $message = 'Invalid indexes';
+
+    /**
+     * @var string The term to use in error messages for attributes/columns
+     */
+    protected string $attributeTerm;
 
     /**
      * @var array<string> Supported index types
@@ -30,10 +38,14 @@ class Indexes extends Validator
 
     /**
      * @param int $maxIndexes Maximum number of indexes allowed
+     * @param string $type The API type context ('legacy' for attributes, 'tablesdb' for columns)
      */
     public function __construct(
         protected int $maxIndexes = APP_LIMIT_ARRAY_PARAMS_SIZE,
+        string $type = self::TYPE_LEGACY,
     ) {
+        // Set terminology based on API type
+        $this->attributeTerm = ($type === self::TYPE_TABLESDB) ? 'column' : 'attribute';
     }
 
     /**
@@ -84,10 +96,20 @@ class Indexes extends Validator
                 return false;
             }
 
-            if (!isset($index['attributes']) || !is_array($index['attributes'])) {
-                $this->message = "Index at position $i is missing required field 'attributes' (must be an array)";
+            $attributesFieldName = ($this->attributeTerm === 'column') ? 'columns' : 'attributes';
+            if (!isset($index['attributes']) && !isset($index['columns'])) {
+                $this->message = "Index at position $i is missing required field '{$attributesFieldName}' (must be an array)";
                 return false;
             }
+
+            // Support both 'attributes' and 'columns' field names for TablesDB compatibility
+            $indexAttributes = $index['attributes'] ?? $index['columns'] ?? null;
+            if (!is_array($indexAttributes)) {
+                $this->message = "Index at position $i is missing required field '{$attributesFieldName}' (must be an array)";
+                return false;
+            }
+            // Normalize to 'attributes' for internal processing
+            $index['attributes'] = $indexAttributes;
 
             // Validate key format
             if (!$keyValidator->isValid($index['key'])) {
@@ -110,12 +132,12 @@ class Indexes extends Validator
 
             // Validate attributes array
             if (empty($index['attributes'])) {
-                $this->message = "Index '" . $index['key'] . "' must have at least one attribute";
+                $this->message = "Index '" . $index['key'] . "' must have at least one {$this->attributeTerm}";
                 return false;
             }
 
             if (count($index['attributes']) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
-                $this->message = "Index '" . $index['key'] . "' cannot have more than " . APP_LIMIT_ARRAY_PARAMS_SIZE . " attributes";
+                $this->message = "Index '" . $index['key'] . "' cannot have more than " . APP_LIMIT_ARRAY_PARAMS_SIZE . " {$this->attributeTerm}s";
                 return false;
             }
 
@@ -123,11 +145,11 @@ class Indexes extends Validator
             $systemAttrs = ['$id', '$createdAt', '$updatedAt'];
             foreach ($index['attributes'] as $attrIndex => $attr) {
                 if (!is_string($attr)) {
-                    $this->message = "Invalid attribute at position $attrIndex in index '" . $index['key'] . "': must be a string";
+                    $this->message = "Invalid {$this->attributeTerm} at position $attrIndex in index '" . $index['key'] . "': must be a string";
                     return false;
                 }
                 if (!$keyValidator->isValid($attr) && !in_array($attr, $systemAttrs)) {
-                    $this->message = "Invalid attribute name '$attr' in index '" . $index['key'] . "'";
+                    $this->message = "Invalid {$this->attributeTerm} name '$attr' in index '" . $index['key'] . "'";
                     return false;
                 }
             }
@@ -142,7 +164,7 @@ class Indexes extends Validator
                 }
 
                 if (count($index['orders']) !== $attrCount) {
-                    $this->message = "Index '" . $index['key'] . "': orders array length (" . count($index['orders']) . ") must match attributes array length ($attrCount)";
+                    $this->message = "Index '" . $index['key'] . "': orders array length (" . count($index['orders']) . ") must match {$attributesFieldName} array length ($attrCount)";
                     return false;
                 }
 
@@ -162,7 +184,7 @@ class Indexes extends Validator
                 }
 
                 if (count($index['lengths']) !== $attrCount) {
-                    $this->message = "Index '" . $index['key'] . "': lengths array length (" . count($index['lengths']) . ") must match attributes array length ($attrCount)";
+                    $this->message = "Index '" . $index['key'] . "': lengths array length (" . count($index['lengths']) . ") must match {$attributesFieldName} array length ($attrCount)";
                     return false;
                 }
 

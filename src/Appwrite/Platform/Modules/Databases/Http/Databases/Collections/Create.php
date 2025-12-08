@@ -125,7 +125,8 @@ class Create extends Action
 
         $attributesValidator = new AttributesValidator(
             APP_LIMIT_ARRAY_PARAMS_SIZE,
-            $dbForProject->getAdapter()->getSupportForSpatialAttributes()
+            $dbForProject->getAdapter()->getSupportForSpatialAttributes(),
+            $this->isCollectionsAPI() ? AttributesValidator::TYPE_LEGACY : AttributesValidator::TYPE_TABLESDB
         );
 
         if (!$attributesValidator->isValid($attributes)) {
@@ -133,10 +134,11 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $attributesValidator->getDescription());
         }
 
+        $structureTerm = $this->isCollectionsAPI() ? 'attributes' : 'columns';
         foreach ($attributes as $attribute) {
             if (($attribute['type'] ?? '') === Database::VAR_RELATIONSHIP) {
                 $dbForProject->deleteDocument($databaseKey, $collection->getId());
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Relationship attributes cannot be created inline. Use the create relationship endpoint instead.');
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, "Relationship {$structureTerm} cannot be created inline. Use the create relationship endpoint instead.");
             }
         }
 
@@ -154,7 +156,10 @@ class Create extends Action
         }
 
         // Validate indexes
-        $indexesValidator = new IndexesValidator($dbForProject->getLimitForIndexes());
+        $indexesValidator = new IndexesValidator(
+            $dbForProject->getLimitForIndexes(),
+            $this->isCollectionsAPI() ? IndexesValidator::TYPE_LEGACY : IndexesValidator::TYPE_TABLESDB
+        );
         if (!$indexesValidator->isValid($indexes)) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $indexesValidator->getDescription());
@@ -185,7 +190,9 @@ class Create extends Action
             $dbForProject->getAdapter()->getSupportForVectors(),
             $dbForProject->getAdapter()->getSupportForAttributes(),
             $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForProject->getAdapter()->getSupportForObject(),
+
         );
 
         foreach ($collectionIndexes as $indexDoc) {
