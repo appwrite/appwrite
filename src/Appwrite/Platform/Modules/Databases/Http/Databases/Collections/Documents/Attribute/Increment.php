@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -12,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use InvalidArgumentException;
 use Utopia\Database\Database;
@@ -91,8 +91,8 @@ class Increment extends Action
 
     public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan, Authorization $authorization): void
     {
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {

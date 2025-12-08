@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -12,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -112,8 +112,8 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot commit and rollback at the same time');
         }
 
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         $transaction = ($isAPIKey || $isPrivilegedUser)
             ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
@@ -241,13 +241,12 @@ class Update extends Action
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($transaction);
                 });
-
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e);
-            } catch (DuplicateException|ConflictException $e) {
+            } catch (DuplicateException | ConflictException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));

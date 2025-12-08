@@ -11,7 +11,7 @@ Messaging messaging = new Messaging(client);
 
 messaging.listTargets(
     "<MESSAGE_ID>", // messageId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

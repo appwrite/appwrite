@@ -367,6 +367,8 @@ class Create extends Action
             }
         }
 
+
+
         $metadata = null;
 
         $queueForEvents

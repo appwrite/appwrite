@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -12,6 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -180,8 +180,8 @@ class Create extends Action
             $documents = [$data];
         }
 
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($isBulk && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);

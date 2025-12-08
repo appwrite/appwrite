@@ -9,6 +9,7 @@ use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
+use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Swoole\Timer;
@@ -81,6 +82,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache, $authorization) {
                 ->setNamespace('_console')
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', 'console');
+            $dbForPlatform->setDocumentType('users', User::class);
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];

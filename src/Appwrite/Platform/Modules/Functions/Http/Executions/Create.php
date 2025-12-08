@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -15,9 +14,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -94,6 +96,8 @@ class Create extends Base
             ->inject('queueForStatsUsage')
             ->inject('queueForFunctions')
             ->inject('geodb')
+            ->inject('store')
+            ->inject('proofForToken')
             ->inject('executor')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -117,6 +121,8 @@ class Create extends Base
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
         Reader $geodb,
+        Store $store,
+        Token $proofForToken,
         Executor $executor,
         Authorization $authorization
     ) {
@@ -158,8 +164,8 @@ class Create extends Base
 
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -200,7 +206,7 @@ class Create extends Base
 
             foreach ($sessions as $session) {
                 /** @var Utopia\Database\Document $session */
-                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // Find most recent active session for user ID and JWT headers
                     $current = $session;
                 }
             }

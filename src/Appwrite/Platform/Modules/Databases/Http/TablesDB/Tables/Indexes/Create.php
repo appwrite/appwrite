@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Indexes;
 
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Indexes\Create as IndexCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,7 +9,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -73,11 +70,4 @@ class Create extends IndexCreate
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
-    {
-        // Map TablesDB parameters to Collections API parameters
-        // tableId -> collectionId
-        // columns -> attributes
-        parent::action($databaseId, $tableId, $key, $type, $columns, $orders, $lengths, $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
-    }
 }

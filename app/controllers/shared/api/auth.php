@@ -1,7 +1,7 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
 use Utopia\App;
@@ -20,7 +20,7 @@ App::init()
         $lastUpdate = $session->getAttribute('mfaUpdatedAt');
         if (!empty($lastUpdate)) {
             $now = DateTime::now();
-            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
 
             $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
         }
@@ -50,8 +50,8 @@ App::init()
 
         $route = $utopia->match($request);
 
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
-        $isAppUser = Auth::isAppUser($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAppUser = User::isApp($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;

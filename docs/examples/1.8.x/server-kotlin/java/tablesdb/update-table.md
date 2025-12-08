@@ -1,8 +1,8 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.TablesDB;
 import io.appwrite.Permission;
 import io.appwrite.Role;
+import io.appwrite.services.TablesDB;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -15,7 +15,7 @@ tablesDB.updateTable(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "<NAME>", // name
-    listOf(Permission.read(Role.any())), // permissions (optional)
+    List.of(Permission.read(Role.any())), // permissions (optional)
     false, // rowSecurity (optional)
     false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
