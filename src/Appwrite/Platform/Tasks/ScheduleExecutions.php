@@ -64,7 +64,9 @@ class ScheduleExecutions extends ScheduleBase
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
             \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data) {
-                Co::sleep($delay);
+                if ($delay > 0) {
+                    Co::sleep($delay);
+                }
 
                 $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
