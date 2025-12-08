@@ -81,7 +81,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, bool $cache, int $ttl, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState,Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, bool $cache, int $ttl, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
     {
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -144,7 +144,7 @@ class XList extends Action
                     foreach ($queries as $query) {
                         $serializedQueries[] = $query instanceof Query ? $query->toArray() : $query;
                     }
-                
+
                     $hostname = $dbForProject->getAdapter()->getHostname();
                     $cacheKeyBase = \sprintf(
                         '%s-cache-%s:%s:%s:collection:%s:%s',
@@ -155,24 +155,24 @@ class XList extends Action
                         $collectionId,
                         \md5(\json_encode($serializedQueries))
                     );
-                
+
                     $documentsCacheKey = $cacheKeyBase . ':documents';
                     $totalCacheKey = $cacheKeyBase . ':total';
 
                     $documentsCacheHit = $totalDocumentsCacheHit = false;
 
                     $cachedDocuments = $dbForProject->cache->load($documentsCacheKey, $ttl);
-                   
+
                     if ($cachedDocuments !== null &&
                         $cachedDocuments !== false &&
                       \is_array($cachedDocuments)) {
-                        $documents = \array_map(function ($doc){
+                        $documents = \array_map(function ($doc) {
                             return new Document($doc);
                         }, $cachedDocuments);
                         $documentsCacheHit = true;
                     } else {
                         $documents = $dbForProject->find($collectionTableId, $queries);
-                        
+
                         // Convert Document objects to arrays for caching
                         $documentsArray = \array_map(function ($doc) {
                             return $doc->getArrayCopy();
