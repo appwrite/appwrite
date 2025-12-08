@@ -1391,12 +1391,7 @@ trait DatabasesBase
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
 
-        // MongoDB only allows one fulltext index per collection, so it returns a different error
-        if ($this->isMongoDB()) {
-            $this->assertEquals('There is already a fulltext index in the collection', $fulltextArray['body']['message']);
-        } else {
-            $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
-        }
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',

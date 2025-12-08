@@ -121,12 +121,18 @@ class Create extends Action
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        /**
+         * @var Database $dbForDatabases
+         */
+        $dbForDatabases = $getDatabasesDB($database);
+
         $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $databaseKey = 'database_' . $database->getSequence();
 
         $attributesValidator = new AttributesValidator(
             APP_LIMIT_ARRAY_PARAMS_SIZE,
-            $dbForProject->getAdapter()->getSupportForSpatialAttributes()
+            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
+            $dbForDatabases->getAdapter()->getSupportForAttributes()
         );
 
         if (!$attributesValidator->isValid($attributes)) {
@@ -155,7 +161,7 @@ class Create extends Action
         }
 
         // Validate indexes
-        $indexesValidator = new IndexesValidator($dbForProject->getLimitForIndexes());
+        $indexesValidator = new IndexesValidator($dbForDatabases->getLimitForIndexes());
         if (!$indexesValidator->isValid($indexes)) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $indexesValidator->getDescription());
@@ -178,15 +184,15 @@ class Create extends Action
         $indexValidator = new IndexValidator(
             $collectionAttributes,
             [],
-            $dbForProject->getAdapter()->getMaxIndexLength(),
-            $dbForProject->getAdapter()->getInternalIndexesKeys(),
-            $dbForProject->getAdapter()->getSupportForIndexArray(),
-            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForProject->getAdapter()->getSupportForVectors(),
-            $dbForProject->getAdapter()->getSupportForAttributes(),
-            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
+            $dbForDatabases->getAdapter()->getMaxIndexLength(),
+            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
+            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
+            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForDatabases->getAdapter()->getSupportForVectors(),
+            $dbForDatabases->getAdapter()->getSupportForAttributes(),
+            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes()
         );
 
         foreach ($collectionIndexes as $indexDoc) {
@@ -195,10 +201,7 @@ class Create extends Action
                 throw new Exception($this->getInvalidIndexException(), $indexValidator->getDescription());
             }
         }
-        /**
-         * @var Database $dbForDatabases
-         */
-        $dbForDatabases = $getDatabasesDB($database);
+
         try {
             $dbForDatabases->createCollection(
                 id: $collectionKey,
