@@ -60,6 +60,7 @@ class Update extends Base
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -70,7 +71,8 @@ class Update extends Base
         Response $response,
         Database $dbForProject,
         Event $queueForEvents,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Authorization $authorization
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -104,12 +106,12 @@ class Update extends Base
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        Authorization::skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
+        $authorization->skip(fn () => $dbForPlatform->foreach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $authorization) {
             $rule = $rule
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getSequence());
 
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
         }, $queries));
 
         $queueForEvents

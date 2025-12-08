@@ -87,7 +87,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github
+        GitHub $github,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
