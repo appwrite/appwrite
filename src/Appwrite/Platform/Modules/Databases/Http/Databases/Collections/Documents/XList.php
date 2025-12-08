@@ -71,7 +71,7 @@ class XList extends Action
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-            ->param('useCache', false, new Boolean(true), 'Opt-in to cached responses for select queries. Disabled by default.', true)
+            ->param('cache', false, new Boolean(true), 'Opt-in to cached responses for select queries. Disabled by default.', true)
             ->param('ttl', 30, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -81,7 +81,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, bool $useCache, int $ttl, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState,Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, bool $cache, int $ttl, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState,Authorization $authorization): void
     {
         $isAPIKey = Auth::isAppUser($authorization->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
@@ -139,7 +139,7 @@ class XList extends Action
                 $total = $includeTotal ? $transactionState->countDocuments($collectionTableId, $transactionId, $queries) : 0;
             } elseif (! empty($selectQueries)) {
 
-                if ($useCache) {
+                if ($cache) {
                     $serializedQueries = [];
                     foreach ($queries as $query) {
                         $serializedQueries[] = $query instanceof Query ? $query->toArray() : $query;
