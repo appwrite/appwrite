@@ -135,6 +135,8 @@ use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
 use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageDocumentsDB;
+use Appwrite\Utopia\Response\Model\UsageDocumentsDBs;
 use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
@@ -175,6 +177,8 @@ class Response extends SwooleResponse
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
+    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
@@ -612,6 +616,8 @@ class Response extends SwooleResponse
             ->setModel(new MetricBreakdown())
             ->setModel(new UsageDatabases())
             ->setModel(new UsageDatabase())
+            ->setModel(new UsageDocumentsDBs())
+            ->setModel(new UsageDocumentsDB())
             ->setModel(new UsageTable())
             ->setModel(new UsageCollection())
             ->setModel(new UsageUsers())

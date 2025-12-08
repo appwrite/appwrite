@@ -84,8 +84,6 @@ class Delete extends Action
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
-            ->inject('transactionState')
-            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -213,8 +211,8 @@ class Delete extends Action
         );
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1); // per collection
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1); // per collection
 
         $response->addHeader('X-Debug-Operations', 1);
 

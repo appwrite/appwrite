@@ -286,6 +286,8 @@ class Migrations extends Action
             'disabledMetrics' => [
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,

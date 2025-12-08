@@ -92,8 +92,6 @@ class Upsert extends Action
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
-            ->inject('transactionState')
-            ->inject('plan')
             ->callback($this->action(...));
     }
 
@@ -259,8 +257,8 @@ class Upsert extends Action
         $setCollection($collection, $newDocument);
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations));
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $operations));
 
         // Handle transaction staging
         if ($transactionId !== null) {

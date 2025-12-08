@@ -275,11 +275,11 @@ class Update extends Action
             }
 
             $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $totalOperations);
+                ->addMetric($this->getDatabasesOperationWriteMetric(), $totalOperations);
 
             foreach ($databaseOperations as $sequence => $count) {
                 $queueForStatsUsage->addMetric(
-                    str_replace('{databaseInternalId}', $sequence, METRIC_DATABASE_ID_OPERATIONS_WRITES),
+                    str_replace('{databaseInternalId}', $sequence, $this->getDatabasesIdOperationWriteMetric()),
                     $count
                 );
             }

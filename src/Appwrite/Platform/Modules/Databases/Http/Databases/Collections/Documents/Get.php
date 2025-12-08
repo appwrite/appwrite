@@ -71,7 +71,6 @@ class Get extends Action
             ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
-            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
@@ -133,8 +132,8 @@ class Get extends Action
         );
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 

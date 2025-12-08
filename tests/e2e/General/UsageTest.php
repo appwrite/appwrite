@@ -917,6 +917,7 @@ class UsageTest extends Scope
     {
         $documentsTotal = 0;
         $collectionsTotal = 0;
+        $documentsDbTotal = 0;
         $databasesTotal = $data['databasesTotal'];
         $requestsTotal = $data['requestsTotal'];
 
@@ -940,7 +941,7 @@ class UsageTest extends Scope
             $this->assertNotEmpty($response['body']['$id']);
 
             $requestsTotal += 1;
-            $databasesTotal += 1;
+            $documentsDbTotal += 1;
 
             $documentsDbId = $response['body']['$id'];
 
@@ -955,7 +956,7 @@ class UsageTest extends Scope
 
                 $this->assertEmpty($response['body']);
 
-                $databasesTotal -= 1;
+                $documentsDbTotal -= 1;
                 $requestsTotal += 1;
             }
         }
@@ -1052,6 +1053,7 @@ class UsageTest extends Scope
             'documentsDbCollectionId' => $collectionId,
             'requestsTotal' => $requestsTotal,
             'databasesTotal' => $databasesTotal,
+            'documentsDbTotal' => $documentsDbTotal,
             'documentsDbCollectionsTotal' => $collectionsTotal,
             'documentsDbDocumentsTotal' => $documentsTotal,
         ]);
@@ -1065,6 +1067,7 @@ class UsageTest extends Scope
         $collectionId = $data['documentsDbCollectionId'];
         $requestsTotal = $data['requestsTotal'];
         $databasesTotal = $data['databasesTotal'];
+        $documentsDbTotal = $data['documentsDbTotal'];
         $collectionsTotal = $data['documentsDbCollectionsTotal'];
         $documentsTotal = $data['documentsDbDocumentsTotal'];
 
@@ -1086,7 +1089,9 @@ class UsageTest extends Scope
         $this->assertCount(1, $response['body']['network']);
         $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
         $this->validateDates($response['body']['requests']);
-        $this->assertEquals($databasesTotal, $response['body']['databasesTotal']);
+        // documentsdbTotal should reflect only documents DB instances, not relational databases.
+        $this->assertEquals($documentsDbTotal, $response['body']['documentsdbTotal']);
+        $this->assertEquals($documentsTotal, $response['body']['documentsdbDocumentsTotal']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -1097,26 +1102,30 @@ class UsageTest extends Scope
         $this->assertEquals($databasesTotal, $response['body']['databases'][array_key_last($response['body']['databases'])]['value']);
         $this->validateDates($response['body']['databases']);
 
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            '/documentsdb/' . $documentsDbId . '/usage?range=30d',
-            $this->getConsoleHeaders()
-        );
+        $this->assertEventually(function () use ($documentsDbId, $collectionsTotal, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/documentsdb/' . $documentsDbId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-        $this->assertEquals($collectionsTotal, $response['body']['collections'][array_key_last($response['body']['collections'])]['value']);
-        $this->validateDates($response['body']['collections']);
+            $this->assertEquals($collectionsTotal, $response['body']['collections'][array_key_last($response['body']['collections'])]['value']);
+            $this->validateDates($response['body']['collections']);
 
-        $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
-        $this->validateDates($response['body']['documents']);
+            $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+            $this->validateDates($response['body']['documents']);
+        });
 
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/usage?range=30d',
-            $this->getConsoleHeaders()
-        );
+        $this->assertEventually(function () use ($documentsDbId, $collectionId, $documentsTotal) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/documentsdb/' . $documentsDbId . '/collections/' . $collectionId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-        $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
-        $this->validateDates($response['body']['documents']);
+            $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
+            $this->validateDates($response['body']['documents']);
+        });
 
         return $data;
     }

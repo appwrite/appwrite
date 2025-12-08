@@ -1,5 +1,10 @@
 # Change Log
 
+## 13.5.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
 ## 13.4.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance

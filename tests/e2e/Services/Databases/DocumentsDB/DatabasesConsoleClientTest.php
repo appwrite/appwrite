@@ -224,7 +224,8 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(15, count($response['body']));
+        // not 15 fields due to no tables related fields in body
+        $this->assertEquals(11, count($response['body']));
         $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsNumeric($response['body']['documentsTotal']);
         $this->assertIsNumeric($response['body']['collectionsTotal']);

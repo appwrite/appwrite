@@ -73,6 +73,18 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 };
 
 /**
+ * Get database type prefixed metric
+ * Prefixes the metric with database type if it's not legacy or tablesdb
+ *
+ * @param string $databaseType Database type (e.g., 'documentsdb', 'tablesdb', 'legacy', '')
+ * @param string $metric Base metric constant (e.g., METRIC_DATABASES, METRIC_COLLECTIONS)
+ * @return string Prefixed metric or original metric if no prefix needed
+ */
+$getDatabaseTypePrefixedMetric = function (string $databaseType, string $metric): string {
+    return implode('.', array_filter([$databaseType, $metric]));
+};
+
+/**
  * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
  *
  * Accounts can be created in many ways beyond `createAccount`
@@ -110,7 +122,7 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
     }
 };
 
-$usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
+$usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage, string $databaseType) use ($getDatabaseTypePrefixedMetric) {
     $value = 1;
 
     switch ($event) {
@@ -142,7 +154,8 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
             $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
             break;
         case $document->getCollection() === 'databases': // databases
-            $queueForStatsUsage->addMetric(METRIC_DATABASES, $value); // per project
+            $metric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASES);
+            $queueForStatsUsage->addMetric($metric, $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $queueForStatsUsage->addReduce($document);
@@ -151,22 +164,29 @@ $usageDatabaseListener = function (string $event, Document $document, StatsUsage
         case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
             $parts = explode('_', $document->getCollection());
             $databaseInternalId = $parts[1] ?? 0;
+            $collectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_COLLECTIONS);
+            $databaseIdCollectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTIONS);
             $queueForStatsUsage
-                ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value);
+                ->addMetric($collectionMetric, $value) // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdCollectionMetric), $value);
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $queueForStatsUsage->addReduce($document);
             }
             break;
+            // for databases route documents are getting created via getDatabasesDB and stats are maintained in the resources
+            // but keeping it since other routes might created documents still directly via dbForProject
         case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
             $parts = explode('_', $document->getCollection());
             $databaseInternalId   = $parts[1] ?? 0;
             $collectionInternalId = $parts[3] ?? 0;
+            $documentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DOCUMENTS);
+            $databaseIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_DOCUMENTS);
+            $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
             $queueForStatsUsage
-                ->addMetric(METRIC_DOCUMENTS, $value)  // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
-                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                ->addMetric($documentsMetric, $value)  // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
+                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
             break;
         case $document->getCollection() === 'buckets': //buckets
             $queueForStatsUsage
@@ -506,6 +526,11 @@ App::init()
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
+        $path = $route->getMatchedPath();
+        $databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            default => '',
+        };
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
@@ -621,12 +646,14 @@ App::init()
         $queueForWebhooks = new Webhook($publisherWebhooks);
         $queueForRealtime = new Realtime();
 
+        // to get consumed in the stats worker without calling to database
+        $queueForStatsUsage->setContext('database', new Document(['type' => $databaseType]));
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
             ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
                 $project,
                 $document,
