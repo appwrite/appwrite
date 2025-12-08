@@ -164,86 +164,87 @@ class Create extends Action
                     throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
                 }
 
-            if ($attributeStatus !== 'available') {
-                $contextType = ucfirst($contextType);
-                throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
-            }
+                if ($attributeStatus !== 'available') {
+                    $contextType = ucfirst($contextType);
+                    throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
+                }
 
                 if (empty($lengths[$i])) {
                     $lengths[$i] = null;
                 }
 
-            if ($attributeArray === true) {
-                // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
-                throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                if ($attributeArray === true) {
+                    // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                    throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                }
             }
-        }
 
-        $index = new Document([
-            '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
-            'key' => $key,
-            'status' => 'processing', // processing, available, failed, deleting, stuck
-            'databaseInternalId' => $db->getSequence(),
-            'databaseId' => $databaseId,
-            'collectionInternalId' => $collection->getSequence(),
-            'collectionId' => $collectionId,
-            'type' => $type,
-            'attributes' => $attributes,
-            'lengths' => $lengths,
-            'orders' => $orders,
-        ]);
+            $index = new Document([
+                '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
+                'key' => $key,
+                'status' => 'processing', // processing, available, failed, deleting, stuck
+                'databaseInternalId' => $db->getSequence(),
+                'databaseId' => $databaseId,
+                'collectionInternalId' => $collection->getSequence(),
+                'collectionId' => $collectionId,
+                'type' => $type,
+                'attributes' => $attributes,
+                'lengths' => $lengths,
+                'orders' => $orders,
+            ]);
 
-        $validator = new IndexValidator(
-            $collection->getAttribute('attributes'),
-            $collection->getAttribute('indexes'),
-            $dbForDatabases->getAdapter()->getMaxIndexLength(),
-            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
-            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForDatabases->getAdapter()->getSupportForVectors(),
-            $dbForDatabases->getAdapter()->getSupportForAttributes(),
-            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObject()
-        );
+            $validator = new IndexValidator(
+                $collection->getAttribute('attributes'),
+                $collection->getAttribute('indexes'),
+                $dbForDatabases->getAdapter()->getMaxIndexLength(),
+                $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
+                $dbForDatabases->getAdapter()->getSupportForIndexArray(),
+                $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
+                $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
+                $dbForDatabases->getAdapter()->getSupportForVectors(),
+                $dbForDatabases->getAdapter()->getSupportForAttributes(),
+                $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
+                $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
+                $dbForDatabases->getAdapter()->getSupportForObject()
+            );
 
-        if (!$validator->isValid($index)) {
-            throw new Exception($this->getInvalidTypeException(), $validator->getDescription());
-        }
+            if (!$validator->isValid($index)) {
+                throw new Exception($this->getInvalidTypeException(), $validator->getDescription());
+            }
 
-        try {
-            $index = $dbForProject->createDocument('indexes', $index);
-        } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
-        }
+            try {
+                $index = $dbForProject->createDocument('indexes', $index);
+            } catch (DuplicateException) {
+                throw new Exception($this->getDuplicateException());
+            }
 
-        $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
+            $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_CREATE_INDEX)
-            ->setDatabase($db);
-
-        if ($this->isCollectionsAPI()) {
             $queueForDatabase
-                ->setCollection($collection)
-                ->setDocument($index);
-        } else {
-            $queueForDatabase
-                ->setTable($collection)
-                ->setRow($index);
+                ->setType(DATABASE_TYPE_CREATE_INDEX)
+                ->setDatabase($db);
+
+            if ($this->isCollectionsAPI()) {
+                $queueForDatabase
+                    ->setCollection($collection)
+                    ->setDocument($index);
+            } else {
+                $queueForDatabase
+                    ->setTable($collection)
+                    ->setRow($index);
+            }
+
+            $queueForEvents
+                ->setContext('database', $db)
+                ->setParam('databaseId', $databaseId)
+                ->setParam('indexId', $index->getId())
+                ->setParam('collectionId', $collection->getId())
+                ->setParam('tableId', $collection->getId())
+                ->setContext($this->getCollectionsEventsContext(), $collection);
+
+            $response
+                ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
+                ->dynamic($index, $this->getResponseModel());
         }
-
-        $queueForEvents
-            ->setContext('database', $db)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('indexId', $index->getId())
-            ->setParam('collectionId', $collection->getId())
-            ->setParam('tableId', $collection->getId())
-            ->setContext($this->getCollectionsEventsContext(), $collection);
-
-        $response
-            ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
-            ->dynamic($index, $this->getResponseModel());
     }
 }
