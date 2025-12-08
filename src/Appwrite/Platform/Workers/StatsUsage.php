@@ -68,6 +68,7 @@ class StatsUsage extends Action
         METRIC_COLLECTIONS => true,
         METRIC_DOCUMENTS => true,
         METRIC_DATABASES_STORAGE => true,
+        METRIC_DATABASES_STORAGE_DOCUMENTSDB => true,
     ];
 
     /**
@@ -501,7 +502,7 @@ class StatsUsage extends Action
         foreach ($this->skipParentIdMetrics as $skipMetric) {
             $metricParts = explode('.', $stat->getAttribute('metric'));
             $metric = implode('.', in_array($metricParts[0], self::DATABASE_PREFIXES) ? array_slice($metricParts, 1) : $metricParts);
-            if (str_ends_with($metric, $metric)) {
+            if (str_ends_with($metric, $skipMetric)) {
                 return;
             }
         }
