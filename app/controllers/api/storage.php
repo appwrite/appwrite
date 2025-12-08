@@ -682,7 +682,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     'metadata' => $metadata,
                 ]);
 
-                $file = $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                try {
+                    $file = $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                } catch (DuplicateException) {
+                    throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+                } catch (NotFoundException) {
+                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                }
             } else {
                 $file = $file
                     ->setAttribute('$permissions', $permissions)
@@ -731,6 +737,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
                 try {
                     $file = $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                } catch (DuplicateException) {
+                    throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                 } catch (NotFoundException) {
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
