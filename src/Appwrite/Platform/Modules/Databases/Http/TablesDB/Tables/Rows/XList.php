@@ -2,17 +2,22 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows;
 
+use Appwrite\Databases\TransactionState;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\XList as DocumentXList;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class XList extends DocumentXList
@@ -54,6 +59,8 @@ class XList extends DocumentXList
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the TablesDB service [server integration](https://appwrite.io/docs/products/databases/tables#create-table).')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID to read uncommitted changes within the transaction.', true)
+            ->param('cache', false, new Boolean(true), 'Opt-in to cached responses for select queries. Disabled by default.', true)
+            ->param('ttl', 30, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
