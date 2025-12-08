@@ -3072,4 +3072,116 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('test-identifier-updated', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
     }
+
+    /**
+     * @depends testCreateAccount
+     */
+    public function testMFARecoveryCodeChallenge($data): void
+    {
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+
+        // Create session first
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $sessionCookie = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Generate recovery codes
+        $response = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionCookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['recoveryCodes']);
+        $recoveryCodes = $response['body']['recoveryCodes'];
+        $this->assertGreaterThan(0, count($recoveryCodes));
+
+        // Create recovery code challenge
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionCookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'factor' => 'recoveryCode'
+        ]);
+
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+        $this->assertNotEmpty($challenge['body']['$id']);
+        $challengeId = $challenge['body']['$id'];
+
+        // Test SUCCESS: Verify with valid recovery code (this tests the bug fix)
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionCookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'challengeId' => $challengeId,
+            'otp' => $recoveryCodes[0]
+        ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
+        $this->assertArrayHasKey('factors', $verification['body']);
+        $this->assertContains('recoveryCode', $verification['body']['factors']);
+
+        // Test that the code was consumed (can't use again)
+        $challenge2 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionCookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'factor' => 'recoveryCode'
+        ]);
+
+        $this->assertEquals(201, $challenge2['headers']['status-code']);
+
+        $verification2 = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionCookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'challengeId' => $challenge2['body']['$id'],
+            'otp' => $recoveryCodes[0] // Same code should fail
+        ]);
+
+        $this->assertEquals(401, $verification2['headers']['status-code']);
+
+        // Test FAILURE: Invalid recovery code
+        $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionCookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'factor' => 'recoveryCode'
+        ]);
+
+        $this->assertEquals(201, $challenge3['headers']['status-code']);
+
+        $verification3 = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionCookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'challengeId' => $challenge3['body']['$id'],
+            'otp' => 'invalid-code-123'
+        ]);
+
+        $this->assertEquals(401, $verification3['headers']['status-code']);
+    }
 }

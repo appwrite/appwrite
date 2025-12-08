@@ -4942,7 +4942,7 @@ App::put('/v1/account/mfa/challenge')
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
                 $challenge->isSet('type') &&
-                $challenge->getAttribute('type') === \strtolower(Type::RECOVERY_CODE)
+                $challenge->getAttribute('type') === Type::RECOVERY_CODE
             ) {
                 $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
                 if (in_array($otp, $mfaRecoveryCodes)) {
@@ -4964,7 +4964,7 @@ App::put('/v1/account/mfa/challenge')
             Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
-            \strtolower(Type::RECOVERY_CODE) => $recoveryCodeChallenge($challenge, $user, $otp),
+            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
             default => false
         });
 
