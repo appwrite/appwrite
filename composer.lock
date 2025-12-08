@@ -4264,29 +4264,29 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.33",
+            "version": "0.33.34",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "838e3a28276e73187bc34a314f014096dc92191b"
+                "reference": "76def92594c32504ec80eaacdb60ff8fad73c856"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/838e3a28276e73187bc34a314f014096dc92191b",
-                "reference": "838e3a28276e73187bc34a314f014096dc92191b",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/76def92594c32504ec80eaacdb60ff8fad73c856",
+                "reference": "76def92594c32504ec80eaacdb60ff8fad73c856",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1",
+                "php": ">=8.3",
                 "utopia-php/compression": "0.1.*",
                 "utopia-php/telemetry": "0.1.*",
                 "utopia-php/validators": "0.1.*"
             },
             "require-dev": {
-                "laravel/pint": "^1.2",
-                "phpbench/phpbench": "^1.2",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5.25"
+                "laravel/pint": "1.*",
+                "phpbench/phpbench": "1.*",
+                "phpstan/phpstan": "1.*",
+                "phpunit/phpunit": "9.*"
             },
             "type": "library",
             "autoload": {
@@ -4306,9 +4306,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.33"
+                "source": "https://github.com/utopia-php/http/tree/0.33.34"
             },
-            "time": "2025-11-25T10:21:13+00:00"
+            "time": "2025-12-08T07:55:31+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4513,16 +4513,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.8",
+            "version": "1.3.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "f7b4823bff22edf83b63720cf2165a830b98d6b5"
+                "reference": "c55ec67c74663190cda10fd79297422147be7e85"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f7b4823bff22edf83b63720cf2165a830b98d6b5",
-                "reference": "f7b4823bff22edf83b63720cf2165a830b98d6b5",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c55ec67c74663190cda10fd79297422147be7e85",
+                "reference": "c55ec67c74663190cda10fd79297422147be7e85",
                 "shasum": ""
             },
             "require": {
@@ -4562,9 +4562,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.3.8"
+                "source": "https://github.com/utopia-php/migration/tree/1.3.9"
             },
-            "time": "2025-12-08T07:37:32+00:00"
+            "time": "2025-12-08T08:45:09+00:00"
         },
         {
             "name": "utopia-php/mongo",
