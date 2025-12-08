@@ -170,9 +170,7 @@ class Create extends Action
 
             if ($attributeArray === true) {
                 // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Creating indexes on array values is not currently supported.');
-                //$lengths[$i] = Database::MAX_ARRAY_INDEX_LENGTH;
-                //$orders[$i] = null;
+                throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
             }
         }
 
