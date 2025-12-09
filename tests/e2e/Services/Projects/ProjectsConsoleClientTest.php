@@ -12,6 +12,8 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -110,6 +112,92 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => $projectId,
             'teamId' => $team['body']['$id']
         ];
+    }
+
+    public function testDeleteProjectWithMultiDB(): void
+    {
+        // Create a team and project
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'MultiDB Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'MultiDB Project',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        $projectAdminHeaders = array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+        ]);
+
+        // Create legacy database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $projectAdminHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'Legacy DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $projectAdminHeaders, [
+            'collectionId' => ID::unique(),
+            'name' => 'Legacy Collection',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        // Create documentsdb database and collection
+        $documentsDb = $this->client->call(Client::METHOD_POST, '/documentsdb', $projectAdminHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'Documents DB',
+        ]);
+        $this->assertEquals(201, $documentsDb['headers']['status-code']);
+        $documentsDbId = $documentsDb['body']['$id'];
+
+        $documentsCollection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $documentsDbId . '/collections', $projectAdminHeaders, [
+            'collectionId' => ID::unique(),
+            'name' => 'Documents Collection',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $documentsCollection['headers']['status-code']);
+
+        // Delete project
+        $delete = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $delete['headers']['status-code']);
+
+        // Ensure project is gone
+        $getProject = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $getProject['headers']['status-code']);
     }
 
     public function testCreateDuplicateProject(): void
