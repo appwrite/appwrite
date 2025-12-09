@@ -67,6 +67,8 @@ class StatsUsage extends Action
         METRIC_BUILDS => true,
         METRIC_COLLECTIONS => true,
         METRIC_DOCUMENTS => true,
+        METRIC_COLLECTIONS_DOCUMENTSDB => true,
+        METRIC_DOCUMENTS_DOCUMENTSDB => true,
         METRIC_DATABASES_STORAGE => true,
         METRIC_DATABASES_STORAGE_DOCUMENTSDB => true,
     ];
