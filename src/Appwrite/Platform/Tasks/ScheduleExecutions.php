@@ -63,7 +63,7 @@ class ScheduleExecutions extends ScheduleBase
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data) {
+            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data, $dbForPlatform) {
                 if ($delay > 0) {
                     Co::sleep($delay);
                 }
@@ -81,15 +81,14 @@ class ScheduleExecutions extends ScheduleBase
                     ->setUserId($data['userId'] ?? '')
                     ->trigger();
 
+                $dbForPlatform->deleteDocument(
+                    'schedules',
+                    $schedule['$id'],
+                );
+
                 $this->recordEnqueueDelay($scheduledAt);
+                unset($this->schedules[$schedule['$sequence']]);
             });
-
-            $dbForPlatform->deleteDocument(
-                'schedules',
-                $schedule['$id'],
-            );
-
-            unset($this->schedules[$schedule['$sequence']]);
         }
     }
 }
