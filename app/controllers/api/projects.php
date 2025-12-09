@@ -2071,13 +2071,16 @@ App::patch('/v1/projects/:projectId/smtp')
 
         // validate SMTP settings
         if ($enabled) {
+            if (empty($username)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP Username is required when enabling SMTP.');
+            } elseif (empty($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP Password is required when enabling SMTP.');
+            }
             $mail = new PHPMailer(true);
             $mail->isSMTP();
-            if (!empty($username) && !empty($password)) {
-              $mail->SMTPAuth = true;
-              $mail->Username = $username;
-              $mail->Password = $password;
-            }
+            $mail->SMTPAuth = true;
+            $mail->Username = $username;
+            $mail->Password = $password;
             $mail->Host = $host;
             $mail->Port = $port;
             $mail->SMTPSecure = $secure;
