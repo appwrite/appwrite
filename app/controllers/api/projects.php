@@ -2073,8 +2073,11 @@ App::patch('/v1/projects/:projectId/smtp')
         if ($enabled) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
-            $mail->Username = $username;
-            $mail->Password = $password;
+            if (!empty($username) && !empty($password)) {
+              $mail->SMTPAuth = true;
+              $mail->Username = $username;
+              $mail->Password = $password;
+            }
             $mail->Host = $host;
             $mail->Port = $port;
             $mail->SMTPSecure = $secure;
