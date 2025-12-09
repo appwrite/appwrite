@@ -4874,7 +4874,9 @@ App::post('/v1/account/mfa/challenge')
             ->setParam('userId', $user->getId())
             ->setParam('challengeId', $challenge->getId());
 
-        $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
     });
 
 App::put('/v1/account/mfa/challenge')
