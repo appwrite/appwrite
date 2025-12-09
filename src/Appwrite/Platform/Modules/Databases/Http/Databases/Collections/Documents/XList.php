@@ -148,7 +148,7 @@ class XList extends Action
                     $hostname = $dbForProject->getAdapter()->getHostname();
                     $cacheKeyBase = \sprintf(
                         '%s-cache-%s:%s:%s:collection:%s:%s',
-                        $dbForProject->cacheName,
+                        $dbForProject->getCacheName(),
                         $hostname ?? '',
                         $dbForProject->getNamespace(),
                         $dbForProject->getTenant(),
@@ -161,7 +161,7 @@ class XList extends Action
 
                     $documentsCacheHit = $totalDocumentsCacheHit = false;
 
-                    $cachedDocuments = $dbForProject->cache->load($documentsCacheKey, $ttl);
+                    $cachedDocuments = $dbForProject->getCache()->load($documentsCacheKey, $ttl);
 
                     if ($cachedDocuments !== null &&
                         $cachedDocuments !== false &&
@@ -177,17 +177,17 @@ class XList extends Action
                         $documentsArray = \array_map(function ($doc) {
                             return $doc->getArrayCopy();
                         }, $documents);
-                        $dbForProject->cache->save($documentsCacheKey, $documentsArray);
+                        $dbForProject->getCache()->save($documentsCacheKey, $documentsArray);
                     }
 
                     if ($includeTotal) {
-                        $cachedTotal = $dbForProject->cache->load($totalCacheKey, $ttl);
+                        $cachedTotal = $dbForProject->getCache()->load($totalCacheKey, $ttl);
                         if ($cachedTotal !== null && $cachedTotal !== false) {
                             $total = $cachedTotal;
                             $totalDocumentsCacheHit = true;
                         } else {
                             $total = $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT);
-                            $dbForProject->cache->save($totalCacheKey, $total);
+                            $dbForProject->getCache()->save($totalCacheKey, $total);
                         }
                     } else {
                         $total = 0;
