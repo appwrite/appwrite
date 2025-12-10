@@ -480,7 +480,7 @@ App::post('/v1/teams/:teamId/memberships')
         if ($project->getId() === 'console') {
             $roles = array_keys(Config::getParam('roles', []));
             $roles = array_values(array_filter($roles, function ($role) {
-                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
             }));
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
@@ -1093,7 +1093,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         if ($project->getId() === 'console') {
             $roles = array_keys(Config::getParam('roles', []));
             $roles = array_values(array_filter($roles, function ($role) {
-                return !in_array($role, [Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS, Auth::USER_ROLE_USERS]);
+                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
             }));
             return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }

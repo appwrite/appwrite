@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7c9cb03eb5267f1e7a3ffc037ae22b6a",
+    "content-hash": "8343d57d49bb1aeae8d3ce9980d6d735",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -887,16 +887,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.4.8",
+            "version": "6.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "56baf981af4f192e15a4f369d4975af847a81ccb"
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/56baf981af4f192e15a4f369d4975af847a81ccb",
-                "reference": "56baf981af4f192e15a4f369d4975af847a81ccb",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/5cbea85106e561c7138d03603eb6e05128480409",
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409",
                 "shasum": ""
             },
             "require": {
@@ -952,7 +952,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2025-11-26T16:02:47+00:00"
+            "time": "2023-10-02T10:01:54+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -3891,16 +3891,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "3.5.0",
+            "version": "3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "5da71b65a6123ce2e78795522b05b7458aabfbd7"
+                "reference": "af15066255a5fd7bd2926de37bcbf3d8500fc155"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/5da71b65a6123ce2e78795522b05b7458aabfbd7",
-                "reference": "5da71b65a6123ce2e78795522b05b7458aabfbd7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/af15066255a5fd7bd2926de37bcbf3d8500fc155",
+                "reference": "af15066255a5fd7bd2926de37bcbf3d8500fc155",
                 "shasum": ""
             },
             "require": {
@@ -3943,9 +3943,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/3.5.0"
+                "source": "https://github.com/utopia-php/database/tree/3.6.0"
             },
-            "time": "2025-11-18T08:11:01+00:00"
+            "time": "2025-12-08T05:23:04+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8937,9 +8937,9 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": [],
-    "prefer-stable": false,
+    "minimum-stability": "dev",
+    "stability-flags": {},
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.3.0",
