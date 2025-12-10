@@ -152,7 +152,13 @@ class Mails extends Action
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        if (!empty($smtp)) {
+        $senderEmail = $payload['senderEmail'] ?? '';
+        $senderName = $payload['senderName'] ?? '';
+
+        if (!empty($senderEmail)) {
+            $replyTo = $senderEmail;
+            $replyToName = $senderName;
+        } elseif (!empty($smtp)) {
             $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
             $replyToName = $smtp['senderName'];
         }

@@ -16,6 +16,9 @@ class Mail extends Event
     protected string $bodyTemplate = '';
     protected array $attachment = [];
 
+    protected string $senderEmail = '';
+    protected string $senderName = '';
+
     public function __construct(protected Publisher $publisher)
     {
         parent::__construct($publisher);
@@ -401,6 +404,50 @@ class Mail extends Event
     }
 
     /**
+     * Set sender email
+     *
+     * @param string $email
+     * @return self
+     */
+    public function setSenderEmail(string $email): self
+    {
+        $this->senderEmail = $email;
+        return $this;
+    }
+
+    /**
+     * Get sender email
+     *
+     * @return string
+     */
+    public function getSenderEmail(): string
+    {
+        return $this->senderEmail;
+    }
+
+    /**
+     * Set sender name
+     *
+     * @param string $name
+     * @return self
+     */
+    public function setSenderName(string $name): self
+    {
+        $this->senderName = $name;
+        return $this;
+    }
+
+    /**
+     * Get sender name
+     *
+     * @return string
+     */
+    public function getSenderName(): string
+    {
+        return $this->senderName;
+    }
+
+    /**
      * Reset
      *
      * @return self
@@ -415,6 +462,8 @@ class Mail extends Event
         $this->variables = [];
         $this->bodyTemplate = '';
         $this->attachment = [];
+        $this->senderEmail = '';
+        $this->senderName = '';
         return $this;
     }
 
@@ -436,6 +485,8 @@ class Mail extends Event
             'smtp' => $this->smtp,
             'variables' => $this->variables,
             'attachment' => $this->attachment,
+            'senderEmail' => $this->senderEmail,
+            'senderName' => $this->senderName,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];
     }
