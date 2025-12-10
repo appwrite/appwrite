@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.10.5 AS final
+FROM appwrite/base:0.10.6 AS final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -24,9 +24,9 @@ ENV _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
 RUN \
-  if [ "$DEBUG" == "true" ]; then \
+    if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
-  fi
+    fi
 
 WORKDIR /usr/src/code
 

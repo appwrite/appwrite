@@ -1,5 +1,11 @@
 # Change Log
 
+## 20.0.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `createTemplateDeployment` method signature: replace `version` parameter with `type` (TemplateReferenceType) and `reference` parameters
+* Add `Theme`, `Timezone` and `Output` enums
+
 ## 19.4.0
 
 * Add `getScreenshot` method to `Avatars` service

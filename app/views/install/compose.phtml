@@ -870,7 +870,7 @@ $dbService = $this->getParam('database');
       - _APP_DB_PASS
 
   appwrite-assistant:
-    image: appwrite/assistant:0.8.3
+    image: appwrite/assistant:0.8.4
     container_name: appwrite-assistant
     <<: *x-logging
     restart: unless-stopped
@@ -878,7 +878,7 @@ $dbService = $this->getParam('database');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-      
+
   appwrite-browser:
     image: appwrite/browser:0.3.2
     container_name: appwrite-browser

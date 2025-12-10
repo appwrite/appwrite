@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia;
 
-use Appwrite\Auth\Auth;
+use Appwrite\Utopia\Database\Documents\User as DBUser;
 use Appwrite\Utopia\Fetch\BodyMultipart;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
@@ -146,8 +146,8 @@ use Appwrite\Utopia\Response\Model\VcsContent;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
 use JsonException;
-use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
+use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -813,8 +813,8 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = Authorization::getRoles();
-                $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-                $isAppUser = Auth::isAppUser($roles);
+                $isPrivilegedUser = DBUser::isPrivileged($roles);
+                $isAppUser = DBUser::isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
                     $data->setAttribute($key, '');

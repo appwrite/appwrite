@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -19,6 +18,8 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\PhoneNumberUtil;
 use Utopia\Abuse\Abuse;
+use Utopia\Auth\Proofs\Code as ProofsCode;
+use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -102,6 +103,8 @@ class Create extends Action
             ->inject('timelimit')
             ->inject('queueForStatsUsage')
             ->inject('plan')
+            ->inject('proofForToken')
+            ->inject('proofForCode')
             ->callback($this->action(...));
     }
 
@@ -118,15 +121,18 @@ class Create extends Action
         Mail $queueForMails,
         callable $timelimit,
         StatsUsage $queueForStatsUsage,
-        array $plan
+        array $plan,
+        ProofsToken $proofForToken,
+        ProofsCode $proofForCode
     ): void {
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
-        $code = Auth::codeGenerator();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+
+        $code = $proofForCode->generate();
         $challenge = new Document([
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
             'type' => $factor,
-            'token' => Auth::tokenGenerator(),
+            'token' => $proofForToken->generate(),
             'code' => $code,
             'expire' => $expire,
             '$permissions' => [
@@ -138,7 +144,8 @@ class Create extends Action
 
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
-        $templatesPath = \dirname(__DIR__, 7) . '/app/config/locale/templates';
+        // 9 levels up to project root
+        $templatesPath = \dirname(__DIR__, 9) . '/app/config/locale/templates';
 
         switch ($factor) {
             case Type::PHONE:
