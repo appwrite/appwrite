@@ -294,7 +294,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      * Create document for this worker to share stats across Containers.
      */
     go(function () use ($register, $containerId, &$statsDocument) {
-        $attempts = 0;
         $database = getConsoleDB();
         $document = new Document([
             '$id' => ID::unique(),
