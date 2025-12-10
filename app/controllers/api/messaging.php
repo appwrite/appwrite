@@ -1155,12 +1155,6 @@ App::get('/v1/messaging/providers/:providerId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
-
         $audit = new Audit($dbForProject);
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, $queries);
@@ -2562,12 +2556,6 @@ App::get('/v1/messaging/topics/:topicId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
-
         $audit = new Audit($dbForProject);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $queries);
@@ -2984,12 +2972,6 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'subscriber/' . $subscriberId;
@@ -3784,12 +3766,6 @@ App::get('/v1/messaging/messages/:messageId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'message/' . $messageId;
