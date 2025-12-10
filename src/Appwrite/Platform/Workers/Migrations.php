@@ -288,6 +288,8 @@ class Migrations extends Action
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
                 METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
+                METRIC_DATABASES_OPERATIONS_READS_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB,
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
@@ -456,6 +458,7 @@ class Migrations extends Action
     {
         return match ($databaseType) {
             'documentsdb' => $this->project->getAttribute('documentsDatabase'),
+            'vectordb' => $this->project->getAttribute('vectorDatabase'),
             default => $this->project->getAttribute('database'),
         };
     }

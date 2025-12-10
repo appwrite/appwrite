@@ -531,7 +531,7 @@ class Deletes extends Action
         $projectTables = !\in_array($dsn->getHost(), $sharedTables);
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $databaseDSNKeys = ['database','documentsDatabase'];
+        $databaseDSNKeys = ['database','documentsDatabase','vectorDatabase'];
 
         $exectionActionPerDatabase = function (string $databaseDSNKey, $callback) use ($getDatabasesDB, $document) {
             /**

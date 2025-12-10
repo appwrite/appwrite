@@ -183,6 +183,25 @@ class ProjectsConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $documentsCollection['headers']['status-code']);
 
+        // Create vectordb database and collection
+        $vectorDb = $this->client->call(Client::METHOD_POST, '/vectordb', $projectAdminHeaders, [
+            'databaseId' => ID::unique(),
+            'name' => 'Vector DB',
+        ]);
+        $this->assertEquals(201, $vectorDb['headers']['status-code']);
+        $vectorDbId = $vectorDb['body']['$id'];
+
+        $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDbId . '/collections', $projectAdminHeaders, [
+            'collectionId' => ID::unique(),
+            'name' => 'Vector Collection',
+            'dimension' => 3,
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $vectorCollection['headers']['status-code']);
+
         // Delete project
         $delete = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',

@@ -4,6 +4,7 @@
 $common = include __DIR__ . '/collections/common.php';
 $projects = include __DIR__ . '/collections/projects.php';
 $databases = include __DIR__ . '/collections/databases.php';
+$vectordb = include __DIR__ . '/collections/vectordb.php';
 $platform = include __DIR__ . '/collections/platform.php';
 $logs = include __DIR__ . '/collections/logs.php';
 
@@ -26,6 +27,7 @@ unset($common['files']);
 $collections = [
     'buckets' => $buckets,
     'databases' => $databases,
+    'vectordb' => $vectordb,
     'projects' => array_merge($projects, $common),
     'console' => array_merge($platform, $common),
     'logs' => $logs,

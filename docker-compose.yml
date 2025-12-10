@@ -92,7 +92,9 @@ services:
 
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
       # - clamav
     entrypoint:
       - php
@@ -137,6 +139,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -269,7 +277,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -286,6 +296,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_CONFIG_REALTIME
@@ -304,6 +320,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -334,8 +352,10 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - request-catcher-sms
       - request-catcher-webhook
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -365,6 +385,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -432,6 +454,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -446,6 +470,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
@@ -468,6 +498,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -536,6 +568,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -579,7 +613,9 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - openruntimes-executor
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -716,6 +752,8 @@ services:
       - ./tests:/usr/src/code/tests
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -799,6 +837,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -831,6 +871,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -863,6 +905,8 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -894,7 +938,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -923,7 +969,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -951,7 +999,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1125,6 +1175,40 @@ services:
       - mongodb
 
 
+  postgresql:
+    build:
+      context: https://github.com/appwrite/docker-postgres.git#feat-dockerfile
+    container_name: appwrite-postgresql
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
+
+  ollama:
+    build: 
+      context: https://github.com/appwrite/docker-ollama.git#feat-dockerfile
+      args:
+        MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
+        # duration to keep model in memory
+        OLLAMA_KEEP_ALIVE: 24h
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    # persistent for caching models across restarts and preloading
+    volumes:
+      - appwrite-models:/root/.ollama
+    networks:
+      - appwrite
+
   redis:
     image: redis:7.2.4-alpine
     <<: *x-logging
@@ -1225,6 +1309,7 @@ volumes:
   appwrite-mariadb:
   appwrite-mongodb:
   appwrite-mongodb-keyfile:
+  appwrite-postgresql:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
@@ -1234,3 +1319,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
+  appwrite-models:

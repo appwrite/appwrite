@@ -125,6 +125,7 @@ class StatsResources extends Action
 
             $databases = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB])]);
             $documentsdb = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB])]);
+            $vectordb = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_VECTORDB])]);
             $buckets = $dbForProject->count('buckets');
             $users = $dbForProject->count('users');
 
@@ -160,6 +161,7 @@ class StatsResources extends Action
             $metrics = [
                 METRIC_DATABASES => $databases,
                 METRIC_DATABASES_DOCUMENTSDB => $documentsdb,
+                METRIC_DATABASES_VECTORDB => $vectordb,
                 METRIC_BUCKETS => $buckets,
                 METRIC_USERS => $users,
                 METRIC_FUNCTIONS => $functions,
@@ -268,8 +270,13 @@ class StatsResources extends Action
         $totalDocumentsDocumentsdb = 0;
         $totalDatabaseStorageDocumentsdb = 0;
 
+        // vectordb
+        $totalCollectionsVectordb = 0;
+        $totalDocumentsVectordb = 0;
+        $totalDatabaseStorageVectordb = 0;
 
-        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $getDatabasesDB, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage, &$totalCollectionsDocumentsdb, &$totalDocumentsDocumentsdb, &$totalDatabaseStorageDocumentsdb) {
+
+        $this->foreachDocument($dbForProject, 'databases', [], function ($database) use ($dbForProject, $getDatabasesDB, $region, &$totalCollections, &$totalDocuments, &$totalDatabaseStorage, &$totalCollectionsDocumentsdb, &$totalDocumentsDocumentsdb, &$totalDatabaseStorageDocumentsdb, &$totalCollectionsVectordb, &$totalDocumentsVectordb, &$totalDatabaseStorageVectordb) {
             $dbForDatabases = $getDatabasesDB($database);
             $collections = $dbForProject->count('database_' . $database->getSequence());
 
@@ -289,6 +296,11 @@ class StatsResources extends Action
                     $totalDocumentsDocumentsdb += $documents;
                     $totalCollectionsDocumentsdb += $collections;
                     break;
+                case DATABASE_TYPE_VECTORDB:
+                    $totalDatabaseStorageVectordb += $storage;
+                    $totalDocumentsVectordb += $documents;
+                    $totalCollectionsVectordb += $collections;
+                    break;
                 default:
                     $totalDatabaseStorage += $storage;
                     $totalDocuments += $documents;
@@ -303,6 +315,10 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, METRIC_COLLECTIONS_DOCUMENTSDB, $totalCollectionsDocumentsdb);
         $this->createStatsDocuments($region, METRIC_DOCUMENTS_DOCUMENTSDB, $totalDocumentsDocumentsdb);
         $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE_DOCUMENTSDB, $totalDatabaseStorageDocumentsdb);
+
+        $this->createStatsDocuments($region, METRIC_COLLECTIONS_VECTORDB, $totalCollectionsVectordb);
+        $this->createStatsDocuments($region, METRIC_DOCUMENTS_VECTORDB, $totalDocumentsVectordb);
+        $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE_VECTORDB, $totalDatabaseStorageVectordb);
     }
     protected function countForCollections(Database $dbForProject, Database $dbForDatabases, Document $database, string $region): array
     {

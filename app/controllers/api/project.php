@@ -76,6 +76,18 @@ App::get('/v1/project/usage')
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
                 METRIC_FILES_IMAGES_TRANSFORMED,
+                // VectorDB totals
+                METRIC_DATABASES_VECTORDB,
+                METRIC_COLLECTIONS_VECTORDB,
+                METRIC_DOCUMENTS_VECTORDB,
+                METRIC_DATABASES_STORAGE_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_READS_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB,
+                // Embeddings totals
+                METRIC_EMBEDDINGS_TEXT,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
@@ -92,6 +104,18 @@ App::get('/v1/project/usage')
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
                 METRIC_FILES_IMAGES_TRANSFORMED,
+                // VectorDB time series
+                METRIC_DATABASES_VECTORDB,
+                METRIC_COLLECTIONS_VECTORDB,
+                METRIC_DOCUMENTS_VECTORDB,
+                METRIC_DATABASES_STORAGE_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_READS_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB,
+                // Embeddings time series
+                METRIC_EMBEDDINGS_TEXT,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
             ]
         ];
 
@@ -379,6 +403,12 @@ App::get('/v1/project/usage')
             'databasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES],
             'documentsdbDatabasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB],
             'documentsdbDatabasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB],
+            'vectordbDatabasesTotal' => $total[METRIC_DATABASES_VECTORDB] ?? 0,
+            'vectordbCollectionsTotal' => $total[METRIC_COLLECTIONS_VECTORDB] ?? 0,
+            'vectordbDocumentsTotal' => $total[METRIC_DOCUMENTS_VECTORDB] ?? 0,
+            'vectordbDatabasesStorageTotal' => $total[METRIC_DATABASES_STORAGE_VECTORDB] ?? 0,
+            'vectordbDatabasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS_VECTORDB] ?? 0,
+            'vectordbDatabasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB] ?? 0,
             'executionsBreakdown' => $executionsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'databasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS],
@@ -386,6 +416,12 @@ App::get('/v1/project/usage')
             'documentsdbDatabasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB],
             'documentsdbDatabasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB],
             'documentsdbDatabasesStorage' => $usage[METRIC_DATABASES_STORAGE_DOCUMENTSDB],
+            'vectordbDatabases' => $usage[METRIC_DATABASES_VECTORDB] ?? [],
+            'vectordbCollections' => $usage[METRIC_COLLECTIONS_VECTORDB] ?? [],
+            'vectordbDocuments' => $usage[METRIC_DOCUMENTS_VECTORDB] ?? [],
+            'vectordbDatabasesStorage' => $usage[METRIC_DATABASES_STORAGE_VECTORDB] ?? [],
+            'vectordbDatabasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS_VECTORDB] ?? [],
+            'vectordbDatabasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB] ?? [],
             'databasesStorageBreakdown' => $databasesStorageBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
@@ -395,6 +431,14 @@ App::get('/v1/project/usage')
             'authPhoneCountryBreakdown' => $authPhoneCountryBreakdown,
             'imageTransformations' => $usage[METRIC_FILES_IMAGES_TRANSFORMED],
             'imageTransformationsTotal' => $total[METRIC_FILES_IMAGES_TRANSFORMED],
+            'embeddingsText' => $usage[METRIC_EMBEDDINGS_TEXT] ?? [],
+            'embeddingsTextTokens' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS] ?? [],
+            'embeddingsTextDuration' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION] ?? [],
+            'embeddingsTextErrors' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR] ?? [],
+            'embeddingsTextTotal' => $total[METRIC_EMBEDDINGS_TEXT] ?? 0,
+            'embeddingsTextTokensTotal' => $total[METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS] ?? 0,
+            'embeddingsTextDurationTotal' => $total[METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION] ?? 0,
+            'embeddingsTextErrorsTotal' => $total[METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR] ?? 0,
         ]), Response::MODEL_USAGE_PROJECT);
     });
 

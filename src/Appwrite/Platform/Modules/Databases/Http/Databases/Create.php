@@ -34,10 +34,18 @@ class Create extends Action
     {
         return match ($this->getDatabaseType()) {
             DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
+            VECTORDB => $project->getAttribute('vectorDatabase'),
             default => $project->getAttribute('database'),
         };
     }
 
+    protected function getDatabaseCollection()
+    {
+        return match ($this->getDatabaseType()) {
+            'vectordb' => (Config::getParam('collections', [])['vectordb'] ?? [])['collections'] ?? [],
+            default => (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [],
+        };
+    }
     public function __construct()
     {
         $this
@@ -102,7 +110,7 @@ class Create extends Action
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        $collections = (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [];
+        $collections = $this->getDatabaseCollection();
         if (empty($collections)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
         }

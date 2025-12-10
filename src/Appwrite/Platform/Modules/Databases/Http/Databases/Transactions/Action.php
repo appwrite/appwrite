@@ -36,6 +36,7 @@ abstract class Action extends DatabasesAction
     public function setHttpPath(string $path): DatabasesAction
     {
         switch (true) {
+            // TODO: set the getDatabaseType() from each database group instead of path matching
             case str_contains($path, '/tablesdb'):
                 $this->context = TABLES;
                 $this->databaseType = TABLESDB;
@@ -44,6 +45,10 @@ abstract class Action extends DatabasesAction
             case str_contains($path, '/documentsdb'):
                 $this->context = COLLECTIONS;
                 $this->databaseType = DOCUMENTSDB;
+                break;
+            case str_contains($path, '/vectordb'):
+                $this->context = COLLECTIONS;
+                $this->databaseType = VECTORDB;
                 break;
         }
         return parent::setHttpPath($path);

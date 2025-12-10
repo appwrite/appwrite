@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "51d293b5ffae82523da7b15cd0a942dd",
+    "content-hash": "4a44da365c2e5b931f007f72437144dc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3498,6 +3498,60 @@
                 "source": "https://github.com/utopia-php/abuse/tree/1.0.2"
             },
             "time": "2025-10-20T07:18:33+00:00"
+        },
+        {
+            "name": "utopia-php/agents",
+            "version": "0.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/agents.git",
+                "reference": "ab026e44d332598852b4606808d9cd3bf1de9c96"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/ab026e44d332598852b4606808d9cd3bf1de9c96",
+                "reference": "ab026e44d332598852b4606808d9cd3bf1de9c96",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3",
+                "utopia-php/fetch": "0.4.*"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.9.x-dev",
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Agents\\": "src/Agents"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Utopia PHP",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "A simple PHP AI agents library",
+            "keywords": [
+                "agents",
+                "ai",
+                "automation",
+                "machine-learning",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/agents/issues",
+                "source": "https://github.com/utopia-php/agents/tree/0.6.0"
+            },
+            "time": "2025-12-02T10:51:32+00:00"
         },
         {
             "name": "utopia-php/analytics",
