@@ -158,6 +158,9 @@ class Mails extends Action
         if (!empty($senderEmail)) {
             $replyTo = $senderEmail;
             $replyToName = $senderName;
+
+            // set again since these can be a diff.
+            $mail->setFrom($senderEmail, $senderName);
         } elseif (!empty($smtp)) {
             $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
             $replyToName = $smtp['senderName'];
