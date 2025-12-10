@@ -296,26 +296,34 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     go(function () use ($register, $containerId, &$statsDocument) {
         $attempts = 0;
         $database = getConsoleDB();
+        $document = new Document([
+            '$id' => ID::unique(),
+            '$collection' => ID::custom('realtime'),
+            '$permissions' => [],
+            'container' => $containerId,
+            'timestamp' => DateTime::now(),
+            'value' => '{}'
+        ]);
+        try {
+            $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
+        } catch (\Exception $e) {
+            $logger = $register->get('realtimeLogger');
+            if ($logger) {
+                $log = new Log();
+                $log->setNamespace("http");
+                $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+                $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
+                $log->setType(Log::TYPE_ERROR);
 
-        do {
-            try {
-                $attempts++;
-                $document = new Document([
-                    '$id' => ID::unique(),
-                    '$collection' => ID::custom('realtime'),
-                    '$permissions' => [],
-                    'container' => $containerId,
-                    'timestamp' => DateTime::now(),
-                    'value' => '{}'
-                ]);
+                $log->setMessage($e->getMessage());
 
-                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
-                break;
-            } catch (Throwable) {
-                Console::warning("Collection not ready. Retrying connection ({$attempts})...");
-                sleep(DATABASE_RECONNECT_SLEEP);
+                $log->addExtra('file', $e->getFile());
+                $log->addExtra('line', $e->getLine());
+                $log->addExtra('trace', $e->getTraceAsString());
+
+                $logger->addLog($log);
             }
-        } while (true);
+        }
     });
 
     /**
