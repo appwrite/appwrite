@@ -36,11 +36,12 @@ App::init()
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
-    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
+    ->inject('trustedIp')
+    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb, string $trustedIp) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
-            $record = $geodb->get($request->getIP()) ?? [];
+            $record = $geodb->get($trustedIp) ?? [];
             $country = $record['country']['iso_code'] ?? '';
             if (in_array($country, $countries)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);

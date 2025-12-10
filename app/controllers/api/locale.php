@@ -32,11 +32,12 @@ App::get('/v1/locale')
     ->inject('response')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
+    ->inject('trustedIp')
+    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb, string $trustedIp) {
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
         $output = [];
-        $ip = $request->getIP();
+        $ip = $trustedIp;
 
         $output['ip'] = $ip;
 

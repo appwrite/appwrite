@@ -98,6 +98,7 @@ class Create extends Base
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
+            ->inject('trustedIp')
             ->callback($this->action(...));
     }
 
@@ -109,6 +110,7 @@ class Create extends Base
         string $method,
         mixed $headers,
         ?string $scheduledAt,
+        string $trustedIp,
         Response $response,
         Request $request,
         Document $project,
@@ -236,7 +238,7 @@ class Create extends Base
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
-        $ip = $request->getIP();
+        $ip = $trustedIp;
         $headers['x-appwrite-client-ip'] = $ip;
 
         if (!empty($ip)) {

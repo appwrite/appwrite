@@ -342,7 +342,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 204);
     }
 
-    public function testGetIp(): void
+    public function testTrustedIp(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
