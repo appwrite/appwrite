@@ -3073,20 +3073,13 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(false, $response['body']['expired']);
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
-    public function testMFARecoveryCodeChallenge($data): void
+    public function testMFARecoveryCodeChallenge(): void
     {
-        $session = $data['session'] ?? '';
-
-        // Generate recovery codes
+        // Generate recovery codes using existing authenticated session
         $response = $this->client->call(Client::METHOD_POST, '/account/mfa/recovery-codes', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), []);
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['recoveryCodes']);
@@ -3095,11 +3088,9 @@ class AccountCustomClientTest extends Scope
 
         // Create recovery code challenge
         $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        ], $this->getHeaders()), [
             'factor' => 'recoveryCode'
         ]);
 
@@ -3109,11 +3100,9 @@ class AccountCustomClientTest extends Scope
 
         // Test SUCCESS: Verify with valid recovery code (this tests the bug fix)
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        ], $this->getHeaders()), [
             'challengeId' => $challengeId,
             'otp' => $recoveryCodes[0]
         ]);
@@ -3124,22 +3113,18 @@ class AccountCustomClientTest extends Scope
 
         // Test that the code was consumed (can't use again)
         $challenge2 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        ], $this->getHeaders()), [
             'factor' => 'recoveryCode'
         ]);
 
         $this->assertEquals(201, $challenge2['headers']['status-code']);
 
         $verification2 = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        ], $this->getHeaders()), [
             'challengeId' => $challenge2['body']['$id'],
             'otp' => $recoveryCodes[0] // Same code should fail
         ]);
@@ -3148,22 +3133,18 @@ class AccountCustomClientTest extends Scope
 
         // Test FAILURE: Invalid recovery code
         $challenge3 = $this->client->call(Client::METHOD_POST, '/account/mfa/challenge', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        ], $this->getHeaders()), [
             'factor' => 'recoveryCode'
         ]);
 
         $this->assertEquals(201, $challenge3['headers']['status-code']);
 
         $verification3 = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenge', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
+        ], $this->getHeaders()), [
             'challengeId' => $challenge3['body']['$id'],
             'otp' => 'invalid-code-123'
         ]);
