@@ -310,7 +310,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             $logger = $register->get('realtimeLogger');
             if ($logger) {
                 $log = new Log();
-                $log->setNamespace("http");
+                $log->setNamespace("realtime");
                 $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
                 $log->setVersion(System::getEnv('_APP_VERSION', 'UNKNOWN'));
                 $log->setType(Log::TYPE_ERROR);
