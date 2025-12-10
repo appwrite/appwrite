@@ -194,7 +194,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 }
 ;
 
-$createSession = function (string $userId, string $secret, string $trustedIp, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, string $trustedIp) {
 
     /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
     $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -365,7 +365,7 @@ App::post('/v1/account')
     ->inject('dbForProject')
     ->inject('hooks')
     ->inject('trustedIp')
-    ->action(function (string $userId, string $email, string $password, string $name, string $trustedIp, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks, string $trustedIp) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -959,7 +959,7 @@ App::post('/v1/account/sessions/email')
     ->inject('proofForPassword')
     ->inject('proofForToken')
     ->inject('trustedIp')
-    ->action(function (string $email, string $password, string $trustedIp, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, string $trustedIp ) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1453,7 +1453,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('proofForPassword')
     ->inject('proofForToken')
     ->inject('trustedIp')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, string $trustedIp, Request $request, Response $response, Document $project, array $platforms, Document $devKey, User $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, array $platforms, Document $devKey, User $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, string $trustedIp) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -2054,7 +2054,7 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForMails')
     ->inject('proofForPassword')
     ->inject('trustedIp')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, string $trustedIp, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, string $trustedIp) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, string $trustedIp) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2323,7 +2323,7 @@ App::post('/v1/account/tokens/email')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('trustedIp')
-    ->action(function (string $userId, string $email, string $trustedIp, bool $phrase, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode, string $trustedIp) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }

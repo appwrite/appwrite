@@ -110,7 +110,6 @@ class Create extends Base
         string $method,
         mixed $headers,
         ?string $scheduledAt,
-        string $trustedIp,
         Response $response,
         Request $request,
         Document $project,
@@ -123,7 +122,8 @@ class Create extends Base
         Reader $geodb,
         Store $store,
         Token $proofForToken,
-        Executor $executor
+        Executor $executor,
+        string $trustedIp,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
