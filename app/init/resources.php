@@ -162,14 +162,6 @@ App::setResource('queueForStatsResources', function (Publisher $publisher) {
 }, ['publisher']);
 
 /**
- * List of domains served by the application.
- */
-App::setResource('domains', fn () => array_unique(array_filter([
-    ...\explode(',', System::getEnv('_APP_DOMAIN', 'localhost')),
-    ...\explode(',', System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'))
-])));
-
-/**
  * Platform configuration
  */
 App::setResource('platform', function (Request $request) {
@@ -183,33 +175,16 @@ App::setResource('platform', function (Request $request) {
     if ($request->getPort() === '80' && $protocol !== 'http') {
         $port = ':80';
     }
-    $platform['endpoint'] = "$protocol://{$platform['domain']}{$port}/v1";
+    $platform['endpoint'] = "$protocol://{$platform['apiHostname']}{$port}/v1";
 
     return $platform;
 }, ['request']);
 
 /**
- * Safe request origin used to construct urls
- */
-App::setResource('origin', function (Request $request) {
-    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-
-    $port = '';
-    if ($request->getPort() === '443' && $protocol !== 'https') {
-        $port = ':443';
-    }
-    if ($request->getPort() === '80' && $protocol !== 'http') {
-        $port = ':80';
-    }
-
-    return "$protocol://{$request->getHostname()}{$port}";
-}, ['request']);
-
-/**
  * List of allowed request hostnames for the request.
  */
-App::setResource('allowedHostnames', function (array $domains, Document $project, Document $rule, Document $devKey, Request $request) {
-    $allowed = [...$domains];
+App::setResource('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
+    $allowed = [...($platform['hostnames'] ?? [])];
 
     /* Add platform configured hostnames */
     if (!$project->isEmpty() && $project->getId() !== 'console') {
@@ -230,7 +205,7 @@ App::setResource('allowedHostnames', function (array $domains, Document $project
     }
 
     return array_unique($allowed);
-}, ['domains', 'project', 'rule', 'devKey', 'request']);
+}, ['platform', 'project', 'rule', 'devKey', 'request']);
 
 /**
  * List of allowed request schemes for the request.

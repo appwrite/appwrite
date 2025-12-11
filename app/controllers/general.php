@@ -59,7 +59,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, array $domains)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey)
 {
     $host = $request->getHostname() ?? '';
     if (!empty($previewHostname)) {
@@ -80,7 +80,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
     $errorView = __DIR__ . '/../views/general/error.phtml';
     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-    $url = $protocol . '://' . $platform['consoleDomain'];
+    $url = $protocol . '://' . $platform['consoleHostname'];
+    $platformHostnames = $platform['hostnames'] ?? [];
 
     if ($rule->isEmpty()) {
         $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
@@ -101,7 +102,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             throw $exception;
         }
 
-        if (!in_array($host, $domains)) {
+        if (!in_array($host, $platformHostnames)) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.', view: $errorView);
         }
 
@@ -269,7 +270,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             }
 
             if (!$authorized) {
-                $url = $protocol . "://" . $platform['consoleDomain'];
+                $url = $protocol . "://" . $platform['consoleHostname'];
                 $response
                     ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     ->addHeader('Pragma', 'no-cache')
@@ -858,15 +859,15 @@ App::init()
     ->inject('devKey')
     ->inject('apiKey')
     ->inject('cors')
-    ->inject('domains')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Func $queueForFunctions, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, array $domains) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Func $queueForFunctions, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors) {
         /*
         * Appwrite Router
         */
         $hostname = $request->getHostname() ?? '';
+        $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
-        if (!in_array($hostname, $domains) || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $apiKey, $domains)) {
+        if (!in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1028,10 +1029,11 @@ App::init()
    ->inject('console')
    ->inject('dbForPlatform')
    ->inject('queueForCertificates')
-   ->inject('domains')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $domains) {
+   ->inject('platform')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform) {
        $hostname = $request->getHostname();
-       $cache = Config::getParam('domains', []);
+       $cache = Config::getParam('hostnames', []);
+       $platformHostnames = $platform['hostnames'] ?? [];
 
        // 1. Cache hit
        if (array_key_exists($hostname, $cache)) {
@@ -1042,7 +1044,7 @@ App::init()
        $domain = new Domain(!empty($hostname) ? $hostname : '');
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
            $cache[$domain->get()] = false;
-           Config::setParam('domains', $cache);
+           Config::setParam('hostnames', $cache);
            Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
            return;
        }
@@ -1053,7 +1055,7 @@ App::init()
        }
 
        // 3. Check if domain is a main domain
-       if (!in_array($domain->get(), $domains)) {
+       if (!in_array($domain->get(), $platformHostnames)) {
            Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
            return;
        }
@@ -1114,7 +1116,7 @@ App::init()
            Console::info('Certificate already exists');
        } finally {
            $cache[$domain->get()] = true;
-           Config::setParam('domains', $cache);
+           Config::setParam('hostnames', $cache);
            Authorization::reset();
        }
    });
@@ -1138,14 +1140,14 @@ App::options()
     ->inject('project')
     ->inject('devKey')
     ->inject('apiKey')
-    ->inject('domains')
     ->inject('cors')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, array $domains, Cors $cors) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors) {
         /*
         * Appwrite Router
         */
+        $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
-        if (!in_array($request->getHostname(), $domains) || !empty($previewHostname)) {
+        if (!in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
@@ -1448,9 +1450,9 @@ App::get('/robots.txt')
     ->inject('platform')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->inject('domains')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, array $domains) {
-        if (in_array($request->getHostname(), $domains) || !empty($previewHostname)) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey) {
+        $platformHostnames = $platform['hostnames'] ?? [];
+        if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
@@ -1480,9 +1482,9 @@ App::get('/humans.txt')
     ->inject('platform')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->inject('domains')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, array $domains) {
-        if (in_array($request->getHostname(), $domains) || !empty($previewHostname)) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey) {
+        $platformHostnames = $platform['hostnames'] ?? [];
+        if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
