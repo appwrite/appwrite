@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Apppwrite\Network\TrustedIp;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
