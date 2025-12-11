@@ -89,9 +89,12 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
       # - clamav
     entrypoint:
       - php
@@ -130,11 +133,18 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -266,8 +276,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -278,11 +290,18 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_CONFIG_REALTIME
@@ -300,7 +319,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -309,6 +330,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -329,14 +351,17 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - request-catcher-sms
       - request-catcher-webhook
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -359,7 +384,9 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -377,6 +404,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -425,7 +453,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -434,11 +464,18 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
@@ -460,7 +497,9 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -472,6 +511,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -527,7 +567,9 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -549,6 +591,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -569,8 +612,10 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - openruntimes-executor
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -581,6 +626,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -656,6 +702,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -704,7 +751,9 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -720,6 +769,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -757,6 +807,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -785,11 +836,14 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -816,11 +870,14 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -847,11 +904,14 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -877,8 +937,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -887,6 +949,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -905,8 +968,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -915,6 +980,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -932,8 +998,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
+      - postgresql
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -942,6 +1010,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -1054,6 +1123,91 @@ services:
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
+
+  mongodb:
+    image: mongo:8.0.10
+    container_name: appwrite-mongodb
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db
+      - appwrite-mongodb-keyfile:/data/keyfile
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+    healthcheck:
+      test: |
+        bash -c "
+          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
+            exit 0
+          else
+            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
+              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'appwrite-mongodb:27017'}]})
+            \" 2>/dev/null || exit 1
+          fi
+        "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  appwrite-mongo-express:
+    image: mongo-express
+    container_name: appwrite-mongo-express
+    networks:
+      - appwrite
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
+      ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
+    depends_on:
+      - mongodb
+
+
+  postgresql:
+    build:
+      context: https://github.com/appwrite/docker-postgres.git#feat-dockerfile
+    container_name: appwrite-postgresql
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
+
+  ollama:
+    build: 
+      context: https://github.com/appwrite/docker-ollama.git#feat-dockerfile
+      args:
+        MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
+        # duration to keep model in memory
+        OLLAMA_KEEP_ALIVE: 24h
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    # persistent for caching models across restarts and preloading
+    volumes:
+      - appwrite-models:/root/.ollama
+    networks:
+      - appwrite
 
   redis:
     image: redis:7.2.4-alpine
@@ -1261,6 +1415,9 @@ configs:
 
 volumes:
   appwrite-mariadb:
+  appwrite-mongodb:
+  appwrite-mongodb-keyfile:
+  appwrite-postgresql:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
@@ -1270,3 +1427,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
+  appwrite-models:
