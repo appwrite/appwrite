@@ -74,17 +74,17 @@ class Delete extends Action
     {
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($db->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $attribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key);
         if ($attribute->isEmpty()) {
-            throw Exception::withParams($this->getNotFoundException(), $key);
+            throw new Exception($this->getNotFoundException(), params: [$key]);
         }
 
         $validator = new IndexDependencyValidator(
@@ -93,7 +93,7 @@ class Delete extends Action
         );
 
         if (!$validator->isValid($attribute)) {
-            throw Exception::withParams($this->getIndexDependencyException(), $key);
+            throw new Exception($this->getIndexDependencyException(), params: [$key]);
         }
 
         if ($attribute->getAttribute('status') === 'available') {
@@ -108,12 +108,12 @@ class Delete extends Action
             if ($options['twoWay']) {
                 $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection']);
                 if ($relatedCollection->isEmpty()) {
-                    throw Exception::withParams($this->getParentNotFoundException(), $options['relatedCollection']);
+                    throw new Exception($this->getParentNotFoundException(), params: [$options['relatedCollection']]);
                 }
 
                 $relatedAttribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
                 if ($relatedAttribute->isEmpty()) {
-                    throw Exception::withParams($this->getNotFoundException(), $options['twoWayKey']);
+                    throw new Exception($this->getNotFoundException(), params: [$options['twoWayKey']]);
                 }
 
                 if ($relatedAttribute->getAttribute('status') === 'available') {

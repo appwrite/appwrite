@@ -75,7 +75,7 @@ class XList extends Action
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         try {

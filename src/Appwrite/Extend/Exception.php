@@ -389,7 +389,8 @@ class Exception extends \Exception
         string $message = null,
         int|string $code = null,
         \Throwable $previous = null,
-        ?string $view = null
+        ?string $view = null,
+        array $params = []
     ) {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
@@ -405,28 +406,17 @@ class Exception extends \Exception
             }
         }
 
-        $this->message = $message ?? $this->errors[$type]['description'];
+        // Format message with params if provided
+        if (!empty($params) && $message === null) {
+            $description = $this->errors[$type]['description'] ?? '';
+            $this->message = !empty($description) ? sprintf($description, ...$params) : '';
+        } else {
+            $this->message = $message ?? $this->errors[$type]['description'];
+        }
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 
         parent::__construct($this->message, $this->code, $previous);
-    }
-
-    /**
-     * Create an exception with formatted parameters.
-     */
-    public static function withParams(string $type, mixed ...$params): self
-    {
-        $errors = Config::getParam('errors');
-        $description = $errors[$type]['description'] ?? '';
-
-        if (!empty($params) && !empty($description)) {
-            $message = sprintf($description, ...$params);
-        } else {
-            $message = $description;
-        }
-
-        return new self($type, $message);
     }
 
     /**

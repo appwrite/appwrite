@@ -78,19 +78,19 @@ class Delete extends Action
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw Exception::withParams($this->getGrandParentNotFoundException(), $collectionId);
+            throw new Exception($this->getGrandParentNotFoundException(), params: [$collectionId]);
         }
 
         $index = $dbForProject->getDocument('indexes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key);
 
         if (empty($index->getId())) {
-            throw Exception::withParams($this->getNotFoundException(), $key);
+            throw new Exception($this->getNotFoundException(), params: [$key]);
         }
 
         // Only update status if removing available index

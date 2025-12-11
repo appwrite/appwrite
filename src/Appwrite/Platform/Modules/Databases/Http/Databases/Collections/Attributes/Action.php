@@ -307,19 +307,19 @@ abstract class Action extends UtopiaAction
         $options = $attribute->getAttribute('options', []);
 
         if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
-            throw Exception::withParams($this->getSpatialTypeNotSupportedException(), $type);
+            throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
-            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         if (!empty($format)) {
@@ -382,9 +382,9 @@ abstract class Action extends UtopiaAction
             $dbForProject->checkAttribute($collection, $attribute);
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
-            throw Exception::withParams($this->getDuplicateException(), $key);
+            throw new Exception($this->getDuplicateException(), params: [$key]);
         } catch (LimitException) {
-            throw Exception::withParams($this->getLimitException(), $collectionId);
+            throw new Exception($this->getLimitException(), params: [$collectionId]);
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (Throwable $e) {
@@ -426,9 +426,9 @@ abstract class Action extends UtopiaAction
                 $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
                 $dbForProject->createDocument('attributes', $twoWayAttribute);
             } catch (DuplicateException) {
-                throw Exception::withParams($this->getDuplicateException(), $twoWayKey);
+                throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
             } catch (LimitException) {
-                throw Exception::withParams($this->getLimitException(), $relatedCollection->getId());
+                throw new Exception($this->getLimitException(), params: [$relatedCollection->getId()]);
             } catch (StructureException) {
                 throw new Exception($this->getStructureException());
             } catch (Throwable $e) {
@@ -477,19 +477,19 @@ abstract class Action extends UtopiaAction
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
-            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $attribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $collection->getSequence() . '_' . $key);
 
         if ($attribute->isEmpty()) {
-            throw Exception::withParams($this->getNotFoundException(), $key);
+            throw new Exception($this->getNotFoundException(), params: [$key]);
         }
 
         if ($attribute->getAttribute('status') !== 'available') {
@@ -590,7 +590,7 @@ abstract class Action extends UtopiaAction
             } catch (IndexException) {
                 throw new Exception(Exception::INDEX_INVALID);
             } catch (LimitException) {
-                throw Exception::withParams($this->getLimitException(), $collectionId);
+                throw new Exception($this->getLimitException(), params: [$collectionId]);
             } catch (RelationshipException $e) {
                 throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
             } catch (StructureException $e) {
@@ -624,11 +624,11 @@ abstract class Action extends UtopiaAction
                     newKey: $newKey ?? null
                 );
             } catch (DuplicateException) {
-                throw Exception::withParams($this->getDuplicateException(), $key);
+                throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {
                 throw new Exception($this->getInvalidIndexException(), $e->getMessage());
             } catch (LimitException) {
-                throw Exception::withParams($this->getLimitException(), $collectionId);
+                throw new Exception($this->getLimitException(), params: [$collectionId]);
             } catch (TruncateException) {
                 throw new Exception($this->getInvalidResizeException());
             }
@@ -644,7 +644,7 @@ abstract class Action extends UtopiaAction
             try {
                 $dbForProject->updateDocument('attributes', $originalUid, $attribute);
             } catch (DuplicateException) {
-                throw Exception::withParams($this->getDuplicateException(), $newKey);
+                throw new Exception($this->getDuplicateException(), params: [$newKey]);
             }
 
             /**

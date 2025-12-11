@@ -88,12 +88,12 @@ class Delete extends Action
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $hasRelationships = \array_filter(

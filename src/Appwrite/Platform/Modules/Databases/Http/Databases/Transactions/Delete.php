@@ -60,7 +60,7 @@ class Delete extends Action
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
         if ($transaction->isEmpty()) {
-            throw Exception::withParams(Exception::TRANSACTION_NOT_FOUND, $transactionId);
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
 
         $dbForProject->deleteDocument('transactions', $transactionId);

@@ -71,12 +71,12 @@ class Delete extends Action
     {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw Exception::withParams($this->getNotFoundException(), $collectionId);
+            throw new Exception($this->getNotFoundException(), params: [$collectionId]);
         }
 
         if (!$dbForProject->deleteDocument('database_' . $database->getSequence(), $collectionId)) {

@@ -118,7 +118,7 @@ class Update extends Action
             ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty()) {
-            throw Exception::withParams(Exception::TRANSACTION_NOT_FOUND, $transactionId);
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
         if ($transaction->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -247,7 +247,7 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
 
-                throw Exception::withParams(Exception::DOCUMENT_NOT_FOUND, $currentDocumentId ?? 'unknown', previous: $e);
+                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
             } catch (DuplicateException | ConflictException $e) {
                 Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',

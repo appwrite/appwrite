@@ -104,13 +104,13 @@ class Update extends Action
         $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         if ($transactionId === null) {
@@ -129,7 +129,7 @@ class Update extends Action
         }
 
         if ($document->isEmpty()) {
-            throw Exception::withParams($this->getNotFoundException(), $documentId);
+            throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -252,7 +252,7 @@ class Update extends Action
                 ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
-                throw Exception::withParams(Exception::TRANSACTION_NOT_FOUND, $transactionId);
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -326,7 +326,7 @@ class Update extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
-            throw Exception::withParams($this->getDuplicateException(), $documentId);
+            throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

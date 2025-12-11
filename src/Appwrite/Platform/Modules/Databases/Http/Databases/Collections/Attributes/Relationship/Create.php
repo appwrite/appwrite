@@ -93,19 +93,19 @@ class Create extends Action
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
-            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         if ($collection->isEmpty()) {
-            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId);
         $relatedCollection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollectionDocument->getSequence());
         if ($relatedCollection->isEmpty()) {
-            throw Exception::withParams($this->getParentNotFoundException(), $relatedCollectionId);
+            throw new Exception($this->getParentNotFoundException(), params: [$relatedCollectionId]);
         }
 
         $attributes = $collection->getAttribute('attributes', []);
@@ -115,14 +115,14 @@ class Create extends Action
             }
 
             if (\strtolower($attribute->getId()) === \strtolower($key)) {
-                throw Exception::withParams($this->getDuplicateException(), $key);
+                throw new Exception($this->getDuplicateException(), params: [$key]);
             }
 
             if (
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                throw Exception::withParams($this->getDuplicateException(), $twoWayKey);
+                throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
             }
 
             if (
