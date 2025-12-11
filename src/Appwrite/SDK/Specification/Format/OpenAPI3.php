@@ -165,7 +165,8 @@ class OpenAPI3 extends Format
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $sdk->isPackaging()
+                    'packaging' => $sdk->isPackaging(),
+                    'public' => $sdk->isPublic(),
                 ],
             ];
 
@@ -225,6 +226,7 @@ class OpenAPI3 extends Format
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
+                        'public' => $methodObj->isPublic(),
                     ];
 
                     // add deprecation only if method has it!

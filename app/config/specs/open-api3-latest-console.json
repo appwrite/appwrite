@@ -62,6 +62,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -110,6 +111,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -185,6 +187,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -234,6 +237,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -309,6 +313,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -378,6 +383,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -440,6 +446,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -489,6 +496,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -565,6 +573,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -634,6 +643,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAAuthenticator"
@@ -660,6 +670,7 @@
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
                             "demo": "account\/create-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAAuthenticator"
@@ -685,7 +696,8 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-mfa-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -753,6 +765,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAAuthenticator"
@@ -781,6 +794,7 @@
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
                             "demo": "account\/update-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAAuthenticator"
@@ -808,7 +822,8 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-mfa-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -888,6 +903,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.deleteMFAAuthenticator"
@@ -913,6 +929,7 @@
                             ],
                             "description": "Delete an authenticator for a user by ID.",
                             "demo": "account\/delete-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.deleteMFAAuthenticator"
@@ -937,7 +954,8 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-mfa-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1007,6 +1025,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAChallenge"
@@ -1033,6 +1052,7 @@
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
                             "demo": "account\/create-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAChallenge"
@@ -1058,7 +1078,8 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-mfa-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1135,6 +1156,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAChallenge"
@@ -1163,6 +1185,7 @@
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/update-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAChallenge"
@@ -1190,7 +1213,8 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-mfa-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1268,6 +1292,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.listMFAFactors"
@@ -1290,6 +1315,7 @@
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
                             "demo": "account\/list-mfa-factors.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.listMFAFactors"
@@ -1311,7 +1337,8 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-mfa-factors.md"
+                            "demo": "account\/list-mfa-factors.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1364,6 +1391,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.getMFARecoveryCodes"
@@ -1386,6 +1414,7 @@
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
                             "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.getMFARecoveryCodes"
@@ -1407,7 +1436,8 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-mfa-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1458,6 +1488,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFARecoveryCodes"
@@ -1480,6 +1511,7 @@
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFARecoveryCodes"
@@ -1501,7 +1533,8 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-mfa-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1552,6 +1585,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFARecoveryCodes"
@@ -1574,6 +1608,7 @@
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
                             "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFARecoveryCodes"
@@ -1595,7 +1630,8 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-mfa-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1648,6 +1684,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1717,6 +1754,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1791,6 +1829,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1866,6 +1905,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1914,6 +1954,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1986,6 +2027,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2059,6 +2101,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2140,6 +2183,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2181,6 +2225,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2231,6 +2276,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2280,6 +2326,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2354,6 +2401,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2425,6 +2473,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2567,6 +2616,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2645,6 +2695,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2719,6 +2770,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2779,6 +2831,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2832,6 +2885,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2894,6 +2948,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2943,6 +2998,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3021,6 +3077,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3091,6 +3148,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3155,6 +3213,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3237,6 +3296,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3314,6 +3374,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3459,6 +3520,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3533,6 +3595,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "createEmailVerification",
@@ -3554,7 +3617,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
-                            "demo": "account\/create-email-verification.md"
+                            "demo": "account\/create-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "createVerification",
@@ -3577,6 +3641,7 @@
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
                             "demo": "account\/create-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createEmailVerification"
@@ -3650,6 +3715,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "updateEmailVerification",
@@ -3673,7 +3739,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
-                            "demo": "account\/update-email-verification.md"
+                            "demo": "account\/update-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "updateVerification",
@@ -3698,6 +3765,7 @@
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
                             "demo": "account\/update-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateEmailVerification"
@@ -3782,6 +3850,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3830,6 +3899,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3899,6 +3969,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4025,6 +4096,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4157,6 +4229,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4215,6 +4288,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4703,6 +4777,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4785,6 +4860,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4877,6 +4953,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4969,6 +5046,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5711,6 +5789,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5771,6 +5850,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5846,6 +5926,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5894,6 +5975,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.list"
@@ -5920,6 +6002,7 @@
                             ],
                             "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.",
                             "demo": "databases\/list.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.list"
@@ -6010,6 +6093,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.create"
@@ -6039,6 +6123,7 @@
                             ],
                             "description": "Create a new Database.\n",
                             "demo": "databases\/create.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.create"
@@ -6126,6 +6211,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6191,6 +6277,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6259,6 +6346,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6321,6 +6409,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6397,6 +6486,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6461,6 +6551,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6542,6 +6633,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listUsage"
@@ -6566,6 +6658,7 @@
                             ],
                             "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                             "demo": "databases\/list-usage.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.listUsage"
@@ -6644,6 +6737,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.get"
@@ -6670,6 +6764,7 @@
                             ],
                             "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata.",
                             "demo": "databases\/get.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.get"
@@ -6735,6 +6830,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.update"
@@ -6764,6 +6860,7 @@
                             ],
                             "description": "Update a database by its unique ID.",
                             "demo": "databases\/update.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.update"
@@ -6846,6 +6943,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.delete"
@@ -6871,6 +6969,7 @@
                             ],
                             "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database.",
                             "demo": "databases\/delete.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.delete"
@@ -6938,6 +7037,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listTables"
@@ -7036,6 +7136,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createTable"
@@ -7096,6 +7197,22 @@
                                         "type": "boolean",
                                         "description": "Is collection enabled? When set to 'disabled', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.",
                                         "x-example": false
+                                    },
+                                    "attributes": {
+                                        "type": "array",
+                                        "description": "Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "indexes": {
+                                        "type": "array",
+                                        "description": "Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC\/DESC, optional), and lengths (array of integers, optional).",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "required": [
@@ -7145,6 +7262,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getTable"
@@ -7218,6 +7336,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateTable"
@@ -7322,6 +7441,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteTable"
@@ -7397,6 +7517,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listColumns"
@@ -7496,6 +7617,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createBooleanColumn"
@@ -7607,6 +7729,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateBooleanColumn"
@@ -7723,6 +7846,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createDatetimeColumn"
@@ -7834,6 +7958,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateDatetimeColumn"
@@ -7950,6 +8075,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createEmailColumn"
@@ -8061,6 +8187,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateEmailColumn"
@@ -8177,6 +8304,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createEnumColumn"
@@ -8297,6 +8425,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateEnumColumn"
@@ -8422,6 +8551,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createFloatColumn"
@@ -8545,6 +8675,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateFloatColumn"
@@ -8673,6 +8804,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createIntegerColumn"
@@ -8796,6 +8928,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateIntegerColumn"
@@ -8924,6 +9057,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createIpColumn"
@@ -9035,6 +9169,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateIpColumn"
@@ -9151,6 +9286,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createLineColumn"
@@ -9264,6 +9400,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateLineColumn"
@@ -9386,6 +9523,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createPointColumn"
@@ -9499,6 +9637,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updatePointColumn"
@@ -9621,6 +9760,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createPolygonColumn"
@@ -9734,6 +9874,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updatePolygonColumn"
@@ -9856,6 +9997,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createRelationshipColumn"
@@ -9993,6 +10135,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createStringColumn"
@@ -10115,6 +10258,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateStringColumn"
@@ -10237,6 +10381,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createUrlColumn"
@@ -10348,6 +10493,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateUrlColumn"
@@ -10495,6 +10641,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getColumn"
@@ -10570,6 +10717,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteColumn"
@@ -10654,6 +10802,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateRelationshipColumn"
@@ -10770,6 +10919,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listRows"
@@ -10880,6 +11030,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createRow"
@@ -10914,6 +11065,7 @@
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/create-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.createRow"
@@ -10945,6 +11097,7 @@
                             ],
                             "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/create-documents.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.createRows"
@@ -11066,6 +11219,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.upsertRows"
@@ -11097,6 +11251,7 @@
                             ],
                             "description": "Create or update Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.\n",
                             "demo": "databases\/upsert-documents.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.upsertRows"
@@ -11201,6 +11356,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateRows"
@@ -11305,6 +11461,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteRows"
@@ -11407,6 +11564,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getRow"
@@ -11516,6 +11674,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.upsertRow"
@@ -11550,6 +11709,7 @@
                             ],
                             "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/upsert-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.upsertRow"
@@ -11672,6 +11832,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateRow"
@@ -11782,6 +11943,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteRow"
@@ -11885,6 +12047,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listRowLogs"
@@ -11985,6 +12148,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.decrementRowColumn"
@@ -12111,6 +12275,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.incrementRowColumn"
@@ -12234,6 +12399,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listIndexes"
@@ -12331,6 +12497,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createIndex"
@@ -12470,6 +12637,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getIndex"
@@ -12545,6 +12713,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteIndex"
@@ -12629,6 +12798,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listTableLogs"
@@ -12716,6 +12886,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getTableUsage"
@@ -12812,6 +12983,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listDatabaseLogs"
@@ -12839,6 +13011,7 @@
                             ],
                             "description": "Get the database activity logs list by its unique ID.",
                             "demo": "databases\/list-logs.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.listDatabaseLogs"
@@ -12918,6 +13091,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getUsage"
@@ -12945,6 +13119,7 @@
                             ],
                             "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
                             "demo": "databases\/get-usage.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.getUsage"
@@ -13033,6 +13208,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13117,6 +13293,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13411,6 +13588,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13461,6 +13639,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13510,6 +13689,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13702,6 +13882,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13762,6 +13943,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13834,6 +14016,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -13893,6 +14076,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14184,6 +14368,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14245,6 +14430,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14325,6 +14511,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14419,6 +14606,7 @@
                         "server"
                     ],
                     "packaging": true,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14517,6 +14705,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14602,6 +14791,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14718,6 +14908,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14815,6 +15006,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14877,6 +15069,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -14942,6 +15135,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15031,6 +15225,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15104,6 +15299,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15190,6 +15386,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15307,6 +15504,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15370,6 +15568,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15441,6 +15640,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15523,6 +15723,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15582,6 +15783,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15673,6 +15875,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15742,6 +15945,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15835,6 +16039,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15908,6 +16113,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -15960,6 +16166,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16010,6 +16217,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16059,6 +16267,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16108,6 +16317,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16157,6 +16367,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16217,6 +16428,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16266,6 +16478,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16315,6 +16528,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16377,6 +16591,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16439,6 +16654,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16512,6 +16728,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16574,6 +16791,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16662,6 +16880,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16724,6 +16943,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16786,6 +17006,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16848,6 +17069,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16910,6 +17132,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -16972,6 +17195,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17034,6 +17258,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17096,6 +17321,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17158,6 +17384,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17207,6 +17434,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17256,6 +17484,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17307,6 +17536,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17359,6 +17589,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17411,6 +17642,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17463,6 +17695,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17515,6 +17748,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17567,6 +17801,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17619,6 +17854,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17671,6 +17907,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17722,6 +17959,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17809,6 +18047,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -17954,6 +18193,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -18111,6 +18351,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -18287,6 +18528,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -18483,6 +18725,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.createSMS"
@@ -18516,6 +18759,7 @@
                             ],
                             "description": "Create a new SMS message.",
                             "demo": "messaging\/create-sms.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.createSMS"
@@ -18548,7 +18792,8 @@
                                 }
                             ],
                             "description": "Create a new SMS message.",
-                            "demo": "messaging\/create-sms.md"
+                            "demo": "messaging\/create-sms.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -18661,6 +18906,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.updateSMS"
@@ -18693,6 +18939,7 @@
                             ],
                             "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
                             "demo": "messaging\/update-sms.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.updateSMS"
@@ -18724,7 +18971,8 @@
                                 }
                             ],
                             "description": "Update an SMS message by its unique ID. This endpoint only works on messages that are in draft status. Messages that are already processing, sent, or failed cannot be updated.\n",
-                            "demo": "messaging\/update-sms.md"
+                            "demo": "messaging\/update-sms.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -18845,6 +19093,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -18898,6 +19147,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -18960,6 +19210,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -19046,6 +19297,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -19132,6 +19384,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -19219,6 +19472,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.createAPNSProvider"
@@ -19253,6 +19507,7 @@
                             ],
                             "description": "Create a new Apple Push Notification service provider.",
                             "demo": "messaging\/create-apns-provider.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.createAPNSProvider"
@@ -19286,7 +19541,8 @@
                                 }
                             ],
                             "description": "Create a new Apple Push Notification service provider.",
-                            "demo": "messaging\/create-apns-provider.md"
+                            "demo": "messaging\/create-apns-provider.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -19395,6 +19651,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.updateAPNSProvider"
@@ -19428,6 +19685,7 @@
                             ],
                             "description": "Update a Apple Push Notification service provider by its unique ID.",
                             "demo": "messaging\/update-apns-provider.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.updateAPNSProvider"
@@ -19460,7 +19718,8 @@
                                 }
                             ],
                             "description": "Update a Apple Push Notification service provider by its unique ID.",
-                            "demo": "messaging\/update-apns-provider.md"
+                            "demo": "messaging\/update-apns-provider.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -19573,6 +19832,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.createFCMProvider"
@@ -19603,6 +19863,7 @@
                             ],
                             "description": "Create a new Firebase Cloud Messaging provider.",
                             "demo": "messaging\/create-fcm-provider.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.createFCMProvider"
@@ -19632,7 +19893,8 @@
                                 }
                             ],
                             "description": "Create a new Firebase Cloud Messaging provider.",
-                            "demo": "messaging\/create-fcm-provider.md"
+                            "demo": "messaging\/create-fcm-provider.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -19722,6 +19984,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.updateFCMProvider"
@@ -19751,6 +20014,7 @@
                             ],
                             "description": "Update a Firebase Cloud Messaging provider by its unique ID.",
                             "demo": "messaging\/update-fcm-provider.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.updateFCMProvider"
@@ -19779,7 +20043,8 @@
                                 }
                             ],
                             "description": "Update a Firebase Cloud Messaging provider by its unique ID.",
-                            "demo": "messaging\/update-fcm-provider.md"
+                            "demo": "messaging\/update-fcm-provider.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -19872,6 +20137,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -19989,6 +20255,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -20109,6 +20376,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -20205,6 +20473,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -20304,6 +20573,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -20410,6 +20680,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -20519,6 +20790,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -20625,6 +20897,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -20734,6 +21007,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.createSMTPProvider"
@@ -20775,6 +21049,7 @@
                             ],
                             "description": "Create a new SMTP provider.",
                             "demo": "messaging\/create-smtp-provider.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.createSMTPProvider"
@@ -20815,7 +21090,8 @@
                                 }
                             ],
                             "description": "Create a new SMTP provider.",
-                            "demo": "messaging\/create-smtp-provider.md"
+                            "demo": "messaging\/create-smtp-provider.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -20962,6 +21238,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "messaging.updateSMTPProvider"
@@ -21001,6 +21278,7 @@
                             ],
                             "description": "Update a SMTP provider by its unique ID.",
                             "demo": "messaging\/update-smtp-provider.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "messaging.updateSMTPProvider"
@@ -21039,7 +21317,8 @@
                                 }
                             ],
                             "description": "Update a SMTP provider by its unique ID.",
-                            "demo": "messaging\/update-smtp-provider.md"
+                            "demo": "messaging\/update-smtp-provider.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -21190,6 +21469,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21286,6 +21566,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21385,6 +21666,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21481,6 +21763,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21580,6 +21863,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21676,6 +21960,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21775,6 +22060,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21871,6 +22157,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -21970,6 +22257,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22023,6 +22311,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22085,6 +22374,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22171,6 +22461,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22257,6 +22548,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22342,6 +22634,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22425,6 +22718,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22485,6 +22779,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22564,6 +22859,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22626,6 +22922,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22712,6 +23009,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22809,6 +23107,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22897,6 +23196,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -22962,6 +23262,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23034,6 +23335,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23119,6 +23421,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23227,6 +23530,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23340,6 +23644,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23454,6 +23759,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23538,6 +23844,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23628,6 +23935,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23714,6 +24022,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23840,6 +24149,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -23988,6 +24298,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24108,6 +24419,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24247,6 +24559,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24305,6 +24618,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24356,6 +24670,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24416,6 +24731,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24504,6 +24820,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24550,6 +24867,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24628,6 +24946,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24686,6 +25005,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24768,6 +25088,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24828,6 +25149,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -24911,6 +25233,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25045,6 +25368,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25103,6 +25427,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25218,6 +25543,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25278,6 +25604,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "projects.updateAPIStatus"
@@ -25308,6 +25635,7 @@
                             ],
                             "description": "Update the status of a specific API type. Use this endpoint to enable or disable API types such as REST, GraphQL and Realtime.",
                             "demo": "projects\/update-api-status.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "projects.updateAPIStatus"
@@ -25337,7 +25665,8 @@
                                 }
                             ],
                             "description": "Update the status of a specific API type. Use this endpoint to enable or disable API types such as REST, GraphQL and Realtime.",
-                            "demo": "projects\/update-api-status.md"
+                            "demo": "projects\/update-api-status.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -25432,6 +25761,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "projects.updateAPIStatusAll"
@@ -25460,6 +25790,7 @@
                             ],
                             "description": "Update the status of all API types. Use this endpoint to enable or disable API types such as REST, GraphQL and Realtime all at once.",
                             "demo": "projects\/update-api-status-all.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "projects.updateAPIStatusAll"
@@ -25487,7 +25818,8 @@
                                 }
                             ],
                             "description": "Update the status of all API types. Use this endpoint to enable or disable API types such as REST, GraphQL and Realtime all at once.",
-                            "demo": "projects\/update-api-status-all.md"
+                            "demo": "projects\/update-api-status-all.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -25569,6 +25901,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25648,6 +25981,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25727,6 +26061,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25806,6 +26141,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25897,6 +26233,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -25979,6 +26316,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26058,6 +26396,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26137,6 +26476,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26216,6 +26556,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26295,6 +26636,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26374,6 +26716,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26474,6 +26817,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26545,6 +26889,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26630,6 +26975,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26698,6 +27044,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26784,6 +27131,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -26854,6 +27202,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27000,6 +27349,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27069,6 +27419,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27223,6 +27574,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27291,6 +27643,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27446,6 +27799,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27516,6 +27870,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27657,6 +28012,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27726,6 +28082,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27845,6 +28202,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -27913,6 +28271,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -28008,6 +28367,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -28078,6 +28438,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -28180,6 +28541,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -28259,6 +28621,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "projects.updateSMTP"
@@ -28295,6 +28658,7 @@
                             ],
                             "description": "Update the SMTP configuration for your project. Use this endpoint to configure your project's SMTP provider with your custom settings for sending transactional emails. ",
                             "demo": "projects\/update-smtp.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "projects.updateSMTP"
@@ -28330,7 +28694,8 @@
                                 }
                             ],
                             "description": "Update the SMTP configuration for your project. Use this endpoint to configure your project's SMTP provider with your custom settings for sending transactional emails. ",
-                            "demo": "projects\/update-smtp.md"
+                            "demo": "projects\/update-smtp.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -28451,6 +28816,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "projects.createSMTPTest"
@@ -28489,6 +28855,7 @@
                             ],
                             "description": "Send a test email to verify SMTP configuration. ",
                             "demo": "projects\/create-smtp-test.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "projects.createSMTPTest"
@@ -28526,7 +28893,8 @@
                                 }
                             ],
                             "description": "Send a test email to verify SMTP configuration. ",
-                            "demo": "projects\/create-smtp-test.md"
+                            "demo": "projects\/create-smtp-test.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -28660,6 +29028,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -28739,6 +29108,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -28963,6 +29333,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -29227,6 +29598,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -29453,6 +29825,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "projects.getSMSTemplate"
@@ -29483,6 +29856,7 @@
                             ],
                             "description": "Get a custom SMS template for the specified locale and type returning it's contents.",
                             "demo": "projects\/get-sms-template.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "projects.getSMSTemplate"
@@ -29512,7 +29886,8 @@
                                 }
                             ],
                             "description": "Get a custom SMS template for the specified locale and type returning it's contents.",
-                            "demo": "projects\/get-sms-template.md"
+                            "demo": "projects\/get-sms-template.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -29736,6 +30111,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "projects.updateSMSTemplate"
@@ -29768,6 +30144,7 @@
                             ],
                             "description": "Update a custom SMS template for the specified locale and type. Use this endpoint to modify the content of your SMS templates. ",
                             "demo": "projects\/update-sms-template.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "projects.updateSMSTemplate"
@@ -29799,7 +30176,8 @@
                                 }
                             ],
                             "description": "Update a custom SMS template for the specified locale and type. Use this endpoint to modify the content of your SMS templates. ",
-                            "demo": "projects\/update-sms-template.md"
+                            "demo": "projects\/update-sms-template.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -30042,6 +30420,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "projects.deleteSMSTemplate"
@@ -30072,6 +30451,7 @@
                             ],
                             "description": "Reset a custom SMS template to its default value. This endpoint removes any custom message and restores the template to its original state. ",
                             "demo": "projects\/delete-sms-template.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "projects.deleteSMSTemplate"
@@ -30101,7 +30481,8 @@
                                 }
                             ],
                             "description": "Reset a custom SMS template to its default value. This endpoint removes any custom message and restores the template to its original state. ",
-                            "demo": "projects\/delete-sms-template.md"
+                            "demo": "projects\/delete-sms-template.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -30327,6 +30708,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30396,6 +30778,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30511,6 +30894,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30579,6 +30963,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30695,6 +31080,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30765,6 +31151,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30835,6 +31222,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30920,6 +31308,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -30987,6 +31376,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31065,6 +31455,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31178,6 +31569,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31256,6 +31648,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31307,6 +31700,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31367,6 +31761,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31427,6 +31822,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31511,6 +31907,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31763,6 +32160,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31813,6 +32211,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31862,6 +32261,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -31991,6 +32391,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32051,6 +32452,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32123,6 +32525,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32182,6 +32585,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32430,6 +32834,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32491,6 +32896,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32571,6 +32977,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32665,6 +33072,7 @@
                         "server"
                     ],
                     "packaging": true,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32769,6 +33177,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32849,6 +33258,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -32965,6 +33375,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33063,6 +33474,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33125,6 +33537,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33190,6 +33603,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33279,6 +33693,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33350,6 +33765,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33435,6 +33851,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33497,6 +33914,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33568,6 +33986,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33650,6 +34069,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33709,6 +34129,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33800,6 +34221,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33869,6 +34291,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -33962,6 +34385,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34033,6 +34457,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34117,6 +34542,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34250,6 +34676,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34309,6 +34736,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34439,6 +34867,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34502,6 +34931,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34599,6 +35029,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34698,6 +35129,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34770,6 +35202,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34861,6 +35294,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -34928,6 +35362,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35006,6 +35441,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35234,6 +35670,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35317,6 +35754,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35389,6 +35827,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35471,6 +35910,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35555,6 +35995,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35639,6 +36080,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35707,6 +36149,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35778,6 +36221,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35843,6 +36287,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35922,6 +36367,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -35989,6 +36435,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36073,6 +36520,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "listUsage",
@@ -36092,7 +36540,8 @@
                                 }
                             ],
                             "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "tablesdb\/list-usage.md"
+                            "demo": "tablesdb\/list-usage.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -36167,6 +36616,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36226,6 +36676,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36302,6 +36753,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36366,6 +36818,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36463,6 +36916,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36519,6 +36973,22 @@
                                         "type": "boolean",
                                         "description": "Is table enabled? When set to 'disabled', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.",
                                         "x-example": false
+                                    },
+                                    "columns": {
+                                        "type": "array",
+                                        "description": "Array of column definitions to create. Each column should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "indexes": {
+                                        "type": "array",
+                                        "description": "Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of column keys), orders (array of ASC\/DESC, optional), and lengths (array of integers, optional).",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "required": [
@@ -36571,6 +37041,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36643,6 +37114,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36746,6 +37218,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36820,6 +37293,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -36918,6 +37392,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37028,6 +37503,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37143,6 +37619,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37253,6 +37730,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37368,6 +37846,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37478,6 +37957,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37593,6 +38073,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37712,6 +38193,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37836,6 +38318,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -37958,6 +38441,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38085,6 +38569,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38207,6 +38692,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38334,6 +38820,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38444,6 +38931,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38559,6 +39047,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38671,6 +39160,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38792,6 +39282,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -38904,6 +39395,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39025,6 +39517,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39137,6 +39630,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39258,6 +39752,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39394,6 +39889,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39515,6 +40011,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39636,6 +40133,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39746,6 +40244,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39892,6 +40391,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -39966,6 +40466,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40049,6 +40550,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40162,6 +40664,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40258,6 +40761,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40396,6 +40900,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40470,6 +40975,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40553,6 +41059,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40641,6 +41148,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -40750,6 +41258,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "createRow",
@@ -40779,7 +41288,8 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/create-row.md"
+                            "demo": "tablesdb\/create-row.md",
+                            "public": true
                         },
                         {
                             "name": "createRows",
@@ -40806,7 +41316,8 @@
                                 }
                             ],
                             "description": "Create new Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/create-rows.md"
+                            "demo": "tablesdb\/create-rows.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -40927,6 +41438,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "upsertRows",
@@ -40953,7 +41465,8 @@
                                 }
                             ],
                             "description": "Create or update Rows. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.\n",
-                            "demo": "tablesdb\/upsert-rows.md"
+                            "demo": "tablesdb\/upsert-rows.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -41057,6 +41570,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -41160,6 +41674,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -41261,6 +41776,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -41369,6 +41885,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "upsertRow",
@@ -41397,7 +41914,8 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -41516,6 +42034,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -41625,6 +42144,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -41727,6 +42247,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -41826,6 +42347,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -41951,6 +42473,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42073,6 +42596,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42168,6 +42692,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "getUsage",
@@ -42190,7 +42715,8 @@
                                 }
                             ],
                             "description": "Get usage metrics and statistics for a database. You can view the total number of tables, rows, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
-                            "demo": "tablesdb\/get-usage.md"
+                            "demo": "tablesdb\/get-usage.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -42277,6 +42803,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42364,6 +42891,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42449,6 +42977,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42511,6 +43040,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42585,6 +43115,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42647,6 +43178,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42733,6 +43265,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42830,6 +43363,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -42948,6 +43482,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43020,6 +43555,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43114,6 +43650,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43187,6 +43724,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43284,6 +43822,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43344,6 +43883,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43425,6 +43965,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43519,6 +44060,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43608,6 +44150,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43668,6 +44211,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43738,6 +44282,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43799,6 +44344,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43883,6 +44429,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -43973,6 +44520,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44058,6 +44606,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44143,6 +44692,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44222,6 +44772,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44283,6 +44834,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44368,6 +44920,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44453,6 +45006,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44568,6 +45122,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44671,6 +45226,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44776,6 +45332,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44848,6 +45405,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44900,6 +45458,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -44961,6 +45520,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -45041,6 +45601,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -45123,6 +45684,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -45206,6 +45768,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -45291,6 +45854,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -45387,6 +45951,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "users.updateMFA"
@@ -45415,6 +45980,7 @@
                             ],
                             "description": "Enable or disable MFA on a user account.",
                             "demo": "users\/update-mfa.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "users.updateMFA"
@@ -45442,7 +46008,8 @@
                                 }
                             ],
                             "description": "Enable or disable MFA on a user account.",
-                            "demo": "users\/update-mfa.md"
+                            "demo": "users\/update-mfa.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -45518,6 +46085,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "users.deleteMFAAuthenticator"
@@ -45545,6 +46113,7 @@
                             ],
                             "description": "Delete an authenticator app.",
                             "demo": "users\/delete-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "users.deleteMFAAuthenticator"
@@ -45571,7 +46140,8 @@
                                 }
                             ],
                             "description": "Delete an authenticator app.",
-                            "demo": "users\/delete-mfa-authenticator.md"
+                            "demo": "users\/delete-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -45650,6 +46220,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "users.listMFAFactors"
@@ -45676,6 +46247,7 @@
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
                             "demo": "users\/list-mfa-factors.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "users.listMFAFactors"
@@ -45701,7 +46273,8 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "users\/list-mfa-factors.md"
+                            "demo": "users\/list-mfa-factors.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -45765,6 +46338,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "users.getMFARecoveryCodes"
@@ -45791,6 +46365,7 @@
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow by User ID. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
                             "demo": "users\/get-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "users.getMFARecoveryCodes"
@@ -45816,7 +46391,8 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow by User ID. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
-                            "demo": "users\/get-mfa-recovery-codes.md"
+                            "demo": "users\/get-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -45878,6 +46454,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "users.updateMFARecoveryCodes"
@@ -45904,6 +46481,7 @@
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow by User ID. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
                             "demo": "users\/update-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "users.updateMFARecoveryCodes"
@@ -45929,7 +46507,8 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow by User ID. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method.",
-                            "demo": "users\/update-mfa-recovery-codes.md"
+                            "demo": "users\/update-mfa-recovery-codes.md",
+                            "public": false
                         }
                     ],
                     "auth": {
@@ -45991,6 +46570,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "users.createMFARecoveryCodes"
@@ -46017,6 +46597,7 @@
                             ],
                             "description": "Generate recovery codes used as backup for MFA flow for User ID. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method by client SDK.",
                             "demo": "users\/create-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "users.createMFARecoveryCodes"
@@ -46042,7 +46623,8 @@
                                 }
                             ],
                             "description": "Generate recovery codes used as backup for MFA flow for User ID. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method by client SDK.",
-                            "demo": "users\/create-mfa-recovery-codes.md"
+                            "demo": "users\/create-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -46106,6 +46688,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46186,6 +46769,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46266,6 +46850,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46346,6 +46931,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46405,6 +46991,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46485,6 +47072,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46555,6 +47143,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46607,6 +47196,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46661,6 +47251,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46732,6 +47323,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46813,6 +47405,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -46897,6 +47490,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47007,6 +47601,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47077,6 +47672,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47166,6 +47762,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47237,6 +47834,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47319,6 +47917,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47399,6 +47998,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47479,6 +48079,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47575,6 +48176,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47673,6 +48275,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47758,6 +48361,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47828,6 +48432,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47898,6 +48503,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -47983,6 +48589,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -48072,6 +48679,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -48157,6 +48765,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -48208,6 +48817,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }

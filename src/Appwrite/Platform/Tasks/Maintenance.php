@@ -129,15 +129,16 @@ class Maintenance extends Action
         if (\count($certificates) > 0) {
             Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
 
+            // TODO: (@Meldiron) Remove after 1.7.x migration
+            $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+
             foreach ($certificates as $certificate) {
                 $domain = $certificate->getAttribute('domain');
-                if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-                    $rule = $dbForPlatform->getDocument('rules', md5($domain));
-                } else {
-                    $rule = $dbForPlatform->findOne('rules', [
+                $rule = $isMd5
+                    ? $dbForPlatform->getDocument('rules', md5($domain))
+                    : $dbForPlatform->findOne('rules', [
                         Query::equal('domain', [$domain]),
                     ]);
-                }
 
                 if ($rule->isEmpty() || $rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
                     continue;
