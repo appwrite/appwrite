@@ -4,12 +4,17 @@ use Appwrite\Platform\Modules\Compute\Specification;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
+
+// Email
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_EMAIL_LOGO_URL = 'https://cloud.appwrite.io/images/mails/logo.png';
 const APP_EMAIL_ACCENT_COLOR = '#fd366e';
 const APP_EMAIL_TERMS_URL = 'https://appwrite.io/terms';
 const APP_EMAIL_PRIVACY_URL = 'https://appwrite.io/privacy';
+const APP_EMAIL_PLATFORM_NAME = 'Appwrite';
+const APP_EMAIL_FOOTER_IMAGE_URL = 'https://appwrite.io/email/footer.png';
+
 const APP_USERAGENT = APP_NAME . '-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
@@ -81,7 +86,6 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
-const APP_HOSTNAME_INTERNAL = 'appwrite';
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;

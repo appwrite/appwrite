@@ -1,4 +1,5 @@
 <?php
+use Utopia\Config\Config;
 use Utopia\System\System;
 
 $development = $this->getParam('development', false);
@@ -15,7 +16,8 @@ $labelClass = '';
 $buttons = [];
 
 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-$hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+$platform = Config::getParam('platform', []);
+$hostname = $platform['consoleDomain'] ?? '';
 // TODO: remove this later
 if (System::getEnv('_APP_ENV') === 'development') {
     $hostname = 'localhost';

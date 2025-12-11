@@ -67,10 +67,11 @@ class Create extends Action
             ->inject('queueForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
+            ->inject('domains')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, array $domains)
     {
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -90,13 +91,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
-        $deniedDomains = [
-            'localhost',
-            APP_HOSTNAME_INTERNAL
-        ];
-
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
-        $deniedDomains[] = $mainDomain;
+        $deniedDomains = [...$domains];
 
         if (!empty($sitesDomain)) {
             $deniedDomains[] = $sitesDomain;
@@ -125,8 +120,9 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
 
         $status = 'created';
         if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
