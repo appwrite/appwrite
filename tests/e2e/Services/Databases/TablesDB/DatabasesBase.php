@@ -1374,7 +1374,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown column: Unknown. Verify the column name or create the column.', $unknown['body']['message']);
+        $this->assertEquals('The column \'Unknown\' required for the index could not be found. Please confirm all your columns are in the available state.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
