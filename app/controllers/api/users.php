@@ -117,14 +117,19 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
         $hashedPassword = null;
 
         $isHashed = !$hash instanceof Plaintext;
+
+        $defaultHash = new ProofsPassword();
         if (!empty($password)) {
             if (!$isHashed) { // Password was never hashed, hash it with the default hash
-                $defaultHash = new ProofsPassword();
                 $hashedPassword = $defaultHash->hash($password);
                 $hash = $defaultHash->getHash();
             } else {
                 $hashedPassword = $password;
             }
+        } else {
+            // when password is not provided, plaintext was set as the default hash causing the issue
+            $hash = $defaultHash->getHash();
+            $isHashed = !$hash instanceof Plaintext;
         }
 
         $user = new Document([
@@ -160,7 +165,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
             'emailIsFree' => $emailCanonical?->isFree(),
         ]);
 
-        if (!$isHashed) {
+        if (!$isHashed && !empty($password)) {
             $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
@@ -952,11 +957,7 @@ App::get('/v1/users/:userId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+
         $audit = new Audit($dbForProject);
         $logs = $audit->getLogsByUser($user->getSequence(), $queries);
         $output = [];
@@ -1812,6 +1813,7 @@ App::patch('/v1/users/:userId/mfa')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFA',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -1871,6 +1873,7 @@ App::get('/v1/users/:userId/mfa/factors')
                 since: '1.8.0',
                 replaceWith: 'users.listMFAFactors',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -1929,6 +1932,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.getMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -1993,6 +1997,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.createMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -2064,6 +2069,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -2076,7 +2082,8 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_MFA_RECOVERY_CODES,
                 )
-            ]
+            ],
+            public: false,
         )
     ])
     ->param('userId', '', new UID(), 'User ID.')
@@ -2135,6 +2142,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
                 since: '1.8.0',
                 replaceWith: 'users.deleteMFAAuthenticator',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -2629,7 +2637,8 @@ App::post('/v1/users/:userId/jwts')
             $session = \count($sessions) > 0 ? $sessions[\count($sessions) - 1] : new Document();
         } else {
             // Find by ID
-            foreach ($sessions as $loopSession) { /** @var Utopia\Database\Document $loopSession */
+            foreach ($sessions as $loopSession) {
+                /** @var Utopia\Database\Document $loopSession */
                 if ($loopSession->getId() == $sessionId) {
                     $session = $loopSession;
                     break;

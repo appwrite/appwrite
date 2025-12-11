@@ -129,6 +129,8 @@ class Builds extends Action
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
+        $platform = $payload['platform'] ?? [];
+
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -157,7 +159,8 @@ class Builds extends Action
                     $isResourceBlocked,
                     $log,
                     $executor,
-                    $plan
+                    $plan,
+                    $platform
                 );
                 break;
 
@@ -209,7 +212,8 @@ class Builds extends Action
         callable $isResourceBlocked,
         Log $log,
         Executor $executor,
-        array $plan
+        array $plan,
+        array $platform
     ): void {
         Console::info('Deployment action started');
 
@@ -532,7 +536,7 @@ class Builds extends Action
 
                 Console::log('Git source uploaded');
 
-                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             Console::log('Status marked as building');
@@ -550,7 +554,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             $deploymentModel = new Deployment();
@@ -612,10 +616,6 @@ class Builds extends Action
                 'scopes' => $resource->getAttribute('scopes', [])
             ]);
 
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_DOMAIN');
-            $endpoint = $protocol . '://' . $hostname . "/v1";
-
             // Appwrite vars
             $vars = \array_merge($vars, [
                 'APPWRITE_VERSION' => APP_VERSION_STABLE,
@@ -639,7 +639,7 @@ class Builds extends Action
                 case 'functions':
                     $vars = [
                         ...$vars,
-                        'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+                        'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
                         'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
@@ -654,7 +654,7 @@ class Builds extends Action
                 case 'sites':
                     $vars = [
                         ...$vars,
-                        'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
+                        'APPWRITE_SITE_API_ENDPOINT' => $platform['endpoint'],
                         'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_SITE_ID' => $resource->getId(),
                         'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
@@ -1107,12 +1107,8 @@ class Builds extends Action
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
             }
 
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
             /** Set auto deploy */
@@ -1197,6 +1193,11 @@ class Builds extends Action
 
                 Console::log('Deployment activated');
             }
+
+            // Send realtime event after updating the associated resource so that Console will have the resource's deployment details when re-fetching.
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
 
             if ($resource->getCollection() === 'sites') {
                 // VCS branch
@@ -1336,7 +1337,7 @@ class Builds extends Action
                 ->trigger();
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
         } finally {
             $queueForRealtime
@@ -1488,6 +1489,8 @@ class Builds extends Action
      * @param string $deploymentId
      * @param Database $dbForProject
      * @param Database $dbForPlatform
+     * @param Realtime $queueForRealtime
+     * @param array $platform
      * @return void
      * @throws Structure
      * @throws \Utopia\Database\Exception
@@ -1507,6 +1510,7 @@ class Builds extends Action
         Database $dbForProject,
         Database $dbForPlatform,
         Realtime $queueForRealtime,
+        array $platform
     ): void {
         try {
             if ($resource->getAttribute('providerSilentMode', false) === true) {
@@ -1592,7 +1596,7 @@ class Builds extends Action
                         default => throw new \Exception('Invalid resource type')
                     };
 
-                    $comment = new Comment();
+                    $comment = new Comment($platform);
                     $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
                     $comment->addBuild($project, $resource, $resourceType, $status, $deployment->getId(), ['type' => 'logs'], $previewUrl);
                     $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());

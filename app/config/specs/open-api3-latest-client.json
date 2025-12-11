@@ -62,6 +62,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -111,6 +112,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -196,6 +198,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -258,7 +261,7 @@
                 "x-appwrite": {
                     "method": "listIdentities",
                     "group": "identities",
-                    "weight": 58,
+                    "weight": 48,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-identities.md",
@@ -272,6 +275,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -328,7 +332,7 @@
                 "x-appwrite": {
                     "method": "deleteIdentity",
                     "group": "identities",
-                    "weight": 59,
+                    "weight": 49,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-identity.md",
@@ -342,6 +346,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -405,6 +410,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -454,6 +460,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -517,7 +524,7 @@
                 "x-appwrite": {
                     "method": "updateMFA",
                     "group": "mfa",
-                    "weight": 45,
+                    "weight": 306,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa.md",
@@ -531,6 +538,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -587,7 +595,7 @@
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 47,
+                    "weight": 308,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-authenticator.md",
@@ -601,6 +609,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAAuthenticator"
@@ -627,6 +636,7 @@
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
                             "demo": "account\/create-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAAuthenticator"
@@ -652,7 +662,8 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-mfa-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -707,7 +718,7 @@
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 48,
+                    "weight": 309,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-authenticator.md",
@@ -721,6 +732,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAAuthenticator"
@@ -749,6 +761,7 @@
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
                             "demo": "account\/update-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAAuthenticator"
@@ -776,7 +789,8 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-mfa-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -843,7 +857,7 @@
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 52,
+                    "weight": 310,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-mfa-authenticator.md",
@@ -857,6 +871,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.deleteMFAAuthenticator"
@@ -882,6 +897,7 @@
                             ],
                             "description": "Delete an authenticator for a user by ID.",
                             "demo": "account\/delete-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.deleteMFAAuthenticator"
@@ -906,7 +922,8 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-mfa-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -939,7 +956,7 @@
                 ]
             }
         },
-        "\/account\/mfa\/challenge": {
+        "\/account\/mfa\/challenges": {
             "post": {
                 "summary": "Create MFA challenge",
                 "operationId": "accountCreateMfaChallenge",
@@ -963,7 +980,7 @@
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
-                    "weight": 53,
+                    "weight": 314,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-challenge.md",
@@ -977,6 +994,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAChallenge"
@@ -1003,6 +1021,7 @@
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
                             "demo": "account\/create-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAChallenge"
@@ -1028,7 +1047,8 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-mfa-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1091,7 +1111,7 @@
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
-                    "weight": 54,
+                    "weight": 315,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-challenge.md",
@@ -1105,6 +1125,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAChallenge"
@@ -1133,6 +1154,7 @@
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/update-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAChallenge"
@@ -1160,7 +1182,8 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-mfa-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1225,7 +1248,7 @@
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
-                    "weight": 46,
+                    "weight": 307,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-mfa-factors.md",
@@ -1239,6 +1262,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.listMFAFactors"
@@ -1261,6 +1285,7 @@
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
                             "demo": "account\/list-mfa-factors.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.listMFAFactors"
@@ -1282,7 +1307,8 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-mfa-factors.md"
+                            "demo": "account\/list-mfa-factors.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1322,7 +1348,7 @@
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 51,
+                    "weight": 313,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/get-mfa-recovery-codes.md",
@@ -1336,6 +1362,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.getMFARecoveryCodes"
@@ -1358,6 +1385,7 @@
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
                             "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.getMFARecoveryCodes"
@@ -1379,7 +1407,8 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-mfa-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1417,7 +1446,7 @@
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 49,
+                    "weight": 311,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-recovery-codes.md",
@@ -1431,6 +1460,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFARecoveryCodes"
@@ -1453,6 +1483,7 @@
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFARecoveryCodes"
@@ -1474,7 +1505,8 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-mfa-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1512,7 +1544,7 @@
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 50,
+                    "weight": 312,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-recovery-codes.md",
@@ -1526,6 +1558,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFARecoveryCodes"
@@ -1548,6 +1581,7 @@
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
                             "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFARecoveryCodes"
@@ -1569,7 +1603,8 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-mfa-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1623,6 +1658,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1693,6 +1729,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1768,6 +1805,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1844,6 +1882,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1893,6 +1932,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1966,6 +2006,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2040,6 +2081,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2122,6 +2164,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2164,6 +2207,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2215,6 +2259,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2264,6 +2309,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2338,6 +2384,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2409,6 +2456,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2551,6 +2599,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2629,6 +2678,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2703,6 +2753,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2764,6 +2815,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2818,6 +2870,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2881,6 +2934,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2918,7 +2972,7 @@
                 "x-appwrite": {
                     "method": "createPushTarget",
                     "group": "pushTargets",
-                    "weight": 55,
+                    "weight": 45,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-push-target.md",
@@ -2931,6 +2985,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2997,7 +3052,7 @@
                 "x-appwrite": {
                     "method": "updatePushTarget",
                     "group": "pushTargets",
-                    "weight": 56,
+                    "weight": 46,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-push-target.md",
@@ -3010,6 +3065,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3068,7 +3124,7 @@
                 "x-appwrite": {
                     "method": "deletePushTarget",
                     "group": "pushTargets",
-                    "weight": 57,
+                    "weight": 47,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-push-target.md",
@@ -3081,6 +3137,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3146,6 +3203,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3228,6 +3286,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3305,6 +3364,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3450,6 +3510,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3524,6 +3585,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "createEmailVerification",
@@ -3545,7 +3607,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
-                            "demo": "account\/create-email-verification.md"
+                            "demo": "account\/create-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "createVerification",
@@ -3568,6 +3631,7 @@
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
                             "demo": "account\/create-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createEmailVerification"
@@ -3642,6 +3706,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "updateEmailVerification",
@@ -3665,7 +3730,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
-                            "demo": "account\/update-email-verification.md"
+                            "demo": "account\/update-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "updateVerification",
@@ -3690,6 +3756,7 @@
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
                             "demo": "account\/update-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateEmailVerification"
@@ -3775,6 +3842,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3824,6 +3892,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3879,7 +3948,7 @@
                 "x-appwrite": {
                     "method": "getBrowser",
                     "group": null,
-                    "weight": 61,
+                    "weight": 51,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-browser.md",
@@ -3894,6 +3963,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4005,7 +4075,7 @@
                 "x-appwrite": {
                     "method": "getCreditCard",
                     "group": null,
-                    "weight": 60,
+                    "weight": 50,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-credit-card.md",
@@ -4020,6 +4090,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4137,7 +4208,7 @@
                 "x-appwrite": {
                     "method": "getFavicon",
                     "group": null,
-                    "weight": 64,
+                    "weight": 54,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-favicon.md",
@@ -4152,6 +4223,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4195,7 +4267,7 @@
                 "x-appwrite": {
                     "method": "getFlag",
                     "group": null,
-                    "weight": 62,
+                    "weight": 52,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-flag.md",
@@ -4210,6 +4282,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4683,7 +4756,7 @@
                 "x-appwrite": {
                     "method": "getImage",
                     "group": null,
-                    "weight": 63,
+                    "weight": 53,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-image.md",
@@ -4698,6 +4771,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4765,7 +4839,7 @@
                 "x-appwrite": {
                     "method": "getInitials",
                     "group": null,
-                    "weight": 66,
+                    "weight": 56,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-initials.md",
@@ -4780,6 +4854,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4857,7 +4932,7 @@
                 "x-appwrite": {
                     "method": "getQR",
                     "group": null,
-                    "weight": 65,
+                    "weight": 55,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-qr.md",
@@ -4872,6 +4947,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4949,7 +5025,7 @@
                 "x-appwrite": {
                     "method": "getScreenshot",
                     "group": null,
-                    "weight": 67,
+                    "weight": 57,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-screenshot.md",
@@ -4964,6 +5040,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4993,7 +5070,7 @@
                         "required": false,
                         "schema": {
                             "type": "object",
-                            "x-example": "{}",
+                            "x-example": "{\"Authorization\":\"Bearer token123\",\"X-Custom-Header\":\"value\"}",
                             "default": {}
                         },
                         "in": "query"
@@ -5005,7 +5082,7 @@
                         "schema": {
                             "type": "integer",
                             "format": "int32",
-                            "x-example": 1,
+                            "x-example": "1920",
                             "default": 1280
                         },
                         "in": "query"
@@ -5017,7 +5094,7 @@
                         "schema": {
                             "type": "integer",
                             "format": "int32",
-                            "x-example": 1,
+                            "x-example": "1080",
                             "default": 720
                         },
                         "in": "query"
@@ -5029,7 +5106,7 @@
                         "schema": {
                             "type": "number",
                             "format": "float",
-                            "x-example": 0.1,
+                            "x-example": "2",
                             "default": 1
                         },
                         "in": "query"
@@ -5040,7 +5117,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "x-example": "light",
+                            "x-example": "dark",
                             "enum": [
                                 "light",
                                 "dark"
@@ -5057,7 +5134,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "x-example": "<USER_AGENT>",
+                            "x-example": "Mozilla\/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit\/605.1.15",
                             "default": ""
                         },
                         "in": "query"
@@ -5068,7 +5145,7 @@
                         "required": false,
                         "schema": {
                             "type": "boolean",
-                            "x-example": false,
+                            "x-example": "true",
                             "default": false
                         },
                         "in": "query"
@@ -5079,7 +5156,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "x-example": "<LOCALE>",
+                            "x-example": "en-US",
                             "default": ""
                         },
                         "in": "query"
@@ -5090,7 +5167,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "x-example": "africa\/abidjan",
+                            "x-example": "america\/new_york",
                             "enum": [
                                 "africa\/abidjan",
                                 "africa\/accra",
@@ -5525,7 +5602,7 @@
                         "schema": {
                             "type": "number",
                             "format": "float",
-                            "x-example": -90,
+                            "x-example": "37.7749",
                             "default": 0
                         },
                         "in": "query"
@@ -5537,7 +5614,7 @@
                         "schema": {
                             "type": "number",
                             "format": "float",
-                            "x-example": -180,
+                            "x-example": "-122.4194",
                             "default": 0
                         },
                         "in": "query"
@@ -5549,7 +5626,7 @@
                         "schema": {
                             "type": "number",
                             "format": "float",
-                            "x-example": 0,
+                            "x-example": "100",
                             "default": 0
                         },
                         "in": "query"
@@ -5560,7 +5637,7 @@
                         "required": false,
                         "schema": {
                             "type": "boolean",
-                            "x-example": false,
+                            "x-example": "true",
                             "default": false
                         },
                         "in": "query"
@@ -5572,8 +5649,33 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                    "geolocation",
+                                    "camera",
+                                    "microphone",
+                                    "notifications",
+                                    "midi",
+                                    "push",
+                                    "clipboard-read",
+                                    "clipboard-write",
+                                    "payment-handler",
+                                    "usb",
+                                    "bluetooth",
+                                    "accelerometer",
+                                    "gyroscope",
+                                    "magnetometer",
+                                    "ambient-light-sensor",
+                                    "background-sync",
+                                    "persistent-storage",
+                                    "screen-wake-lock",
+                                    "web-share",
+                                    "xr-spatial-tracking"
+                                ],
+                                "x-enum-name": "BrowserPermission",
+                                "x-enum-keys": []
                             },
+                            "x-example": "[\"geolocation\",\"notifications\"]",
                             "default": []
                         },
                         "in": "query"
@@ -5585,7 +5687,7 @@
                         "schema": {
                             "type": "integer",
                             "format": "int32",
-                            "x-example": 0,
+                            "x-example": "3",
                             "default": 0
                         },
                         "in": "query"
@@ -5597,7 +5699,7 @@
                         "schema": {
                             "type": "integer",
                             "format": "int32",
-                            "x-example": 0,
+                            "x-example": "800",
                             "default": 0
                         },
                         "in": "query"
@@ -5609,7 +5711,7 @@
                         "schema": {
                             "type": "integer",
                             "format": "int32",
-                            "x-example": 0,
+                            "x-example": "600",
                             "default": 0
                         },
                         "in": "query"
@@ -5621,7 +5723,7 @@
                         "schema": {
                             "type": "integer",
                             "format": "int32",
-                            "x-example": -1,
+                            "x-example": "85",
                             "default": -1
                         },
                         "in": "query"
@@ -5632,7 +5734,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "x-example": "jpg",
+                            "x-example": "jpeg",
                             "enum": [
                                 "jpg",
                                 "jpeg",
@@ -5690,6 +5792,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5755,6 +5858,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5823,6 +5927,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5885,6 +5990,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5961,6 +6067,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6025,6 +6132,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6108,6 +6216,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listRows"
@@ -6218,6 +6327,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createRow"
@@ -6252,6 +6362,7 @@
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/create-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.createRow"
@@ -6376,6 +6487,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getRow"
@@ -6485,6 +6597,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.upsertRow"
@@ -6519,6 +6632,7 @@
                             ],
                             "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/upsert-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.upsertRow"
@@ -6641,6 +6755,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateRow"
@@ -6751,6 +6866,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteRow"
@@ -6857,6 +6973,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.decrementRowColumn"
@@ -6983,6 +7100,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.incrementRowColumn"
@@ -7108,6 +7226,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7194,6 +7313,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7311,6 +7431,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7370,7 +7491,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 251,
+                    "weight": 241,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -7385,6 +7506,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7422,7 +7544,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 250,
+                    "weight": 240,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -7437,6 +7559,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7474,7 +7597,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 71,
+                    "weight": 61,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/get.md",
@@ -7489,6 +7612,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7526,7 +7650,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 72,
+                    "weight": 62,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-codes.md",
@@ -7541,6 +7665,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7578,7 +7703,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 76,
+                    "weight": 66,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-continents.md",
@@ -7593,6 +7718,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7630,7 +7756,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 73,
+                    "weight": 63,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries.md",
@@ -7645,6 +7771,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7682,7 +7809,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 74,
+                    "weight": 64,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-eu.md",
@@ -7697,6 +7824,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7734,7 +7862,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 75,
+                    "weight": 65,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-phones.md",
@@ -7749,6 +7877,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7786,7 +7915,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 77,
+                    "weight": 67,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-currencies.md",
@@ -7801,6 +7930,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7838,7 +7968,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 78,
+                    "weight": 68,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-languages.md",
@@ -7853,6 +7983,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7890,7 +8021,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 300,
+                    "weight": 290,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -7906,6 +8037,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7973,7 +8105,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 304,
+                    "weight": 294,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -7989,6 +8121,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8048,7 +8181,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 161,
+                    "weight": 151,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -8063,6 +8196,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8145,7 +8279,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 160,
+                    "weight": 150,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -8160,6 +8294,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8244,7 +8379,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 162,
+                    "weight": 152,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -8259,6 +8394,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8316,7 +8452,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 167,
+                    "weight": 157,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -8331,6 +8467,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8407,7 +8544,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 168,
+                    "weight": 158,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -8422,6 +8559,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8474,7 +8612,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 164,
+                    "weight": 154,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -8489,6 +8627,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8552,7 +8691,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 163,
+                    "weight": 153,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -8567,6 +8706,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8780,7 +8920,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 165,
+                    "weight": 155,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -8795,6 +8935,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8883,6 +9024,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8951,6 +9093,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9022,6 +9165,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9087,6 +9231,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9166,6 +9311,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9233,6 +9379,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9319,6 +9466,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9428,6 +9576,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "createRow",
@@ -9457,7 +9606,8 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/create-row.md"
+                            "demo": "tablesdb\/create-row.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -9581,6 +9731,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9689,6 +9840,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "upsertRow",
@@ -9717,7 +9869,8 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -9836,6 +9989,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9945,6 +10099,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10050,6 +10205,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10175,6 +10331,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10281,7 +10438,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 172,
+                    "weight": 162,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list.md",
@@ -10296,6 +10453,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10368,7 +10526,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 171,
+                    "weight": 161,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create.md",
@@ -10383,6 +10541,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10453,7 +10612,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 173,
+                    "weight": 163,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get.md",
@@ -10468,6 +10627,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10515,7 +10675,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 175,
+                    "weight": 165,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-name.md",
@@ -10530,6 +10690,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10589,7 +10750,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 177,
+                    "weight": 167,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete.md",
@@ -10604,6 +10765,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10653,7 +10815,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 179,
+                    "weight": 169,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list-memberships.md",
@@ -10668,6 +10830,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10750,7 +10913,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 178,
+                    "weight": 168,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create-membership.md",
@@ -10765,6 +10928,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10814,7 +10978,14 @@
                                         "description": "Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions). Maximum of 100 roles are allowed, each 32 characters long.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "admin",
+                                                "developer",
+                                                "owner"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     },
                                     "url": {
@@ -10861,7 +11032,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 180,
+                    "weight": 170,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-membership.md",
@@ -10876,6 +11047,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10933,7 +11105,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 181,
+                    "weight": 171,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership.md",
@@ -10948,6 +11120,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10992,7 +11165,14 @@
                                         "description": "An array of strings. Use this param to set the user's roles in the team. A role can be any string. Learn more about [roles and permissions](https:\/\/appwrite.io\/docs\/permissions). Maximum of 100 roles are allowed, each 32 characters long.",
                                         "x-example": null,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "admin",
+                                                "developer",
+                                                "owner"
+                                            ],
+                                            "x-enum-name": null,
+                                            "x-enum-keys": []
                                         }
                                     }
                                 },
@@ -11020,7 +11200,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 183,
+                    "weight": 173,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete-membership.md",
@@ -11035,6 +11215,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -11094,7 +11275,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 182,
+                    "weight": 172,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership-status.md",
@@ -11108,6 +11289,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -11192,7 +11374,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 174,
+                    "weight": 164,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-prefs.md",
@@ -11206,6 +11388,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -11253,7 +11436,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 176,
+                    "weight": 166,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-prefs.md",
@@ -11267,6 +11450,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }

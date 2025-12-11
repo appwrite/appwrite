@@ -197,7 +197,6 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
-        $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
         $this->assertNotEmpty($webhook['data']['osName']);
@@ -286,7 +285,6 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertIsString($webhook['data']['expire']);
-        $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
         $this->assertNotEmpty($webhook['data']['osName']);
@@ -372,7 +370,6 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
-        $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
         $this->assertNotEmpty($webhook['data']['osName']);

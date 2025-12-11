@@ -199,7 +199,8 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         $this->assertArrayHasKey('errors', $row['body']);
-        $this->assertEquals('Row with the requested ID could not be found.', $row['body']['errors'][0]['message']);
+        $rowId = $gqlPayload['variables']['rowId'];
+        $this->assertEquals("Row with the requested ID '$rowId' could not be found.", $row['body']['errors'][0]['message']);
     }
 
     public function testValidAuth()

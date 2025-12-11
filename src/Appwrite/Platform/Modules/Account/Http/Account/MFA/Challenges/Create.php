@@ -72,6 +72,7 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'account.createMFAChallenge',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
@@ -144,7 +145,8 @@ class Create extends Action
 
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
-        $templatesPath = \dirname(__DIR__, 7) . '/app/config/locale/templates';
+        // 9 levels up to project root
+        $templatesPath = \dirname(__DIR__, 9) . '/app/config/locale/templates';
 
         switch ($factor) {
             case Type::PHONE:

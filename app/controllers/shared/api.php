@@ -8,7 +8,9 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
@@ -495,6 +497,9 @@ App::init()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForStatsUsage')
+    ->inject('queueForFunctions')
+    ->inject('queueForMails')
+    ->inject('queueForMigrations')
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('resourceToken')
@@ -503,8 +508,9 @@ App::init()
     ->inject('plan')
     ->inject('devKey')
     ->inject('telemetry')
+    ->inject('platform')
     ->inject('trustedIp')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, string $trustedIp) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Migration $queueForMigrations, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, string $trustedIp) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -578,6 +584,10 @@ App::init()
             }
         }
 
+        /**
+         *  TODO: (@loks0n)
+         *  Avoid mutating the message across file boundaries - it's difficult to reason about at scale.
+         */
         /*
         * Background Jobs
         */
@@ -608,10 +618,18 @@ App::init()
             }
         }
 
+        /* Auto-set projects */
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
-        $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
+        $queueForFunctions->setProject($project);
+        $queueForBuilds->setProject($project);
+
+        /* Auto-set platforms */
+        $queueForFunctions->setPlatform($platform);
+        $queueForBuilds->setPlatform($platform);
+        $queueForMails->setPlatform($platform);
+        $queueForMigrations->setPlatform($platform);
 
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
