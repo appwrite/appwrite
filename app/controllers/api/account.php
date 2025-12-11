@@ -4421,7 +4421,9 @@ App::post('/v1/account/mfa/recovery-codes')
             'recoveryCodes' => $mfaRecoveryCodes
         ]);
 
-        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
 App::patch('/v1/account/mfa/recovery-codes')
@@ -4874,7 +4876,9 @@ App::post('/v1/account/mfa/challenge')
             ->setParam('userId', $user->getId())
             ->setParam('challengeId', $challenge->getId());
 
-        $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
     });
 
 App::put('/v1/account/mfa/challenge')
@@ -4942,7 +4946,7 @@ App::put('/v1/account/mfa/challenge')
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
                 $challenge->isSet('type') &&
-                $challenge->getAttribute('type') === \strtolower(Type::RECOVERY_CODE)
+                $challenge->getAttribute('type') === Type::RECOVERY_CODE
             ) {
                 $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
                 if (in_array($otp, $mfaRecoveryCodes)) {
@@ -4964,7 +4968,7 @@ App::put('/v1/account/mfa/challenge')
             Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
-            \strtolower(Type::RECOVERY_CODE) => $recoveryCodeChallenge($challenge, $user, $otp),
+            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
             default => false
         });
 
