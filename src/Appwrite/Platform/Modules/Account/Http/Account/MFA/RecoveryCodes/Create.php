@@ -55,6 +55,7 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'account.createMFARecoveryCodes',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
