@@ -89,6 +89,7 @@ class Create extends Action
     public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $key ??= $relatedCollectionId;
+        $twoWayKeyWasProvided = $twoWayKey !== null;
         $twoWayKey ??= $collectionId;
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -122,7 +123,10 @@ class Create extends Action
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                throw new Exception($this->getDuplicateException(), params: [$twoWayKey]);
+                // If user explicitly provided twoWayKey, report that.
+                // Otherwise report the key that they're trying to create.
+                $conflictingKey = $twoWayKeyWasProvided ? $twoWayKey : $key;
+                throw new Exception($this->getDuplicateException(), params: [$conflictingKey]);
             }
 
             if (
