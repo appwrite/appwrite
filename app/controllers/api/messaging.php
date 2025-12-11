@@ -339,6 +339,7 @@ App::post('/v1/messaging/providers/smtp')
                 since: '1.8.0',
                 replaceWith: 'messaging.createSMTPProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -872,6 +873,7 @@ App::post('/v1/messaging/providers/fcm')
                 since: '1.8.0',
                 replaceWith: 'messaging.createFCMProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -961,6 +963,7 @@ App::post('/v1/messaging/providers/apns')
                 since: '1.8.0',
                 replaceWith: 'messaging.createAPNSProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -1574,6 +1577,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateSMTPProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -2165,6 +2169,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateFCMProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -2260,6 +2265,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateAPNSProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -3325,6 +3331,7 @@ App::post('/v1/messaging/messages/sms')
                 since: '1.8.0',
                 replaceWith: 'messaging.createSMS',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -4168,6 +4175,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateSMS',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',

@@ -48,6 +48,7 @@ class Get extends Action
                         since: '1.8.0',
                         replaceWith: 'account.getMFARecoveryCodes',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
