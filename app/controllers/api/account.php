@@ -2613,10 +2613,11 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('queueForMails')
     ->inject('store')
     ->inject('proofForCode')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode) use ($createSession) {
+    ->inject('trustedIp')
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode, $trustedIp) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode, $trustedIp);
     });
 
 App::put('/v1/account/sessions/phone')
@@ -2661,6 +2662,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
+    ->inject('trustedIp')
     ->action($createSession);
 
 App::post('/v1/account/tokens/phone')
