@@ -32,8 +32,15 @@ class Screenshot extends Action
 
     public function action(string $templateId, string $variables): void
     {
-        $variables = \json_decode($variables, true);
-        if(!\is_array($variables)) {
+        if (empty($variables)) {
+            $variables = [];
+        } else {
+            $variables = \json_decode($variables, true);
+            if (!\is_array($variables)) {
+                throw new \Exception('Invalid JSON in --variables flag');
+            }
+        }
+        if ($variables === null) {
             throw new \Exception('Invalid JSON in --variables flag');
         }
 
@@ -140,7 +147,7 @@ class Screenshot extends Action
         $projectId = $project['body']['$id'];
 
         $framework = $template['frameworks'][0];
-        
+
         // Use best specifications to prevent out-of-memory during build
         $specifications = Config::getParam('specifications', []);
         $specifications = array_keys($specifications);
@@ -175,7 +182,7 @@ class Screenshot extends Action
         Console::info("Site created");
 
         $siteId = $site['body']['$id'];
-        
+
         // Prepare API key, incase it's needed as variable
         $response = $client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
             'content-type' => 'application/json',
@@ -185,32 +192,32 @@ class Screenshot extends Action
             'name' => 'Screenshot API key',
             'scopes' => \array_keys(Config::getParam('scopes', []))
         ]);
-        
+
         if ($response['headers']['status-code'] !== 201) {
             Console::error(\json_encode($response));
             throw new \Exception("Failed to create API key");
         }
-        
+
         $apiKey = $response['body']['secret'];
 
         Console::info("API key created");
-        
+
         $variables['APPWRITE_API_KEY'] = $apiKey;
 
         // Create variables
         if (!empty($template['variables'] ?? [])) {
             foreach ($template['variables'] as $variable) {
                 $name = $variable['name'];
-                
+
                 $value = $variable['value'];
                 $value = \str_replace('{projectName}', $projectName, $value);
                 $value = \str_replace('{projectId}', $projectId, $value);
                 $value = \str_replace('{apiEndpoint}', 'http://' . System::getEnv('_APP_DOMAIN', '') . '/v1', $value);
-                
-                if(\array_key_exists($name, $variables)) {
+
+                if (\array_key_exists($name, $variables)) {
                     $value = $variables[$name];
                 }
-                
+
                 if (empty($value)) {
                     if (($variable['required'] ?? false) === true) {
                         throw new \Exception("Missing required variable: {$variable['name']}. Provide it using the --variables flag to resolve this.");
