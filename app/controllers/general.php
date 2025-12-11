@@ -1084,8 +1084,8 @@ App::init()
            }
 
            if (
-               !empty($funcDomain) && \str_ends_with($domain->get(), $funcDomain) ||
-               !empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain)
+               (!empty($funcDomain) && \str_ends_with($domain->get(), $funcDomain)) ||
+               (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))
            ) {
                $owner = 'Appwrite';
            }
