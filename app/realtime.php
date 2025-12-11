@@ -552,7 +552,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          */
         $timelimit = $timelimit('url:{url},ip:{ip}', 128, 60);
         $timelimit
-            ->setParam('{ip}', TrustedIp::extract($request))
+            ->setParam('{ip}', TrustedIp::extract($request, System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for')))
             ->setParam('{url}', $request->getURI());
 
         $abuse = new Abuse($timelimit);

@@ -861,7 +861,7 @@ App::setResource('servers', function () {
 });
 
 App::setResource('trustedIp', function (Request $request) {
-    return TrustedIp::extract($request);
+    return TrustedIp::extract($request, System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for'));
 }, ['request']);
 
 App::setResource('promiseAdapter', function ($register) {

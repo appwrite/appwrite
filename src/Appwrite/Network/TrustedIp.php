@@ -3,7 +3,6 @@
 namespace Appwrite\Network;
 
 use Appwrite\Utopia\Request;
-use Utopia\System\System;
 
 class TrustedIp
 {
@@ -17,15 +16,12 @@ class TrustedIp
      * @return string The trusted client IP address
      *
      */
-    public static function extract(Request $request): string
+    public static function extract(Request $request, string $trustedHeaders): string
     {
         // Fallback to remote address
         $remoteAddr = $request->getServer('remote_addr') ?? '0.0.0.0';
 
-        // Fetch and parse the list of trusted headers from configuration
-        $trustedHeadersConfig = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
-
-        $trustedHeaders = explode(',', $trustedHeadersConfig);
+        $trustedHeaders = explode(',', $trustedHeaders);
         $trustedHeaders = array_map('trim', $trustedHeaders);
         $trustedHeaders = array_map('strtolower', $trustedHeaders);
         $trustedHeaders = array_filter($trustedHeaders);
