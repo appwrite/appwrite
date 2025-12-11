@@ -59,6 +59,7 @@ class Update extends Action
                         since: '1.8.0',
                         replaceWith: 'account.updateMFAChallenge',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',

@@ -3754,6 +3754,7 @@ App::post('/v1/account/verifications/email')
                 since: '1.8.0',
                 replaceWith: 'account.createEmailVerification'
             ),
+            public: false,
         )
     ])
     ->label('abuse-limit', 10)
@@ -3970,6 +3971,7 @@ App::put('/v1/account/verifications/email')
                 since: '1.8.0',
                 replaceWith: 'account.updateEmailVerification'
             ),
+            public: false,
         )
     ])
     ->label('abuse-limit', 10)
