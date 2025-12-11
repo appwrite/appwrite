@@ -5569,6 +5569,11 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithUpdateRow(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
@@ -5693,6 +5698,11 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithCreateOperations(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
@@ -5820,6 +5830,11 @@ trait TransactionsBase
      */
     public function testMultipleArrayOperators(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',

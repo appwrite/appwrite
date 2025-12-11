@@ -318,13 +318,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     ) { // Validate user has valid login token
         $user = new User([]);
     }
-    // if (APP_MODE_ADMIN === $mode) {
-    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-    //         Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
-    //     } else {
-    //         $user = new Document([]);
-    //     }
-    // }
+
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
@@ -949,6 +943,8 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
             return $team;
         }
     }
+
+    // if teamInternalId is empty, return an empty document
 
     if (empty($teamInternalId)) {
         return new Document([]);

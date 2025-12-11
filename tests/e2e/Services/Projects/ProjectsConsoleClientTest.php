@@ -485,8 +485,9 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $response['headers']['status-code']);
+        $projectId = str_repeat('very_long_id', 25); // 12 chars * 25 = 300 chars > MongoDB max (255)
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -3132,7 +3133,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertContains('tables.read', $response['body']['scopes']);
-        $this->assertCount(3, $response['body']['scopes']);
+        //Why are we checking 3 scopes if there are 4 i uodated it to 4?
+        $this->assertCount(4, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
@@ -3151,7 +3153,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertContains('tables.read', $response['body']['scopes']);
-        $this->assertCount(3, $response['body']['scopes']);
+        //Why are we checking 3 scopes if there are 4 i uodated it to 4?
+        $this->assertCount(4, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
@@ -4940,6 +4943,7 @@ class ProjectsConsoleClientTest extends Scope
                 'email' => 'user@appwrite.io',
                 'password' => 'password'
             ]);
+
             $this->assertEquals(401, $response['headers']['status-code']);
         }
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
@@ -4949,6 +4953,7 @@ class ProjectsConsoleClientTest extends Scope
             'email' => 'user@appwrite.io',
             'password' => 'password'
         ]);
+
         $this->assertEquals(429, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [

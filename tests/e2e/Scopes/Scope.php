@@ -42,6 +42,66 @@ abstract class Scope extends TestCase
         $this->client = null;
     }
 
+    /**
+     * @var array|null Cached console variables
+     */
+    protected static ?array $consoleVariables = null;
+
+    /**
+     * Fetch console variables from the API
+     */
+    protected function getConsoleVariables(): array
+    {
+        if (self::$consoleVariables !== null) {
+            return self::$consoleVariables;
+        }
+
+        $root = $this->getRoot();
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/variables', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $root['session'],
+        ]);
+
+        self::$consoleVariables = $response['body'] ?? [];
+
+        return self::$consoleVariables;
+    }
+
+    /**
+     * Check if the database adapter supports relationships
+     */
+    protected function getSupportForRelationships(): bool
+    {
+        return $this->getConsoleVariables()['supportForRelationships'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports operators
+     */
+    protected function getSupportForOperators(): bool
+    {
+        return $this->getConsoleVariables()['supportForOperators'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports spatial attributes
+     */
+    protected function getSupportForSpatials(): bool
+    {
+        return $this->getConsoleVariables()['supportForSpatials'] ?? true;
+    }
+
+    /**
+     * Get the maximum index length supported by the database adapter
+     */
+    protected function getMaxIndexLength(): int
+    {
+        return $this->getConsoleVariables()['maxIndexLength'] ?? 768;
+    }
+
     protected function getLastEmail(int $limit = 1): array
     {
         sleep(3);
