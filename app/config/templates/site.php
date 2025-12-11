@@ -1482,8 +1482,8 @@ return [
         'frameworks' => [
             getFramework('REACT', [
                 'providerRootDirectory' => './react/react-admin',
-                'installCommand' => 'pnpm install && pnpm db-seed',
-                'buildCommand' => 'pnpm build',
+                'installCommand' => 'pnpm install',
+                'buildCommand' => 'pnpm build && pnpm db-seed',
                 'outputDirectory' => './dist',
             ]),
         ],
