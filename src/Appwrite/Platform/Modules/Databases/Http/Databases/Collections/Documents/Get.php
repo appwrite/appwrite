@@ -80,13 +80,13 @@ class Get extends Action
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException());
+            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
         }
 
         try {
@@ -114,7 +114,7 @@ class Get extends Action
         }
 
         if ($document->isEmpty()) {
-            throw new Exception($this->getNotFoundException());
+            throw Exception::withParams($this->getNotFoundException(), $documentId);
         }
 
         $operations = 0;

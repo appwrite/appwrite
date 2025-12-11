@@ -105,13 +105,13 @@ class Delete extends Action
         $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException());
+            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
         }
 
         // Read permission should not be required for delete
@@ -125,7 +125,7 @@ class Delete extends Action
         }
 
         if ($document->isEmpty()) {
-            throw new Exception($this->getNotFoundException());
+            throw Exception::withParams($this->getNotFoundException(), $documentId);
         }
 
         // Handle transaction staging
@@ -134,7 +134,7 @@ class Delete extends Action
                 ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+                throw Exception::withParams(Exception::TRANSACTION_NOT_FOUND, $transactionId);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);

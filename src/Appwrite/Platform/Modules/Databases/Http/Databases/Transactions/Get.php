@@ -58,7 +58,7 @@ class Get extends Action
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
         if ($transaction->isEmpty()) {
-            throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            throw Exception::withParams(Exception::TRANSACTION_NOT_FOUND, $transactionId);
         }
 
         $response

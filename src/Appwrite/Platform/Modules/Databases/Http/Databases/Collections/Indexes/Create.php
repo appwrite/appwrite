@@ -87,14 +87,14 @@ class Create extends Action
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
         }
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw new Exception($this->getGrandParentNotFoundException());
+            throw Exception::withParams($this->getGrandParentNotFoundException(), $collectionId);
         }
 
         $count = $dbForProject->count('indexes', [
@@ -105,7 +105,7 @@ class Create extends Action
         $limit = $dbForProject->getLimitForIndexes();
 
         if ($count >= $limit) {
-            throw new Exception($this->getLimitException(), 'Index limit exceeded');
+            throw Exception::withParams($this->getLimitException(), $collectionId);
         }
 
         $oldAttributes = \array_map(
@@ -148,7 +148,7 @@ class Create extends Action
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
             if ($attributeIndex === false) {
-                throw new Exception($this->getParentUnknownException(), "Unknown $contextType: " . $attribute . ". Verify the $contextType name or create the $contextType.");
+                throw Exception::withParams($this->getParentUnknownException(), $attribute);
             }
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
@@ -160,8 +160,7 @@ class Create extends Action
             }
 
             if ($attributeStatus !== 'available') {
-                $contextType = ucfirst($contextType);
-                throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
+                throw Exception::withParams($this->getParentNotAvailableException(), $oldAttributes[$attributeIndex]['key']);
             }
 
             if (empty($lengths[$i])) {
@@ -209,7 +208,7 @@ class Create extends Action
         try {
             $index = $dbForProject->createDocument('indexes', $index);
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw Exception::withParams($this->getDuplicateException(), $key);
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);

@@ -67,18 +67,18 @@ class Get extends Action
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
         }
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw new Exception($this->getGrandParentNotFoundException());
+            throw Exception::withParams($this->getGrandParentNotFoundException(), $collectionId);
         }
 
         $index = $collection->find('key', $key, 'indexes');
         if (empty($index)) {
-            throw new Exception($this->getNotFoundException());
+            throw Exception::withParams($this->getNotFoundException(), $key);
         }
 
         $response->dynamic($index, $this->getResponseModel());

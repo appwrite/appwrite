@@ -70,7 +70,7 @@ class Update extends Action
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
         }
 
         $database = $dbForProject->updateDocument('databases', $databaseId, $database

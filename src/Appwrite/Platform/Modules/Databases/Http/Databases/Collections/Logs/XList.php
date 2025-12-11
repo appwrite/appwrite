@@ -79,14 +79,14 @@ class XList extends Action
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
         }
 
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
 
         if ($collection->isEmpty()) {
-            throw new Exception($this->getNotFoundException());
+            throw Exception::withParams($this->getNotFoundException(), $collectionId);
         }
 
         try {

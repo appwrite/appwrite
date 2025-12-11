@@ -93,19 +93,19 @@ class Create extends Action
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw Exception::withParams(Exception::DATABASE_NOT_FOUND, $databaseId);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw Exception::withParams($this->getParentNotFoundException(), $collectionId);
         }
 
         $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId);
         $relatedCollection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollectionDocument->getSequence());
         if ($relatedCollection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw Exception::withParams($this->getParentNotFoundException(), $relatedCollectionId);
         }
 
         $attributes = $collection->getAttribute('attributes', []);
@@ -115,14 +115,14 @@ class Create extends Action
             }
 
             if (\strtolower($attribute->getId()) === \strtolower($key)) {
-                throw new Exception($this->getDuplicateException());
+                throw Exception::withParams($this->getDuplicateException(), $key);
             }
 
             if (
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                throw new Exception($this->getDuplicateException(), 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
+                throw Exception::withParams($this->getDuplicateException(), $twoWayKey);
             }
 
             if (

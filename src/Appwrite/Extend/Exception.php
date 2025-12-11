@@ -413,6 +413,23 @@ class Exception extends \Exception
     }
 
     /**
+     * Create an exception with formatted parameters.
+     */
+    public static function withParams(string $type, mixed ...$params): self
+    {
+        $errors = Config::getParam('errors');
+        $description = $errors[$type]['description'] ?? '';
+
+        if (!empty($params) && !empty($description)) {
+            $message = sprintf($description, ...$params);
+        } else {
+            $message = $description;
+        }
+
+        return new self($type, $message);
+    }
+
+    /**
      * Get the type of the exception.
      *
      * @return string
