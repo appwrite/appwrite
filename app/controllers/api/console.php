@@ -43,9 +43,6 @@ App::get('/v1/console/variables')
     ))
     ->inject('response')
     ->action(function (Response $response) {
-        $validator = new Domain(System::getEnv('_APP_DOMAIN'));
-        $isDomainValid = !empty(System::getEnv('_APP_DOMAIN', '')) && $validator->isKnown() && !$validator->isTest();
-
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
 
@@ -55,9 +52,7 @@ App::get('/v1/console/variables')
         $validator = new IP(IP::V6);
         $isAAAAValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_AAAA', '')) && $validator->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA'));
 
-        $isDomainEnabled = $isDomainValid && (
-            $isAAAAValid || $isAValid || $isCNAMEValid
-        );
+        $isDomainEnabled = $isAAAAValid || $isAValid || $isCNAMEValid;
 
         $isVcsEnabled = !empty(System::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
             && !empty(System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))

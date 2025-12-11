@@ -38,9 +38,15 @@ services:
     depends_on:
       - appwrite
     networks:
-      - gateway
-      - appwrite
-      - runtimes
+      appwrite:
+        aliases:
+          - appwrite.test
+      gateway:
+        aliases:
+          - appwrite.test
+      runtimes:
+        aliases:
+          - appwrite.test
 
   appwrite:
     container_name: appwrite
