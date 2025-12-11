@@ -333,6 +333,8 @@ class Create extends Action
             ->setParam('userId', $user->getId())
             ->setParam('challengeId', $challenge->getId());
 
-        $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
     }
 }
