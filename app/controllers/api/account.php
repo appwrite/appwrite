@@ -201,19 +201,40 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
+    $sessionData = [
+        '$id' => ID::unique(),
+        'userId' => $user->getId(),
+        'userInternalId' => $user->getSequence(),
+        'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
+        'userAgent' => $request->getUserAgent('UNKNOWN'),
+        'ip' => $request->getIP(),
+        'factors' => [$factor],
+        'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+        'expire' => DateTime::addSeconds(new \DateTime(), $duration)
+    ];
+
+    // For OAuth2 tokens, retrieve and add provider tokens from identity
+    if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_OAUTH2) {
+        // Find the most recently updated identity for this user
+        $identities = $dbForProject->find('identities', [
+            Query::equal('userInternalId', [$user->getSequence()]),
+            Query::orderDesc('$updatedAt'),
+            Query::limit(1)
+        ]);
+
+        $latestIdentity = !empty($identities) ? $identities[0] : null;
+
+        if ($latestIdentity && !$latestIdentity->isEmpty()) {
+            $sessionData['provider'] = $latestIdentity->getAttribute('provider', '');
+            $sessionData['providerUid'] = $latestIdentity->getAttribute('providerUid', '');
+            $sessionData['providerAccessToken'] = $latestIdentity->getAttribute('providerAccessToken', '');
+            $sessionData['providerRefreshToken'] = $latestIdentity->getAttribute('providerRefreshToken', '');
+            $sessionData['providerAccessTokenExpiry'] = $latestIdentity->getAttribute('providerAccessTokenExpiry', '');
+        }
+    }
+
     $session = new Document(array_merge(
-        [
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getSequence(),
-            'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
-            'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'factors' => [$factor],
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
-        ],
+        $sessionData,
         $detector->getOS(),
         $detector->getClient(),
         $detector->getDevice()
