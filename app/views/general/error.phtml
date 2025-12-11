@@ -17,7 +17,7 @@ $buttons = [];
 
 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
 $platform = Config::getParam('platform', []);
-$hostname = $platform['consoleDomain'] ?? '';
+$hostname = $platform['consoleHostname'] ?? '';
 // TODO: remove this later
 if (System::getEnv('_APP_ENV') === 'development') {
     $hostname = 'localhost';
