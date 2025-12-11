@@ -21,6 +21,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Platform;
+use Appwrite\Network\TrustedIp;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -748,37 +749,8 @@ App::setResource('servers', function () {
     return $languages;
 });
 
-App::setResource('trustedIp', function(Request $request) {
-
-    // Setup the fallback
-    $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
-
-    // Fetch and parse the list of trusted headers from configuration
-    $trustedHeadersConfig = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
-
-    $trustedHeaders = explode(',', $trustedHeadersConfig);
-    $trustedHeaders = array_map('trim', $trustedHeaders);
-    $trustedHeaders = array_map('strtolower', $trustedHeaders);
-    $trustedHeaders = array_filter($trustedHeaders);
-
-    foreach ($trustedHeaders as $header) {
-        $headerValue = $this->getHeader($header);
-
-        if (empty($headerValue)) {
-            continue;
-        }
-
-        // Leftmost IP address is the address of the originating client
-        $ips = explode(',', $headerValue);
-        $ip = trim($ips[0]);
-
-        // Validate IP format (supports both IPv4 and IPv6)
-        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-            return $ip;
-        }
-    }
-
-    return $remoteAddr;
+App::setResource('trustedIp', function (Request $request) {
+    return TrustedIp::extract($request);
 }, ['request']);
 
 App::setResource('promiseAdapter', function ($register) {

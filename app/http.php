@@ -477,7 +477,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             } else {
-                $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
+                $log->setUser(new User('guest-' . hash('sha256', TrustedIp::extract($request))));
             }
 
             $log->setNamespace("http");

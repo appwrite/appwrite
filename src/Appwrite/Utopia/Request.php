@@ -9,7 +9,6 @@ use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
-use Utopia\System\System;
 
 class Request extends UtopiaRequest
 {
