@@ -1179,8 +1179,8 @@ App::error()
     ->inject('logger')
     ->inject('log')
     ->inject('queueForStatsUsage')
-    ->inject('devKey')
     ->inject('trustedIp')
+    ->inject('devKey')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage, string $trustedIp) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
