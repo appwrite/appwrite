@@ -13,8 +13,6 @@ use Utopia\System\System;
 
 class Request extends UtopiaRequest
 {
-    protected array $trustedIpHeaders = explode(",", System::getEnv('_APP_TRUSTED_HEADERS') ?? 'x-forwarded-for');
-
     /**
      * @var array<Filter>
      */
@@ -23,6 +21,9 @@ class Request extends UtopiaRequest
 
     public function __construct(SwooleRequest $request)
     {
+        $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
+        $this->setTrustedIpHeaders(explode(',', $trustedHeaders));
+
         parent::__construct($request);
     }
 
