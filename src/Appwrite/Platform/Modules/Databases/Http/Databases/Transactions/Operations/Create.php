@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Operation;
+use Appwrite\Utopia\Request\Model\Database\Legacy\TransactionOperation;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -58,7 +59,7 @@ class Create extends Action
                 contentType: ContentType::JSON
             ))
             ->param('transactionId', '', new UID(), 'Transaction ID.')
-            ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
+            ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true, model: TransactionOperation::class)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('transactionState')

@@ -6238,10 +6238,8 @@
                                 "operations": {
                                     "type": "array",
                                     "description": "Array of staged operations.",
-                                    "default": [],
-                                    "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"collectionId\": \"<COLLECTION_ID>\",\n\t        \"documentId\": \"<DOCUMENT_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
                                     "items": {
-                                        "type": "object"
+                                        "$ref": "#\/definitions\/transactionOperationLegacy"
                                     }
                                 }
                             }
@@ -6736,10 +6734,10 @@
                                     "description": "An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "documentSecurity": {
                                     "type": "boolean",
@@ -6941,10 +6939,10 @@
                                     "description": "An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "documentSecurity": {
                                     "type": "boolean",
@@ -10651,10 +10649,10 @@
                                     "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "documents": {
                                     "type": "array",
@@ -11259,10 +11257,10 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
@@ -11378,10 +11376,10 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
@@ -16857,30 +16855,30 @@
                                     "description": "List of Topic IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "users": {
                                     "type": "array",
                                     "description": "List of User IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "targets": {
                                     "type": "array",
                                     "description": "List of Targets IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "subject": {
                                     "type": "string",
@@ -16915,20 +16913,20 @@
                                     "description": "Array of target IDs to be added as CC.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "bcc": {
                                     "type": "array",
                                     "description": "Array of target IDs to be added as BCC.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "scheduledAt": {
                                     "type": "string",
@@ -16942,10 +16940,10 @@
                                     "description": "Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -17224,30 +17222,30 @@
                                     "description": "List of Topic IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "users": {
                                     "type": "array",
                                     "description": "List of User IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "targets": {
                                     "type": "array",
                                     "description": "List of Targets IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "title": {
                                     "type": "string",
@@ -17701,30 +17699,30 @@
                                     "description": "List of Topic IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "users": {
                                     "type": "array",
                                     "description": "List of User IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "targets": {
                                     "type": "array",
                                     "description": "List of Targets IDs.",
                                     "default": null,
                                     "x-example": null,
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "content": {
                                     "type": "string",
@@ -21692,10 +21690,10 @@
                                     "description": "An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https:\/\/appwrite.io\/docs\/permissions#permission-roles). Maximum of 100 roles are allowed, each 64 characters long.",
                                     "default": null,
                                     "x-example": "[\"any\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -24635,10 +24633,10 @@
                                     "description": "An array of permission strings. By default, no user is granted with any permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "fileSecurity": {
                                     "type": "boolean",
@@ -24844,10 +24842,10 @@
                                     "description": "An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "fileSecurity": {
                                     "type": "boolean",
@@ -25317,10 +25315,10 @@
                                     "description": "An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 }
                             }
                         }
@@ -26370,10 +26368,8 @@
                                 "operations": {
                                     "type": "array",
                                     "description": "Array of staged operations.",
-                                    "default": [],
-                                    "x-example": "[\n\t    {\n\t        \"action\": \"create\",\n\t        \"databaseId\": \"<DATABASE_ID>\",\n\t        \"tableId\": \"<TABLE_ID>\",\n\t        \"rowId\": \"<ROW_ID>\",\n\t        \"data\": {\n\t            \"name\": \"Walter O'Brien\"\n\t        }\n\t    }\n\t]",
                                     "items": {
-                                        "type": "object"
+                                        "$ref": "#\/definitions\/transactionOperationTablesDB"
                                     }
                                 }
                             }
@@ -26762,10 +26758,10 @@
                                     "description": "An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "rowSecurity": {
                                     "type": "boolean",
@@ -26965,10 +26961,10 @@
                                     "description": "An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "rowSecurity": {
                                     "type": "boolean",
@@ -31020,10 +31016,10 @@
                                     "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "rows": {
                                     "type": "array",
@@ -31614,10 +31610,10 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
@@ -31729,10 +31725,10 @@
                                     "description": "An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
                                     "default": null,
                                     "x-example": "[\"read(\"any\")\"]",
-                                    "x-nullable": true,
                                     "items": {
                                         "type": "string"
-                                    }
+                                    },
+                                    "x-nullable": true
                                 },
                                 "transactionId": {
                                     "type": "string",
@@ -45264,6 +45260,96 @@
                 "providerType": "email",
                 "identifier": "token",
                 "expired": false
+            }
+        },
+        "transactionOperationLegacy": {
+            "description": "Legacy\\TransactionOperation",
+            "type": "object",
+            "properties": {
+                "databaseId": {
+                    "type": "string",
+                    "description": "The ID of the database.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "collectionId": {
+                    "type": "string",
+                    "description": "The ID of the collection.",
+                    "x-example": "5e5ea5c15117e"
+                },
+                "documentId": {
+                    "type": "string",
+                    "description": "The ID of the document. Required for update, upsert, delete, increment, and decrement actions.",
+                    "x-example": "5e5ea5c15117e",
+                    "x-nullable": true
+                },
+                "action": {
+                    "type": "string",
+                    "description": "The action to perform on the document.",
+                    "x-example": "create"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "The data payload for the operation. Structure depends on the action type.",
+                    "x-example": "{\"name\": \"John Doe\", \"email\": \"john@example.com\"}"
+                }
+            },
+            "required": [
+                "databaseId",
+                "collectionId",
+                "action"
+            ],
+            "example": {
+                "databaseId": "5e5ea5c16897e",
+                "collectionId": "5e5ea5c15117e",
+                "documentId": "5e5ea5c15117e",
+                "action": "create",
+                "data": "{\"name\": \"John Doe\", \"email\": \"john@example.com\"}"
+            }
+        },
+        "transactionOperationTablesDB": {
+            "description": "TablesDB\\TransactionOperation",
+            "type": "object",
+            "properties": {
+                "databaseId": {
+                    "type": "string",
+                    "description": "The ID of the database.",
+                    "x-example": "5e5ea5c16897e"
+                },
+                "action": {
+                    "type": "string",
+                    "description": "The action to perform on the document.",
+                    "x-example": "create"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "The data payload for the operation. Structure depends on the action type.",
+                    "x-example": "{\"name\": \"John Doe\", \"email\": \"john@example.com\"}"
+                },
+                "tableId": {
+                    "type": "string",
+                    "description": "The ID of the table.",
+                    "x-example": "5e5ea5c15117e"
+                },
+                "rowId": {
+                    "type": "string",
+                    "description": "The ID of the row. Required for update, upsert, delete, increment, and decrement actions.",
+                    "x-example": "5e5ea5c15117e",
+                    "x-nullable": true
+                }
+            },
+            "required": [
+                "databaseId",
+                "action",
+                "tableId"
+            ],
+            "example": {
+                "databaseId": "5e5ea5c16897e",
+                "action": "create",
+                "data": "{\"name\": \"John Doe\", \"email\": \"john@example.com\"}",
+                "tableId": "5e5ea5c15117e",
+                "rowId": "5e5ea5c15117e"
             }
         }
     },

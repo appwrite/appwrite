@@ -9,6 +9,7 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
+use Appwrite\Utopia\Request\Model as RequestModel;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
@@ -88,6 +89,7 @@ class Swagger2 extends Format
         }
 
         $usedModels = [];
+        $usedRequestModels = [];
 
         foreach ($this->routes as $route) {
             /** @var Route $route */
@@ -269,7 +271,7 @@ class Swagger2 extends Format
                         $responseModel = $response->getModel();
                         if (\is_array($responseModel)) {
                             foreach ($responseModel as $modelName) {
-                                foreach ($this->models as $value) {
+                                foreach ($this->responseModels as $value) {
                                     if ($value->getType() === $modelName) {
                                         $usedModels[] = $modelName;
                                         break;
@@ -288,7 +290,7 @@ class Swagger2 extends Format
                             // lets not assume stuff here!
                             if ($response->getCode() !== 204) {
                                 $responseData['model'] = '#/definitions/' . $responseModel;
-                                foreach ($this->models as $value) {
+                                foreach ($this->responseModels as $value) {
                                     if ($value->getType() === $responseModel) {
                                         $usedModels[] = $responseModel;
                                         break;
@@ -309,7 +311,7 @@ class Swagger2 extends Format
                 /** @var Response $response */
                 $model = $response->getModel();
 
-                foreach ($this->models as $value) {
+                foreach ($this->responseModels as $value) {
                     if (\is_array($model)) {
                         $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
                     } else {
@@ -709,30 +711,43 @@ class Swagger2 extends Format
                         $bodyRequired[] = $name;
                     }
 
-                    $body['schema']['properties'][$name] = [
-                        'type' => $node['type'],
-                        'description' => $node['description'],
-                        'default' => $node['default'] ?? null,
-                        'x-example' => $node['x-example'] ?? null,
-                    ];
+                    $property = &$body['schema']['properties'][$name];
+                    $paramModel = $param['model'] ?? null;
 
-                    if (isset($node['enum'])) {
-                        /// If the enum flag is Set, add the enum values to the body
-                        $body['schema']['properties'][$name]['enum'] = $node['enum'];
-                        $body['schema']['properties'][$name]['x-enum-name'] = $node['x-enum-name'] ?? null;
-                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'] ?? null;
-                    }
+                    if ($paramModel !== null && \class_exists($paramModel)) {
+                        /** @var RequestModel $requestModelInstance */
+                        $requestModelInstance = new $paramModel();
+                        $requestModelType = $requestModelInstance->getType();
+                        $usedRequestModels[] = $requestModelType;
 
-                    if ($node['x-global'] ?? false) {
-                        $body['schema']['properties'][$name]['x-global'] = true;
+                        $property = $array
+                            ? ['type' => 'array', 'description' => $node['description'], 'items' => ['$ref' => '#/definitions/' . $requestModelType]]
+                            : ['$ref' => '#/definitions/' . $requestModelType];
+                    } else {
+                        $property = [
+                            'type' => $node['type'],
+                            'description' => $node['description'],
+                            'default' => $node['default'] ?? null,
+                            'x-example' => $node['x-example'] ?? null,
+                        ];
+
+                        if (isset($node['enum'])) {
+                            $property['enum'] = $node['enum'];
+                            $property['x-enum-name'] = $node['x-enum-name'] ?? null;
+                            $property['x-enum-keys'] = $node['x-enum-keys'] ?? null;
+                        }
+
+                        if ($node['x-global'] ?? false) {
+                            $property['x-global'] = true;
+                        }
+
+                        if (\array_key_exists('items', $node)) {
+                            $property['items'] = $node['items'];
+                        }
                     }
 
                     if ($isNullable) {
-                        $body['schema']['properties'][$name]['x-nullable'] = true;
-                    }
-
-                    if (\array_key_exists('items', $node)) {
-                        $body['schema']['properties'][$name]['items'] = $node['items'];
+                        $property['x-nullable'] = true;
                     }
                 }
 
@@ -752,11 +767,11 @@ class Swagger2 extends Format
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
 
-        foreach ($this->models as $model) {
+        foreach ($this->responseModels as $model) {
             $this->getNestedModels($model, $usedModels);
         }
 
-        foreach ($this->models as $model) {
+        foreach ($this->responseModels as $model) {
             if (!in_array($model->getType(), $usedModels)) {
                 continue;
             }
@@ -927,6 +942,89 @@ class Swagger2 extends Format
             }
 
             $output['definitions'][$model->getType()]['example'] = $examples;
+        }
+
+        // Generate request model definitions
+        foreach ($this->requestModels as $model) {
+            $this->getNestedRequestModels($model, $usedRequestModels);
+        }
+
+        foreach ($this->requestModels as $model) {
+            if (!in_array($model->getType(), $usedRequestModels)) {
+                continue;
+            }
+
+            $required = $model->getRequired();
+            $rules = $model->getRules();
+
+            $output['definitions'][$model->getType()] = [
+                'description' => $model->getName(),
+                'type' => 'object',
+            ];
+
+            if (!empty($rules)) {
+                $output['definitions'][$model->getType()]['properties'] = [];
+            }
+
+            if (!empty($required)) {
+                $output['definitions'][$model->getType()]['required'] = $required;
+            }
+
+            foreach ($rules as $name => $rule) {
+                $ruleType = $rule['type'];
+                $isArray = $rule['array'] ?? false;
+
+                [$type, $format] = match ($ruleType) {
+                    'string', 'datetime' => ['string', null],
+                    'enum' => ['string', null],
+                    'json' => ['object', null],
+                    'array' => ['array', null],
+                    'integer' => ['integer', 'int32'],
+                    'float' => ['number', 'float'],
+                    'double' => ['number', 'double'],
+                    'boolean' => ['boolean', null],
+                    'payload' => ['payload', null],
+                    default => ['object', null],
+                };
+
+                $property = &$output['definitions'][$model->getType()]['properties'][$name];
+
+                if ($ruleType === 'json') {
+                    $property = ['type' => $type, 'additionalProperties' => true, 'description' => $rule['description'] ?? '', 'x-example' => $rule['example'] ?? null];
+                    continue;
+                }
+
+                $property = ['type' => $isArray ? 'array' : $type, 'description' => $rule['description'] ?? '', 'x-example' => $rule['example'] ?? null];
+
+                if ($isArray) {
+                    $property['items'] = ['type' => $type];
+                    if ($format) {
+                        $property['items']['format'] = $format;
+                    }
+                } elseif ($format) {
+                    $property['format'] = $format;
+                }
+
+                // Handle nested model references
+                if ($type === 'object' && $ruleType && $ruleType !== 'json') {
+                    $refKey = $isArray ? 'x-anyOf' : 'x-oneOf';
+                    $property['items'] = \is_array($ruleType)
+                        ? [$refKey => \array_map(fn ($t) => ['$ref' => '#/definitions/' . $t], $ruleType)]
+                        : ['type' => 'object', '$ref' => '#/definitions/' . $ruleType];
+                }
+
+                if ($ruleType === 'enum' && !empty($rule['enum'])) {
+                    $target = $isArray ? $property['items'] : $property;
+                    $target['enum'] = \array_values($rule['enum']);
+                    $isArray ? $property['items'] = $target : $property = $target;
+                }
+
+                if (!in_array($name, $required)) {
+                    $property['x-nullable'] = true;
+                }
+            }
+
+            $output['definitions'][$model->getType()]['example'] = \array_map(fn ($r) => $r['example'] ?? null, $rules);
         }
 
         \ksort($output['paths']);

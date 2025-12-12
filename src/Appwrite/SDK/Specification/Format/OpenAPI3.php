@@ -9,6 +9,7 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
+use Appwrite\Utopia\Request\Model as RequestModel;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Database;
@@ -91,6 +92,7 @@ class OpenAPI3 extends Format
         }
 
         $usedModels = [];
+        $usedRequestModels = [];
 
         foreach ($this->routes as $route) {
             $url = \str_replace('/v1', '', $route->getPath());
@@ -261,7 +263,7 @@ class OpenAPI3 extends Format
 
                         if (\is_array($responseModel)) {
                             foreach ($responseModel as $modelName) {
-                                foreach ($this->models as $value) {
+                                foreach ($this->responseModels as $value) {
                                     if ($value->getType() === $modelName) {
                                         $usedModels[] = $modelName;
                                         break;
@@ -280,7 +282,7 @@ class OpenAPI3 extends Format
                             // lets not assume stuff here!
                             if ($response->getCode() !== 204) {
                                 $responseData['model'] = '#/components/schemas/' . $responseModel;
-                                foreach ($this->models as $value) {
+                                foreach ($this->responseModels as $value) {
                                     if ($value->getType() === $responseModel) {
                                         $usedModels[] = $responseModel;
                                         break;
@@ -301,7 +303,7 @@ class OpenAPI3 extends Format
                 /** @var Response $response */
                 $model = $response->getModel();
 
-                foreach ($this->models as $value) {
+                foreach ($this->responseModels as $value) {
                     if (\is_array($model)) {
                         $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
                     } else {
@@ -721,37 +723,50 @@ class OpenAPI3 extends Format
                         $bodyRequired[] = $name;
                     }
 
-                    $body['content'][$consumes[0]]['schema']['properties'][$name] = [
-                        'type' => $node['schema']['type'],
-                        'description' => $node['description'],
-                        'x-example' => $node['schema']['x-example'] ?? null
-                    ];
+                    $property = &$body['content'][$consumes[0]]['schema']['properties'][$name];
+                    $paramModel = $param['model'] ?? null;
 
-                    if (isset($node['schema']['enum'])) {
-                        /// If the enum flag is Set, add the enum values to the body
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'] ?? null;
-                    }
+                    if ($paramModel !== null && \class_exists($paramModel)) {
+                        /** @var RequestModel $requestModelInstance */
+                        $requestModelInstance = new $paramModel();
+                        $requestModelType = $requestModelInstance->getType();
+                        $usedRequestModels[] = $requestModelType;
 
-                    if ($node['schema']['x-upload-id'] ?? false) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
-                    }
+                        $property = $array
+                            ? ['type' => 'array', 'description' => $node['description'], 'items' => ['$ref' => '#/components/schemas/' . $requestModelType]]
+                            : ['$ref' => '#/components/schemas/' . $requestModelType];
+                    } else {
+                        $property = [
+                            'type' => $node['schema']['type'],
+                            'description' => $node['description'],
+                            'x-example' => $node['schema']['x-example'] ?? null
+                        ];
 
-                    if (isset($node['default'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['default'] = $node['default'];
-                    }
+                        if (isset($node['schema']['enum'])) {
+                            $property['enum'] = $node['schema']['enum'];
+                            $property['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
+                            $property['x-enum-keys'] = $node['schema']['x-enum-keys'] ?? null;
+                        }
 
-                    if (\array_key_exists('items', $node['schema'])) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
-                    }
+                        if ($node['schema']['x-upload-id'] ?? false) {
+                            $property['x-upload-id'] = $node['schema']['x-upload-id'];
+                        }
 
-                    if ($node['x-global'] ?? false) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
+                        if (isset($node['default'])) {
+                            $property['default'] = $node['default'];
+                        }
+
+                        if (\array_key_exists('items', $node['schema'])) {
+                            $property['items'] = $node['schema']['items'];
+                        }
+
+                        if ($node['x-global'] ?? false) {
+                            $property['x-global'] = true;
+                        }
                     }
 
                     if ($isNullable) {
-                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
+                        $property['x-nullable'] = true;
                     }
                 }
 
@@ -769,11 +784,11 @@ class OpenAPI3 extends Format
             $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
         }
 
-        foreach ($this->models as $model) {
+        foreach ($this->responseModels as $model) {
             $this->getNestedModels($model, $usedModels);
         }
 
-        foreach ($this->models as $model) {
+        foreach ($this->responseModels as $model) {
             if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
                 continue;
             }
@@ -931,6 +946,86 @@ class OpenAPI3 extends Format
             }
 
             $output['components']['schemas'][$model->getType()]['example'] = $examples;
+        }
+
+        // Generate request model schemas
+        foreach ($this->requestModels as $model) {
+            $this->getNestedRequestModels($model, $usedRequestModels);
+        }
+
+        foreach ($this->requestModels as $model) {
+            if (!in_array($model->getType(), $usedRequestModels)) {
+                continue;
+            }
+
+            $required = $model->getRequired();
+            $rules = $model->getRules();
+
+            $output['components']['schemas'][$model->getType()] = [
+                'description' => $model->getName(),
+                'type' => 'object',
+            ];
+
+            if (!empty($rules)) {
+                $output['components']['schemas'][$model->getType()]['properties'] = [];
+            }
+
+            if (!empty($required)) {
+                $output['components']['schemas'][$model->getType()]['required'] = $required;
+            }
+
+            foreach ($rules as $name => $rule) {
+                $ruleType = $rule['type'];
+                $isArray = $rule['array'] ?? false;
+
+                [$type, $format] = match ($ruleType) {
+                    'string', 'datetime', 'payload' => ['string', null],
+                    'enum' => ['string', null],
+                    'json' => ['object', null],
+                    'array' => ['array', null],
+                    'integer' => ['integer', 'int32'],
+                    'float' => ['number', 'float'],
+                    'double' => ['number', 'double'],
+                    'boolean' => ['boolean', null],
+                    default => ['object', null],
+                };
+
+                $property = &$output['components']['schemas'][$model->getType()]['properties'][$name];
+                $property = ['type' => $isArray ? 'array' : $type, 'description' => $rule['description'] ?? '', 'x-example' => $rule['example'] ?? null];
+
+                if ($ruleType === 'json') {
+                    $property['additionalProperties'] = true;
+                }
+
+                if ($isArray) {
+                    $property['items'] = ['type' => $type];
+                    if ($format) {
+                        $property['items']['format'] = $format;
+                    }
+                } elseif ($format) {
+                    $property['format'] = $format;
+                }
+
+                // Handle nested model references
+                if ($type === 'object' && $ruleType && $ruleType !== 'json') {
+                    $refKey = $isArray ? 'anyOf' : 'oneOf';
+                    $property['items'] = \is_array($ruleType)
+                        ? [$refKey => \array_map(fn ($t) => ['$ref' => '#/components/schemas/' . $t], $ruleType)]
+                        : ['$ref' => '#/components/schemas/' . $ruleType];
+                }
+
+                if ($ruleType === 'enum' && !empty($rule['enum'])) {
+                    $target = $isArray ? $property['items'] : $property;
+                    $target['enum'] = \array_values($rule['enum']);
+                    $isArray ? $property['items'] = $target : $property = $target;
+                }
+
+                if (!in_array($name, $required)) {
+                    $property['x-nullable'] = true;
+                }
+            }
+
+            $output['components']['schemas'][$model->getType()]['example'] = \array_map(fn ($r) => $r['example'] ?? null, $rules);
         }
 
         \ksort($output['paths']);

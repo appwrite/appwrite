@@ -12,6 +12,9 @@ use Utopia\Swoole\Request as UtopiaRequest;
 
 class Request extends UtopiaRequest
 {
+    public const string MODEL_TRANSACTION_OPERATION_LEGACY = 'transactionOperationLegacy';
+    public const string MODEL_TRANSACTION_OPERATION_TABLESDB = 'transactionOperationTablesDB';
+
     /**
      * @var array<Filter>
      */
