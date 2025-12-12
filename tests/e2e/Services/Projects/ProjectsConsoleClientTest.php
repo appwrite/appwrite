@@ -24,9 +24,9 @@ class ProjectsConsoleClientTest extends Scope
     use Async;
 
     /**
-     * @group devKeys
      * @group smtpAndTemplates
-     * @group projectsCRUD */
+     * @group projectsCRUD
+     */
     public function testCreateProject(): array
     {
         /**
@@ -564,8 +564,14 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectSMTP($data): array
     {
         $id = $data['projectId'];
-        
-        /**Test for SUCCESS: Valid Credentials*/
+        $smtpHost = System::getEnv('_APP_SMTP_HOST', "maildev");
+        $smtpPort = intval(System::getEnv('_APP_SMTP_PORT', "1025"));
+        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', 'user');
+        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', 'password');
+
+        /**
+         * Test for SUCCESS: Valid Credentials
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -573,23 +579,23 @@ class ProjectsConsoleClientTest extends Scope
             'enabled' => true,
             'senderEmail' => 'mailer@appwrite.io',
             'senderName' => 'Mailer',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => 'user',
-            'password' => 'password',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled']);
         $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSenderEmail']);
         $this->assertEquals('Mailer', $response['body']['smtpSenderName']);
-        $this->assertEquals('maildev', $response['body']['smtpHost']);
-        $this->assertEquals(1025, $response['body']['smtpPort']);
-        $this->assertEquals('user', $response['body']['smtpUsername']);
-        $this->assertEquals('password', $response['body']['smtpPassword']);
+        $this->assertEquals($smtpHost, $response['body']['smtpHost']);
+        $this->assertEquals($smtpPort, $response['body']['smtpPort']);
+        $this->assertEquals($smtpUsername, $response['body']['smtpUsername']);
+        $this->assertEquals($smtpPassword, $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
 
-        /** Test Reading Project */
+        // Check the project
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -599,13 +605,15 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertTrue($response['body']['smtpEnabled']);
         $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSenderEmail']);
         $this->assertEquals('Mailer', $response['body']['smtpSenderName']);
-        $this->assertEquals('maildev', $response['body']['smtpHost']);
-        $this->assertEquals(1025, $response['body']['smtpPort']);
-        $this->assertEquals('user', $response['body']['smtpUsername']);
-        $this->assertEquals('password', $response['body']['smtpPassword']);
+        $this->assertEquals($smtpHost, $response['body']['smtpHost']);
+        $this->assertEquals($smtpPort, $response['body']['smtpPort']);
+        $this->assertEquals($smtpUsername, $response['body']['smtpUsername']);
+        $this->assertEquals($smtpPassword, $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
 
-        /**  Test for Missing or Invalid Credentials*/
+        /**
+         * Test for FAILURE: Invalid Credentials
+         */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -613,15 +621,15 @@ class ProjectsConsoleClientTest extends Scope
             'enabled' => true,
             'senderEmail' => 'fail@appwrite.io',
             'senderName' => 'Failing Mailer',
-            'host' => 'maildev',
-            'port' => 1025,
+            'host' => $smtpHost,
+            'port' => $smtpPort,
             'username' => 'invalid-user',
             'password' => 'bad-password',
         ]);
-        
+
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals(Exception::PROJECT_SMTP_CONFIG_INVALID, $response['body']['type']);
-        $this->assertStringContainsStringIgnoringCase('SMTP authentication failed.', $response['body']['message']);
+        $this->assertStringContainsStringIgnoringCase('Could not authenticate', $response['body']['message']);
 
         return $data;
     }
@@ -633,6 +641,11 @@ class ProjectsConsoleClientTest extends Scope
     public function testCreateProjectSMTPTests($data): array
     {
         $id = $data['projectId'];
+        $smtpHost = System::getEnv('_APP_SMTP_HOST', "maildev");
+        $smtpPort = intval(System::getEnv('_APP_SMTP_PORT', "1025"));
+        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', 'user');
+        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', 'password');
+
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -641,10 +654,10 @@ class ProjectsConsoleClientTest extends Scope
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -678,10 +691,10 @@ class ProjectsConsoleClientTest extends Scope
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -694,10 +707,10 @@ class ProjectsConsoleClientTest extends Scope
             'senderEmail' => 'custommailer@appwrite.io',
             'senderName' => 'Custom Mailer',
             'replyTo' => 'reply@appwrite.io',
-            'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'host' => $smtpHost,
+            'port' => $smtpPort,
+            'username' => $smtpUsername,
+            'password' => $smtpPassword,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -720,7 +733,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('Account Verification', $response['body']['subject']);
+        $this->assertEquals('Account Verification for {{project}}', $response['body']['subject']);
         $this->assertEquals('', $response['body']['senderEmail']);
         $this->assertEquals('verification', $response['body']['type']);
         $this->assertEquals('en-us', $response['body']['locale']);
@@ -3023,7 +3036,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertContains('tables.read', $response['body']['scopes']);
-        $this->assertCount(3, $response['body']['scopes']);
+        $this->assertCount(4, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
@@ -3042,7 +3055,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertContains('tables.read', $response['body']['scopes']);
-        $this->assertCount(3, $response['body']['scopes']);
+        $this->assertCount(4, $response['body']['scopes']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
@@ -4976,8 +4989,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']);
 
         /**
-        * Get rate limit trying to use the deleted key
-        */
+         * Get rate limit trying to use the deleted key
+         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,

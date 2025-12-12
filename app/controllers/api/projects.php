@@ -294,7 +294,7 @@ App::post('/v1/projects')
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
-        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
+        $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2071,14 +2071,9 @@ App::patch('/v1/projects/:projectId/smtp')
 
         // validate SMTP settings
         if ($enabled) {
-            if (empty($username)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP Username is required when enabling SMTP.');
-            } elseif (empty($password)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP Password is required when enabling SMTP.');
-            }
             $mail = new PHPMailer(true);
             $mail->isSMTP();
-            $mail->SMTPAuth = true;
+            $mail->SMTPAuth = (!empty($username) && !empty($password));
             $mail->Username = $username;
             $mail->Password = $password;
             $mail->Host = $host;
@@ -2094,7 +2089,7 @@ App::patch('/v1/projects/:projectId/smtp')
                     throw new Exception('Connection is not valid.');
                 }
             } catch (Throwable $error) {
-                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
+                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
             }
         }
 
@@ -2661,7 +2656,7 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
         $auths = $project->getAttribute('auths', []);
         $auths['invalidateSessions'] = $enabled;
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-        ->setAttribute('auths', $auths));
+            ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
