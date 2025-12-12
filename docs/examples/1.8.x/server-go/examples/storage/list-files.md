@@ -18,4 +18,5 @@ response, error := service.ListFiles(
     "<BUCKET_ID>",
     storage.WithListFilesQueries([]interface{}{}),
     storage.WithListFilesSearch("<SEARCH>"),
+    storage.WithListFilesTotal(false),
 )

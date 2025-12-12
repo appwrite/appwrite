@@ -2,53 +2,17 @@
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Helpers\ID;
 
 class OriginTest extends TestCase
 {
     public function testValues(): void
     {
-        $validator = new Origin([
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Production',
-                'type' => Platform::TYPE_WEB,
-                'hostname' => 'appwrite.io',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Development',
-                'type' => Platform::TYPE_WEB,
-                'hostname' => 'appwrite.test',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Localhost',
-                'type' => Platform::TYPE_WEB,
-                'hostname' => 'localhost',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Flutter',
-                'type' => Platform::TYPE_FLUTTER_WEB,
-                'hostname' => 'appwrite.flutter',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Expo',
-                'type' => Platform::TYPE_SCHEME,
-                'key' => 'exp',
-            ],
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Appwrite Callback',
-                'type' => Platform::TYPE_SCHEME,
-                'key' => 'appwrite-callback-123',
-            ],
-        ]);
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io', 'appwrite.test', 'localhost', 'appwrite.flutter'],
+            allowedSchemes: ['exp', 'appwrite-callback-123']
+        );
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid('/'));

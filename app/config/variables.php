@@ -81,7 +81,7 @@ return [
             ],
             [
                 'name' => '_APP_DOMAIN',
-                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'.',
+                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
@@ -947,6 +947,16 @@ return [
                 'description' => 'The host used by Appwrite to communicate with the function executor.',
                 'introduction' => '0.13.0',
                 'default' => 'http://exc1/v1',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_BROWSER_HOST',
+                'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
+                'introduction' => '1.8.0',
+                'default' => 'http://appwrite-browser:3000/v1',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',

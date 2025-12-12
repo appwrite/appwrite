@@ -7,7 +7,8 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.listSessions({
-    userId: '<USER_ID>'
+    userId: '<USER_ID>',
+    total: false // optional
 });
 
 console.log(result);

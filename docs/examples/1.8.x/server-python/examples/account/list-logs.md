@@ -9,5 +9,6 @@ client.set_session('') # The user session to authenticate with
 account = Account(client)
 
 result = account.list_logs(
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

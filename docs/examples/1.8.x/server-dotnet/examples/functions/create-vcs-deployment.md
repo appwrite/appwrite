@@ -12,7 +12,7 @@ Functions functions = new Functions(client);
 
 Deployment result = await functions.CreateVcsDeployment(
     functionId: "<FUNCTION_ID>",
-    type: VCSDeploymentType.Branch,
+    type: VCSReferenceType.Branch,
     reference: "<REFERENCE>",
     activate: false // optional
 );

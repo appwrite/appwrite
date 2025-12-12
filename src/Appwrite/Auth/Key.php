@@ -5,6 +5,7 @@ namespace Appwrite\Auth;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -110,16 +111,16 @@ class Key
             $secret = $key;
         }
 
-        $role = Auth::USER_ROLE_APPS;
+        $role = User::ROLE_APPS;
         $roles = Config::getParam('roles', []);
-        $scopes = $roles[Auth::USER_ROLE_APPS]['scopes'] ?? [];
+        $scopes = $roles[User::ROLE_APPS]['scopes'] ?? [];
         $expired = false;
 
         $guestKey = new Key(
             $project->getId(),
             $type,
-            Auth::USER_ROLE_GUESTS,
-            $roles[Auth::USER_ROLE_GUESTS]['scopes'] ?? [],
+            User::ROLE_GUESTS,
+            $roles[User::ROLE_GUESTS]['scopes'] ?? [],
             'UNKNOWN'
         );
 

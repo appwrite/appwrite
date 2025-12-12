@@ -18,4 +18,5 @@ response, error := service.ListColumns(
     "<DATABASE_ID>",
     "<TABLE_ID>",
     tablesdb.WithListColumnsQueries([]interface{}{}),
+    tablesdb.WithListColumnsTotal(false),
 )

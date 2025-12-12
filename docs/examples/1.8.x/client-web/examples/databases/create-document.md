@@ -1,4 +1,4 @@
-import { Client, Databases } from "appwrite";
+import { Client, Databases, Permission, Role } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -17,7 +17,7 @@ const result = await databases.createDocument({
         "age": 30,
         "isAdmin": false
     },
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });
 

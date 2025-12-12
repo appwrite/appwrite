@@ -87,14 +87,14 @@ class Create extends Action
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $db->getSequence(), $collectionId);
 
         if ($collection->isEmpty()) {
             // table or collection.
-            throw new Exception($this->getGrandParentNotFoundException());
+            throw new Exception($this->getGrandParentNotFoundException(), params: [$collectionId]);
         }
 
         $count = $dbForProject->count('indexes', [
@@ -105,11 +105,13 @@ class Create extends Action
         $limit = $dbForProject->getLimitForIndexes();
 
         if ($count >= $limit) {
-            throw new Exception($this->getLimitException(), 'Index limit exceeded');
+            throw new Exception($this->getLimitException(), params: [$collectionId]);
         }
 
-        // Convert Document array to array of attribute metadata
-        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+        $oldAttributes = \array_map(
+            fn ($a) => $a->getArrayCopy(),
+            $collection->getAttribute('attributes')
+        );
 
         $oldAttributes[] = [
             'key' => '$id',
@@ -120,7 +122,6 @@ class Create extends Action
             'default' => null,
             'size' => Database::LENGTH_KEY
         ];
-
         $oldAttributes[] = [
             'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
@@ -131,7 +132,6 @@ class Create extends Action
             'default' => null,
             'size' => 0
         ];
-
         $oldAttributes[] = [
             'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
@@ -145,11 +145,10 @@ class Create extends Action
 
         $contextType = $this->getParentContext();
         foreach ($attributes as $i => $attribute) {
-            // find attribute metadata in collection document
             $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
             if ($attributeIndex === false) {
-                throw new Exception($this->getParentUnknownException(), "Unknown $contextType: " . $attribute . ". Verify the $contextType name or create the $contextType.");
+                throw new Exception($this->getParentUnknownException(), params: [$attribute]);
             }
 
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
@@ -160,10 +159,8 @@ class Create extends Action
                 throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // ensure attribute is available
             if ($attributeStatus !== 'available') {
-                $contextType = ucfirst($contextType);
-                throw new Exception($this->getParentNotAvailableException(), "$contextType not available: " . $oldAttributes[$attributeIndex]['key']);
+                throw new Exception($this->getParentNotAvailableException(), params: [$oldAttributes[$attributeIndex]['key']]);
             }
 
             if (empty($lengths[$i])) {
@@ -171,8 +168,8 @@ class Create extends Action
             }
 
             if ($attributeArray === true) {
-                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
-                $orders[$i] = null;
+                // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
             }
         }
 
@@ -190,21 +187,18 @@ class Create extends Action
             'orders' => $orders,
         ]);
 
-        $maxIndexLength = $dbForProject->getAdapter()->getMaxIndexLength();
-        $internalIndexesKeys = $dbForProject->getAdapter()->getInternalIndexesKeys();
-        $supportForIndexArray = $dbForProject->getAdapter()->getSupportForIndexArray();
-        $supportForSpatialAttributes = $dbForProject->getAdapter()->getSupportForSpatialAttributes();
-        $supportForSpatialIndexNull = $dbForProject->getAdapter()->getSupportForSpatialIndexNull();
-        $supportForSpatialIndexOrder = $dbForProject->getAdapter()->getSupportForSpatialIndexOrder();
-
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
-            $maxIndexLength,
-            $internalIndexesKeys,
-            $supportForIndexArray,
-            $supportForSpatialAttributes,
-            $supportForSpatialIndexNull,
-            $supportForSpatialIndexOrder
+            $collection->getAttribute('indexes'),
+            $dbForProject->getAdapter()->getMaxIndexLength(),
+            $dbForProject->getAdapter()->getInternalIndexesKeys(),
+            $dbForProject->getAdapter()->getSupportForIndexArray(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForProject->getAdapter()->getSupportForVectors(),
+            $dbForProject->getAdapter()->getSupportForAttributes(),
+            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
         );
 
         if (!$validator->isValid($index)) {
@@ -214,7 +208,7 @@ class Create extends Action
         try {
             $index = $dbForProject->createDocument('indexes', $index);
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$key]);
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);

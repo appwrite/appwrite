@@ -389,6 +389,26 @@ class AccountCustomClientTest extends Scope
         $this->assertIsNumeric($responseLimitOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
+
+        /**
+         * Test for total=false
+         */
+        $logsWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $logsWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($logsWithIncludeTotalFalse['body']);
+        $this->assertIsArray($logsWithIncludeTotalFalse['body']['logs']);
+        $this->assertIsInt($logsWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $logsWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($logsWithIncludeTotalFalse['body']['logs']));
+
         /**
          * Test for FAILURE
          */
@@ -1348,10 +1368,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
-    public function testSessionAlert($data): void
+    public function testSessionAlert(): void
     {
         $email = uniqid() . 'session-alert@appwrite.io';
         $password = 'password123';
@@ -1417,6 +1434,7 @@ class AccountCustomClientTest extends Scope
         $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
         $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
         $this->assertStringContainsString($response['body']['clientName'], $lastEmail['text']); // Client name
+        $this->assertStringNotContainsStringIgnoringCase('Appwrite logo', $lastEmail['html']);
 
         // Verify no alert sent in OTP login
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
@@ -2112,10 +2130,15 @@ class AccountCustomClientTest extends Scope
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
-        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
-
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('success', $response['body']['result']);
+
+        $sessionCookieKey = 'a_session_' . $this->getProject()['$id'];
+        $this->assertArrayHasKey(
+            $sessionCookieKey,
+            $response['cookies'],
+            "Failed asserting that session cookie '$sessionCookieKey' is set. Cookies: " . json_encode($response['cookies'])
+        );
+        $session = $response['cookies'][$sessionCookieKey];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',

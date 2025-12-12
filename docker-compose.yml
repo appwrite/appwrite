@@ -38,9 +38,15 @@ services:
     depends_on:
       - appwrite
     networks:
-      - gateway
-      - appwrite
-      - runtimes
+      appwrite:
+        aliases:
+          - appwrite.test
+      gateway:
+        aliases:
+          - appwrite.test
+      runtimes:
+        aliases:
+          - appwrite.test
 
   appwrite:
     container_name: appwrite
@@ -219,7 +225,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.4.7
+    image: appwrite/console:7.4.11
     restart: unless-stopped
     networks:
       - appwrite
@@ -285,6 +291,7 @@ services:
       - _APP_DB_PASS
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-worker-audits:
@@ -698,6 +705,7 @@ services:
       - appwrite
     volumes:
       - appwrite-imports:/storage/imports:rw
+      - appwrite-uploads:/storage/uploads:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
@@ -949,7 +957,7 @@ services:
 
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.8.3
+    image: appwrite/assistant:0.8.4
     networks:
       - appwrite
     environment:
@@ -957,7 +965,7 @@ services:
 
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.2.4
+    image: appwrite/browser:0.3.2
     networks:
       - appwrite
 
@@ -966,7 +974,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.11.0
+    image: openruntimes/executor:0.11.4
     restart: unless-stopped
     networks:
       - appwrite

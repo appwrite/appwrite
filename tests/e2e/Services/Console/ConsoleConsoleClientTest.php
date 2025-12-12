@@ -24,9 +24,10 @@ class ConsoleConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(14, $response['body']);
+        $this->assertCount(15, $response['body']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_CNAME']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_A']);
+        $this->assertIsInt($response['body']['_APP_COMPUTE_BUILD_TIMEOUT']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_AAAA']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_CAA']);
         $this->assertIsInt($response['body']['_APP_STORAGE_LIMIT']);

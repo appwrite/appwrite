@@ -115,7 +115,8 @@ class Build extends Event
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
-            'template' => $this->template
+            'template' => $this->template,
+            'platform' => $this->platform
         ];
     }
 
@@ -130,6 +131,7 @@ class Build extends Event
         $this->resource = null;
         $this->deployment = null;
         $this->template = null;
+        $this->platform = [];
         parent::reset();
 
         return $this;

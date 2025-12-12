@@ -9,6 +9,7 @@ let tablesDB = TablesDB(client)
 
 let databaseList = try await tablesDB.list(
     queries: [], // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 )
 

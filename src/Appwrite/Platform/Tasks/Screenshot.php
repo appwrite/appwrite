@@ -2,11 +2,16 @@
 
 namespace Appwrite\Platform\Tasks;
 
+// Example usage: docker compose exec appwrite screenshot --templateId="playground-for-tanstack-start"
+// Example of env vars flag: --variables="{\"VITE_FORMSPREE_FORM_ID\":\"xvgkbzll\", \"VITE_FORMSPREE_FORM_SECRET\":\"some_secret\"}"
+// Expected output: public/images/sites/templates/playground-for-tanstack-start-light.png (and dark.png)
+
 use Appwrite\ID;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Platform\Action;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 
 class Screenshot extends Action
@@ -21,11 +26,24 @@ class Screenshot extends Action
         $this
             ->desc('Create Site template screenshot')
             ->param('templateId', '', new Text(128), 'Template ID.')
+            ->param('variables', '', new Text(16384), 'JSON of env variables to use when setting up the site.')
             ->callback($this->action(...));
     }
 
-    public function action(string $templateId): void
+    public function action(string $templateId, string $variables): void
     {
+        if (empty($variables)) {
+            $variables = [];
+        } else {
+            $variables = \json_decode($variables, true);
+            if (!\is_array($variables)) {
+                throw new \Exception('Invalid JSON in --variables flag');
+            }
+        }
+        if ($variables === null) {
+            throw new \Exception('Invalid JSON in --variables flag');
+        }
+
         $templates = Config::getParam('templates-site', []);
 
         $allowedTemplates = \array_filter($templates, function ($item) use ($templateId) {
@@ -130,6 +148,11 @@ class Screenshot extends Action
 
         $framework = $template['frameworks'][0];
 
+        // Use best specifications to prevent out-of-memory during build
+        $specifications = Config::getParam('specifications', []);
+        $specifications = array_keys($specifications);
+        $specification = \end($specifications);
+
         // Create site
         $site = $client->call(Client::METHOD_POST, '/sites', [
             'content-type' => 'application/json',
@@ -138,6 +161,7 @@ class Screenshot extends Action
             'cookie' => $cookieConsole
         ], [
             'siteId' => ID::unique(),
+            'specification' => $specification,
             'name' => $template["name"],
             'framework' => $framework['key'],
             'adapter' => $framework['adapter'],
@@ -159,21 +183,48 @@ class Screenshot extends Action
 
         $siteId = $site['body']['$id'];
 
+        // Prepare API key, incase it's needed as variable
+        $response = $client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => $cookieConsole
+        ], [
+            'name' => 'Screenshot API key',
+            'scopes' => \array_keys(Config::getParam('scopes', []))
+        ]);
+
+        if ($response['headers']['status-code'] !== 201) {
+            Console::error(\json_encode($response));
+            throw new \Exception("Failed to create API key");
+        }
+
+        $apiKey = $response['body']['secret'];
+
+        Console::info("API key created");
+
+        $variables['APPWRITE_API_KEY'] = $apiKey;
+
         // Create variables
         if (!empty($template['variables'] ?? [])) {
             foreach ($template['variables'] as $variable) {
-                if (empty($variable['value'] ?? '')) {
-                    if (($variable['required'] ?? false) === true) {
-                        throw new \Exception("Missing required variable: {$variable['name']}");
-                    }
-
-                    continue;
-                }
+                $name = $variable['name'];
 
                 $value = $variable['value'];
                 $value = \str_replace('{projectName}', $projectName, $value);
                 $value = \str_replace('{projectId}', $projectId, $value);
-                $value = \str_replace('{apiEndpoint}', 'http://localhost/v1', $value);
+                $value = \str_replace('{apiEndpoint}', 'http://' . System::getEnv('_APP_DOMAIN', '') . '/v1', $value);
+
+                if (\array_key_exists($name, $variables)) {
+                    $value = $variables[$name];
+                }
+
+                if (empty($value)) {
+                    if (($variable['required'] ?? false) === true) {
+                        throw new \Exception("Missing required variable: {$variable['name']}. Provide it using the --variables flag to resolve this.");
+                    }
+
+                    continue;
+                }
 
                 $response = $client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', [
                     'content-type' => 'application/json',
@@ -204,7 +255,8 @@ class Screenshot extends Action
             'owner' => $template['providerOwner'],
             'repository' => $template['providerRepositoryId'],
             'rootDirectory' => $framework['providerRootDirectory'],
-            'version' => $template['providerVersion'],
+            'reference' => $template['providerVersion'],
+            'type' => 'tag',
             'activate' => true,
         ]);
 
