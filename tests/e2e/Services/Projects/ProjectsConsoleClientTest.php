@@ -620,11 +620,11 @@ class ProjectsConsoleClientTest extends Scope
         $id = $data['projectId'];
         $smtpHost = System::getEnv('_APP_SMTP_HOST', "maildev");
         $smtpPort = intval(System::getEnv('_APP_SMTP_PORT', "1025"));
-        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', 'user');
-        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', 'password');
+        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', '');
+        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', '');
 
         /**
-         * Test for SUCCESS: Valid Credentials
+         * Test for SUCCESS: Valid Connection (no auth required)
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',
@@ -695,8 +695,8 @@ class ProjectsConsoleClientTest extends Scope
     {
         $smtpHost = System::getEnv('_APP_SMTP_HOST', "maildev");
         $smtpPort = intval(System::getEnv('_APP_SMTP_PORT', "1025"));
-        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', 'user');
-        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', 'password');
+        $smtpUsername = System::getEnv('_APP_SMTP_USERNAME', '');
+        $smtpPassword = System::getEnv('_APP_SMTP_PASSWORD', '');
 
         // Create a team
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
