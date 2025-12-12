@@ -16,8 +16,7 @@ class Mail extends Event
     protected string $bodyTemplate = '';
     protected array $attachment = [];
 
-    protected string $senderEmail = '';
-    protected string $senderName = '';
+    protected array $customMailOptions = [];
 
     public function __construct(protected Publisher $publisher)
     {
@@ -411,7 +410,7 @@ class Mail extends Event
      */
     public function setSenderEmail(string $email): self
     {
-        $this->senderEmail = $email;
+        $this->customMailOptions['senderEmail'] = $email;
         return $this;
     }
 
@@ -422,7 +421,7 @@ class Mail extends Event
      */
     public function getSenderEmail(): string
     {
-        return $this->senderEmail;
+        return $this->customMailOptions['senderEmail'] ?? '';
     }
 
     /**
@@ -433,7 +432,7 @@ class Mail extends Event
      */
     public function setSenderName(string $name): self
     {
-        $this->senderName = $name;
+        $this->customMailOptions['senderName'] = $name;
         return $this;
     }
 
@@ -444,7 +443,51 @@ class Mail extends Event
      */
     public function getSenderName(): string
     {
-        return $this->senderName;
+        return $this->customMailOptions['senderName'] ?? '';
+    }
+
+    /**
+     * Set reply-to email
+     *
+     * @param string $email
+     * @return self
+     */
+    public function setReplyToEmail(string $email): self
+    {
+        $this->customMailOptions['replyToEmail'] = $email;
+        return $this;
+    }
+
+    /**
+     * Get reply-to email
+     *
+     * @return string
+     */
+    public function getReplyToEmail(): string
+    {
+        return $this->customMailOptions['replyToEmail'] ?? '';
+    }
+
+    /**
+     * Set reply-to name
+     *
+     * @param string $name
+     * @return self
+     */
+    public function setReplyToName(string $name): self
+    {
+        $this->customMailOptions['replyToName'] = $name;
+        return $this;
+    }
+
+    /**
+     * Get reply-to name
+     *
+     * @return string
+     */
+    public function getReplyToName(): string
+    {
+        return $this->customMailOptions['replyToName'] ?? '';
     }
 
     /**
@@ -462,8 +505,7 @@ class Mail extends Event
         $this->variables = [];
         $this->bodyTemplate = '';
         $this->attachment = [];
-        $this->senderEmail = '';
-        $this->senderName = '';
+        $this->customMailOptions = [];
         return $this;
     }
 
@@ -485,8 +527,7 @@ class Mail extends Event
             'smtp' => $this->smtp,
             'variables' => $this->variables,
             'attachment' => $this->attachment,
-            'senderEmail' => $this->senderEmail,
-            'senderName' => $this->senderName,
+            'customMailOptions' => $this->customMailOptions,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];
     }

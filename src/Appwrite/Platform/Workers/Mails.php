@@ -152,18 +152,29 @@ class Mails extends Action
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        $senderEmail = $payload['senderEmail'] ?? '';
-        $senderName = $payload['senderName'] ?? '';
+        $customMailOptions = $payload['customMailOptions'] ?? [];
 
-        if (!empty($senderEmail)) {
-            $replyTo = $senderEmail;
-            $replyToName = $senderName;
+        // override sender if custom options are provided.
+        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
+            // custom email > fallback to default set
+            $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
 
-            // set again since these can be a diff.
-            $mail->setFrom($senderEmail, $senderName);
+            // custom name > fallback to default set
+            $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
+            $mail->setFrom($fromEmail, $fromName);
+        }
+
+        // override reply-to if custom options provided
+        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
+            // custom reply email > fallback to default set
+            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
+
+            // custom reply name > fallback to default set
+            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
         } elseif (!empty($smtp)) {
-            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
-            $replyToName = $smtp['senderName'];
+            // new smtp options are available, use them!
+            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
+            $replyToName = $smtp['senderName'] ?? $replyToName;
         }
 
         $mail->addReplyTo($replyTo, $replyToName);
