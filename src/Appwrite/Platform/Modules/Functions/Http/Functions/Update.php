@@ -89,12 +89,18 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ), 'Build specification for the function deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function executions.', true, ['plan'])
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -125,7 +131,8 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -235,13 +242,22 @@ class Update extends Base
         }
 
         // Enforce Cold Start if spec limits change.
-        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deploymentId'))) {
-            try {
-                $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
-            } catch (\Throwable $th) {
-                // Don't throw if the deployment doesn't exist
-                if ($th->getCode() !== 404) {
-                    throw $th;
+        if (!empty($function->getAttribute('deploymentId'))) {
+            $specsChanged = false;
+            if ($function->getAttribute('runtimeSpecification') !== $runtimeSpecification) {
+                $specsChanged = true;
+            } elseif ($function->getAttribute('buildSpecification') !== $buildSpecification) {
+                $specsChanged = true;
+            }
+
+            if ($specsChanged) {
+                try {
+                    $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
+                } catch (\Throwable $th) {
+                    // Don't throw if the deployment doesn't exist
+                    if ($th->getCode() !== 404) {
+                        throw $th;
+                    }
                 }
             }
         }
@@ -267,7 +283,8 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 
