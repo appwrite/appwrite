@@ -154,25 +154,17 @@ class Mails extends Action
 
         $customMailOptions = $payload['customMailOptions'] ?? [];
 
-        // override sender if custom options are provided.
+        // fallback hierarchy: Custom options > SMTP config > Defaults.
         if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
-            // custom email > fallback to default set
             $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
-
-            // custom name > fallback to default set
             $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
             $mail->setFrom($fromEmail, $fromName);
         }
 
-        // override reply-to if custom options provided
         if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
-            // custom reply email > fallback to default set
             $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
-
-            // custom reply name > fallback to default set
             $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
         } elseif (!empty($smtp)) {
-            // new smtp options are available, use them!
             $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
             $replyToName = $smtp['senderName'] ?? $replyToName;
         }
