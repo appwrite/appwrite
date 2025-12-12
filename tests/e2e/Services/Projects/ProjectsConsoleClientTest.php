@@ -4889,7 +4889,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(403, $response['headers']['status-code']);
         $this->assertNotEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin'] ?? null);
+        // you should not return a fallback origin for a disallowed host
+        $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
 
 
         /**
@@ -4906,7 +4907,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertEquals('*', $response['headers']['access-control-allow-origin'] ?? null);
+        $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
     }
 
     /**

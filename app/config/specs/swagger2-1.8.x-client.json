@@ -108,6 +108,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -159,6 +160,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -250,6 +252,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -328,6 +331,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -399,6 +403,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -462,6 +467,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -511,6 +517,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -587,6 +594,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -660,6 +668,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAAuthenticator"
@@ -686,6 +695,7 @@
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
                             "demo": "account\/create-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAAuthenticator"
@@ -711,7 +721,8 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-mfa-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -780,6 +791,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAAuthenticator"
@@ -808,6 +820,7 @@
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
                             "demo": "account\/update-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAAuthenticator"
@@ -835,7 +848,8 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-mfa-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -917,6 +931,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.deleteMFAAuthenticator"
@@ -942,6 +957,7 @@
                             ],
                             "description": "Delete an authenticator for a user by ID.",
                             "demo": "account\/delete-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.deleteMFAAuthenticator"
@@ -966,7 +982,8 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-mfa-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1037,6 +1054,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAChallenge"
@@ -1063,6 +1081,7 @@
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
                             "demo": "account\/create-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAChallenge"
@@ -1088,7 +1107,8 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-mfa-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1168,6 +1188,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAChallenge"
@@ -1196,6 +1217,7 @@
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/update-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAChallenge"
@@ -1223,7 +1245,8 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-mfa-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1304,6 +1327,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.listMFAFactors"
@@ -1326,6 +1350,7 @@
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
                             "demo": "account\/list-mfa-factors.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.listMFAFactors"
@@ -1347,7 +1372,8 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-mfa-factors.md"
+                            "demo": "account\/list-mfa-factors.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1401,6 +1427,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.getMFARecoveryCodes"
@@ -1423,6 +1450,7 @@
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
                             "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.getMFARecoveryCodes"
@@ -1444,7 +1472,8 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-mfa-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1498,6 +1527,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFARecoveryCodes"
@@ -1520,6 +1550,7 @@
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFARecoveryCodes"
@@ -1541,7 +1572,8 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-mfa-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1595,6 +1627,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFARecoveryCodes"
@@ -1617,6 +1650,7 @@
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
                             "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFARecoveryCodes"
@@ -1638,7 +1672,8 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-mfa-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1694,6 +1729,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1767,6 +1803,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1846,6 +1883,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1924,6 +1962,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -1975,6 +2014,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2051,6 +2091,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2129,6 +2170,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2214,6 +2256,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2260,6 +2303,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2313,6 +2357,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2364,6 +2409,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2442,6 +2488,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2519,6 +2566,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2656,6 +2704,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2738,6 +2787,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2814,6 +2864,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2875,6 +2926,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2931,6 +2983,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -2994,6 +3047,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3046,6 +3100,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3130,6 +3185,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3202,6 +3258,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3267,6 +3324,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3354,6 +3412,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3439,6 +3498,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3579,6 +3639,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3657,6 +3718,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "createEmailVerification",
@@ -3678,7 +3740,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
-                            "demo": "account\/create-email-verification.md"
+                            "demo": "account\/create-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "createVerification",
@@ -3701,6 +3764,7 @@
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
                             "demo": "account\/create-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createEmailVerification"
@@ -3778,6 +3842,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "updateEmailVerification",
@@ -3801,7 +3866,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
-                            "demo": "account\/update-email-verification.md"
+                            "demo": "account\/update-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "updateVerification",
@@ -3826,6 +3892,7 @@
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
                             "demo": "account\/update-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateEmailVerification"
@@ -3915,6 +3982,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -3966,6 +4034,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4044,6 +4113,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4168,6 +4238,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4298,6 +4369,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4360,6 +4432,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4846,6 +4919,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -4928,6 +5002,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5018,6 +5093,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5108,6 +5184,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5819,6 +5896,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5884,6 +5962,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -5952,6 +6031,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6013,6 +6093,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6090,6 +6171,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6153,6 +6235,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -6232,6 +6315,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listRows"
@@ -6334,6 +6418,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createRow"
@@ -6368,6 +6453,7 @@
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/create-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.createRow"
@@ -6490,6 +6576,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getRow"
@@ -6591,6 +6678,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.upsertRow"
@@ -6625,6 +6713,7 @@
                             ],
                             "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/upsert-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.upsertRow"
@@ -6743,6 +6832,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateRow"
@@ -6851,6 +6941,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteRow"
@@ -6951,6 +7042,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.decrementRowColumn"
@@ -7071,6 +7163,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.incrementRowColumn"
@@ -7188,6 +7281,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7270,6 +7364,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7388,6 +7483,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7459,6 +7555,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7532,6 +7629,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7603,6 +7701,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7654,6 +7753,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7705,6 +7805,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7756,6 +7857,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7807,6 +7909,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7858,6 +7961,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7909,6 +8013,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7960,6 +8065,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8014,6 +8120,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8098,6 +8205,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8167,6 +8275,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8258,6 +8367,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8347,6 +8457,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8416,6 +8527,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8506,6 +8618,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8575,6 +8688,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8653,6 +8767,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8859,6 +8974,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -8940,6 +9056,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9008,6 +9125,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9079,6 +9197,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9143,6 +9262,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9223,6 +9343,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9289,6 +9410,7 @@
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9371,6 +9493,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9472,6 +9595,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "createRow",
@@ -9501,7 +9625,8 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/create-row.md"
+                            "demo": "tablesdb\/create-row.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -9623,6 +9748,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9723,6 +9849,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "methods": [
                         {
                             "name": "upsertRow",
@@ -9751,7 +9878,8 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -9866,6 +9994,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -9973,6 +10102,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10072,6 +10202,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10191,6 +10322,7 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10304,6 +10436,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10387,6 +10520,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10476,6 +10610,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10537,6 +10672,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10611,6 +10747,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10672,6 +10809,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10763,6 +10901,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10882,6 +11021,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -10951,6 +11091,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -11043,6 +11184,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -11114,6 +11256,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -11208,6 +11351,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -11269,6 +11413,7 @@
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }

@@ -362,8 +362,9 @@ class Create extends Base
             if (!empty($functionsDomain)) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
-                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
                 $rule = Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([

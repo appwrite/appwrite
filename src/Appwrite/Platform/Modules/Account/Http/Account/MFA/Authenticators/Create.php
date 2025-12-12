@@ -60,6 +60,7 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'account.createMFAAuthenticator',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',

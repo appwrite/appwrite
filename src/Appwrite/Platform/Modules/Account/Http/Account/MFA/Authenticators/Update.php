@@ -59,6 +59,7 @@ class Update extends Action
                         since: '1.8.0',
                         replaceWith: 'account.updateMFAAuthenticator',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
