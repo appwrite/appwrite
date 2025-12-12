@@ -129,7 +129,8 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
         }
 
-        if ($rule->getAttribute('verification') === true) {
+        // If rule is already verified or in certificate generation state, don't queue for verification again
+        if ($rule->getAttribute('verification') === true || $rule->getAttribute('status') === 'verifying') {
             return $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         }
 
