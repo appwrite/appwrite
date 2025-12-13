@@ -37,7 +37,7 @@ class XList extends Action
                     group: 'mfa',
                     name: 'listMfaFactors',
                     description: '/docs/references/account/list-mfa-factors.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -56,7 +56,7 @@ class XList extends Action
                     group: 'mfa',
                     name: 'listMFAFactors',
                     description: '/docs/references/account/list-mfa-factors.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,

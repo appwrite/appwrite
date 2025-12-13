@@ -40,7 +40,7 @@ class Get extends Base
                 description: <<<EOT
                 Get a function execution log by its unique ID.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

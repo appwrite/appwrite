@@ -46,7 +46,7 @@ class Update extends Base
                 description: <<<EOT
                 Update variable by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
