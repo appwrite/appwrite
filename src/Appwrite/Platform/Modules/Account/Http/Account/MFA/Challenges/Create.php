@@ -9,6 +9,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
@@ -60,7 +61,7 @@ class Create extends Action
                     group: 'mfa',
                     name: 'createMfaChallenge',
                     description: '/docs/references/account/create-mfa-challenge.md',
-                    auth: [],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,
@@ -79,7 +80,7 @@ class Create extends Action
                     group: 'mfa',
                     name: 'createMFAChallenge',
                     description: '/docs/references/account/create-mfa-challenge.md',
-                    auth: [],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,

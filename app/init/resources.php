@@ -831,7 +831,7 @@ App::setResource('passwordsDictionary', function ($register) {
 
 App::setResource('servers', function () {
     $platforms = Config::getParam('sdks');
-    $server = $platforms[APP_PLATFORM_SERVER];
+    $server = $platforms[APP_SDK_PLATFORM_SERVER];
 
     $languages = array_map(function ($language) {
         return strtolower($language['name']);

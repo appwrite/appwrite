@@ -89,9 +89,9 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
-const APP_PLATFORM_SERVER = 'server';
-const APP_PLATFORM_CLIENT = 'client';
-const APP_PLATFORM_CONSOLE = 'console';
+const APP_SDK_PLATFORM_SERVER = 'server';
+const APP_SDK_PLATFORM_CLIENT = 'client';
+const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
