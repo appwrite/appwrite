@@ -387,3 +387,6 @@ const DATABASE_TYPE_DOCUMENTSDB = 'documentsdb';
 
 // CSV import/export allowed database types
 const CSV_ALLOWED_DATABASE_TYPES = [DATABASE_TYPE_LEGACY, DATABASE_TYPE_LEGACY];
+
+const APP_EMAIL_PLATFORM_NAME = 'Appwrite';
+const APP_EMAIL_FOOTER_IMAGE_URL = 'https://appwrite.io/email/footer.png';
