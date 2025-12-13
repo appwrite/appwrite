@@ -107,9 +107,11 @@ FROM base AS development
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-RUN cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini && \
+RUN if [ "$DEBUG" = "true" ]; then \
+    cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini && \
     mkdir -p /tmp/xdebug && \
-    apk add --update --no-cache openssh-client github-cli
+    apk add --update --no-cache openssh-client github-cli; \
+    fi
 
 EXPOSE 80
 
