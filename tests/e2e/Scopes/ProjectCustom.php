@@ -161,9 +161,9 @@ trait ProjectCustom
             'senderEmail' => 'mailer@appwrite.io',
             'senderName' => 'Mailer',
             'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'port' => intval(System::getEnv('_APP_SMTP_PORT', "1025")),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
         ]);
 
         $project = [
