@@ -42,7 +42,7 @@ class Get extends Action
                 description: <<<EOT
                 Get a site deployment content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.
                 EOT,
-                auth: [AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

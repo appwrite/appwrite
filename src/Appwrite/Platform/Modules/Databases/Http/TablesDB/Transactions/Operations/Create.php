@@ -39,7 +39,7 @@ class Create extends OperationsCreate
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/tablesdb/create-operations.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,

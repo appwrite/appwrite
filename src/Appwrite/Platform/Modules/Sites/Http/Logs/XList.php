@@ -46,7 +46,7 @@ class XList extends Base
                 description: <<<EOT
                 Get a list of all site logs. You can use the query params to filter your results.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

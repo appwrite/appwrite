@@ -50,7 +50,7 @@ App::get('/v1/health')
         group: 'health',
         name: 'get',
         description: '/docs/references/health/get.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -89,7 +89,7 @@ App::get('/v1/health/db')
         group: 'health',
         name: 'getDB',
         description: '/docs/references/health/get-db.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -150,7 +150,7 @@ App::get('/v1/health/cache')
         group: 'health',
         name: 'getCache',
         description: '/docs/references/health/get-cache.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -210,7 +210,7 @@ App::get('/v1/health/pubsub')
         group: 'health',
         name: 'getPubSub',
         description: '/docs/references/health/get-pubsub.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -270,7 +270,7 @@ App::get('/v1/health/time')
         group: 'health',
         name: 'getTime',
         description: '/docs/references/health/get-time.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -334,7 +334,7 @@ App::get('/v1/health/queue/webhooks')
         group: 'queue',
         name: 'getQueueWebhooks',
         description: '/docs/references/health/get-queue-webhooks.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -367,7 +367,7 @@ App::get('/v1/health/queue/logs')
         group: 'queue',
         name: 'getQueueLogs',
         description: '/docs/references/health/get-queue-logs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -400,7 +400,7 @@ App::get('/v1/health/certificate')
         group: 'health',
         name: 'getCertificate',
         description: '/docs/references/health/get-certificate.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -457,7 +457,7 @@ App::get('/v1/health/queue/certificates')
         group: 'queue',
         name: 'getQueueCertificates',
         description: '/docs/references/health/get-queue-certificates.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -490,7 +490,7 @@ App::get('/v1/health/queue/builds')
         group: 'queue',
         name: 'getQueueBuilds',
         description: '/docs/references/health/get-queue-builds.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -523,7 +523,7 @@ App::get('/v1/health/queue/databases')
         group: 'queue',
         name: 'getQueueDatabases',
         description: '/docs/references/health/get-queue-databases.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -556,7 +556,7 @@ App::get('/v1/health/queue/deletes')
         group: 'queue',
         name: 'getQueueDeletes',
         description: '/docs/references/health/get-queue-deletes.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -589,7 +589,7 @@ App::get('/v1/health/queue/mails')
         group: 'queue',
         name: 'getQueueMails',
         description: '/docs/references/health/get-queue-mails.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -622,7 +622,7 @@ App::get('/v1/health/queue/messaging')
         group: 'queue',
         name: 'getQueueMessaging',
         description: '/docs/references/health/get-queue-messaging.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -655,7 +655,7 @@ App::get('/v1/health/queue/migrations')
         group: 'queue',
         name: 'getQueueMigrations',
         description: '/docs/references/health/get-queue-migrations.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -688,7 +688,7 @@ App::get('/v1/health/queue/functions')
         group: 'queue',
         name: 'getQueueFunctions',
         description: '/docs/references/health/get-queue-functions.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -721,7 +721,7 @@ App::get('/v1/health/queue/stats-resources')
         group: 'queue',
         name: 'getQueueStatsResources',
         description: '/docs/references/health/get-queue-stats-resources.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -754,7 +754,7 @@ App::get('/v1/health/queue/stats-usage')
         group: 'queue',
         name: 'getQueueUsage',
         description: '/docs/references/health/get-queue-stats-usage.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -787,7 +787,7 @@ App::get('/v1/health/storage/local')
         group: 'storage',
         name: 'getStorageLocal',
         description: '/docs/references/health/get-storage-local.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -837,7 +837,7 @@ App::get('/v1/health/storage')
         group: 'storage',
         name: 'getStorage',
         description: '/docs/references/health/get-storage.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -889,7 +889,7 @@ App::get('/v1/health/anti-virus')
         group: 'health',
         name: 'getAntivirus',
         description: '/docs/references/health/get-storage-anti-virus.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -935,7 +935,7 @@ App::get('/v1/health/queue/failed/:name')
         group: 'queue',
         name: 'getFailedJobs',
         description: '/docs/references/health/get-failed-queue-jobs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,

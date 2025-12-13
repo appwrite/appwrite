@@ -37,7 +37,7 @@ class Create extends TransactionsCreate
                 group: 'transactions',
                 name: 'createTransaction',
                 description: '/docs/references/tablesdb/create-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,

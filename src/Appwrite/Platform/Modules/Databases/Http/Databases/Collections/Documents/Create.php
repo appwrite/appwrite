@@ -69,7 +69,7 @@ class Create extends Action
                     name: self::getName(),
                     desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,

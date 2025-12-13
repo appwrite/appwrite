@@ -28,6 +28,15 @@ use Utopia\Validator\WhiteList;
 
 class Specs extends Action
 {
+    public function __construct()
+    {
+        $this
+            ->desc('Generate Appwrite API specifications')
+            ->param('version', 'latest', new Text(16), 'Spec version', true)
+            ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
+            ->callback($this->action(...));
+    }
+
     public static function getName(): string
     {
         return 'specs';
@@ -52,40 +61,43 @@ class Specs extends Action
         };
     }
 
-    public function __construct()
+    /**
+     * Platforms
+     *
+     * @return array{client: string, server: string, console: string}
+     */
+    protected function getPlatforms(): array
     {
-        $this
-            ->desc('Generate Appwrite API specifications')
-            ->param('version', 'latest', new Text(16), 'Spec version', true)
-            ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->callback($this->action(...));
-    }
-
-    public function action(string $version, string $mode): void
-    {
-        $appRoutes = App::getRoutes();
-        $response = $this->getResponse();
-        $mocks = ($mode === 'mocks');
-
-        // Mock dependencies
-        App::setResource('request', fn () => $this->getRequest());
-        App::setResource('response', fn () => $response);
-        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
-
-        $platforms = [
+        return [
             'client' => APP_PLATFORM_CLIENT,
             'server' => APP_PLATFORM_SERVER,
             'console' => APP_PLATFORM_CONSOLE,
         ];
+    }
 
-        $authCounts = [
+    /**
+     * Number of authentication methods supported by each platform
+     * client: 1 (Session or JWT), server: 2 (Key and JWT), console: 1 (Admin)
+     *
+     * @return array{client: int, console: int, server: int}
+     */
+    protected function getAuthCounts(): array
+    {
+        return [
             'client' => 1,
             'server' => 2,
             'console' => 1,
         ];
+    }
 
-        $keys = [
+    /**
+     * Keys for each platform
+     *
+     * @return array{client: array, server: array, console: array}
+     */
+    protected function getKeys(): array
+    {
+        return [
             APP_PLATFORM_CLIENT => [
                 'Project' => [
                     'type' => 'apiKey',
@@ -189,6 +201,50 @@ class Specs extends Action
                 ],
             ],
         ];
+    }
+
+    public function getSDKPlatformsForRouteSecurity(array $routeSecurity): array
+    {
+        $sdkPlatforms = [];
+        foreach ($routeSecurity as $value) {
+            switch ($value) {
+                case AuthType::SESSION:
+                    $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+                    break;
+                case AuthType::JWT:
+                case AuthType::KEY:
+                    $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                    break;
+                case AuthType::ADMIN:
+                    $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
+                    break;
+            }
+        }
+
+        if (empty($sdkPlatforms)) {
+            $sdkPlatforms[] = APP_PLATFORM_SERVER;
+            $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+        }
+
+        return $sdkPlatforms;
+    }
+
+    public function action(string $version, string $mode): void
+    {
+        $appRoutes = App::getRoutes();
+        /** @var AppwriteResponse $response */
+        $response = $this->getResponse();
+        $mocks = ($mode === 'mocks');
+
+        // Mock dependencies
+        App::setResource('request', fn () => $this->getRequest());
+        App::setResource('response', fn () => $response);
+        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
+        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+
+        $platforms = $this->getPlatforms();
+        $authCounts = $this->getAuthCounts();
+        $keys = $this->getKeys();
 
         foreach ($platforms as $platform) {
             $routes = [];
@@ -215,27 +271,7 @@ class Specs extends Action
                         }
 
                         $routeSecurity = $sdk->getAuth();
-                        $sdkPlatforms = [];
-
-                        foreach ($routeSecurity as $value) {
-                            switch ($value) {
-                                case AuthType::SESSION:
-                                    $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                                    break;
-                                case AuthType::JWT:
-                                case AuthType::KEY:
-                                    $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                                    break;
-                                case AuthType::ADMIN:
-                                    $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
-                                    break;
-                            }
-                        }
-
-                        if (empty($routeSecurity)) {
-                            $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                            $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                        }
+                        $sdkPlatforms = $this->getSDKPlatformsForRouteSecurity($routeSecurity);
 
                         if (!$route->getLabel('docs', true)) {
                             continue;
@@ -253,7 +289,7 @@ class Specs extends Action
                             continue;
                         }
 
-                        if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
+                        if (!\in_array($platforms[$platform], $sdkPlatforms)) {
                             continue;
                         }
 

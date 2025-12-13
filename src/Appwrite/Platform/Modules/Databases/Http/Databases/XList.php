@@ -43,7 +43,7 @@ class XList extends Action
                     group: 'databases',
                     name: 'list',
                     description: '/docs/references/databases/list.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,
