@@ -7760,6 +7760,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
         $this->assertEquals(200, $inc['headers']['status-code']);
+        $this->assertEquals($tableId, $inc['body']['$tableId']);
         $this->assertEquals(6, $inc['body']['count']);
 
         // Verify count = 6
@@ -7872,6 +7873,7 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $dec['headers']['status-code']);
         $this->assertEquals(9, $dec['body']['count']);
+        $this->assertEquals($tableId, $dec['body']['$tableId']);
 
         $get = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, array_merge([
             'content-type' => 'application/json',
