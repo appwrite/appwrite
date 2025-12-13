@@ -1,4 +1,4 @@
-PUT /v1/account/mfa/challenge HTTP/1.1
+PUT /v1/account/mfa/challenges HTTP/1.1
 Host: &lt;REGION&gt;.cloud.appwrite.io
 Content-Type: application/json
 X-Appwrite-Response-Format: 1.6.0

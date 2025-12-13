@@ -150,6 +150,7 @@ class Exception extends \Exception
     public const string STORAGE_INVALID_RANGE = 'storage_invalid_range';
     public const string STORAGE_INVALID_APPWRITE_ID = 'storage_invalid_appwrite_id';
     public const string STORAGE_FILE_NOT_PUBLIC = 'storage_file_not_public';
+    public const string STORAGE_BUCKET_TRANSFORMATIONS_DISABLED = 'storage_bucket_transformations_disabled';
 
     /** VCS */
     public const string INSTALLATION_NOT_FOUND = 'installation_not_found';
@@ -388,7 +389,8 @@ class Exception extends \Exception
         string $message = null,
         int|string $code = null,
         \Throwable $previous = null,
-        ?string $view = null
+        ?string $view = null,
+        array $params = []
     ) {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
@@ -404,7 +406,13 @@ class Exception extends \Exception
             }
         }
 
-        $this->message = $message ?? $this->errors[$type]['description'];
+        // Format message with params if provided
+        if (!empty($params) && $message === null) {
+            $description = $this->errors[$type]['description'] ?? '';
+            $this->message = !empty($description) ? sprintf($description, ...$params) : '';
+        } else {
+            $this->message = $message ?? $this->errors[$type]['description'];
+        }
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 

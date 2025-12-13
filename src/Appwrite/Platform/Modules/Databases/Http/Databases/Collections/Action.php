@@ -105,4 +105,64 @@ abstract class Action extends UtopiaAction
             ? Exception::COLLECTION_LIMIT_EXCEEDED
             : Exception::TABLE_LIMIT_EXCEEDED;
     }
+
+    /**
+     * Get the appropriate format unsupported exception.
+     */
+    protected function getFormatUnsupportedException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_FORMAT_UNSUPPORTED
+            : Exception::COLUMN_FORMAT_UNSUPPORTED;
+    }
+
+    /**
+     * Get the correct default unsupported message.
+     */
+    protected function getDefaultUnsupportedException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED
+            : Exception::COLUMN_DEFAULT_UNSUPPORTED;
+    }
+
+    /**
+     * Get the appropriate parent level not found exception.
+     */
+    protected function getParentNotFoundException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::COLLECTION_NOT_FOUND
+            : Exception::TABLE_NOT_FOUND;
+    }
+
+    /**
+     * Get the correct invalid structure message.
+     */
+    protected function getStructureException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::DOCUMENT_INVALID_STRUCTURE
+            : Exception::ROW_INVALID_STRUCTURE;
+    }
+
+    /**
+     * Get the exception for unknown attribute/column in index.
+     */
+    protected function getParentUnknownException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_UNKNOWN
+            : Exception::COLUMN_UNKNOWN;
+    }
+
+    /**
+     * Get the exception for invalid attribute/column type in index.
+     */
+    protected function getParentInvalidTypeException(): string
+    {
+        return $this->isCollectionsAPI()
+            ? Exception::ATTRIBUTE_TYPE_INVALID
+            : Exception::COLUMN_TYPE_INVALID;
+    }
 }

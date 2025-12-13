@@ -55,6 +55,23 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test1['body']['$id'], $databases['body']['databases'][0]['$id']);
         $this->assertEquals($test2['body']['$id'], $databases['body']['databases'][1]['$id']);
 
+        /**
+         * Test for SUCCESS with total=false
+         */
+        $databasesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $databasesWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($databasesWithIncludeTotalFalse['body']);
+        $this->assertIsArray($databasesWithIncludeTotalFalse['body']['databases']);
+        $this->assertIsInt($databasesWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $databasesWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($databasesWithIncludeTotalFalse['body']['databases']));
+
         $base = array_reverse($databases['body']['databases']);
 
         $databases = $this->client->call(Client::METHOD_GET, '/tablesdb', array_merge([
@@ -1479,7 +1496,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $tooMany['headers']['status-code']);
-        $this->assertEquals('Index limit exceeded', $tooMany['body']['message']);
+        $this->assertEquals("The maximum number of indexes for table '$tableId' has been reached.", $tooMany['body']['message']);
 
         $table = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([
             'content-type' => 'application/json',

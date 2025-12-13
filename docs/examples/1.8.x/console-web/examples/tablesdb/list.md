@@ -8,7 +8,8 @@ const tablesDB = new TablesDB(client);
 
 const result = await tablesDB.list({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

@@ -10,5 +10,6 @@ sites = Sites(client)
 
 result = sites.list(
     queries = [], # optional
-    search = '<SEARCH>' # optional
+    search = '<SEARCH>', # optional
+    total = False # optional
 )

@@ -2,6 +2,8 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Storage;
+use Appwrite\Enums\ImageGravity;
+use Appwrite\Enums\ImageFormat;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint

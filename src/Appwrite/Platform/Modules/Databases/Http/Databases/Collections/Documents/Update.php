@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
@@ -12,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -27,6 +27,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Nullable;
 
 class Update extends Action
 {
@@ -77,8 +78,8 @@ class Update extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documentId', '', new UID(), 'Document ID.')
             ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
-            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
@@ -99,17 +100,21 @@ class Update extends Action
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+        }
+
+        if ($transactionId === null) {
+            $data = $this->parseOperators($data, $collection);
         }
 
         // Read permission should not be required for update
@@ -124,7 +129,7 @@ class Update extends Action
         }
 
         if ($document->isEmpty()) {
-            throw new Exception($this->getNotFoundException());
+            throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -241,14 +246,13 @@ class Update extends Action
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
-
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -300,6 +304,9 @@ class Update extends Action
                 ...$document->getArrayCopy(),
                 ...$data
             ]);
+
+            $queueForEvents->reset();
+
             $response
                 ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
                 ->dynamic($mockDocument, $this->getResponseModel());
@@ -319,7 +326,7 @@ class Update extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

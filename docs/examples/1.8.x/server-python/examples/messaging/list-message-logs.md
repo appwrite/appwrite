@@ -10,5 +10,6 @@ messaging = Messaging(client)
 
 result = messaging.list_message_logs(
     message_id = '<MESSAGE_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

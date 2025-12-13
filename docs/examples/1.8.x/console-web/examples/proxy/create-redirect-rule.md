@@ -1,4 +1,4 @@
-import { Client, Proxy, , ProxyResourceType } from "@appwrite.io/console";
+import { Client, Proxy, StatusCode, ProxyResourceType } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -9,7 +9,7 @@ const proxy = new Proxy(client);
 const result = await proxy.createRedirectRule({
     domain: '',
     url: 'https://example.com',
-    statusCode: .MovedPermanently301,
+    statusCode: StatusCode.MovedPermanently301,
     resourceId: '<RESOURCE_ID>',
     resourceType: ProxyResourceType.Site
 });

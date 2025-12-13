@@ -86,6 +86,12 @@ class Bucket extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('transformations', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Image transformations are enabled.',
+                'default' => true,
+                'example' => false,
+            ])
         ;
     }
 

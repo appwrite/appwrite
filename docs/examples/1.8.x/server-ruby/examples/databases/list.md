@@ -11,5 +11,6 @@ databases = Databases.new(client)
 
 result = databases.list(
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

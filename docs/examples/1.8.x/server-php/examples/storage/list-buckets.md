@@ -12,5 +12,6 @@ $storage = new Storage($client);
 
 $result = $storage->listBuckets(
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

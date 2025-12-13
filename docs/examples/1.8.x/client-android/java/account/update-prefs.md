@@ -9,10 +9,10 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updatePrefs(
-    mapOf(
-        "language" to "en",
-        "timezone" to "UTC",
-        "darkTheme" to true
+    Map.of(
+        "language", "en",
+        "timezone", "UTC",
+        "darkTheme", true
     ), // prefs 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

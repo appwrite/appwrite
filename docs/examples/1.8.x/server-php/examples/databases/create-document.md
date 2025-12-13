@@ -2,6 +2,8 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Databases;
+use Appwrite\Permission;
+use Appwrite\Role;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -21,6 +23,6 @@ $result = $databases->createDocument(
         'age' => 30,
         'isAdmin' => false
     ],
-    permissions: ["read("any")"], // optional
+    permissions: [Permission::read(Role::any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 );

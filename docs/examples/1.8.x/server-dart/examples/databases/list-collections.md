@@ -11,4 +11,5 @@ CollectionList result = await databases.listCollections(
     databaseId: '<DATABASE_ID>',
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

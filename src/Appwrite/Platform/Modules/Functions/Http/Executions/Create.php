@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -15,9 +14,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -36,6 +38,7 @@ use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -81,7 +84,7 @@ class Create extends Base
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
             ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true)
             ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-            ->param('scheduledAt', null, new Text(100), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
+            ->param('scheduledAt', null, new Nullable(new Text(100)), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
             ->inject('request')
             ->inject('project')
@@ -92,7 +95,10 @@ class Create extends Base
             ->inject('queueForStatsUsage')
             ->inject('queueForFunctions')
             ->inject('geodb')
+            ->inject('store')
+            ->inject('proofForToken')
             ->inject('executor')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -114,7 +120,10 @@ class Create extends Base
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
         Reader $geodb,
-        Executor $executor
+        Store $store,
+        Token $proofForToken,
+        Executor $executor,
+        array $platform
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -154,8 +163,8 @@ class Create extends Base
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -198,7 +207,7 @@ class Create extends Base
 
             foreach ($sessions as $session) {
                 /** @var Utopia\Database\Document $session */
-                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // Find most recent active session for user ID and JWT headers
                     $current = $session;
                 }
             }
@@ -359,13 +368,9 @@ class Create extends Base
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
-
         // Appwrite vars
         $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),

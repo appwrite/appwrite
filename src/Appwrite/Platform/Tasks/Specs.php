@@ -43,6 +43,15 @@ class Specs extends Action
         return new AppwriteResponse(new SwooleResponse());
     }
 
+    protected function getFormatInstance(string $format, array $arguments)
+    {
+        return match ($format) {
+            'swagger2' => new Swagger2(...$arguments),
+            'open-api3' => new OpenAPI3(...$arguments),
+            default => throw new Exception('Format not found: ' . $format)
+        };
+    }
+
     public function __construct()
     {
         $this
@@ -288,12 +297,7 @@ class Specs extends Action
             ];
 
             foreach (['swagger2', 'open-api3'] as $format) {
-                $formatInstance = match ($format) {
-                    'swagger2' => new Swagger2(...$arguments),
-                    'open-api3' => new OpenAPI3(...$arguments),
-                    default => throw new Exception('Format not found: ' . $format)
-                };
-
+                $formatInstance = $this->getFormatInstance($format, $arguments);
                 $specs = new Specification($formatInstance);
                 $endpoint = System::getEnv('_APP_HOME', '[HOSTNAME]');
                 $email = System::getEnv('_APP_SYSTEM_TEAM_EMAIL', APP_EMAIL_TEAM);

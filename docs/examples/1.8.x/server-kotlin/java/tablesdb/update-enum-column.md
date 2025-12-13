@@ -13,7 +13,7 @@ tablesDB.updateEnumColumn(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "", // key
-    listOf(), // elements
+    List.of(), // elements
     false, // required
     "<DEFAULT>", // default
     "", // newKey (optional)

@@ -12,6 +12,7 @@ const result = await functions.createTemplateDeployment({
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    version: '<VERSION>',
+    type: sdk.TemplateReferenceType.Commit,
+    reference: '<REFERENCE>',
     activate: false // optional
 });

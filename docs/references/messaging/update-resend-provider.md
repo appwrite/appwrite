@@ -1,0 +1,1 @@
+Update a Resend provider by its unique ID.

@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const health = new sdk.Health(client);
 
 const result = await health.getFailedJobs({
-    name: sdk..V1Database,
+    name: sdk.Name.V1Database,
     threshold: null // optional
 });

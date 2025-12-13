@@ -77,6 +77,7 @@ class Migration extends Event
             'project' => $this->project,
             'user' => $this->user,
             'migration' => $this->migration,
+            'platform' => $this->platform,
         ];
     }
 }

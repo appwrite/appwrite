@@ -10,6 +10,7 @@ let sites = Sites(client)
 let deploymentList = try await sites.listDeployments(
     siteId: "<SITE_ID>",
     queries: [], // optional
-    search: "<SEARCH>" // optional
+    search: "<SEARCH>", // optional
+    total: false // optional
 )
 

@@ -12,7 +12,8 @@ TablesDB tablesDB = new TablesDB(client);
 tablesDB.listColumns(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

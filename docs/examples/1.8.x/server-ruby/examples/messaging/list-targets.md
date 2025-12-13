@@ -11,5 +11,6 @@ messaging = Messaging.new(client)
 
 result = messaging.list_targets(
     message_id: '<MESSAGE_ID>',
-    queries: [] # optional
+    queries: [], # optional
+    total: false # optional
 )

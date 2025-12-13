@@ -71,7 +71,7 @@ class Mails extends Action
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
+        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
@@ -152,9 +152,21 @@ class Mails extends Action
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        if (!empty($smtp)) {
-            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
-            $replyToName = $smtp['senderName'];
+        $customMailOptions = $payload['customMailOptions'] ?? [];
+
+        // fallback hierarchy: Custom options > SMTP config > Defaults.
+        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
+            $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
+            $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
+            $mail->setFrom($fromEmail, $fromName);
+        }
+
+        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
+            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
+            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
+        } elseif (!empty($smtp)) {
+            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
+            $replyToName = $smtp['senderName'] ?? $replyToName;
         }
 
         $mail->addReplyTo($replyTo, $replyToName);

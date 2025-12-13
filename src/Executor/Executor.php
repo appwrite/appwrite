@@ -200,10 +200,6 @@ class Executor
         ?int $requestTimeout = null,
         string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS
     ) {
-        if (empty($headers['host'])) {
-            $headers['host'] = System::getEnv('_APP_DOMAIN', '');
-        }
-
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/executions';
 

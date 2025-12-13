@@ -10,4 +10,5 @@ Users users = Users(client);
 LogList result = await users.listLogs(
     userId: '<USER_ID>',
     queries: [], // (optional)
+    total: false, // (optional)
 );

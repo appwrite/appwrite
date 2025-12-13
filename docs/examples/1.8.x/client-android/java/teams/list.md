@@ -9,8 +9,9 @@ Client client = new Client(context)
 Teams teams = new Teams(client);
 
 teams.list(
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

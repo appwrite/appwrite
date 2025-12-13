@@ -12,5 +12,6 @@ $sites = new Sites($client);
 
 $result = $sites->listLogs(
     siteId: '<SITE_ID>',
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 );

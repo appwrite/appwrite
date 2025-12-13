@@ -1,6 +1,7 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Enums
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -14,6 +15,7 @@ result = functions.create_template_deployment(
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     root_directory: '<ROOT_DIRECTORY>',
-    version: '<VERSION>',
+    type: TemplateReferenceType::COMMIT,
+    reference: '<REFERENCE>',
     activate: false # optional
 )

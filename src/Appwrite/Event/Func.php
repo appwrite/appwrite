@@ -161,7 +161,7 @@ class Func extends Event
     /**
      * Sets custom headers for the function event.
      *
-     * @param string $headers
+     * @param array $headers
      * @return self
      */
     public function setHeaders(array $headers): self
@@ -217,6 +217,7 @@ class Func extends Event
             'path' => $this->path,
             'headers' => $this->headers,
             'method' => $this->method,
+            'platform' => $this->platform
         ];
     }
 }

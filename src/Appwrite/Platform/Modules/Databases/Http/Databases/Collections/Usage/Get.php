@@ -73,7 +73,7 @@ class Get extends Action
         $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collectionDocument->getSequence());
 
         if ($collection->isEmpty()) {
-            throw new Exception($this->getNotFoundException());
+            throw new Exception($this->getNotFoundException(), params: [$collectionId]);
         }
 
         $periods = Config::getParam('usage', []);

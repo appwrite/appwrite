@@ -8,4 +8,5 @@ Account account = Account(client);
 
 LogList result = await account.listLogs(
     queries: [], // optional
+    total: false, // optional
 );

@@ -58,7 +58,7 @@ class Update extends IPUpdate
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when column is required.')
-            ->param('newKey', null, new Key(), 'New Column Key.', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

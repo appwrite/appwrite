@@ -18,4 +18,5 @@ response, error := service.ListCollections(
     "<DATABASE_ID>",
     databases.WithListCollectionsQueries([]interface{}{}),
     databases.WithListCollectionsSearch("<SEARCH>"),
+    databases.WithListCollectionsTotal(false),
 )

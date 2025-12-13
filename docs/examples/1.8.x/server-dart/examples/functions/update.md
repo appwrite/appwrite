@@ -10,7 +10,7 @@ Functions functions = Functions(client);
 Func result = await functions.update(
     functionId: '<FUNCTION_ID>',
     name: '<NAME>',
-    runtime: .node145, // (optional)
+    runtime: Runtime.node145, // (optional)
     execute: ["any"], // (optional)
     events: [], // (optional)
     schedule: '', // (optional)

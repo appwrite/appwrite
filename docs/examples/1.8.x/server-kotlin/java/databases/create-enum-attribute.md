@@ -13,7 +13,7 @@ databases.createEnumAttribute(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
     "", // key
-    listOf(), // elements
+    List.of(), // elements
     false, // required
     "<DEFAULT>", // default (optional)
     false, // array (optional)

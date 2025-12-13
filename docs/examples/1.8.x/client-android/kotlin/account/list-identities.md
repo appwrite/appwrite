@@ -10,4 +10,5 @@ val account = Account(client)
 
 val result = account.listIdentities(
     queries = listOf(), // (optional)
+    total = false, // (optional)
 )

@@ -11,5 +11,6 @@ databases = Databases(client)
 result = databases.list_attributes(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
-    queries = [] # optional
+    queries = [], # optional
+    total = False # optional
 )

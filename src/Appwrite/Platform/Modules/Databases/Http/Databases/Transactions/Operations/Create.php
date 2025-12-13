@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Action;
@@ -10,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -72,15 +72,15 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
         }
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         // API keys and admins can read any transaction, regular users need permissions
         $transaction = ($isAPIKey || $isPrivilegedUser)
             ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty()) {
-            throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
         if ($transaction->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
@@ -115,14 +115,14 @@ class Create extends Action
 
             $database = $databases[$operation['databaseId']] ??= Authorization::skip(fn () => $dbForProject->getDocument('databases', $operation['databaseId']));
             if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-                throw new Exception(Exception::DATABASE_NOT_FOUND);
+                throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$operation['databaseId']]);
             }
 
             $collection = $collections[$operation[$this->getGroupId()]] ??=
                 Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $operation[$this->getGroupId()]));
 
             if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+                throw new Exception(Exception::COLLECTION_NOT_FOUND, params: [$operation[$this->getGroupId()]]);
             }
 
             if (\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
@@ -148,7 +148,7 @@ class Create extends Action
 
                 $document = $transactionState->getDocument($collectionKey, $documentId, $transactionId);
                 if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
-                    throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+                    throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$documentId]);
                 }
             }
 

@@ -11,4 +11,5 @@ SubscriberList result = await messaging.listSubscribers(
     topicId: '<TOPIC_ID>',
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

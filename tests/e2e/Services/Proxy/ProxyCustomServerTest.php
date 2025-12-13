@@ -103,12 +103,11 @@ class ProxyCustomServerTest extends Scope
         $domain = \uniqid() . '-api.custom.localhost';
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://' . $domain);
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
 
-        // We should ideally assert 400, but server allows unknown domains, and serves API by default
         $response = $proxyClient->call(Client::METHOD_GET, '/versions');
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $ruleId = $this->setupAPIRule($domain);
 
@@ -138,11 +137,11 @@ class ProxyCustomServerTest extends Scope
         $domain = \uniqid() . '-redirect.custom.localhost';
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://appwrite');
+        $proxyClient->setEndpoint('http://appwrite.test');
         $proxyClient->addHeader('x-appwrite-hostname', $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/todos/1');
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $siteId = $this->setupSite()['siteId'];
 
@@ -166,7 +165,7 @@ class ProxyCustomServerTest extends Scope
         $this->assertNotEmpty($ruleId);
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://appwrite');
+        $proxyClient->setEndpoint('http://appwrite.test');
         $proxyClient->addHeader('x-appwrite-hostname', $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
@@ -193,11 +192,11 @@ class ProxyCustomServerTest extends Scope
         $domain = \uniqid() . '-function.custom.localhost';
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://appwrite');
+        $proxyClient->setEndpoint('http://appwrite.test');
         $proxyClient->addHeader('x-appwrite-hostname', $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/ping');
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $setup = $this->setupFunction();
         $functionId = $setup['functionId'];
@@ -248,11 +247,11 @@ class ProxyCustomServerTest extends Scope
         $domain = \uniqid() . '-site.custom.localhost';
 
         $proxyClient = new Client();
-        $proxyClient->setEndpoint('http://appwrite');
+        $proxyClient->setEndpoint('http://appwrite.test');
         $proxyClient->addHeader('x-appwrite-hostname', $domain);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact');
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $setup = $this->setupSite();
         $siteId = $setup['siteId'];

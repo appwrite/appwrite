@@ -3,6 +3,7 @@
 use Appwrite\Client;
 use Appwrite\Services\TablesDB;
 use Appwrite\Enums\RelationshipType;
+use Appwrite\Enums\RelationMutate;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint

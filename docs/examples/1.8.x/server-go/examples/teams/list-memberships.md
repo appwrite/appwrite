@@ -18,4 +18,5 @@ response, error := service.ListMemberships(
     "<TEAM_ID>",
     teams.WithListMembershipsQueries([]interface{}{}),
     teams.WithListMembershipsSearch("<SEARCH>"),
+    teams.WithListMembershipsTotal(false),
 )

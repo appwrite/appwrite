@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\DNS\Message\Record;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
@@ -313,13 +314,13 @@ class Certificates extends Action
             $validators = [];
             $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
             if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
+                $validators[] = new DNS($targetCNAME->get(), Record::TYPE_CNAME);
             }
             if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
+                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), Record::TYPE_A);
             }
             if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
+                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), Record::TYPE_AAAA);
             }
 
             // Validate if domain target is properly configured
@@ -332,24 +333,13 @@ class Certificates extends Action
             if (!$validator->isValid($domain->get())) {
                 $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
                 $log->addTag('dnsDomain', $domain->get());
-
-                $errors = [];
-                foreach ($validators as $validator) {
-                    if (!empty($validator->getLogs())) {
-                        $errors[] = $validator->getLogs();
-                    }
-                }
-
-                $error = \implode("\n", $errors);
-                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
-
                 throw new Exception('Failed to verify domain DNS records.');
             }
 
             // Ensure CAA won't block certificate issuance
             if (!empty(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''))) {
                 $validationStart = \microtime(true);
-                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), DNS::RECORD_CAA);
+                $validator = new DNS(System::getEnv('_APP_DOMAIN_TARGET_CAA', ''), Record::TYPE_CAA);
                 if (!$validator->isValid($domain->get())) {
                     $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
                     $log->addTag('dnsDomain', $domain->get());
@@ -440,14 +430,13 @@ class Certificates extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime
     ): void {
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $rule = $dbForPlatform->getDocument('rules', md5($domain));
-        } else {
-            $rule = $dbForPlatform->findOne('rules', [
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $rule = $isMd5
+            ? $dbForPlatform->getDocument('rules', md5($domain))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain]),
             ]);
-        }
 
         if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);

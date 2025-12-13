@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
@@ -9,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -32,7 +32,7 @@ App::init()
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }

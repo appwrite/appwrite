@@ -1,6 +1,7 @@
 require 'appwrite'
 
 include Appwrite
+include Appwrite::Enums
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint

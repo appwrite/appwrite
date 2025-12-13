@@ -41,25 +41,15 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['accessedAt']);
         $this->assertArrayHasKey('targets', $response['body']);
         $this->assertEquals($email, $response['body']['targets'][0]['identifier']);
+        $this->assertArrayNotHasKey('emailCanonical', $response['body']);
+        $this->assertArrayNotHasKey('emailIsFree', $response['body']);
+        $this->assertArrayNotHasKey('emailIsDisposable', $response['body']);
+        $this->assertArrayNotHasKey('emailIsCorporate', $response['body']);
+        $this->assertArrayNotHasKey('emailIsCanonical', $response['body']);
 
         /**
          * Test for FAILURE
          */
-        // Deny request from blocked IP
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'x-forwarded-for' => '103.152.127.250' // Test IP for denied access region
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
-
-        $this->assertEquals(451, $response['headers']['status-code']);
-
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',

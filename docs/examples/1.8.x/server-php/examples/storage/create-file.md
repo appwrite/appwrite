@@ -3,6 +3,8 @@
 use Appwrite\Client;
 use Appwrite\InputFile;
 use Appwrite\Services\Storage;
+use Appwrite\Permission;
+use Appwrite\Role;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -15,5 +17,5 @@ $result = $storage->createFile(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     file: InputFile::withPath('file.png'),
-    permissions: ["read("any")"] // optional
+    permissions: [Permission::read(Role::any())] // optional
 );

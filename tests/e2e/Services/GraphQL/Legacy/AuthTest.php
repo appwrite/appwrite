@@ -199,7 +199,8 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         $this->assertArrayHasKey('errors', $document['body']);
-        $this->assertEquals('Document with the requested ID could not be found.', $document['body']['errors'][0]['message']);
+        $documentId = $gqlPayload['variables']['documentId'];
+        $this->assertEquals("Document with the requested ID '$documentId' could not be found.", $document['body']['errors'][0]['message']);
     }
 
     public function testValidAuth()

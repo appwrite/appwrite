@@ -10,4 +10,5 @@ Functions functions = Functions(client);
 ExecutionList result = await functions.listExecutions(
     functionId: '<FUNCTION_ID>',
     queries: [], // (optional)
+    total: false, // (optional)
 );

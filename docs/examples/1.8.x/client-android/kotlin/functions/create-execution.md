@@ -1,6 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
+import io.appwrite.enums.ExecutionMethod
 
 val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint

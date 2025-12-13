@@ -10,6 +10,7 @@ let tablesDB = TablesDB(client)
 let columnIndexList = try await tablesDB.listIndexes(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 )
 

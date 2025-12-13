@@ -12,7 +12,7 @@ Databases databases = new Databases(client);
 databases.deleteDocuments(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

@@ -1,7 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Sites;
-import io.appwrite.enums.VCSDeploymentType;
+import io.appwrite.enums.VCSReferenceType;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +12,7 @@ Sites sites = new Sites(client);
 
 sites.createVcsDeployment(
     "<SITE_ID>", // siteId
-    VCSDeploymentType.BRANCH, // type
+    VCSReferenceType.BRANCH, // type
     "<REFERENCE>", // reference
     false, // activate (optional)
     new CoroutineCallback<>((result, error) -> {

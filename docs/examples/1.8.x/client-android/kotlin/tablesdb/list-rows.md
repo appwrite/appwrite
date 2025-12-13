@@ -13,4 +13,5 @@ val result = tablesDB.listRows(
     tableId = "<TABLE_ID>", 
     queries = listOf(), // (optional)
     transactionId = "<TRANSACTION_ID>", // (optional)
+    total = false, // (optional)
 )

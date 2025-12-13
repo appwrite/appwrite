@@ -50,7 +50,7 @@ class ScheduleExecutions extends ScheduleBase
             }
 
             $scheduledAt = new \DateTime($schedule['schedule']);
-            if ($scheduledAt <= $intervalEnd) {
+            if ($scheduledAt > $intervalEnd) {
                 continue;
             }
 
@@ -63,8 +63,10 @@ class ScheduleExecutions extends ScheduleBase
 
             $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data) {
-                Co::sleep($delay);
+            \go(function () use ($queueForFunctions, $schedule, $scheduledAt, $delay, $data, $dbForPlatform) {
+                if ($delay > 0) {
+                    Co::sleep($delay);
+                }
 
                 $queueForFunctions->setType('schedule')
                     // Set functionId instead of function as we don't have $dbForProject
@@ -79,15 +81,14 @@ class ScheduleExecutions extends ScheduleBase
                     ->setUserId($data['userId'] ?? '')
                     ->trigger();
 
+                $dbForPlatform->deleteDocument(
+                    'schedules',
+                    $schedule['$id'],
+                );
+
                 $this->recordEnqueueDelay($scheduledAt);
+                unset($this->schedules[$schedule['$sequence']]);
             });
-
-            $dbForPlatform->deleteDocument(
-                'schedules',
-                $schedule['$id'],
-            );
-
-            unset($this->schedules[$schedule['$sequence']]);
         }
     }
 }
