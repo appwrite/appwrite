@@ -170,6 +170,7 @@ class Swagger2 extends Format
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $sdk->isPackaging(),
+                    'public' => $sdk->isPublic(),
                 ],
             ];
 
@@ -234,6 +235,7 @@ class Swagger2 extends Format
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
                         'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
+                        'public' => $methodObj->isPublic(),
                     ];
 
                     // add deprecation only if method has it!

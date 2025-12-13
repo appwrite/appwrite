@@ -107,7 +107,7 @@ class SDKs extends Action
             throw new \Exception('Unknown version given');
         }
 
-        $platforms = Config::getParam('platforms');
+        $platforms = Config::getParam('sdks');
         foreach ($platforms as $key => $platform) {
             if ($selectedPlatform !== $key && $selectedPlatform !== '*' && ($sdks === null)) {
                 continue;

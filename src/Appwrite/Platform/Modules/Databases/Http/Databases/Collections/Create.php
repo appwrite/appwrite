@@ -94,7 +94,7 @@ class Create extends Action
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collectionId = $collectionId === 'unique()' ? ID::unique() : $collectionId;
@@ -114,11 +114,11 @@ class Create extends Action
                 'search' => \implode(' ', [$collectionId, $name]),
             ]));
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (LimitException) {
-            throw new Exception($this->getLimitException());
+            throw new Exception($this->getLimitException(), params: [$databaseId]);
         } catch (NotFoundException) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         /**
@@ -212,13 +212,13 @@ class Create extends Action
             );
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (IndexException $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getInvalidIndexException(), $e->getMessage());
         } catch (LimitException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
-            throw new Exception($this->getLimitException());
+            throw new Exception($this->getLimitException(), params: [$collectionId]);
         } catch (\Throwable $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw $e;
@@ -234,7 +234,7 @@ class Create extends Action
             }
         } catch (DuplicateException) {
             $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (\Throwable $e) {
             $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
             throw $e;

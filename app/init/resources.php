@@ -20,8 +20,10 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -43,7 +45,6 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -64,7 +65,7 @@ use Utopia\Storage\Storage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Utopia\Validator\Hostname;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
@@ -159,79 +160,170 @@ App::setResource('queueForMigrations', function (Publisher $publisher) {
 App::setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
-App::setResource('platforms', function (Request $request, Document $console, Document $project, Database $dbForPlatform) {
-    $console->setAttribute('platforms', [ // Always allow current host
-        '$collection' => ID::custom('platforms'),
-        'name' => 'Current Host',
-        'type' => Platform::TYPE_WEB,
-        'hostname' => $request->getHostname(),
-    ], Document::SET_TYPE_APPEND);
 
-    $hostnames = explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
-    $validator = new Hostname();
-    foreach ($hostnames as $hostname) {
-        $hostname = trim($hostname);
-        if (!$validator->isValid($hostname)) {
-            continue;
-        }
-        $console->setAttribute('platforms', [
-            '$collection' => ID::custom('platforms'),
-            'type' => Platform::TYPE_WEB,
-            'name' => $hostname,
-            'hostname' => $hostname,
-        ], Document::SET_TYPE_APPEND);
+/**
+ * Platform configuration
+ */
+App::setResource('platform', function (Request $request) {
+    $platform = Config::getParam('platform', []);
+    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+
+    $port = '';
+    if ($request->getPort() === '443' && $protocol !== 'https') {
+        $port = ':443';
     }
+    if ($request->getPort() === '80' && $protocol !== 'http') {
+        $port = ':80';
+    }
+    $platform['endpoint'] = "$protocol://{$platform['apiHostname']}{$port}/v1";
 
-    // Add `exp` and `appwrite-callback-{projectId}` schemes
+    return $platform;
+}, ['request']);
+
+/**
+ * List of allowed request hostnames for the request.
+ */
+App::setResource('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
+    $allowed = [...($platform['hostnames'] ?? [])];
+
+    /* Add platform configured hostnames */
     if (!$project->isEmpty() && $project->getId() !== 'console') {
-        $project->setAttribute('platforms', [
-            '$collection' => ID::custom('platforms'),
-            'type' => Platform::TYPE_SCHEME,
-            'name' => 'Expo',
-            'key' => 'exp',
-        ], Document::SET_TYPE_APPEND);
-        $project->setAttribute('platforms', [
-            '$collection' => ID::custom('platforms'),
-            'type' => Platform::TYPE_SCHEME,
-            'name' => 'Appwrite Callback',
-            'key' => 'appwrite-callback-' . $project->getId(),
-        ], Document::SET_TYPE_APPEND);
+        $platforms = $project->getAttribute('platforms', []);
+        $hostnames = Platform::getHostnames($platforms);
+        $allowed = [...$allowed, ...$hostnames];
     }
 
-    $origin = \parse_url($request->getOrigin(), PHP_URL_HOST);
-
-    if (empty($origin)) {
-        $origin = \parse_url($request->getReferer(), PHP_URL_HOST);
+    /* Add the request hostname if a dev key is found */
+    if (!$devKey->isEmpty()) {
+        $allowed[] = $request->getHostname();
     }
 
-    // Safe if rule with same project ID exists
-    if (!empty($origin)) {
-        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($origin ?? '')));
-        } else {
-            $rule = Authorization::skip(
-                fn () => $dbForPlatform->find('rules', [
-                    Query::equal('domain', [$origin]),
-                    Query::limit(1)
-                ])
-            )[0] ?? new Document();
+    $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
+
+    /* Add request hostname for preflight requests */
+    if ($request->getMethod() === 'OPTIONS') {
+        $allowed[] = $originHostname;
+    }
+
+    /* Allow the request origin if a dev key or rule is found */
+    if ((!$rule->isEmpty() || !$devKey->isEmpty()) && !empty($originHostname)) {
+        $allowed[] = $originHostname;
+    }
+
+    return array_unique($allowed);
+}, ['platform', 'project', 'rule', 'devKey', 'request']);
+
+/**
+ * List of allowed request schemes for the request.
+ */
+App::setResource('allowedSchemes', function (Document $project) {
+    $allowed = [];
+
+    if (!$project->isEmpty() && $project->getId() !== 'console') {
+        /* Add hardcoded schemes */
+        $allowed[] = 'exp';
+        $allowed[] = 'appwrite-callback-' . $project->getId();
+
+        /* Add platform configured schemes */
+        $platforms = $project->getAttribute('platforms', []);
+        $schemes = Platform::getSchemes($platforms);
+        $allowed = [...$allowed, ...$schemes];
+    }
+
+    return array_unique($allowed);
+}, ['project']);
+
+/**
+ * Rule associated with a request origin.
+ */
+App::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project) {
+    $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
+    if (empty($domain)) {
+        return new Document();
+    }
+
+    // TODO: (@Meldiron) Remove after 1.7.x migration
+    $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+    $rule = Authorization::skip(function () use ($dbForPlatform, $domain, $isMd5) {
+        if ($isMd5) {
+            return $dbForPlatform->getDocument('rules', md5($domain));
         }
 
-        if (!$rule->isEmpty() && $rule->getAttribute('projectInternalId') === $project->getSequence()) {
-            $project->setAttribute('platforms', [
-                '$collection' => ID::custom('platforms'),
-                'type' => Platform::TYPE_WEB,
-                'name' => $origin,
-                'hostname' => $origin,
-            ], Document::SET_TYPE_APPEND);
-        }
+        return $dbForPlatform->findOne('rules', [
+            Query::equal('domain', [$domain]),
+        ]) ?? new Document();
+    });
+
+    if ($rule->getAttribute('projectInternalId') !== $project->getSequence()) {
+        return new Document();
     }
 
-    return [
-        ...$console->getAttribute('platforms', []),
-        ...$project->getAttribute('platforms', []),
-    ];
-}, ['request', 'console', 'project', 'dbForPlatform']);
+    return $rule;
+}, ['request', 'dbForPlatform', 'project']);
+
+/**
+ * CORS service
+ */
+App::setResource('cors', fn (array $allowedHostnames) => new Cors(
+    $allowedHostnames,
+    allowedMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: [
+        'Accept',
+        'Origin',
+        'Cookie',
+        'Set-Cookie',
+        // Content
+        'Content-Type',
+        'Content-Range',
+        // Appwrite
+        'X-Appwrite-Project',
+        'X-Appwrite-Key',
+        'X-Appwrite-Dev-Key',
+        'X-Appwrite-Locale',
+        'X-Appwrite-Mode',
+        'X-Appwrite-JWT',
+        'X-Appwrite-Response-Format',
+        'X-Appwrite-Timeout',
+        'X-Appwrite-ID',
+        'X-Appwrite-Timestamp',
+        'X-Appwrite-Session',
+        // SDK generator
+        'X-SDK-Version',
+        'X-SDK-Name',
+        'X-SDK-Language',
+        'X-SDK-Platform',
+        'X-SDK-GraphQL',
+        // Caching
+        'Range',
+        'Cache-Control',
+        'Expires',
+        'Pragma',
+        // Server to server
+        'X-Fallback-Cookies',
+        'X-Requested-With',
+        'X-Forwarded-For',
+        'X-Forwarded-User-Agent',
+    ],
+    allowCredentials: true,
+    exposedHeaders: [
+        'X-Appwrite-Session',
+        'X-Fallback-Cookies',
+    ],
+), ['allowedHostnames']);
+
+App::setResource('originValidator', function (Document $devKey, array $allowedHostnames, array $allowedSchemes) {
+    if (!$devKey->isEmpty()) {
+        return new URL();
+    }
+    return new Origin($allowedHostnames, $allowedSchemes);
+}, ['devKey', 'allowedHostnames', 'allowedSchemes']);
+
+App::setResource('redirectValidator', function (Document $devKey, array $allowedHostnames, array $allowedSchemes) {
+    if (!$devKey->isEmpty()) {
+        return new URL();
+    }
+    return new Redirect($allowedHostnames, $allowedSchemes);
+}, ['devKey', 'allowedHostnames', 'allowedSchemes']);
 
 App::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken) {
     /**
@@ -867,7 +959,7 @@ App::setResource('passwordsDictionary', function ($register) {
 
 
 App::setResource('servers', function () {
-    $platforms = Config::getParam('platforms');
+    $platforms = Config::getParam('sdks');
     $server = $platforms[APP_PLATFORM_SERVER];
 
     $languages = array_map(function ($language) {
@@ -968,24 +1060,6 @@ App::setResource('schema', function ($utopia, $dbForProject) {
     );
 }, ['utopia', 'dbForProject']);
 
-App::setResource('contributors', function () {
-    $path = 'app/config/contributors.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
-App::setResource('employees', function () {
-    $path = 'app/config/employees.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
-App::setResource('heroes', function () {
-    $path = 'app/config/heroes.json';
-    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-    return $list;
-});
-
 App::setResource('gitHub', function (Cache $cache) {
     return new VcsGitHub($cache);
 }, ['cache']);
@@ -1052,6 +1126,7 @@ App::setResource('devKey', function (Request $request, Document $project, array 
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
         }
     }
+
     return $key;
 }, ['request', 'project', 'servers', 'dbForPlatform']);
 

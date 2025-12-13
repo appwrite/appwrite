@@ -49,6 +49,7 @@ class XList extends Action
                         since: '1.8.0',
                         replaceWith: 'account.listMFAFactors',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',

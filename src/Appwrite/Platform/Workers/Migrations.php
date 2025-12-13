@@ -64,6 +64,8 @@ class Migrations extends Action
 
     protected array $plan;
 
+    protected array $platform;
+
     /**
      * @var array<string, int>
      */
@@ -125,6 +127,7 @@ class Migrations extends Action
         $this->deviceForMigrations = $deviceForMigrations;
         $this->deviceForFiles = $deviceForFiles;
         $this->plan = $plan;
+        $this->platform = $payload['platform'] ?? [];
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -159,6 +162,7 @@ class Migrations extends Action
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
+        $endpoint = $this->platform['endpoint'] ?: ($credentials['endpoint'] ?? 'http://appwrite.test/v1');
         if ($credentials['projectId']) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
             $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
@@ -194,7 +198,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $endpoint,
                 $credentials['apiKey'],
                 $getDatabasesDB,
                 SourceAppwrite::SOURCE_DATABASE,
@@ -228,7 +232,7 @@ class Migrations extends Action
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $this->project->getId(),
-                'http://appwrite/v1',
+                $this->platform['endpoint'],
                 $apiKey,
                 $this->dbForProject,
                 $this->getDatabasesDB,
@@ -336,7 +340,7 @@ class Migrations extends Action
             ) {
                 $credentials = $migration->getAttribute('credentials', []);
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
-                $credentials['endpoint'] = $credentials['endpoint'] ?? 'http://appwrite/v1';
+                $credentials['endpoint'] = $credentials['endpoint'] ?? $this->platform['endpoint'];
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $migration->setAttribute('credentials', $credentials);
             }

@@ -957,11 +957,7 @@ App::get('/v1/users/:userId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+
         $audit = new Audit($dbForProject);
         $logs = $audit->getLogsByUser($user->getSequence(), $queries);
         $output = [];
@@ -1817,6 +1813,7 @@ App::patch('/v1/users/:userId/mfa')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFA',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -1876,6 +1873,7 @@ App::get('/v1/users/:userId/mfa/factors')
                 since: '1.8.0',
                 replaceWith: 'users.listMFAFactors',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -1934,6 +1932,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.getMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -1998,6 +1997,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.createMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -2069,6 +2069,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
@@ -2081,7 +2082,8 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_MFA_RECOVERY_CODES,
                 )
-            ]
+            ],
+            public: false,
         )
     ])
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
@@ -2140,6 +2142,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
                 since: '1.8.0',
                 replaceWith: 'users.deleteMFAAuthenticator',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',

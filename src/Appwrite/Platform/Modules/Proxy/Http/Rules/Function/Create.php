@@ -72,11 +72,13 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $functionId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject)
+    public function action(string $domain, string $functionId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform)
     {
+        $domains = $platform['hostnames'] ?? [];
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
@@ -95,13 +97,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
         }
 
-        $deniedDomains = [
-            'localhost',
-            APP_HOSTNAME_INTERNAL
-        ];
-
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
-        $deniedDomains[] = $mainDomain;
+        $deniedDomains = [...$domains];
 
         if (!empty($sitesDomain)) {
             $deniedDomains[] = $sitesDomain;
@@ -137,8 +133,9 @@ class Create extends Action
 
         $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''));
 
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
 
         $status = 'created';
         if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
