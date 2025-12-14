@@ -418,6 +418,10 @@ class Migrations extends Action
                     $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime);
                 }
             }
+
+            $transfer = null;
+            $source = null;
+            $destination = null;
         }
     }
 
