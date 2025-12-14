@@ -71,7 +71,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-            public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
+    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
