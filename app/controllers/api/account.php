@@ -3013,7 +3013,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
