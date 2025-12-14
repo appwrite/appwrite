@@ -103,7 +103,10 @@ class XList extends Action
         $context = $this->getContext();
         $resource = "database/$databaseId/$type/$collectionId/$context/{$document->getId()}";
 
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -152,7 +155,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'logs' => $output,
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $audit->countLogsByResource($resource),
         ]), $this->getResponseModel());
     }
 }

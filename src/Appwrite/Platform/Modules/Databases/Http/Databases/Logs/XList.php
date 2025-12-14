@@ -63,11 +63,11 @@ class XList extends Action
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-                ->inject('response')
-                ->inject('dbForProject')
-                ->inject('locale')
-                ->inject('geodb')
-                ->inject('audit')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('locale')
+            ->inject('geodb')
+            ->inject('audit')
             ->callback($this->action(...));
     }
 
@@ -86,7 +86,10 @@ class XList extends Action
         }
 
         $resource = 'database/' . $databaseId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -133,7 +136,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), UtopiaResponse::MODEL_LOG_LIST);
     }
