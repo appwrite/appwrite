@@ -1464,7 +1464,8 @@ App::get('/v1/teams/:teamId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1478,7 +1479,6 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, $queries);
 

@@ -247,7 +247,8 @@ App::post('/v1/projects')
             }
 
             if ($create || $projectTables) {
-                $audit = new Audit($dbForProject);
+                $adapter = new \Utopia\Audit\Adapters\Database($dbForProject);
+                $audit = new Audit($adapter);
                 $audit->setup();
             }
 

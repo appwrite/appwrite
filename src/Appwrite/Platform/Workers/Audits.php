@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\Database as AdapterDatabase;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -136,7 +137,8 @@ class Audits extends Action
 
                 $projectDocument = $projectLogs['project'];
                 $dbForProject = $getProjectDB($projectDocument);
-                $audit = new Audit($dbForProject);
+                $adapter = new AdapterDatabase($dbForProject);
+                $audit = new Audit($adapter);
                 $audit->logBatch($projectLogs['logs']);
 
                 Console::success('Audit logs processed successfully');

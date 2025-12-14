@@ -945,7 +945,8 @@ App::get('/v1/users/:userId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -958,7 +959,6 @@ App::get('/v1/users/:userId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
         $logs = $audit->getLogsByUser($user->getSequence(), $queries);
         $output = [];
         foreach ($logs as $i => &$log) {
