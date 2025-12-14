@@ -148,11 +148,44 @@ class Install extends Action
             $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
         }
 
+        $enableAssistant = false;
+        if ($interactive == 'Y' && Console::isInteractive()) {
+            $answer = Console::confirm('Add Appwrite Assistant? (Y/n)');
+            $enableAssistant = !empty($answer) && \strtolower($answer) === 'y';
+        }
+
         $input = [];
 
         $password = new Password();
         $token = new Token();
         foreach ($vars as $var) {
+            if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
+                if (!$enableAssistant) {
+                    $input[$var['name']] = '';
+                    continue;
+                }
+
+                // key already exists
+                if (!empty($var['default'])) {
+                    $input[$var['name']] = $var['default'];
+                    continue;
+                }
+
+                // if assistant enabled and no key, ask for it
+                if (Console::isInteractive() && $interactive === 'Y') {
+                    $input[$var['name']] = Console::confirm('Enter your OpenAI API key for Appwrite Assistant:');
+                    if (empty($input[$var['name']])) {
+                        Console::warning('No API key provided. Assistant will be disabled.');
+                        $enableAssistant = false;
+                        $input[$var['name']] = '';
+                    }
+                    continue;
+                }
+
+                $input[$var['name']] = '';
+                continue;
+            }
+
             if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
                 if ($data && $var['default'] !== null) {
                     $input[$var['name']] = $var['default'];
@@ -199,7 +232,8 @@ class Install extends Action
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
             ->setParam('organization', $organization)
-            ->setParam('image', $image);
+            ->setParam('image', $image)
+            ->setParam('enableAssistant', $enableAssistant);
 
         $templateForEnv->setParam('vars', $input);
 
