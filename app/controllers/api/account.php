@@ -37,7 +37,7 @@ use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
-use Utopia\Audit\Audit as EventAudit;
+use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
