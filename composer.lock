@@ -3556,12 +3556,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "bea15e59f63d1b0fceabf53bf73bed3962d176d5"
+                "reference": "a83dec21b3b9b7fc85fd8cf92563b2fd174a39cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/bea15e59f63d1b0fceabf53bf73bed3962d176d5",
-                "reference": "bea15e59f63d1b0fceabf53bf73bed3962d176d5",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/a83dec21b3b9b7fc85fd8cf92563b2fd174a39cb",
+                "reference": "a83dec21b3b9b7fc85fd8cf92563b2fd174a39cb",
                 "shasum": ""
             },
             "require": {
@@ -3597,7 +3597,7 @@
                 "issues": "https://github.com/utopia-php/audit/issues",
                 "source": "https://github.com/utopia-php/audit/tree/feat-db-3.x"
             },
-            "time": "2025-12-14T06:56:09+00:00"
+            "time": "2025-12-14T08:29:40+00:00"
         },
         {
             "name": "utopia-php/auth",
