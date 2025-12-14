@@ -262,7 +262,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 
         // create appwrite database, `dbForPlatform` is a direct access call.
         createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections) {
-            if ($dbForPlatform->getCollection(SQL::COLLECTION)->isEmpty()) {
+            if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
                 $adapter = new AdapterDatabase($dbForPlatform);
                 $audit = new Audit($adapter);
                 $audit->setup();
