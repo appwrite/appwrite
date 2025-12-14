@@ -2453,20 +2453,20 @@
         },
         {
             "name": "ramsey/uuid",
-            "version": "4.9.1",
+            "version": "4.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ramsey/uuid.git",
-                "reference": "81f941f6f729b1e3ceea61d9d014f8b6c6800440"
+                "reference": "8429c78ca35a09f27565311b98101e2826affde0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ramsey/uuid/zipball/81f941f6f729b1e3ceea61d9d014f8b6c6800440",
-                "reference": "81f941f6f729b1e3ceea61d9d014f8b6c6800440",
+                "url": "https://api.github.com/repos/ramsey/uuid/zipball/8429c78ca35a09f27565311b98101e2826affde0",
+                "reference": "8429c78ca35a09f27565311b98101e2826affde0",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "^0.8.8 || ^0.9 || ^0.10 || ^0.11 || ^0.12 || ^0.13 || ^0.14",
+                "brick/math": "^0.8.16 || ^0.9 || ^0.10 || ^0.11 || ^0.12 || ^0.13 || ^0.14",
                 "php": "^8.0",
                 "ramsey/collection": "^1.2 || ^2.0"
             },
@@ -2525,9 +2525,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ramsey/uuid/issues",
-                "source": "https://github.com/ramsey/uuid/tree/4.9.1"
+                "source": "https://github.com/ramsey/uuid/tree/4.9.2"
             },
-            "time": "2025-09-04T20:59:21+00:00"
+            "time": "2025-12-14T04:43:48+00:00"
         },
         {
             "name": "spomky-labs/otphp",
@@ -3556,12 +3556,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "5b5a5440eb37ee6c6b7fc717868e6965b19c003f"
+                "reference": "bea15e59f63d1b0fceabf53bf73bed3962d176d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/5b5a5440eb37ee6c6b7fc717868e6965b19c003f",
-                "reference": "5b5a5440eb37ee6c6b7fc717868e6965b19c003f",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/bea15e59f63d1b0fceabf53bf73bed3962d176d5",
+                "reference": "bea15e59f63d1b0fceabf53bf73bed3962d176d5",
                 "shasum": ""
             },
             "require": {
@@ -3597,7 +3597,7 @@
                 "issues": "https://github.com/utopia-php/audit/issues",
                 "source": "https://github.com/utopia-php/audit/tree/feat-db-3.x"
             },
-            "time": "2025-12-14T02:29:51+00:00"
+            "time": "2025-12-14T06:56:09+00:00"
         },
         {
             "name": "utopia-php/auth",

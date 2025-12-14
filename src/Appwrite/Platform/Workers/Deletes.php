@@ -9,7 +9,7 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
-use Utopia\Audit\Audit;
+use Utopia\Audit\Adapter\SQL;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -517,7 +517,7 @@ class Deletes extends Action
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
-            Audit::COLLECTION,
+            SQL::COLLECTION,
             AbuseDatabase::COLLECTION,
         ];
 
@@ -786,7 +786,7 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         try {
-            $this->deleteByGroup(Audit::COLLECTION, [
+            $this->deleteByGroup(SQL::COLLECTION, [
                 Query::select([...$this->selects, 'time']),
                 Query::lessThan('time', $auditRetention),
                 Query::orderDesc('time'),
