@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Exception;
 use Throwable;
-use Utopia\Audit\Adapters\Database as AdapterDatabase;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
