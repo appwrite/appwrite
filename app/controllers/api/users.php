@@ -959,7 +959,11 @@ App::get('/v1/users/:userId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
+        $logs = $audit->getLogsByUser($user->getSequence(), limit: $limit, offset: $offset);
         $output = [];
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
@@ -999,7 +1003,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

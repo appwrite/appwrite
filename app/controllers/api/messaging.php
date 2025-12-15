@@ -1211,7 +1211,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2567,8 +2567,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'topic/' . $topicId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -2616,7 +2620,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2984,8 +2988,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'subscriber/' . $subscriberId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -3033,7 +3041,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3779,8 +3787,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'message/' . $messageId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -3828,7 +3840,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

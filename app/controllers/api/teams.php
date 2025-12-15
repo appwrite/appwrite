@@ -1479,8 +1479,12 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'team/' . $team->getId();
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -1527,7 +1531,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
