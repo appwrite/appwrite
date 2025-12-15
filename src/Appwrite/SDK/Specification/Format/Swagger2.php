@@ -146,7 +146,6 @@ class Swagger2 extends Format
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
@@ -156,6 +155,10 @@ class Swagger2 extends Format
                     'public' => $sdk->isPublic(),
                 ],
             ];
+
+            if ($sdk->getDescriptionFilePath() !== null) {
+                $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
+            }
 
             if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [

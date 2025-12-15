@@ -12,7 +12,9 @@ const result = await databases.createCollection({
     name: '<NAME>',
     permissions: [Permission.read(Role.any())], // optional
     documentSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    attributes: [], // optional
+    indexes: [] // optional
 });
 
 console.log(result);
