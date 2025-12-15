@@ -327,17 +327,20 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 204);
     }
 
-    public function testTrustedIpViaHeaders(): void
+    public function testFallbackForTrustedIp(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
+        // call appwrite directly to avoid proxy stripping the headers
+        $this->client->setEndpoint('http://localhost/v1');
+
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-forwarded-for' => '203.0.113.195',
+            'x-forwarded-for' => '191.0.113.195',
         ]), [
             'userId' => ID::unique(),
             'email' => $email,
@@ -351,13 +354,13 @@ trait AccountBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-forwarded-for' => '203.0.113.195',
+            'x-forwarded-for' => '191.0.113.195',
         ]), [
             'email' => $email,
             'password' => $password,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
-        $this->assertEquals('203.0.113.195', $response['body']['clientIp'] ?? $response['body']['ip'] ?? '');
+        $this->assertEquals('191.0.113.195', $response['body']['clientIp'] ?? $response['body']['ip'] ?? '');
     }
 }

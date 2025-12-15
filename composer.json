@@ -72,7 +72,7 @@
         "utopia-php/queue": "0.11.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "0.18.*",
-        "utopia-php/swoole": "0.8.*",
+        "utopia-php/swoole": "clo-3704-duplicate-changes-to-swoole-due-to-overwrite-dev",
         "utopia-php/system": "0.9.*",
         "utopia-php/telemetry": "0.1.*",
         "utopia-php/vcs": "0.13.*",
