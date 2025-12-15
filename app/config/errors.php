@@ -851,6 +851,11 @@ return [
         'description' => 'The maximum number or size of attributes for collection \'%s\' has been reached.',
         'code' => 400,
     ],
+    Exception::ATTRIBUTE_ROW_WIDTH_LIMIT_EXCEEDED => [
+        'name' => Exception::ATTRIBUTE_ROW_WIDTH_LIMIT_EXCEEDED,
+        'description' => 'The maximum row width for collection \'%s\' has been reached. Try reducing the size of the attributes.',
+        'code' => 400,
+    ],
     Exception::ATTRIBUTE_VALUE_INVALID => [
         'name' => Exception::ATTRIBUTE_VALUE_INVALID,
         'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',

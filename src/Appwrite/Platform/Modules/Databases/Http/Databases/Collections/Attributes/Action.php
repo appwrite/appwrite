@@ -383,8 +383,13 @@ abstract class Action extends UtopiaAction
             $attribute = $dbForProject->createDocument('attributes', $attribute);
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$key]);
-        } catch (LimitException) {
-            throw new Exception($this->getLimitException(), params: [$collectionId]);
+        } catch (LimitException $e) {
+            $message = $e->getMessage();
+            if (\str_contains($message, 'Row width limit reached')) {
+                // More specific error when row width limit is exceeded.
+                throw new Exception(Exception::ATTRIBUTE_ROW_WIDTH_LIMIT_EXCEEDED, params: [$collectionId]);
+            }
+            throw new Exception($this->getLimitException(), $message, params: [$collectionId]);
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (Throwable $e) {
@@ -627,8 +632,13 @@ abstract class Action extends UtopiaAction
                 throw new Exception($this->getDuplicateException(), params: [$key]);
             } catch (IndexException $e) {
                 throw new Exception($this->getInvalidIndexException(), $e->getMessage());
-            } catch (LimitException) {
-                throw new Exception($this->getLimitException(), params: [$collectionId]);
+            } catch (LimitException $e) {
+                $message = $e->getMessage();
+                if (\str_contains($message, 'Row width limit reached')) {
+                    // More specific error when row width limit is exceeded.
+                    throw new Exception(Exception::ATTRIBUTE_ROW_WIDTH_LIMIT_EXCEEDED, params: [$collectionId]);
+                }
+                throw new Exception($this->getLimitException(), $message, params: [$collectionId]);
             } catch (TruncateException) {
                 throw new Exception($this->getInvalidResizeException());
             }

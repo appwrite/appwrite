@@ -233,6 +233,7 @@ class Exception extends \Exception
     public const string ATTRIBUTE_DEFAULT_UNSUPPORTED = 'attribute_default_unsupported';
     public const string ATTRIBUTE_ALREADY_EXISTS = 'attribute_already_exists';
     public const string ATTRIBUTE_LIMIT_EXCEEDED = 'attribute_limit_exceeded';
+    public const string ATTRIBUTE_ROW_WIDTH_LIMIT_EXCEEDED = 'attribute_row_width_limit_exceeded';
     public const string ATTRIBUTE_VALUE_INVALID = 'attribute_value_invalid';
     public const string ATTRIBUTE_TYPE_INVALID = 'attribute_type_invalid';
     public const string ATTRIBUTE_INVALID_RESIZE = 'attribute_invalid_resize';
