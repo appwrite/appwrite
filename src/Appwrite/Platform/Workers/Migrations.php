@@ -41,18 +41,13 @@ use Utopia\System\System;
 
 class Migrations extends Action
 {
-    protected Database $dbForProject;
-
-    protected Database $dbForPlatform;
-
-    protected Device $deviceForMigrations;
-    protected Device $deviceForFiles;
-
-    protected Document $project;
-
-    protected array $plan;
-
-    protected array $platform;
+    protected ?Database $dbForProject;
+    protected ?Database $dbForPlatform;
+    protected ?Device $deviceForMigrations;
+    protected ?Device $deviceForFiles;
+    protected ?Document $project;
+    protected array $plan = [];
+    protected array $platform = [];
 
     /**
      * @var array<string, int>
@@ -60,9 +55,9 @@ class Migrations extends Action
     protected array $sourceReport = [];
 
     /**
-     * @var callable
+     * @var callable|null
      */
-    protected $logError;
+    protected $logError = null;
 
     public static function getName(): string
     {
@@ -130,7 +125,21 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($migration, $queueForRealtime, $queueForMails);
+        try {
+            $this->processMigration($migration, $queueForRealtime, $queueForMails);
+        } finally {
+            $this->dbForProject = null;
+            $this->dbForPlatform = null;
+            $this->project = null;
+            $this->logError = null;
+            $this->deviceForMigrations = null;
+            $this->deviceForFiles = null;
+            $this->plan = [];
+            $this->platform = [];
+            $this->sourceReport = [];
+
+            gc_collect_cycles();
+        }
     }
 
     /**
