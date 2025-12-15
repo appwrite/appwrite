@@ -71,6 +71,7 @@ services:
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
       - /var/run/docker.sock:/var/run/docker.sock # Only needed for tests
       - ./docker-compose.yml:/usr/src/code/docker-compose.yml # Only needed for tests
       - ./.env:/usr/src/code/.env # Only needed for tests

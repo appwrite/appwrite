@@ -36,11 +36,6 @@ class Maintenance extends Action
 
     public function action(string $type, Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
     {
-        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-        if ($type === 'trigger' && $isProduction) {
-            throw new \Exception('Triggering maintenance task is not allowed in production. Please use type=loop instead.');
-        }
-
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 

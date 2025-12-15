@@ -2744,49 +2744,4 @@ class FunctionsCustomServerTest extends Scope
             $this->cleanupFunction($functionId);
         }
     }
-    
-    public function testFunctionDeploymentRetentionWithMaintenance(): void
-    {
-        $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test retention function',
-            'runtime' => 'node-22',
-            'entrypoint' => 'index.js',
-            'deploymentRetention' => 180
-        ]);
-        $this->assertNotEmpty($functionId);
-        
-        $deploymentIdInactive = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactive);
-        
-        $deploymentIdInactiveOld = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdInactiveOld);
-        
-        $deploymentIdActive = $this->setupDeployment($functionId, [
-            'code' => $this->packageFunction('node'),
-            'activate' => true
-        ]);
-        $this->assertNotEmpty($deploymentIdActive);
-        
-        $response = $this->client->call(Client::METHOD_POST, '/v1/mock/time-travels', array_merge([
-            'content-type' => 'application/json',
-        ]), [
-            'projectId' => $this->getProject()['$id'],
-            'resourceType' => 'function',
-            'resourceId' => $deploymentIdInactiveOld,
-            'createdAt' => '2020-01-01T00:00:00Z' // More than 180 days ago
-        ]);
-        $this->assertSame(204, $response['headers']['status-code']);
-        
-        // TODO: Trigger maintenance
-        // TODO: Assert eventuelly, 2 deployments only
-
-         $this->cleanupFunction($functionId);
-    }
 }

@@ -2,7 +2,6 @@
 
 global $utopia, $request, $response;
 
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -13,6 +12,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
@@ -201,11 +201,11 @@ App::post('/v1/mock/api-key-unprefixed')
 
 App::post('/v1/mock/time-travels')
     ->desc('Create a time-travel to chane $createdAt')
-    ->groups(['mock', 'api', 'projects'])
+    ->groups(['mock', 'api'])
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new UID(), 'Project ID.')
-    ->param('resourceType', '', new WhiteList(['function', 'site']), 'Type of resource.')
+    ->param('resourceType', '', new WhiteList(['deployment']), 'Type of resource.')
     ->param('resourceId', '', new UID(), 'ID of resource.')
     ->param('createdAt', '', new DatetimeValidator(), 'New value for $createdAt')
     ->inject('response')
@@ -213,30 +213,30 @@ App::post('/v1/mock/time-travels')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $resourceType, string $resourceId, string $createdAt, Response $response, callable $getProjectDB, Database $dbForPlatform) {
         $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
-        
+
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
-        
+
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
-        
+
         $collection = match($resourceType) {
-            'function' => 'functions',
-            'site' => 'sites',
+            'deployment' => 'deployments',
             default => throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED)
         };
-        
-         /** @var Database $dbForProject */
+
+        /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
-        
-        $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument($collection, $resourceId, new Document([
-                '$createdAt' => $createdAt
-            ]))
-        );
+
+        $update = new Document([
+            '$createdAt' => $createdAt,
+        ]);
+
+        $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
 
         $response->noContent();
     });
