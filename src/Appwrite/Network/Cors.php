@@ -2,6 +2,8 @@
 
 namespace Appwrite\Network;
 
+use Utopia\Validator\Hostname;
+
 /**
  * Generate CORS response headers for an incoming request.
  *
@@ -76,7 +78,8 @@ final class Cors
         }
 
         // Match only by host
-        if (!\in_array($host, $this->allowedHosts, true)) {
+        $validator = new Hostname($this->allowedHosts);
+        if (!$validator->isValid($host)) {
             return $headers;
         }
 
