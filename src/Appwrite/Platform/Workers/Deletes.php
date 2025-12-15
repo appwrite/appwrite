@@ -327,16 +327,10 @@ class Deletes extends Action
 
             $activeDeploymentId = $resource->getAttribute('deploymentId', '');
 
-            $resourceType = match ($resource->getCollection()) {
-                'functions' => 'functions',
-                'sites' => 'site',
-                default => null,
-            };
-
             $queries = [
                 Query::createdBefore(DateTime::addSeconds(new \DateTime(), -1 * $retention * 24 * 60 * 60)),
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
-                Query::equal('resourceType', [$resourceType]),
+                Query::equal('resourceType', [$resource->getCollection()]),
                 Query::orderDesc('$createdAt'),
             ];
 
