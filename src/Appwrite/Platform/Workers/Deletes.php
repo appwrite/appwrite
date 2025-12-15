@@ -317,7 +317,7 @@ class Deletes extends Action
         /* @var $dbForProject Database */
         $dbForProject = $getProjectDB($project);
 
-        $removalCallback = function (Document $resource) use ($dbForProject, $queueForDeletes) {
+        $removalCallback = function (Document $resource) use ($dbForProject, $queueForDeletes, $project) {
             $retention = $resource->getAttribute('deploymentRetention', 0);
 
             // 0 means unlimited - never delete
@@ -327,8 +327,16 @@ class Deletes extends Action
 
             $activeDeploymentId = $resource->getAttribute('deploymentId', '');
 
+            $resourceType = match ($resource->getCollection()) {
+                'functions' => 'functions',
+                'sites' => 'site',
+                default => null,
+            };
+
             $queries = [
                 Query::createdBefore(DateTime::addSeconds(new \DateTime(), -1 * $retention * 24 * 60 * 60)),
+                Query::equal('resourceInternalId', [$resource->getSequence()]),
+                Query::equal('resourceType', [$resourceType]),
                 Query::orderDesc('$createdAt'),
             ];
 
@@ -340,10 +348,11 @@ class Deletes extends Action
                 'deployments',
                 $queries,
                 $dbForProject,
-                function (Document $deployment) use ($queueForDeletes) {
+                function (Document $deployment) use ($queueForDeletes, $project) {
                     $queueForDeletes
                         ->setType(DELETE_TYPE_DOCUMENT)
                         ->setDocument($deployment)
+                        ->setProject($project)
                         ->trigger();
                 }
             );

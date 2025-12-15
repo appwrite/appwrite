@@ -3090,7 +3090,7 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertSame(0, $response['body']['deploymentRetention']);
-        $siteId[] = $response['body']['$id'];
+        $siteIds[] = $response['body']['$id'];
 
         $response = $this->getSite($response['body']['$id']);
         $this->assertSame(200, $response['headers']['status-code']);
@@ -3106,7 +3106,7 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertSame(0, $response['body']['deploymentRetention']);
-        $siteId[] = $response['body']['$id'];
+        $siteIds[] = $response['body']['$id'];
 
         $response = $this->getSite($response['body']['$id']);
         $this->assertSame(200, $response['headers']['status-code']);
@@ -3121,7 +3121,7 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertSame(180, $response['body']['deploymentRetention']);
-        $siteId[] = $response['body']['$id'];
+        $siteIds[] = $response['body']['$id'];
 
         $response = $this->getSite($response['body']['$id']);
         $this->assertSame(200, $response['headers']['status-code']);
@@ -3156,7 +3156,7 @@ class SitesCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $response['headers']['status-code']);
         $this->assertSame(180, $response['body']['deploymentRetention']);
-        $siteId[] = $response['body']['$id'];
+        $siteIds[] = $response['body']['$id'];
         $siteIdToUpdate = $response['body']['$id'];
 
         $response = $this->updateSite([

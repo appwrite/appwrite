@@ -200,7 +200,7 @@ App::post('/v1/mock/api-key-unprefixed')
     });
 
 App::post('/v1/mock/time-travels')
-    ->desc('Create a time-travel to chane $createdAt')
+    ->desc('Create a time-travel to change $createdAt')
     ->groups(['mock', 'api'])
     ->label('scope', 'public')
     ->label('docs', false)
