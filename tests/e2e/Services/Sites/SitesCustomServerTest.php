@@ -3076,4 +3076,134 @@ class SitesCustomServerTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    public function testSiteDeploymentRetention(): void
+    {
+        $siteIds = [];
+
+        // Default
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $siteId[] = $response['body']['$id'];
+
+        $response = $this->getSite($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        // Success values
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 0
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $siteId[] = $response['body']['$id'];
+
+        $response = $this->getSite($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+        $siteId[] = $response['body']['$id'];
+
+        $response = $this->getSite($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+
+        // Failure values
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 999999
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => -1
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        // Update flow
+        $response = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+        $siteId[] = $response['body']['$id'];
+        $siteIdToUpdate = $response['body']['$id'];
+
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => 90
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
+
+        $response = $this->getSite($siteIdToUpdate);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
+
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        $response = $this->getSite($siteIdToUpdate);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        // Failed update flow
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => -1
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->updateSite([
+            '$id' => $siteIdToUpdate,
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => 999999
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        foreach ($siteIds as $siteId) {
+            $this->cleanupSite($siteId);
+        }
+    }
 }
