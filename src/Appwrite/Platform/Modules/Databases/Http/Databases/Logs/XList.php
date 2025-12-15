@@ -63,15 +63,15 @@ class XList extends Action
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-            ->inject('response')
-            ->inject('dbForProject')
-            ->inject('locale')
-            ->inject('geodb')
-            ->inject('audit')
+                ->inject('response')
+                ->inject('dbForProject')
+                ->inject('locale')
+                ->inject('geodb')
+                ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
+            public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -86,10 +86,7 @@ class XList extends Action
         }
 
         $resource = 'database/' . $databaseId;
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
-        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -136,7 +133,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
             'logs' => $output,
         ]), UtopiaResponse::MODEL_LOG_LIST);
     }

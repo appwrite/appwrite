@@ -67,11 +67,11 @@ class XList extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-            ->inject('response')
-            ->inject('dbForProject')
-            ->inject('locale')
-            ->inject('geodb')
-            ->inject('audit')
+                ->inject('response')
+                ->inject('dbForProject')
+                ->inject('locale')
+                ->inject('geodb')
+                ->inject('audit')
             ->callback($this->action(...));
     }
 
@@ -98,10 +98,7 @@ class XList extends Action
 
         $context = $this->getContext();
         $resource = "database/$databaseId/$context/$collectionId";
-        $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
-        $offset = $grouped['offset'] ?? 0;
-        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
+        $logs = $audit->getLogsByResource($resource, $queries);
 
         $output = [];
 
@@ -150,7 +147,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'logs' => $output,
-            'total' => $audit->countLogsByResource($resource),
+            'total' => $audit->countLogsByResource($resource, $queries),
         ]), $this->getResponseModel());
     }
 }

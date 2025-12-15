@@ -4,8 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Exception;
 use Throwable;
-use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\Database as AdapterDatabase;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -103,7 +103,7 @@ class Audits extends Action
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
-            'time' => date("Y-m-d H:i:s", $message->getTimestamp()),
+            'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
         if (isset($this->logs[$project->getSequence()])) {
