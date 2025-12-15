@@ -9,7 +9,7 @@ use Utopia\System\System;
 
 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
 $platform = Config::getParam('platform', []);
-$hostname = $platform['consoleDomain'] ?? '';
+$hostname = $platform['consoleHostname'] ?? '';
 
 $url = $protocol . '://' . $hostname;
 

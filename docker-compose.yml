@@ -54,6 +54,7 @@ services:
     image: appwrite-dev
     build:
       context: .
+      target: development
       args:
         DEBUG: false
         TESTING: true

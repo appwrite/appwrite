@@ -132,7 +132,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $hostname = $platform['consoleDomain'] ?? '';
+            $hostname = $platform['consoleHostname'] ?? '';
 
             $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
@@ -555,7 +555,7 @@ App::get('/v1/vcs/github/authorize')
 
         $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleDomain'] ?? '';
+        $hostname = $platform['consoleHostname'] ?? '';
 
         if (empty($appName)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
@@ -614,7 +614,7 @@ App::get('/v1/vcs/github/callback')
 
         $region = $project->getAttribute('region', 'default');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleDomain'] ?? '';
+        $hostname = $platform['consoleHostname'] ?? '';
 
         $defaultState = [
             'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",

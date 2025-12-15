@@ -184,7 +184,22 @@ class HTTPTest extends Scope
             'origin' => 'http://google.com',
         ]);
         $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
+    }
 
+    public function testPreflight()
+    {
+
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_OPTIONS, $endpoint, [
+            'origin' => 'http://random.com',
+            'access-control-request-headers' => 'X-Appwrite-Project',
+            'access-control-request-method' => 'GET'
+        ]);
+        $this->assertEquals('http://random.com', $response['headers']['access-control-allow-origin']);
     }
 
     public function testConsoleRedirect()

@@ -1325,7 +1325,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $host = $platform['consoleDomain'] ?? '';
+        $host = $platform['consoleHostname'] ?? '';
         $redirectBase = $protocol . '://' . $host;
         if ($protocol === 'https' && $port !== '443') {
             $redirectBase .= ':' . $port;
@@ -1978,7 +1978,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $host = $platform['consoleDomain'] ?? '';
+        $host = $platform['consoleHostname'] ?? '';
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $redirectBase = $protocol . '://' . $host;
@@ -2153,7 +2153,7 @@ App::post('/v1/account/tokens/magic-url')
 
         if (empty($url)) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $host = $platform['consoleDomain'] ?? '';
+            $host = $platform['consoleHostname'] ?? '';
             $port = $request->getPort();
             $callbackBase = $protocol . '://' . $host;
             if ($protocol === 'https' && $port !== '443') {
