@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Queue\Publisher;
 
 class Mail extends Event
@@ -516,6 +517,11 @@ class Mail extends Event
      */
     protected function preparePayload(): array
     {
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'recipient' => $this->recipient,
@@ -528,7 +534,8 @@ class Mail extends Event
             'variables' => $this->variables,
             'attachment' => $this->attachment,
             'customMailOptions' => $this->customMailOptions,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
+            'platform' => $platform,
         ];
     }
 }
