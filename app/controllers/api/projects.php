@@ -295,7 +295,7 @@ App::post('/v1/projects')
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
-        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
+        $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2666,7 +2666,7 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
         $auths = $project->getAttribute('auths', []);
         $auths['invalidateSessions'] = $enabled;
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-        ->setAttribute('auths', $auths));
+            ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
