@@ -2,6 +2,7 @@
 
 global $utopia, $request, $response;
 
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -196,6 +197,48 @@ App::post('/v1/mock/api-key-unprefixed')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($key, Response::MODEL_KEY);
+    });
+
+App::post('/v1/mock/time-travels')
+    ->desc('Create a time-travel to chane $createdAt')
+    ->groups(['mock', 'api', 'projects'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->param('resourceType', '', new WhiteList(['function', 'site']), 'Type of resource.')
+    ->param('resourceId', '', new UID(), 'ID of resource.')
+    ->param('createdAt', '', new DatetimeValidator(), 'New value for $createdAt')
+    ->inject('response')
+    ->inject('getProjectDB')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $resourceType, string $resourceId, string $createdAt, Response $response, callable $getProjectDB, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+        
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+        
+        $collection = match($resourceType) {
+            'function' => 'functions',
+            'site' => 'sites',
+            default => throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED)
+        };
+        
+         /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+        
+        $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument($collection, $resourceId, new Document([
+                '$createdAt' => $createdAt
+            ]))
+        );
+
+        $response->noContent();
     });
 
 App::get('/v1/mock/github/callback')

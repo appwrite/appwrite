@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
+use Utopia\Validator\WhiteList;
 
 class Maintenance extends Action
 {
@@ -25,6 +26,7 @@ class Maintenance extends Action
     {
         $this
             ->desc('Schedules maintenance tasks and publishes them to our queues')
+            ->param('type', 'loop', new WhiteList(['loop', 'trigger']), 'How to run task. "loop" is meant for container entrypoint, and "trigger" for manual execution.')
             ->inject('dbForPlatform')
             ->inject('console')
             ->inject('queueForCertificates')
@@ -32,8 +34,13 @@ class Maintenance extends Action
             ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
+    public function action(string $type, Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
     {
+        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+        if ($type === 'trigger' && $isProduction) {
+            throw new \Exception('Triggering maintenance task is not allowed in production. Please use type=loop instead.');
+        }
+
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
@@ -57,9 +64,7 @@ class Maintenance extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
-
-        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForPlatform, $console, $queueForDeletes, $queueForCertificates) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -96,7 +101,17 @@ class Maintenance extends Action
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
             $this->notifyDeleteCSVExports($queueForDeletes);
-        }, $interval, $delay);
+        };
+
+        if ($type === 'loop') {
+            Console::info('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
+
+            Console::loop(function () use ($action) {
+                $action();
+            }, $interval, $delay);
+        } elseif ($type === 'trigger') {
+            $action();
+        }
     }
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void

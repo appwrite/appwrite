@@ -2629,4 +2629,164 @@ class FunctionsCustomServerTest extends Scope
 
         $this->cleanupFunction($functionId);
     }
+
+    public function testFunctionDeploymentRetention(): void
+    {
+        $functionIds = [];
+
+        // Default
+        $response = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $functionIds[] = $response['body']['$id'];
+
+        $response = $this->getFunction($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        // Success values
+        $response = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+            'deploymentRetention' => 0
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+        $functionIds[] = $response['body']['$id'];
+
+        $response = $this->getFunction($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        $response = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+        $functionIds[] = $response['body']['$id'];
+
+        $response = $this->getFunction($response['body']['$id']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+
+        // Failure values
+        $response = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+            'deploymentRetention' => 999999
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+            'deploymentRetention' => -1
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        // Update flow
+        $response = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $this->assertSame(180, $response['body']['deploymentRetention']);
+        $functionIds[] = $response['body']['$id'];
+        $functionIdForUpdate = $response['body']['$id'];
+
+        $response = $this->updateFunction($functionIdForUpdate, [
+            'name' => 'Test retention function',
+            'deploymentRetention' => 90
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
+
+        $response = $this->getFunction($functionIdForUpdate);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(90, $response['body']['deploymentRetention']);
+
+        $response = $this->updateFunction($functionIdForUpdate, [
+            'name' => 'Test retention function',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        $response = $this->getFunction($functionIdForUpdate);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(0, $response['body']['deploymentRetention']);
+
+        // Failed update flow
+        $response = $this->updateFunction($functionIdForUpdate, [
+            'name' => 'Test retention function',
+            'deploymentRetention' => -1
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        $response = $this->updateFunction($functionIdForUpdate, [
+            'name' => 'Test retention function',
+            'deploymentRetention' => 999999
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+
+        foreach ($functionIds as $functionId) {
+            $this->cleanupFunction($functionId);
+        }
+    }
+    
+    public function testFunctionDeploymentRetentionWithMaintenance(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertNotEmpty($functionId);
+        
+        $deploymentIdInactive = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+        
+        $deploymentIdInactiveOld = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
+        
+        $deploymentIdActive = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdActive);
+        
+        $response = $this->client->call(Client::METHOD_POST, '/v1/mock/time-travels', array_merge([
+            'content-type' => 'application/json',
+        ]), [
+            'projectId' => $this->getProject()['$id'],
+            'resourceType' => 'function',
+            'resourceId' => $deploymentIdInactiveOld,
+            'createdAt' => '2020-01-01T00:00:00Z' // More than 180 days ago
+        ]);
+        $this->assertSame(204, $response['headers']['status-code']);
+        
+        // TODO: Trigger maintenance
+        // TODO: Assert eventuelly, 2 deployments only
+
+         $this->cleanupFunction($functionId);
+    }
 }

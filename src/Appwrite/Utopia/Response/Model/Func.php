@@ -65,6 +65,12 @@ class Func extends Model
                 'default' => '',
                 'example' => 'python-3.8',
             ])
+            ->addRule('deploymentRetention', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'How many days to keep the non-active deployments before they will be automatically deleted.',
+                'default' => 0,
+                'example' => 7,
+            ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function\'s active deployment ID.',
