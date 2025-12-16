@@ -61,7 +61,7 @@ class Get extends Action
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $response->dynamic($database, UtopiaResponse::MODEL_DATABASE);

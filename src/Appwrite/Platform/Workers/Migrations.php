@@ -144,6 +144,12 @@ class Migrations extends Action
         $database = null;
         $queries = [];
 
+        if ($credentials['endpoint'] === 'http://localhost/v1') {
+            $platform = Config::getParam('platform', []);
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
+        }
+
         if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
             $dataSource = Appwrite::SOURCE_DATABASE;
             $database = $this->dbForProject;
@@ -174,7 +180,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['endpoint'],
                 $credentials['apiKey'],
                 $dataSource,
                 $database,
@@ -202,10 +208,13 @@ class Migrations extends Action
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $platform = Config::getParam('platform', []);
+
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $this->project->getId(),
-                'http://appwrite/v1',
+                $protocol . '://' . $platform['apiHostname'] . '/v1',
                 $apiKey,
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
@@ -302,6 +311,8 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
+
+
         try {
             if (
                 $migration->getAttribute('source') === SourceAppwrite::getName() &&
@@ -309,8 +320,13 @@ class Migrations extends Action
             ) {
                 $credentials = $migration->getAttribute('credentials', []);
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
-                $credentials['endpoint'] = $credentials['endpoint'] ?? 'http://appwrite/v1';
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
+
+                if (empty($credentials['endpoint'])) {
+                    $platform = Config::getParam('platform', []);
+                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+                    $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
+                }
                 $migration->setAttribute('credentials', $credentials);
             }
 

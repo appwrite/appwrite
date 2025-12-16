@@ -563,6 +563,7 @@ App::patch('/v1/projects/:projectId/api')
                 since: '1.8.0',
                 replaceWith: 'projects.updateAPIStatus',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -620,6 +621,7 @@ App::patch('/v1/projects/:projectId/api/all')
                 since: '1.8.0',
                 replaceWith: 'projects.updateAPIStatusAll',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2024,6 +2026,7 @@ App::patch('/v1/projects/:projectId/smtp')
                 since: '1.8.0',
                 replaceWith: 'projects.updateSMTP',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2140,6 +2143,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
                 since: '1.8.0',
                 replaceWith: 'projects.createSMTPTest',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2234,6 +2238,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
                 since: '1.8.0',
                 replaceWith: 'projects.getSMSTemplate',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2400,6 +2405,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
                 since: '1.8.0',
                 replaceWith: 'projects.updateSMSTemplate',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2524,6 +2530,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
                 since: '1.8.0',
                 replaceWith: 'projects.deleteSMSTemplate',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',

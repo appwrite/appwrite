@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Queue\Publisher;
 
 class Mail extends Event
@@ -15,6 +16,8 @@ class Mail extends Event
     protected array $variables = [];
     protected string $bodyTemplate = '';
     protected array $attachment = [];
+
+    protected array $customMailOptions = [];
 
     public function __construct(protected Publisher $publisher)
     {
@@ -401,6 +404,94 @@ class Mail extends Event
     }
 
     /**
+     * Set sender email
+     *
+     * @param string $email
+     * @return self
+     */
+    public function setSenderEmail(string $email): self
+    {
+        $this->customMailOptions['senderEmail'] = $email;
+        return $this;
+    }
+
+    /**
+     * Get sender email
+     *
+     * @return string
+     */
+    public function getSenderEmail(): string
+    {
+        return $this->customMailOptions['senderEmail'] ?? '';
+    }
+
+    /**
+     * Set sender name
+     *
+     * @param string $name
+     * @return self
+     */
+    public function setSenderName(string $name): self
+    {
+        $this->customMailOptions['senderName'] = $name;
+        return $this;
+    }
+
+    /**
+     * Get sender name
+     *
+     * @return string
+     */
+    public function getSenderName(): string
+    {
+        return $this->customMailOptions['senderName'] ?? '';
+    }
+
+    /**
+     * Set reply-to email
+     *
+     * @param string $email
+     * @return self
+     */
+    public function setReplyToEmail(string $email): self
+    {
+        $this->customMailOptions['replyToEmail'] = $email;
+        return $this;
+    }
+
+    /**
+     * Get reply-to email
+     *
+     * @return string
+     */
+    public function getReplyToEmail(): string
+    {
+        return $this->customMailOptions['replyToEmail'] ?? '';
+    }
+
+    /**
+     * Set reply-to name
+     *
+     * @param string $name
+     * @return self
+     */
+    public function setReplyToName(string $name): self
+    {
+        $this->customMailOptions['replyToName'] = $name;
+        return $this;
+    }
+
+    /**
+     * Get reply-to name
+     *
+     * @return string
+     */
+    public function getReplyToName(): string
+    {
+        return $this->customMailOptions['replyToName'] ?? '';
+    }
+
+    /**
      * Reset
      *
      * @return self
@@ -415,6 +506,7 @@ class Mail extends Event
         $this->variables = [];
         $this->bodyTemplate = '';
         $this->attachment = [];
+        $this->customMailOptions = [];
         return $this;
     }
 
@@ -425,6 +517,11 @@ class Mail extends Event
      */
     protected function preparePayload(): array
     {
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'recipient' => $this->recipient,
@@ -436,7 +533,9 @@ class Mail extends Event
             'smtp' => $this->smtp,
             'variables' => $this->variables,
             'attachment' => $this->attachment,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'customMailOptions' => $this->customMailOptions,
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
+            'platform' => $platform,
         ];
     }
 }

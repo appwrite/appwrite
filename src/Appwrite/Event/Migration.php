@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
 
@@ -73,10 +74,16 @@ class Migration extends Event
      */
     protected function preparePayload(): array
     {
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'user' => $this->user,
             'migration' => $this->migration,
+            'platform' => $platform,
         ];
     }
 }

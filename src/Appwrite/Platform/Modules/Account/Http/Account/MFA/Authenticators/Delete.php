@@ -57,6 +57,7 @@ class Delete extends Action
                         since: '1.8.0',
                         replaceWith: 'account.deleteMFAAuthenticator',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',

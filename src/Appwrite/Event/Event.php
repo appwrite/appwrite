@@ -52,9 +52,11 @@ class Event
     protected array $sensitive = [];
     protected array $payload = [];
     protected array $context = [];
+    protected array $platform = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected ?string $userId = null;
+
     protected bool $paused = false;
 
     /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
@@ -151,6 +153,28 @@ class Event
     public function getProject(): ?Document
     {
         return $this->project;
+    }
+
+    /**
+     * Set platform for this event.
+     *
+     * @param array $platform
+     * @return self
+     */
+    public function setPlatform(array $platform): self
+    {
+        $this->platform = $platform;
+        return $this;
+    }
+
+    /**
+     * Get platform for this event.
+     *
+     * @return array
+     */
+    public function getPlatform(): array
+    {
+        return $this->platform;
     }
 
     /**

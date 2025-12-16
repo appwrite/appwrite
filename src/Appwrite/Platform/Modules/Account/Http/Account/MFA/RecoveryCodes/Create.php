@@ -55,6 +55,7 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'account.createMFARecoveryCodes',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
@@ -100,6 +101,8 @@ class Create extends Action
             'recoveryCodes' => $mfaRecoveryCodes
         ]);
 
-        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     }
 }

@@ -31,6 +31,7 @@ class Method
      * @param array<Parameter> $parameters
      * @param array $additionalParameters
      * @param string $desc
+     * @param bool $public Whether this method should be rendered on the website/documentation
      */
     public function __construct(
         protected string $namespace,
@@ -47,7 +48,8 @@ class Method
         protected ContentType $requestType = ContentType::JSON,
         protected array $parameters = [],
         protected array $additionalParameters = [],
-        protected string $desc = ''
+        protected string $desc = '',
+        protected bool $public = true
     ) {
         $this->validateMethod($name, $namespace);
         $this->validateAuthTypes($auth);
@@ -304,6 +306,17 @@ class Method
     public function setParameters(array $parameters): self
     {
         $this->parameters = $parameters;
+        return $this;
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->public;
+    }
+
+    public function setPublic(bool $public): self
+    {
+        $this->public = $public;
         return $this;
     }
 
