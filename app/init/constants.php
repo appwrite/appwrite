@@ -208,6 +208,12 @@ const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
+// Rule statuses
+const RULE_STATUS_CREATED = 'created'; // This is also the status when domain DNS verification fails.
+const RULE_STATUS_CERTIFICATE_GENERATING = 'verifying';
+const RULE_STATUS_CERTIFICATE_GENERATION_FAILED = 'unverified';
+const RULE_STATUS_VERIFIED = 'verified';
+
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
 const MESSAGE_SEND_TYPE_EXTERNAL = 'external';
