@@ -91,18 +91,15 @@ class Create extends Action
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
-
+        $status = RULE_STATUS_CREATED;
         $owner = '';
+
         if (
             ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
             ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
         ) {
-            $owner = 'Appwrite';
-        }
-
-        $status = RULE_STATUS_CREATED;
-        if (($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) || ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))) {
             $status = RULE_STATUS_VERIFIED;
+            $owner = 'Appwrite';
         }
 
         $rule = new Document([
