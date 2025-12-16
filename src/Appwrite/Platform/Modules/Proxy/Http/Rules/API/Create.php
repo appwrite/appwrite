@@ -113,8 +113,6 @@ class Create extends Action
             }
         }
 
-        \var_dump($rule);
-
         try {
             $rule = $dbForPlatform->createDocument('rules', $rule);
         } catch (Duplicate $e) {

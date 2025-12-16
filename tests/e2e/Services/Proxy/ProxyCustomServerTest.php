@@ -36,7 +36,7 @@ class ProxyCustomServerTest extends Scope
             $rules = $this->listRules([
                 'queries' => [
                     Query::endsWith('domain', 'webapp.com')->toString(),
-                    Query::limit(1)
+                    Query::limit(1)->toString()
                 ]
             ]);
             $this->assertEquals(200, $rules['headers']['status-code']);
