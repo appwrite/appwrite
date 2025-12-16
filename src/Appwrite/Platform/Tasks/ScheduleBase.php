@@ -195,7 +195,6 @@ abstract class ScheduleBase extends Action
         }
         if (empty($this->schedules)) {
             Console::success("No resources found");
-            return;
         }
 
         // On initial load: load all projects from all schedules
