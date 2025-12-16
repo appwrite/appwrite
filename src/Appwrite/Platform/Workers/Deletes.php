@@ -314,7 +314,7 @@ class Deletes extends Action
 
     private function deleteOldDeployments(DeleteEvent $queueForDeletes, Document $project, callable $getProjectDB): void
     {
-        /* @var $dbForProject Database */
+        /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
         $removalCallback = function (Document $resource) use ($dbForProject, $queueForDeletes, $project) {
