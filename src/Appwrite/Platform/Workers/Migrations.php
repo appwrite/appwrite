@@ -153,7 +153,7 @@ class Migrations extends Action
         $database = null;
         $queries = [];
 
-        if ($credentials['endpoint'] === 'http://localhost/v1') {
+        if (($credentials['endpoint'] ?? null) === 'http://localhost/v1') {
             $platform = Config::getParam('platform', []);
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
