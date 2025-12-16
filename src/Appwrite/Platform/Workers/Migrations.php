@@ -41,16 +41,12 @@ use Utopia\System\System;
 
 class Migrations extends Action
 {
-    protected Database $dbForProject;
-
-    protected Database $dbForPlatform;
-
-    protected Device $deviceForMigrations;
-    protected Device $deviceForFiles;
-
-    protected Document $project;
-
-    protected array $plan;
+    protected ?Database $dbForProject;
+    protected ?Database $dbForPlatform;
+    protected ?Device $deviceForMigrations;
+    protected ?Device $deviceForFiles;
+    protected ?Document $project;
+    protected array $plan = [];
 
     /**
      * @var array<string, int>
@@ -58,9 +54,9 @@ class Migrations extends Action
     protected array $sourceReport = [];
 
     /**
-     * @var callable
+     * @var callable|null
      */
-    protected $logError;
+    protected $logError = null;
 
     public static function getName(): string
     {
@@ -127,7 +123,20 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($migration, $queueForRealtime, $queueForMails);
+        try {
+            $this->processMigration($migration, $queueForRealtime, $queueForMails);
+        } finally {
+            $this->dbForProject = null;
+            $this->dbForPlatform = null;
+            $this->project = null;
+            $this->logError = null;
+            $this->deviceForMigrations = null;
+            $this->deviceForFiles = null;
+            $this->plan = [];
+            $this->sourceReport = [];
+
+            gc_collect_cycles();
+        }
     }
 
     /**
@@ -144,7 +153,7 @@ class Migrations extends Action
         $database = null;
         $queries = [];
 
-        if ($credentials['endpoint'] === 'http://localhost/v1') {
+        if (($credentials['endpoint'] ?? null) === 'http://localhost/v1') {
             $platform = Config::getParam('platform', []);
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
             $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
@@ -311,8 +320,6 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-
-
         try {
             if (
                 $migration->getAttribute('source') === SourceAppwrite::getName() &&
@@ -375,7 +382,9 @@ class Migrations extends Action
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {
-            Console::error($th->getMessage());
+            Console::error('Message: ' . $th->getMessage());
+            Console::error('File: ' . $th->getFile());
+            Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
             if (! $migration->isEmpty()) {
@@ -430,6 +439,10 @@ class Migrations extends Action
                     $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime);
                 }
             }
+
+            $transfer = null;
+            $source = null;
+            $destination = null;
         }
     }
 
