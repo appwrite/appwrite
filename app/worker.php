@@ -411,6 +411,13 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
 
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
+                }
+                $log->addExtra('previousFile', $error->getPrevious()->getFile());
+                $log->addExtra('previousLine', $error->getPrevious()->getLine());
+            }
 
             foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
@@ -431,6 +438,13 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
         Console::warning("Failed: {$error->getMessage()}");
         Console::warning($error->getTraceAsString());
+
+        if ($error->getPrevious() !== null) {
+            if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                Console::warning("Previous Failed: {$error->getPrevious()->getMessage()}");
+            }
+            Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
+        }
     };
 }, ['register', 'project']);
 
