@@ -219,6 +219,7 @@ abstract class ScheduleBase extends Action
         if (!empty($projectIdsToLoad)) {
             $projectIdsToLoad = array_values($projectIdsToLoad);
             $batchSize = 10_000;
+            $batchSize = 499;
             $batches = array_chunk($projectIdsToLoad, $batchSize);
             $projectsLoadStart = microtime(true);
 
