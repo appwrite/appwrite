@@ -10,7 +10,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
 class Get extends Action
@@ -22,8 +21,10 @@ class Get extends Action
         return 'getRule';
     }
 
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/proxy/rules/:ruleId')
@@ -65,7 +66,12 @@ class Get extends Action
         }
 
         $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
-        $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+
+        // Give priority to certificate generation logs if present
+        if (!empty($certificate->getAttribute('logs', ''))) {
+            $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+        }
+
         $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
