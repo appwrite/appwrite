@@ -636,11 +636,14 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
             switch ($resource->getCollection()) {
                 case 'functions':
                     $vars = [
                         ...$vars,
-                        'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
+                        'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
                         'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
@@ -655,7 +658,7 @@ class Builds extends Action
                 case 'sites':
                     $vars = [
                         ...$vars,
-                        'APPWRITE_SITE_API_ENDPOINT' => $platform['endpoint'],
+                        'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
                         'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_SITE_ID' => $resource->getId(),
                         'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
