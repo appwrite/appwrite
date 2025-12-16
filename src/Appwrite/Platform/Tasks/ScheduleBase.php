@@ -118,7 +118,7 @@ abstract class ScheduleBase extends Action
         $loadStart = microtime(true);
         $time = DateTime::now();
 
-        $limit = 10_000;
+        $limit = 499;
         $sum = $limit;
         $total = 0;
         $latestDocument = null;
