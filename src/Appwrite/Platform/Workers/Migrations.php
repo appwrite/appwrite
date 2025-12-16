@@ -372,7 +372,9 @@ class Migrations extends Action
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {
-            Console::error($th->getMessage());
+            Console::error('Message: ' . $th->getMessage());
+            Console::error('File: ' . $th->getFile());
+            Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
             if (! $migration->isEmpty()) {
