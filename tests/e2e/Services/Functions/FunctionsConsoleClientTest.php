@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
@@ -534,6 +535,60 @@ class FunctionsConsoleClientTest extends Scope
         $buildMd5 = \md5($response['body']);
 
         $this->assertNotEquals($deploymentMd5, $buildMd5);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testFunctionDeploymentRetentionWithMaintenance(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test retention function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'deploymentRetention' => 180
+        ]);
+        $this->assertNotEmpty($functionId);
+
+        $deploymentIdInactive = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+
+        $deploymentIdInactiveOld = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
+
+        $deploymentIdActive = $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('node'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdActive);
+
+        $response = $this->client->call(Client::METHOD_POST, '/mock/time-travels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $this->getProject()['$id'],
+            'resourceType' => 'deployment',
+            'resourceId' => $deploymentIdInactiveOld,
+            'createdAt' => '2020-01-01T00:00:00Z' // More than 180 days ago
+        ]);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute("docker exec appwrite-task-maintenance maintenance --type=trigger", '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        $this->assertEventually(function () use ($functionId) {
+            $response = $this->listDeployments($functionId);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame(2, $response['body']['total']);
+        });
 
         $this->cleanupFunction($functionId);
     }

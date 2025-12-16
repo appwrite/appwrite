@@ -101,6 +101,7 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the function executions.', true, ['plan'])
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -133,6 +134,7 @@ class Update extends Base
         string $providerRootDirectory,
         string $buildSpecification,
         string $runtimeSpecification,
+        int $deploymentRetention,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -222,7 +224,7 @@ class Update extends Base
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
-                'providerPullRequestIds' => []
+                'providerPullRequestIds' => [],
             ]));
 
             $repositoryId = $repository->getId();
@@ -275,6 +277,7 @@ class Update extends Base
             'entrypoint' => $entrypoint,
             'commands' => $commands,
             'scopes' => $scopes,
+            'deploymentRetention' => $deploymentRetention,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,

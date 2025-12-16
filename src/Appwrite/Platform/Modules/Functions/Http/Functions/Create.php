@@ -109,6 +109,7 @@ class Create extends Base
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
             ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true, deprecated: true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
@@ -148,6 +149,7 @@ class Create extends Base
         string $templateOwner,
         string $templateRootDirectory,
         string $templateVersion,
+        int $deploymentRetention,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
@@ -218,6 +220,7 @@ class Create extends Base
                 'logging' => $logging,
                 'name' => $name,
                 'runtime' => $runtime,
+                'deploymentRetention' => $deploymentRetention,
                 'deploymentInternalId' => '',
                 'deploymentId' => '',
                 'events' => $events,

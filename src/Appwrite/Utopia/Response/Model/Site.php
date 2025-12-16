@@ -58,6 +58,12 @@ class Site extends Model
                 'default' => '',
                 'example' => 'react',
             ])
+            ->addRule('deploymentRetention', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'How many days to keep the non-active deployments before they will be automatically deleted.',
+                'default' => 0,
+                'example' => 7,
+            ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site\'s active deployment ID.',
