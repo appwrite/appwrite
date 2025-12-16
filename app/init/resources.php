@@ -198,8 +198,14 @@ App::setResource('allowedHostnames', function (array $platform, Document $projec
         $allowed[] = $request->getHostname();
     }
 
-    /* Allow the request origin if a dev key or rule is found */
     $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
+
+    /* Add request hostname for preflight requests */
+    if ($request->getMethod() === 'OPTIONS') {
+        $allowed[] = $originHostname;
+    }
+
+    /* Allow the request origin if a dev key or rule is found */
     if ((!$rule->isEmpty() || !$devKey->isEmpty()) && !empty($originHostname)) {
         $allowed[] = $originHostname;
     }
