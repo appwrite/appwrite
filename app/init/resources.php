@@ -164,21 +164,9 @@ App::setResource('queueForStatsResources', function (Publisher $publisher) {
 /**
  * Platform configuration
  */
-App::setResource('platform', function (Request $request) {
-    $platform = Config::getParam('platform', []);
-    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-
-    $port = '';
-    if ($request->getPort() === '443' && $protocol !== 'https') {
-        $port = ':443';
-    }
-    if ($request->getPort() === '80' && $protocol !== 'http') {
-        $port = ':80';
-    }
-    $platform['endpoint'] = "$protocol://{$platform['apiHostname']}{$port}/v1";
-
-    return $platform;
-}, ['request']);
+App::setResource('platform', function () {
+    return Config::getParam('platform', []);
+}, []);
 
 /**
  * List of allowed request hostnames for the request.
