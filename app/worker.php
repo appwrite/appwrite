@@ -413,10 +413,10 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
             if ($error->getPrevious() !== null) {
                 if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                    $log->addExtra('Previous message', $error->getPrevious()->getMessage());
+                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
                 }
-                $log->addExtra('Previous file', $error->getPrevious()->getFile());
-                $log->addExtra('Previous line', $error->getPrevious()->getLine());
+                $log->addExtra('previousFile', $error->getPrevious()->getFile());
+                $log->addExtra('previousLine', $error->getPrevious()->getLine());
             }
 
             foreach (($extras ?? []) as $key => $value) {
