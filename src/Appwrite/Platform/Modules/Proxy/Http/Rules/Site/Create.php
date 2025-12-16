@@ -91,18 +91,15 @@ class Create extends Action
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
-
+        $status = RULE_STATUS_CREATED;
         $owner = '';
+
         if (
             ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
             ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
         ) {
-            $owner = 'Appwrite';
-        }
-
-        $status = RULE_STATUS_CREATED;
-        if (\str_ends_with($domain, $functionsDomain) || \str_ends_with($domain, $sitesDomain)) {
             $status = RULE_STATUS_VERIFIED;
+            $owner = 'Appwrite';
         }
 
         $rule = new Document([
@@ -125,12 +122,6 @@ class Create extends Action
             'region' => $project->getAttribute('region')
         ]);
 
-        try {
-            $rule = $dbForPlatform->createDocument('rules', $rule);
-        } catch (Duplicate $e) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
-        }
-
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
                 $this->verifyRule($rule, $log);
@@ -138,6 +129,12 @@ class Create extends Action
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
             }
+        }
+
+        try {
+            $rule = $dbForPlatform->createDocument('rules', $rule);
+        } catch (Duplicate $e) {
+            throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {

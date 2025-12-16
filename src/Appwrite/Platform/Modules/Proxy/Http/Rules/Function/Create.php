@@ -101,7 +101,7 @@ class Create extends Action
         }
 
         $status = RULE_STATUS_CREATED;
-        if (\str_ends_with($domain, $functionsDomain) || \str_ends_with($domain, $sitesDomain)) {
+        if (($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) || ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))) {
             $status = RULE_STATUS_VERIFIED;
         }
 
@@ -125,12 +125,6 @@ class Create extends Action
             'region' => $project->getAttribute('region')
         ]);
 
-        try {
-            $rule = $dbForPlatform->createDocument('rules', $rule);
-        } catch (Duplicate $e) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
-        }
-
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
                 $this->verifyRule($rule, $log);
@@ -138,6 +132,12 @@ class Create extends Action
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
             }
+        }
+
+        try {
+            $rule = $dbForPlatform->createDocument('rules', $rule);
+        } catch (Duplicate $e) {
+            throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {

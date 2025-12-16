@@ -60,7 +60,6 @@ class Update extends Action
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('dbForPlatform')
-            ->inject('platform')
             ->inject('log')
             ->callback($this->action(...));
     }
@@ -72,7 +71,6 @@ class Update extends Action
         Event $queueForEvents,
         Document $project,
         Database $dbForPlatform,
-        array $platform,
         Log $log
     ) {
         $rule = $dbForPlatform->getDocument('rules', $ruleId);
