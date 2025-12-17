@@ -196,8 +196,14 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
         ->setBody($body)
         ->setBodyTemplate($bodyTemplate)
         ->setVariables($emailVariables)
-        ->setRecipient($email)
-        ->trigger();
+        ->setRecipient($email);
+
+    // since this is console project, set email sender name!
+    if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+        $queueForMails->setSenderName($platform['emailSenderName']);
+    }
+
+    $queueForMails->trigger();
 }
 
 
