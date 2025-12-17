@@ -129,8 +129,7 @@ class Builds extends Action
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
-        $platform = $payload['platform'] ?? [];
-
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
