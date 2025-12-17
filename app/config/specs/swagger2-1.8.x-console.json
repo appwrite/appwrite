@@ -60568,8 +60568,8 @@
                 },
                 "logs": {
                     "type": "string",
-                    "description": "Certificate generation logs. This will return an empty string if generation did not run, or succeeded.",
-                    "x-example": "HTTP challegne failed."
+                    "description": "Logs from rule verification or certificate generation. Certificate generation logs are prioritized if both are available.",
+                    "x-example": "Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record."
                 },
                 "renewAt": {
                     "type": "string",
@@ -60608,7 +60608,7 @@
                 "deploymentResourceId": "n3u9feiwmf",
                 "deploymentVcsProviderBranch": "main",
                 "status": "verified",
-                "logs": "HTTP challegne failed.",
+                "logs": "Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.",
                 "renewAt": "datetime"
             }
         },
