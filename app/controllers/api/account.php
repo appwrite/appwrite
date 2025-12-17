@@ -159,7 +159,6 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
 
     $projectName = $project->getAttribute('name');
     if ($project->getId() === 'console') {
-        // default on CE - Appwrite
         $projectName = $platform['platformName'];
     }
 

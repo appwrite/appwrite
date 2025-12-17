@@ -148,6 +148,11 @@ class Create extends Action
 
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
+        $projectName = $project->getAttribute('name');
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         // 9 levels up to project root
         $templatesPath = \dirname(__DIR__, 9) . '/app/config/locale/templates';
 
@@ -172,7 +177,7 @@ class Create extends Action
 
                 $messageContent = Template::fromString($locale->getText("sms.verification.body"));
                 $messageContent
-                    ->setParam('{{project}}', $project->getAttribute('name'))
+                    ->setParam('{{project}}', $projectName)
                     ->setParam('{{secret}}', $code);
                 $messageContent = \strip_tags($messageContent->render());
                 $message = $message->setParam('{{token}}', $messageContent);
@@ -302,7 +307,7 @@ class Create extends Action
                     'heading' => $heading,
                     'direction' => $locale->getText('settings.direction'),
                     'user' => $user->getAttribute('name'),
-                    'project' => $project->getAttribute('name'),
+                    'project' => $projectName,
                     'otp' => $code,
                     'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
