@@ -155,11 +155,6 @@ class Migrations extends Action
         $database = null;
         $queries = [];
 
-        if (($credentials['endpoint'] ?? null) === 'http://localhost/v1') {
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
-        }
-
         if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
             $dataSource = Appwrite::SOURCE_DATABASE;
             $database = $this->dbForProject;
@@ -330,6 +325,9 @@ class Migrations extends Action
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
 
+                /**
+                 * endpoint set
+                 */
                 if (empty($credentials['endpoint'])) {
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                     $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
