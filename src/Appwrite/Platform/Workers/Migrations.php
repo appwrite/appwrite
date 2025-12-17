@@ -333,6 +333,8 @@ class Migrations extends Action
                     $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
                 }
                 $migration->setAttribute('credentials', $credentials);
+
+                Console::info('endpoint: '.$credentials['endpoint']);
             }
 
             $migration->setAttribute('stage', 'processing');
