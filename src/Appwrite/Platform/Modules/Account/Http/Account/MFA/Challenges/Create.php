@@ -98,6 +98,7 @@ class Create extends Action
             ->inject('user')
             ->inject('locale')
             ->inject('project')
+            ->inject('platform')
             ->inject('request')
             ->inject('queueForEvents')
             ->inject('queueForMessaging')
@@ -117,6 +118,7 @@ class Create extends Action
         Document $user,
         Locale $locale,
         Document $project,
+        array $platform,
         Request $request,
         Event $queueForEvents,
         Messaging $queueForMessaging,
@@ -309,13 +311,14 @@ class Create extends Action
 
                 if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
                     $emailVariables = array_merge($emailVariables, [
-                        'accentColor' => APP_EMAIL_ACCENT_COLOR,
-                        'logoUrl' => APP_EMAIL_LOGO_URL,
-                        'twitterUrl' => APP_SOCIAL_TWITTER,
-                        'discordUrl' => APP_SOCIAL_DISCORD,
-                        'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-                        'termsUrl' => APP_EMAIL_TERMS_URL,
-                        'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+                        'accentColor' => $platform['accentColor'],
+                        'logoUrl' => $platform['logoUrl'],
+                        'twitter' => $platform['twitterUrl'],
+                        'discord' => $platform['discordUrl'],
+                        'github' => $platform['githubUrl'],
+                        'terms' => $platform['termsUrl'],
+                        'privacy' => $platform['privacyUrl'],
+                        'platform' => $platform['platformName'],
                     ]);
                 }
 
@@ -325,8 +328,14 @@ class Create extends Action
                     ->setBody($body)
                     ->setBodyTemplate($bodyTemplate)
                     ->setVariables($emailVariables)
-                    ->setRecipient($user->getAttribute('email'))
-                    ->trigger();
+                    ->setRecipient($user->getAttribute('email'));
+
+                // since this is console project, set email sender name!
+                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                    $queueForMails->setSenderName($platform['emailSenderName']);
+                }
+
+                $queueForMails->trigger();
                 break;
         }
 
