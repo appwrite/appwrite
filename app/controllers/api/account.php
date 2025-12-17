@@ -74,7 +74,7 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
+function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
     $preview = $locale->getText("emails.sessionAlert.preview");
@@ -171,13 +171,14 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
         $emailVariables = array_merge($emailVariables, [
-            'accentColor' => APP_EMAIL_ACCENT_COLOR,
-            'logoUrl' => APP_EMAIL_LOGO_URL,
-            'twitterUrl' => APP_SOCIAL_TWITTER,
-            'discordUrl' => APP_SOCIAL_DISCORD,
-            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-            'termsUrl' => APP_EMAIL_TERMS_URL,
-            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+            'accentColor' => $platform['accentUrl'],
+            'logoUrl' => $platform['logoUrl'],
+            'twitter' => $platform['twitterUrl'],
+            'discord' => $platform['discordUrl'],
+            'github' => $platform['githubUrl'],
+            'terms' => $platform['termsUrl'],
+            'privacy' => $platform['privacyUrl'],
+            'platform' => $platform['platform'],
         ]);
     }
 
@@ -192,9 +193,9 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->setRecipient($email)
         ->trigger();
 }
-;
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode) {
+
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode) {
 
     /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
     $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -295,7 +296,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     ]) !== 1;
 
     if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
-        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
     }
 
     $queueForEvents
@@ -953,6 +954,7 @@ App::post('/v1/account/sessions/email')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
@@ -961,7 +963,7 @@ App::post('/v1/account/sessions/email')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1062,7 +1064,7 @@ App::post('/v1/account/sessions/email')
                     Query::equal('userId', [$user->getId()]),
                 ]) !== 1
             ) {
-                sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+                sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
             }
         }
 
@@ -1250,6 +1252,7 @@ App::post('/v1/account/sessions/token')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
