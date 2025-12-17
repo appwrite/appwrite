@@ -2332,13 +2332,14 @@ App::post('/v1/account/tokens/email')
     ->inject('response')
     ->inject('user')
     ->inject('project')
+    ->inject('platform')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForPassword')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2539,12 +2540,17 @@ App::post('/v1/account/tokens/email')
                 ->setSmtpSenderName($senderName);
         }
 
+        $projectName = $project->getAttribute('name');
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         $emailVariables = [
             'heading' => $heading,
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{project}} and {{otp}} are required in the templates
             'user' => $user->getAttribute('name'),
-            'project' => $project->getAttribute('name'),
+            'project' => $projectName,
             'otp' => $tokenSecret,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
@@ -2556,13 +2562,14 @@ App::post('/v1/account/tokens/email')
 
         if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
             $emailVariables = array_merge($emailVariables, [
-                'accentColor' => APP_EMAIL_ACCENT_COLOR,
-                'logoUrl' => APP_EMAIL_LOGO_URL,
-                'twitterUrl' => APP_SOCIAL_TWITTER,
-                'discordUrl' => APP_SOCIAL_DISCORD,
-                'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-                'termsUrl' => APP_EMAIL_TERMS_URL,
-                'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
             ]);
         }
 
@@ -2572,8 +2579,14 @@ App::post('/v1/account/tokens/email')
             ->setBody($body)
             ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
-            ->setRecipient($email)
-            ->trigger();
+            ->setRecipient($email);
+
+        // since this is console project, set email sender name!
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2713,6 +2726,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('response')
     ->inject('user')
     ->inject('project')
+    ->inject('platform')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
@@ -2722,7 +2736,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2839,9 +2853,14 @@ App::post('/v1/account/tokens/phone')
                 $message = $customTemplate['message'] ?? $message;
             }
 
+            $projectName = $project->getAttribute('name');
+            if ($project->getId() === 'console') {
+                $projectName = $platform['platformName'];
+            }
+
             $messageContent = Template::fromString($locale->getText("sms.verification.body"));
             $messageContent
-                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{project}}', $projectName)
                 ->setParam('{{secret}}', $secret);
             $messageContent = \strip_tags($messageContent->render());
             $message = $message->setParam('{{token}}', $messageContent);
@@ -3489,15 +3508,16 @@ App::post('/v1/account/recovery')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
     ->inject('proofForToken')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken) {
-
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
+
         $url = htmlentities($url);
         $email = \strtolower($email);
 
@@ -3544,7 +3564,14 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $projectName = $project->isEmpty()
+            ? 'Console'
+            : $project->getAttribute('name', '[APP-NAME]');
+
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
         $preview = $locale->getText("emails.recovery.preview");
@@ -3622,8 +3649,13 @@ App::post('/v1/account/recovery')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)
-            ->setPreview($preview)
-            ->trigger();
+            ->setPreview($preview);
+
+        if ($project->getId() === 'console') {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $recovery->setAttribute('secret', $secret);
 
@@ -3783,13 +3815,14 @@ App::post('/v1/account/verifications/email')
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForToken')
-    ->action(function (string $url, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken) {
+    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3833,7 +3866,15 @@ App::post('/v1/account/verifications/email')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $projectName = $project->isEmpty()
+            ? 'Console'
+            : $project->getAttribute('name', '[APP-NAME]');
+
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
+
         $body = $locale->getText("emails.verification.body");
         $preview = $locale->getText("emails.verification.preview");
         $subject = $locale->getText("emails.verification.subject");
