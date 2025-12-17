@@ -84,7 +84,7 @@ class LetsEncrypt implements Adapter
         return DateTime::addSeconds($dt, -60 * 60 * 24 * 30);
     }
 
-    public function isInstantGeneration(): bool
+    public function isInstantGeneration(string $domain, ?string $domainType): bool
     {
         return true;
     }
