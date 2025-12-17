@@ -84,6 +84,11 @@ class LetsEncrypt implements Adapter
         return DateTime::addSeconds($dt, -60 * 60 * 24 * 30);
     }
 
+    public function isInstantGeneration(): bool
+    {
+        return true;
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';

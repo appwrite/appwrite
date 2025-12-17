@@ -555,6 +555,7 @@ services:
       - _APP_DOMAIN_TARGET_CAA
       - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
       - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
