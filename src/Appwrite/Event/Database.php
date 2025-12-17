@@ -161,7 +161,7 @@ class Database extends Event
         return $this->document;
     }
 
-    public function setProject(Document $project): self
+    public function setProject(Document $project): static
     {
         $database = $project->getAttribute('database');
         if (!empty($database)) {

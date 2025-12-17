@@ -344,7 +344,7 @@ App::post('/v1/account')
         group: 'account',
         name: 'create',
         description: '/docs/references/account/create.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -502,7 +502,7 @@ App::get('/v1/account')
         group: 'account',
         name: 'get',
         description: '/docs/references/account/get.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -585,7 +585,7 @@ App::get('/v1/account/sessions')
         group: 'sessions',
         name: 'listSessions',
         description: '/docs/references/account/list-sessions.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -633,7 +633,7 @@ App::delete('/v1/account/sessions')
         group: 'sessions',
         name: 'deleteSessions',
         description: '/docs/references/account/delete-sessions.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -705,7 +705,7 @@ App::get('/v1/account/sessions/:sessionId')
         group: 'sessions',
         name: 'getSession',
         description: '/docs/references/account/get-session.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -756,7 +756,7 @@ App::delete('/v1/account/sessions/:sessionId')
         group: 'sessions',
         name: 'deleteSession',
         description: '/docs/references/account/delete-session.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -844,7 +844,7 @@ App::patch('/v1/account/sessions/:sessionId')
         group: 'sessions',
         name: 'updateSession',
         description: '/docs/references/account/update-session.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -935,7 +935,7 @@ App::post('/v1/account/sessions/email')
         group: 'sessions',
         name: 'createEmailPasswordSession',
         description: '/docs/references/account/create-session-email-password.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -1083,7 +1083,7 @@ App::post('/v1/account/sessions/anonymous')
         group: 'sessions',
         name: 'createAnonymousSession',
         description: '/docs/references/account/create-session-anonymous.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -1232,7 +1232,7 @@ App::post('/v1/account/sessions/token')
         group: 'sessions',
         name: 'createSession',
         description: '/docs/references/account/create-session.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -1270,7 +1270,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         name: 'createOAuth2Session',
         description: '/docs/references/account/create-session-oauth2.md',
         type: MethodType::WEBAUTH,
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_MOVED_PERMANENTLY,
@@ -1278,7 +1278,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             )
         ],
         contentType: ContentType::HTML,
-        hide: [APP_PLATFORM_SERVER],
+        hide: [APP_SDK_PLATFORM_SERVER],
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
@@ -1932,7 +1932,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
         group: 'tokens',
         name: 'createOAuth2Token',
         description: '/docs/references/account/create-token-oauth2.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_MOVED_PERMANENTLY,
@@ -1953,7 +1953,16 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->inject('project')
     ->inject('platform')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project, array $platform) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        $callback = $platform['endpoint'] . '/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
+
+        $callback = $callbackBase . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
@@ -2022,7 +2031,7 @@ App::post('/v1/account/tokens/magic-url')
         group: 'tokens',
         name: 'createMagicURLToken',
         description: '/docs/references/account/create-token-magic-url.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2291,7 +2300,7 @@ App::post('/v1/account/tokens/email')
         group: 'tokens',
         name: 'createEmailToken',
         description: '/docs/references/account/create-token-email.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2579,7 +2588,7 @@ App::put('/v1/account/sessions/magic-url')
         group: 'sessions',
         name: 'updateMagicURLSession',
         description: '/docs/references/account/create-session.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2626,7 +2635,7 @@ App::put('/v1/account/sessions/phone')
         group: 'sessions',
         name: 'updatePhoneSession',
         description: '/docs/references/account/create-session.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2671,7 +2680,7 @@ App::post('/v1/account/tokens/phone')
         group: 'tokens',
         name: 'createPhoneToken',
         description: '/docs/references/account/create-token-phone.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2886,7 +2895,7 @@ App::post('/v1/account/jwts')
         group: 'tokens',
         name: 'createJWT',
         description: '/docs/references/account/create-jwt.md',
-        auth: [],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2929,7 +2938,7 @@ App::get('/v1/account/prefs')
         group: 'account',
         name: 'getPrefs',
         description: '/docs/references/account/get-prefs.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -2956,7 +2965,7 @@ App::get('/v1/account/logs')
         group: 'logs',
         name: 'listLogs',
         description: '/docs/references/account/list-logs.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3030,7 +3039,7 @@ App::patch('/v1/account/name')
         group: 'account',
         name: 'updateName',
         description: '/docs/references/account/update-name.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3068,7 +3077,7 @@ App::patch('/v1/account/password')
         group: 'account',
         name: 'updatePassword',
         description: '/docs/references/account/update-password.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3160,7 +3169,7 @@ App::patch('/v1/account/email')
         group: 'account',
         name: 'updateEmail',
         description: '/docs/references/account/update-email.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3271,7 +3280,7 @@ App::patch('/v1/account/phone')
         group: 'account',
         name: 'updatePhone',
         description: '/docs/references/account/update-phone.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3359,7 +3368,7 @@ App::patch('/v1/account/prefs')
         group: 'account',
         name: 'updatePrefs',
         description: '/docs/references/account/update-prefs.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3397,7 +3406,7 @@ App::patch('/v1/account/status')
         group: 'account',
         name: 'updateStatus',
         description: '/docs/references/account/update-status.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3448,7 +3457,7 @@ App::post('/v1/account/recovery')
         group: 'recovery',
         name: 'createRecovery',
         description: '/docs/references/account/create-recovery.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -3628,7 +3637,7 @@ App::put('/v1/account/recovery')
         group: 'recovery',
         name: 'updateRecovery',
         description: '/docs/references/account/update-recovery.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -3725,7 +3734,7 @@ App::post('/v1/account/verifications/email')
             group: 'verification',
             name: 'createEmailVerification',
             description: '/docs/references/account/create-email-verification.md',
-            auth: [AuthType::SESSION, AuthType::JWT],
+            auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
@@ -3739,7 +3748,7 @@ App::post('/v1/account/verifications/email')
             group: 'verification',
             name: 'createVerification',
             description: '/docs/references/account/create-email-verification.md',
-            auth: [AuthType::SESSION, AuthType::JWT],
+            auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
@@ -3942,7 +3951,7 @@ App::put('/v1/account/verifications/email')
             group: 'verification',
             name: 'updateEmailVerification',
             description: '/docs/references/account/update-email-verification.md',
-            auth: [AuthType::SESSION, AuthType::JWT],
+            auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -3956,7 +3965,7 @@ App::put('/v1/account/verifications/email')
             group: 'verification',
             name: 'updateVerification',
             description: '/docs/references/account/update-email-verification.md',
-            auth: [AuthType::SESSION, AuthType::JWT],
+            auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -4031,7 +4040,7 @@ App::post('/v1/account/verifications/phone')
         group: 'verification',
         name: 'createPhoneVerification',
         description: '/docs/references/account/create-phone-verification.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -4181,7 +4190,7 @@ App::put('/v1/account/verifications/phone')
         group: 'verification',
         name: 'updatePhoneVerification',
         description: '/docs/references/account/update-phone-verification.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4247,7 +4256,7 @@ App::post('/v1/account/targets/push')
         group: 'pushTargets',
         name: 'createPushTarget',
         description: '/docs/references/account/create-push-target.md',
-        auth: [AuthType::SESSION],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -4330,7 +4339,7 @@ App::put('/v1/account/targets/:targetId/push')
         group: 'pushTargets',
         name: 'updatePushTarget',
         description: '/docs/references/account/update-push-target.md',
-        auth: [AuthType::SESSION],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4395,7 +4404,7 @@ App::delete('/v1/account/targets/:targetId/push')
         group: 'pushTargets',
         name: 'deletePushTarget',
         description: '/docs/references/account/delete-push-target.md',
-        auth: [AuthType::SESSION],
+        auth: [AuthType::ADMIN, AuthType::SESSION],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -4446,7 +4455,7 @@ App::get('/v1/account/identities')
         group: 'identities',
         name: 'listIdentities',
         description: '/docs/references/account/list-identities.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -4522,7 +4531,7 @@ App::delete('/v1/account/identities/:identityId')
         group: 'identities',
         name: 'deleteIdentity',
         description: '/docs/references/account/delete-identity.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,

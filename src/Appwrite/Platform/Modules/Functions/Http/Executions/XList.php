@@ -47,7 +47,7 @@ class XList extends Base
                 description: <<<EOT
                 Get a list of all the current user function execution logs. You can use the query params to filter your results.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

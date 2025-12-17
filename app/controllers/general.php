@@ -458,10 +458,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
         // Appwrite vars
         if ($type === 'function') {
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
                 'APPWRITE_FUNCTION_ID' => $resource->getId(),
                 'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                 'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -473,7 +476,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             ]);
         } elseif ($type === 'site') {
             $vars = \array_merge($vars, [
-                'APPWRITE_SITE_API_ENDPOINT' => $platform['endpoint'],
+                'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
                 'APPWRITE_SITE_ID' => $resource->getId(),
                 'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
                 'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),

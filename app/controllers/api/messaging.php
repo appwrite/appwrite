@@ -3564,7 +3564,8 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
@@ -3584,7 +3585,7 @@ App::post('/v1/messaging/messages/push')
             $image = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$platform['endpoint']}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
+                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 
@@ -4578,10 +4579,13 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 'projectId' => $project->getId(),
             ]);
 
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
             $pushData['image'] = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$platform['endpoint']}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
+                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 

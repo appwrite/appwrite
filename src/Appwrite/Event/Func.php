@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
 
@@ -202,6 +203,11 @@ class Func extends Event
     {
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
 
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'user' => $this->user,
@@ -217,7 +223,7 @@ class Func extends Event
             'path' => $this->path,
             'headers' => $this->headers,
             'method' => $this->method,
-            'platform' => $this->platform
+            'platform' => $platform,
         ];
     }
 }

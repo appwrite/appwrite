@@ -28,6 +28,15 @@ use Utopia\Validator\WhiteList;
 
 class Specs extends Action
 {
+    public function __construct()
+    {
+        $this
+            ->desc('Generate Appwrite API specifications')
+            ->param('version', 'latest', new Text(16), 'Spec version', true)
+            ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
+            ->callback($this->action(...));
+    }
+
     public static function getName(): string
     {
         return 'specs';
@@ -52,41 +61,44 @@ class Specs extends Action
         };
     }
 
-    public function __construct()
+    /**
+     * Platforms
+     *
+     * @return array<string>
+     */
+    protected function getPlatforms(): array
     {
-        $this
-            ->desc('Generate Appwrite API specifications')
-            ->param('version', 'latest', new Text(16), 'Spec version', true)
-            ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->callback($this->action(...));
+        return [
+            APP_SDK_PLATFORM_CLIENT,
+            APP_SDK_PLATFORM_SERVER,
+            APP_SDK_PLATFORM_CONSOLE,
+        ];
     }
 
-    public function action(string $version, string $mode): void
+    /**
+     * Number of authentication methods supported by each platform
+     * client: 1 (Session or JWT), server: 2 (Key and JWT), console: 1 (Admin)
+     *
+     * @return array{client: int, console: int, server: int}
+     */
+    protected function getAuthCounts(): array
     {
-        $appRoutes = App::getRoutes();
-        $response = $this->getResponse();
-        $mocks = ($mode === 'mocks');
-
-        // Mock dependencies
-        App::setResource('request', fn () => $this->getRequest());
-        App::setResource('response', fn () => $response);
-        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
-
-        $platforms = [
-            'client' => APP_PLATFORM_CLIENT,
-            'server' => APP_PLATFORM_SERVER,
-            'console' => APP_PLATFORM_CONSOLE,
-        ];
-
-        $authCounts = [
+        return [
             'client' => 1,
             'server' => 2,
             'console' => 1,
         ];
+    }
 
-        $keys = [
-            APP_PLATFORM_CLIENT => [
+    /**
+     * Keys for each platform
+     *
+     * @return array{client: array, server: array, console: array}
+     */
+    protected function getKeys(): array
+    {
+        return [
+            APP_SDK_PLATFORM_CLIENT => [
                 'Project' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Project',
@@ -118,7 +130,7 @@ class Specs extends Action
                     'in' => 'header',
                 ]
             ],
-            APP_PLATFORM_SERVER => [
+            APP_SDK_PLATFORM_SERVER => [
                 'Project' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Project',
@@ -156,7 +168,7 @@ class Specs extends Action
                     'in' => 'header',
                 ],
             ],
-            APP_PLATFORM_CONSOLE => [
+            APP_SDK_PLATFORM_CONSOLE => [
                 'Project' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Project',
@@ -189,6 +201,47 @@ class Specs extends Action
                 ],
             ],
         ];
+    }
+
+    public function getSDKPlatformsForRouteSecurity(array $routeSecurity): array
+    {
+        $sdkPlatforms = [];
+        foreach ($routeSecurity as $value) {
+            switch ($value) {
+                case AuthType::SESSION:
+                    $sdkPlatforms[] = APP_SDK_PLATFORM_CLIENT;
+                    break;
+                case AuthType::JWT:
+                case AuthType::KEY:
+                    $sdkPlatforms[] = APP_SDK_PLATFORM_SERVER;
+                    break;
+                case AuthType::ADMIN:
+                    $sdkPlatforms[] = APP_SDK_PLATFORM_CONSOLE;
+                    break;
+            }
+        }
+
+        return $sdkPlatforms;
+    }
+
+    public function action(string $version, string $mode): void
+    {
+        $appRoutes = App::getRoutes();
+
+        /** @var AppwriteResponse $response */
+        $response = $this->getResponse();
+
+        $mocks = ($mode === 'mocks');
+
+        // Mock dependencies
+        App::setResource('request', fn () => $this->getRequest());
+        App::setResource('response', fn () => $response);
+        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
+        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+
+        $platforms = $this->getPlatforms();
+        $authCounts = $this->getAuthCounts();
+        $keys = $this->getKeys();
 
         foreach ($platforms as $platform) {
             $routes = [];
@@ -210,32 +263,13 @@ class Specs extends Action
                     foreach ($sdks as $sdk) {
                         /** @var Method $sdk */
                         $hide = $sdk->isHidden();
+
                         if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
                             continue;
                         }
 
                         $routeSecurity = $sdk->getAuth();
-                        $sdkPlatforms = [];
-
-                        foreach ($routeSecurity as $value) {
-                            switch ($value) {
-                                case AuthType::SESSION:
-                                    $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                                    break;
-                                case AuthType::JWT:
-                                case AuthType::KEY:
-                                    $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                                    break;
-                                case AuthType::ADMIN:
-                                    $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
-                                    break;
-                            }
-                        }
-
-                        if (empty($routeSecurity)) {
-                            $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                            $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                        }
+                        $sdkPlatforms = $this->getSDKPlatformsForRouteSecurity($routeSecurity);
 
                         if (!$route->getLabel('docs', true)) {
                             continue;
@@ -253,7 +287,7 @@ class Specs extends Action
                             continue;
                         }
 
-                        if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
+                        if (!\in_array($platform, $sdkPlatforms)) {
                             continue;
                         }
 
@@ -272,6 +306,11 @@ class Specs extends Action
                     continue;
                 }
 
+                // Check if current platform is included in service's platforms
+                if (!\in_array($platform, $service['platforms'] ?? [])) {
+                    continue;
+                }
+
                 $services[] = [
                     'name' => $service['key'] ?? '',
                     'description' => $service['subtitle'] ?? '',
@@ -281,7 +320,7 @@ class Specs extends Action
             $models = $response->getModels();
 
             foreach ($models as $key => $value) {
-                if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
+                if ($platform !== APP_SDK_PLATFORM_CONSOLE && !$value->isPublic()) {
                     unset($models[$key]);
                 }
             }
@@ -293,7 +332,7 @@ class Specs extends Action
                 $models,
                 $keys[$platform],
                 $authCounts[$platform] ?? 0,
-                $platforms[$platform]
+                $platform
             ];
 
             foreach (['swagger2', 'open-api3'] as $format) {
