@@ -57,6 +57,8 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register)
     $dbForPlatform = new Database($adapter, $cache);
     $dbForPlatform->setNamespace('_console');
     $dbForPlatform->setDocumentType('users', User::class);
+
+    $dbForPlatform->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
     return $dbForPlatform;
 }, ['cache', 'register']);
 
