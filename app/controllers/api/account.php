@@ -157,13 +157,19 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
         $session->setAttribute('clientName', $clientName);
     }
 
+    $projectName = $project->getAttribute('name');
+    if ($project->getId() === 'console') {
+        // default on CE - Appwrite
+        $projectName = $platform['platformName'];
+    }
+
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
         'date' => (new \DateTime())->format('F j'),
         'year' => (new \DateTime())->format('YYYY'),
         'time' => (new \DateTime())->format('H:i:s'),
         'user' => $user->getAttribute('name'),
-        'project' => $project->getAttribute('name'),
+        'project' => $projectName,
         'device' => $session->getAttribute('clientName'),
         'ipAddress' => $session->getAttribute('ip'),
         'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
@@ -178,7 +184,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
             'github' => $platform['githubUrl'],
             'terms' => $platform['termsUrl'],
             'privacy' => $platform['privacyUrl'],
-            'platform' => $platform['platform'],
+            'platform' => $platform['platformName'],
         ]);
     }
 
