@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "01c7fc0812cac4e90bcfa5dda323ae21",
+    "content-hash": "39a1f82e1f06ad455835a5b2b46ac88f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4264,16 +4264,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-telemetry-0.2.x",
+            "version": "dev-telemetry-0.2-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "c125af496379f2e4b7bb18270afbb5042201d362"
+                "reference": "5c57e59b64769e106f194a20fbd3a5ca24bc8710"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/c125af496379f2e4b7bb18270afbb5042201d362",
-                "reference": "c125af496379f2e4b7bb18270afbb5042201d362",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/5c57e59b64769e106f194a20fbd3a5ca24bc8710",
+                "reference": "5c57e59b64769e106f194a20fbd3a5ca24bc8710",
                 "shasum": ""
             },
             "require": {
@@ -4306,9 +4306,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/detached"
+                "source": "https://github.com/utopia-php/http/tree/telemetry-0.2-v2"
             },
-            "time": "2025-12-17T10:57:52+00:00"
+            "time": "2025-12-17T13:17:43+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8948,7 +8948,7 @@
     "aliases": [
         {
             "package": "utopia-php/framework",
-            "version": "dev-telemetry-0.2.x",
+            "version": "dev-telemetry-0.2-v2",
             "alias": "0.33.35",
             "alias_normalized": "0.33.35.0"
         }
