@@ -1639,13 +1639,22 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
+            // Look for existing identity with provider user ID or email address
             $identity = $dbForProject->findOne('identities', [
-                Query::equal('provider', [$provider]),
-                Query::equal('providerUid', [$oauth2ID]),
+                Query::or([
+                    Query::and([
+                        Query::equal('provider', [$provider]),
+                        Query::equal('providerUid', [$oauth2ID]),
+                    ]),
+                    Query::equal('providerEmail', [$email]),
+                ]),
             ]);
 
             if (!$identity->isEmpty()) {
-                $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
+                $user->setAttributes($dbForProject->getDocument(
+                    'users',
+                    $identity->getAttribute('userId')
+                )->getArrayCopy());
             }
 
             // If user is not found, check if there is an identity with the same provider user ID
