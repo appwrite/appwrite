@@ -14,7 +14,13 @@ result = tables_db.update_row(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
     row_id = '<ROW_ID>',
-    data = {}, # optional
+    data = {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": False
+    }, # optional
     permissions = [Permission.read(Role.any())], # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )

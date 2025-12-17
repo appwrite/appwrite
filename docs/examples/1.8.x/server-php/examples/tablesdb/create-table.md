@@ -18,5 +18,7 @@ $result = $tablesDB->createTable(
     name: '<NAME>',
     permissions: [Permission::read(Role::any())], // optional
     rowSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    columns: [], // optional
+    indexes: [] // optional
 );

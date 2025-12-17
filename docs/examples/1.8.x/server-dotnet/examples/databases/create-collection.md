@@ -15,5 +15,7 @@ Collection result = await databases.CreateCollection(
     name: "<NAME>",
     permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     documentSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    attributes: new List<object>(), // optional
+    indexes: new List<object>() // optional
 );

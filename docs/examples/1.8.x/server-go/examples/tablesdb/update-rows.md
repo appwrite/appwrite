@@ -17,7 +17,13 @@ service := tablesdb.New(client)
 response, error := service.UpdateRows(
     "<DATABASE_ID>",
     "<TABLE_ID>",
-    tablesdb.WithUpdateRowsData(map[string]interface{}{}),
+    tablesdb.WithUpdateRowsData(map[string]interface{}{
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": false
+    }),
     tablesdb.WithUpdateRowsQueries([]interface{}{}),
     tablesdb.WithUpdateRowsTransactionId("<TRANSACTION_ID>"),
 )

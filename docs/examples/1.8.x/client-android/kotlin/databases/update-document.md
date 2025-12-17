@@ -14,7 +14,13 @@ val result = databases.updateDocument(
     databaseId = "<DATABASE_ID>", 
     collectionId = "<COLLECTION_ID>", 
     documentId = "<DOCUMENT_ID>", 
-    data = mapOf( "a" to "b" ), // (optional)
+    data = mapOf(
+        "username" to "walter.obrien",
+        "email" to "walter.obrien@example.com",
+        "fullName" to "Walter O'Brien",
+        "age" to 33,
+        "isAdmin" to false
+    ), // (optional)
     permissions = listOf(Permission.read(Role.any())), // (optional)
     transactionId = "<TRANSACTION_ID>", // (optional)
 )
