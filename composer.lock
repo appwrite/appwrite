@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3281497e022756da8572c163552f5b7c",
+    "content-hash": "39a1f82e1f06ad455835a5b2b46ac88f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4953,16 +4953,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "dev-bump-telemetry",
+            "version": "0.18.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "4451b1fd829a69feffda0a5263280304d3f39b98"
+                "reference": "9c3f9a471250d22de7d405ee19e23e72b14181ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/4451b1fd829a69feffda0a5263280304d3f39b98",
-                "reference": "4451b1fd829a69feffda0a5263280304d3f39b98",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/9c3f9a471250d22de7d405ee19e23e72b14181ca",
+                "reference": "9c3f9a471250d22de7d405ee19e23e72b14181ca",
                 "shasum": ""
             },
             "require": {
@@ -5005,9 +5005,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/bump-telemetry"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.19"
             },
-            "time": "2025-12-17T13:46:24+00:00"
+            "time": "2025-12-17T13:55:20+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -8952,18 +8952,11 @@
             "version": "dev-telemetry-0.2-v2",
             "alias": "0.33.35",
             "alias_normalized": "0.33.35.0"
-        },
-        {
-            "package": "utopia-php/storage",
-            "version": "dev-bump-telemetry",
-            "alias": "0.18.18",
-            "alias_normalized": "0.18.18.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/framework": 20,
-        "utopia-php/storage": 20
+        "utopia-php/framework": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
