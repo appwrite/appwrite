@@ -2624,16 +2624,17 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
     ->inject('proofForCode')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode);
     });
 
 App::put('/v1/account/sessions/phone')
@@ -2671,6 +2672,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
