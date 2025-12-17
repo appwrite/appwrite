@@ -11516,7 +11516,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object. Include only attribute and value pairs to be updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "queries": {
                                         "type": "array",
@@ -11814,8 +11814,7 @@
                             "required": [
                                 "databaseId",
                                 "collectionId",
-                                "documentId",
-                                "data"
+                                "documentId"
                             ],
                             "responses": [
                                 {
@@ -11884,7 +11883,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object. Include all required attributes of the document to be created or updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -11901,10 +11900,7 @@
                                         "x-example": "<TRANSACTION_ID>",
                                         "x-nullable": true
                                     }
-                                },
-                                "required": [
-                                    "data"
-                                ]
+                                }
                             }
                         }
                     }
@@ -12006,7 +12002,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object. Include only attribute and value pairs to be updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -41806,7 +41802,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object. Include only column and value pairs to be updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "queries": {
                                         "type": "array",
@@ -42166,7 +42162,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -42284,7 +42280,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -60634,8 +60630,8 @@
                     },
                     "logs": {
                         "type": "string",
-                        "description": "Certificate generation logs. This will return an empty string if generation did not run, or succeeded.",
-                        "x-example": "HTTP challegne failed."
+                        "description": "Logs from rule verification or certificate generation. Certificate generation logs are prioritized if both are available.",
+                        "x-example": "Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record."
                     },
                     "renewAt": {
                         "type": "string",
@@ -60674,7 +60670,7 @@
                     "deploymentResourceId": "n3u9feiwmf",
                     "deploymentVcsProviderBranch": "main",
                     "status": "verified",
-                    "logs": "HTTP challegne failed.",
+                    "logs": "Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.",
                     "renewAt": "datetime"
                 }
             },

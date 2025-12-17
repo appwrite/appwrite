@@ -14,7 +14,13 @@ databases.upsertDocument(
     "<DATABASE_ID>", // databaseId 
     "<COLLECTION_ID>", // collectionId 
     "<DOCUMENT_ID>", // documentId 
-    Map.of("a", "b"), // data 
+    Map.of(
+        "username", "walter.obrien",
+        "email", "walter.obrien@example.com",
+        "fullName", "Walter O'Brien",
+        "age", 30,
+        "isAdmin", false
+    ), // data (optional)
     List.of(Permission.read(Role.any())), // permissions (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {

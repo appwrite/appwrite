@@ -281,6 +281,7 @@ App::setResource('cors', fn (array $allowedHostnames) => new Cors(
         'X-SDK-Language',
         'X-SDK-Platform',
         'X-SDK-GraphQL',
+        'X-SDK-Profile',
         // Caching
         'Range',
         'Cache-Control',
