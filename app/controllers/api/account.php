@@ -2265,11 +2265,16 @@ App::post('/v1/account/tokens/magic-url')
                 ->setSmtpSenderName($senderName);
         }
 
+        $projectName = $project->getAttribute('name');
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $user->getAttribute('name'),
-            'project' => $project->getAttribute('name'),
+            'project' => $projectName,
             'redirect' => $url,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
@@ -2284,8 +2289,13 @@ App::post('/v1/account/tokens/magic-url')
             ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
-            ->setRecipient($email)
-            ->trigger();
+            ->setRecipient($email);
+
+        if ($project->getId() === 'console') {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -3960,13 +3970,14 @@ App::post('/v1/account/verifications/email')
 
         if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
             $emailVariables = array_merge($emailVariables, [
-                'accentColor' => APP_EMAIL_ACCENT_COLOR,
-                'logoUrl' => APP_EMAIL_LOGO_URL,
-                'twitterUrl' => APP_SOCIAL_TWITTER,
-                'discordUrl' => APP_SOCIAL_DISCORD,
-                'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-                'termsUrl' => APP_EMAIL_TERMS_URL,
-                'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
             ]);
         }
 
@@ -3977,8 +3988,13 @@ App::post('/v1/account/verifications/email')
             ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name') ?? '')
-            ->trigger();
+            ->setName($user->getAttribute('name') ?? '');
+
+        if ($project->getId() === 'console') {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $verification->setAttribute('secret', $verificationSecret);
 
