@@ -361,13 +361,19 @@ return [
         ],
     ],
     [
-        'name' => '_APP_DB_ADAPTER',
-        'description' => 'To switch between mariadb and mongoDB',
-        'introduction' => '1.8.0',
-        'default' => 'mongoDB',
-        'required' => true,
-        'question' => 'Choose your database (mariadb|mongoDB)',
-        'filter' => ''
+        'category' => 'Database',
+        'description' => 'Appwrite uses a database for storing user data and metadata. You can choose between MariaDB and MongoDB.',
+        'variables' => [
+            [
+                'name' => '_APP_DB_ADAPTER',
+                'description' => 'To switch between mariadb and mongoDB',
+                'introduction' => '1.8.0',
+                'default' => 'mongodb',
+                'required' => true,
+                'question' => 'Choose your database (mariadb|mongodb)',
+                'filter' => ''
+            ],
+        ],
     ],
     [
         'category' => 'Redis',

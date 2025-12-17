@@ -152,6 +152,7 @@ class Install extends Action
         $input = [];
 
         $password = new Password();
+        $password->setCharset('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
         $token = new Token();
         foreach ($vars as $var) {
             if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
@@ -229,36 +230,6 @@ class Install extends Action
             $message = 'Failed to save environment variables file';
             Console::error($message);
             Console::exit(1);
-        }
-
-        // Copy MongoDB initialization files for replica set setup
-        if ($database === 'mongodb') {
-            $mongoInitScript = __DIR__ . '/../../../../mongo-init.js';
-            $mongoEntrypoint = __DIR__ . '/../../../../mongo-entrypoint.sh';
-
-            if (!file_exists($mongoInitScript)) {
-                $message = 'Required MongoDB initialization file not found: mongo-init.js';
-                Console::error($message);
-                Console::exit(1);
-            }
-
-            if (!copy($mongoInitScript, $this->path . '/mongo-init.js')) {
-                $message = 'Failed to copy mongo-init.js - this file is required for MongoDB replica set setup';
-                Console::error($message);
-                Console::exit(1);
-            }
-
-            if (!file_exists($mongoEntrypoint)) {
-                $message = 'Required MongoDB initialization file not found: mongo-entrypoint.sh';
-                Console::error($message);
-                Console::exit(1);
-            }
-
-            if (!copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh')) {
-                $message = 'Failed to copy mongo-entrypoint.sh - this file is required for MongoDB replica set setup';
-                Console::error($message);
-                Console::exit(1);
-            }
         }
 
         $env = '';

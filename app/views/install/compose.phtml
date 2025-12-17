@@ -968,8 +968,6 @@ mariadb:
     volumes:
       - appwrite-mongodb:/data/db
       - appwrite-mongodb-keyfile:/data/keyfile
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
     ports:
       - "27017:27017"
     environment:
@@ -978,22 +976,59 @@ mariadb:
       - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
       - MONGO_INITDB_USERNAME=${_APP_DB_USER}
       - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
-    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        KEYFILE_PATH="/data/keyfile/mongo-keyfile"
+        INIT_FLAG="/data/db/.mongodb_initialized"
+
+        # Generate keyfile if it doesn't exist
+        if [ ! -f "$$KEYFILE_PATH" ]; then
+          echo "Generating random MongoDB keyfile..."
+          mkdir -p /data/keyfile
+          openssl rand -base64 756 > "$$KEYFILE_PATH"
+        fi
+        chmod 400 "$$KEYFILE_PATH"
+        chown mongodb:mongodb "$$KEYFILE_PATH" 2>/dev/null || chown 999:999 "$$KEYFILE_PATH"
+
+        # If not initialized, start without auth first to set up replica set and users
+        if [ ! -f "$$INIT_FLAG" ]; then
+          echo "First-time initialization: starting MongoDB without auth..."
+          mongod --replSet rs0 --bind_ip_all --fork --logpath /var/log/mongodb/mongod.log --dbpath /data/db
+
+          echo "Waiting for MongoDB to start..."
+          sleep 5
+
+          echo "Initializing replica set..."
+          mongosh --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]})"
+
+          echo "Waiting for replica set to initialize..."
+          sleep 5
+
+          echo "Creating root user..."
+          mongosh admin --eval "db.createUser({user: '$$MONGO_INITDB_ROOT_USERNAME', pwd: '$$MONGO_INITDB_ROOT_PASSWORD', roles: ['root']})"
+
+          echo "Creating application user..."
+          mongosh admin --eval "db.createUser({user: '$$MONGO_INITDB_USERNAME', pwd: '$$MONGO_INITDB_PASSWORD', roles: [{role: 'readWrite', db: '$$MONGO_INITDB_DATABASE'}]})"
+
+          echo "Shutting down MongoDB..."
+          mongod --dbpath /data/db --shutdown
+
+          touch "$$INIT_FLAG"
+          echo "Initialization complete."
+        fi
+
+        echo "Starting MongoDB with authentication..."
+        exec mongod --replSet rs0 --bind_ip_all --auth --keyFile "$$KEYFILE_PATH"
     healthcheck:
       test: |
-        bash -c "
-          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
-            exit 0
-          else
-            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
-              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]})
-            \" 2>/dev/null || exit 1
-          fi
-        "
+        mongosh -u root -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "rs.status().ok" | grep -q 1
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 30s
+      start_period: 60s
 
 <?php endif; ?>
 
