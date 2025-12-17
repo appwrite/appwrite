@@ -195,9 +195,7 @@ class Certificates extends Action
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $mainDomain = $validationDomain ?? $this->getMainDomain();
-                $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-                $this->validateDomain($rule, $isMainDomain, $log);
+                $this->validateDomain($rule, $domain, $validationDomain, $log);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
@@ -211,7 +209,7 @@ class Certificates extends Action
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
             // If certificate is generated instantly, we can mark the rule as 'verified'.
-            if ($certificates->isInstantGeneration()) {
+            if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                 $certificate->setAttribute('logs', 'Certificate successfully generated.');
             }
@@ -351,6 +349,31 @@ class Certificates extends Action
     }
 
     /**
+     * Internal domain validation functionality to prevent unnecessary attempts. We check:
+     * - Domain needs to be public and valid (prevents NFT domains that are not supported)
+     * - Domain must have proper DNS record
+     *
+     * @param Document $rule Rule to validate
+     * @param Domain $domain Domain to validate
+     * @param string|null $validationDomain Override for main domain check
+     * @param Log $log Logger for adding metrics
+     *
+     * @return void
+     * @throws Exception
+     */
+    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null, Log $log): void
+    {
+        $mainDomain = $validationDomain ?? $this->getMainDomain();
+        $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
+        if (!$isMainDomain) {
+            $this->verifyRule($rule, $log);
+        } else {
+            // Main domain validation
+            // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
+        }
+    }
+
+    /**
      * Get main domain. Needed as we do different checks for main and non-main domains.
      *
      * @return null|string Returns main domain. If null, there is no main domain yet.
@@ -366,29 +389,7 @@ class Certificates extends Action
     }
 
     /**
-     * Internal domain validation functionality to prevent unnecessary attempts. We check:
-     * - Domain needs to be public and valid (prevents NFT domains that are not supported)
-     * - Domain must have proper DNS record
-     *
-     * @param Document $rule Rule to validate
-     * @param bool $isMainDomain In case of master domain, we look for different DNS configurations
-     * @param Log $log Logger for adding metrics
-     *
-     * @return void
-     * @throws Exception
-     */
-    private function validateDomain(Document $rule, bool $isMainDomain, Log $log): void
-    {
-        if (!$isMainDomain) {
-            $this->verifyRule($rule, $log);
-        } else {
-            // Main domain validation
-            // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
-        }
-    }
-
-    /**
-     * Method to make sure information about error is delivered to admnistrator.
+     * Method to make sure information about error is delivered to administrator.
      *
      * @param string $domain Domain that caused the error
      * @param string $errorMessage Verbose error message
