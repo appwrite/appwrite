@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Docker\Compose;
+use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
@@ -41,7 +43,36 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        $database = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
+
+        // Extract existing database adapter from docker-compose.yml
+        $database = null;
+        $compose = new Compose($data);
+        foreach ($compose->getServices() as $service) {
+            if (!$service) {
+                continue;
+            }
+            $env = $service->getEnvironment()->list();
+            if (isset($env['_APP_DB_ADAPTER'])) {
+                $database = $env['_APP_DB_ADAPTER'];
+                break;
+            }
+        }
+
+        // Fallback to .env file if not found in compose
+        if ($database === null) {
+            $envData = @file_get_contents($this->path . '/.env');
+            if ($envData !== false) {
+                $envFile = new Env($envData);
+                $database = $envFile->list()['_APP_DB_ADAPTER'] ?? null;
+            }
+        }
+
+        // Final fallback to environment variable or default
+        if ($database === null) {
+            // TODO: Change default to 'mongodb' after next release
+            $database = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
+        }
+
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 }

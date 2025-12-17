@@ -137,6 +137,14 @@ class Install extends Action
                     }
                 }
             }
+
+            // Block database type changes on existing installations
+            $existingDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? null;
+            if ($existingDatabase !== null && $existingDatabase !== $database) {
+                Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
+                Console::error('Changing database types on an existing installation is not supported.');
+                Console::exit(1);
+            }
         }
 
         if (empty($httpPort)) {
