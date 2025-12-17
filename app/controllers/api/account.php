@@ -177,7 +177,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
 
     if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
         $emailVariables = array_merge($emailVariables, [
-            'accentColor' => $platform['accentUrl'],
+            'accentColor' => $platform['accentColor'],
             'logoUrl' => $platform['logoUrl'],
             'twitter' => $platform['twitterUrl'],
             'discord' => $platform['discordUrl'],
