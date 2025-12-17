@@ -22,4 +22,5 @@ return [
     'termsUrl' => APP_EMAIL_TERMS_URL,
     'privacyUrl' => APP_EMAIL_PRIVACY_URL,
     'websiteUrl' => 'https://' . APP_DOMAIN,
+    'emailSenderName' => APP_EMAIL_PLATFORM_NAME,
 ];
