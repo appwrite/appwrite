@@ -401,7 +401,6 @@ class Certificates extends Action
         Realtime $queueForRealtime
     ): void {
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
-
         $projectId = $rule->getAttribute('projectId');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
@@ -410,7 +409,6 @@ class Certificates extends Action
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
-
         if ($project->isEmpty()) {
             return;
         }
