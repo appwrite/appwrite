@@ -11,6 +11,9 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
+/**
+ * @template T of Key
+ */
 class Key
 {
     public function __construct(
@@ -96,6 +99,7 @@ class Key
      * Can be a stored API key or a dynamic key (JWT).
      *
      * @throws Exception
+     * @return T
      */
     public static function decode(
         Document $project,
