@@ -1,5 +1,9 @@
 # Change Log
 
+## 14.1.0
+
+* Added ability to create attributes and indexes synchronously while creating a collection
+
 ## 14.0.0
 
 * Rename `VCSDeploymentType` enum to `VCSReferenceType`
