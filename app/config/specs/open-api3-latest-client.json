@@ -6712,8 +6712,7 @@
                             "required": [
                                 "databaseId",
                                 "collectionId",
-                                "documentId",
-                                "data"
+                                "documentId"
                             ],
                             "responses": [
                                 {
@@ -6782,7 +6781,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object. Include all required attributes of the document to be created or updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -6799,10 +6798,7 @@
                                         "x-example": "<TRANSACTION_ID>",
                                         "x-nullable": true
                                     }
-                                },
-                                "required": [
-                                    "data"
-                                ]
+                                }
                             }
                         }
                     }
@@ -6904,7 +6900,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Document data as JSON object. Include only attribute and value pairs to be updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -10046,7 +10042,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object. Include all required columns of the row to be created or updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -10164,7 +10160,7 @@
                                     "data": {
                                         "type": "object",
                                         "description": "Row data as JSON object. Include only columns and value pairs to be updated.",
-                                        "x-example": "{}"
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":33,\"isAdmin\":false}"
                                     },
                                     "permissions": {
                                         "type": "array",
