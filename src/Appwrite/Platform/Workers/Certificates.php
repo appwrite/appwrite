@@ -106,7 +106,7 @@ class Certificates extends Action
 
         switch ($action) {
             case Certificate::ACTION_DOMAIN_VERIFICATION:
-                $this->handleDomainVerificationAction($domain, $dbForPlatform, $log, $queueForCertificates, $validationDomain);
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForCertificates, $log, $validationDomain);
                 break;
 
             case Certificate::ACTION_GENERATION:
@@ -123,8 +123,13 @@ class Certificates extends Action
     /**
      * @param Domain $domain
      * @param Database $dbForPlatform
-     * @param Log $log
+     * @param Event $queueForEvents
+     * @param Webhook $queueForWebhooks
+     * @param Func $queueForFunctions
+     * @param Realtime $queueForRealtime
      * @param Certificate $queueForCertificates
+     * @param Log $log
+     * @param string|null $validationDomain
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -132,8 +137,12 @@ class Certificates extends Action
     private function handleDomainVerificationAction(
         Domain $domain,
         Database $dbForPlatform,
-        Log $log,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        Func $queueForFunctions,
+        Realtime $queueForRealtime,
         Certificate $queueForCertificates,
+        Log $log,
         ?string $validationDomain = null,
     ): void {
         // Get rule
@@ -152,23 +161,22 @@ class Certificates extends Action
 
         Console::info('Domain verification for ' . $rule->getAttribute('domain', '') . ' started.');
 
-        $updates = new Document();
         try {
             // Verify DNS records
             $this->validateDomain($rule, $domain, $log, $validationDomain);
             // Reset logs and status for the rule
-            $updates
-                ->setAttribute('logs', '')
-                ->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+            $rule->setAttribute('logs', '');
+            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
 
             Console::success('Domain verification succeeded.');
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
-            $updates->setAttribute('logs', $err->getMessage());
+            $rule->setAttribute('logs', $err->getMessage());
+        } finally {
+            // Update rule and emit events
+            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
 
-        echo "updating rule with updates: " . \var_dump($updates);
-        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
 
         // Issue a TLS certificate when domain is verified
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
@@ -333,7 +341,7 @@ class Certificates extends Action
             // Ensure certificate is associated with the rule
             $rule->setAttribute('certificateId', $certificate->getId());
             // Update rule and emit events
-            $this->updateDomainDocuments($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
+            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
     }
 
@@ -384,7 +392,7 @@ class Certificates extends Action
      *
      * @return void
      */
-    private function updateDomainDocuments(
+    protected function updateRuleAndSendEvents(
         Document $rule,
         Database $dbForPlatform,
         Event $queueForEvents,
