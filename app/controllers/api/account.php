@@ -1664,6 +1664,20 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
             }
 
+            // If user is not found, check if there is an identity with the same email
+            // Only allow connecting to existing account if OAuth provider verified the email
+            if ($user === false || $user->isEmpty()) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$email]),
+                ]);
+                if (!$identityWithMatchingEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                    $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
+                }
+            }
+
             if ($user === false || $user->isEmpty()) { // Last option -> create the user
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
@@ -1673,14 +1687,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     if ($total >= $limit) {
                         $failureRedirect(Exception::USER_COUNT_EXCEEDED);
                     }
-                }
-
-                // Makes sure this email is not already used in another identity
-                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                    Query::equal('providerEmail', [$email]),
-                ]);
-                if (!$identityWithMatchingEmail->isEmpty()) {
-                    $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -1736,7 +1742,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
-
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
