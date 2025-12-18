@@ -9,6 +9,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
@@ -60,7 +61,7 @@ class Create extends Action
                     group: 'mfa',
                     name: 'createMfaChallenge',
                     description: '/docs/references/account/create-mfa-challenge.md',
-                    auth: [],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,
@@ -72,13 +73,14 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'account.createMFAChallenge',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
                     name: 'createMFAChallenge',
                     description: '/docs/references/account/create-mfa-challenge.md',
-                    auth: [],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,
@@ -332,6 +334,8 @@ class Create extends Action
             ->setParam('userId', $user->getId())
             ->setParam('challengeId', $challenge->getId());
 
-        $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
     }
 }

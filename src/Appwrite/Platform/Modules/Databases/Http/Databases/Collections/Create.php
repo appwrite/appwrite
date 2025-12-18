@@ -61,7 +61,7 @@ class Create extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-collection.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
@@ -80,7 +80,7 @@ class Create extends Action
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
-            ->param('attributes', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
+            ->param('attributes', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
             ->param('indexes', [], new ArrayList(new JSON(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -93,7 +93,7 @@ class Create extends Action
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collectionId = $collectionId === 'unique()' ? ID::unique() : $collectionId;
@@ -113,15 +113,23 @@ class Create extends Action
                 'search' => \implode(' ', [$collectionId, $name]),
             ]));
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (LimitException) {
-            throw new Exception($this->getLimitException());
+            throw new Exception($this->getLimitException(), params: [$databaseId]);
         } catch (NotFoundException) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $databaseKey = 'database_' . $database->getSequence();
+
+        // Map 'float' to 'double' (Database::VAR_FLOAT) before validation
+        $attributes = array_map(function ($attr) {
+            if (isset($attr['type']) && $attr['type'] === 'float') {
+                $attr['type'] = Database::VAR_FLOAT;
+            }
+            return $attr;
+        }, $attributes);
 
         $attributesValidator = new AttributesValidator(
             APP_LIMIT_ARRAY_PARAMS_SIZE,
@@ -212,13 +220,13 @@ class Create extends Action
             );
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (IndexException $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getInvalidIndexException(), $e->getMessage());
         } catch (LimitException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
-            throw new Exception($this->getLimitException());
+            throw new Exception($this->getLimitException(), params: [$collectionId]);
         } catch (\Throwable $e) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw $e;
@@ -234,7 +242,7 @@ class Create extends Action
             }
         } catch (DuplicateException) {
             $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (\Throwable $e) {
             $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
             throw $e;
@@ -242,6 +250,12 @@ class Create extends Action
 
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
         $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+
+        // Set attributes and indexes on the collection document for the response
+        // Use the full database documents for attributes (they have status and other fields needed for response models)
+        // Use the simpler collection documents for indexes (they have the basic fields without internal tracking)
+        $collection->setAttribute('attributes', $attributeDocuments);
+        $collection->setAttribute('indexes', $collectionIndexes);
 
         $queueForEvents
             ->setContext('database', $database)

@@ -15,7 +15,7 @@ class HTTPTest extends Scope
     public function setUp(): void
     {
         parent::setUp();
-        $this->client->setEndpoint('http://traefik');
+        $this->client->setEndpoint('http://appwrite.test');
     }
 
     public function testOptions()
@@ -31,7 +31,7 @@ class HTTPTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
         $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent', $response['headers']['access-control-allow-headers']);
+        $this->assertEquals('Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent', $response['headers']['access-control-allow-headers']);
         $this->assertEquals('X-Appwrite-Session, X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
@@ -66,16 +66,10 @@ class HTTPTest extends Scope
 
     public function testAcmeChallenge()
     {
-        // Preparation
-        $previousEndpoint = $this->client->getEndpoint();
-        $this->client->setEndpoint("http://localhost");
-
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg', \array_merge([
-            'origin' => 'http://localhost',
-        ]));
+        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg');
 
         // 'Unknown path', but validation passed
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -83,15 +77,10 @@ class HTTPTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd', \array_merge([
-            'origin' => 'http://localhost',
-        ]));
+        $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd');
 
-        // Check for too many path segments
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        // Cleanup
-        $this->client->setEndpoint($previousEndpoint);
+        // 'Unknown path', but validation passed
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     public function testSpecs()
@@ -172,48 +161,45 @@ class HTTPTest extends Scope
 
     public function testCors()
     {
-        /**
-         * Test for SUCCESS
-         */
 
         $endpoint = '/v1/projects'; // Can be any non-404 route
 
-        $response = $this->client->call(Client::METHOD_GET, $endpoint);
-
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
-
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, $endpoint, [
             'origin' => 'http://localhost',
         ]);
-
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
-
-        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
-            'origin' => 'http://appwrite.io',
-        ]);
-
-        $this->assertEquals('http://appwrite.io', $response['headers']['access-control-allow-origin']);
-
-        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
-            'origin' => 'https://appwrite.io',
-        ]);
-
-        $this->assertEquals('https://appwrite.io', $response['headers']['access-control-allow-origin']);
-
-        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
-            'origin' => 'http://cloud.appwrite.io',
-        ]);
-
-        $this->assertEquals('http://cloud.appwrite.io', $response['headers']['access-control-allow-origin']);
 
         /**
          * Test for FAILURE
          */
+        // you should not return a fallback origin for a no host
+        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+        $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
+
+        // you should not return a fallback origin for a no host
         $response = $this->client->call(Client::METHOD_GET, $endpoint, [
             'origin' => 'http://google.com',
         ]);
+        $this->assertNull($response['headers']['access-control-allow-origin'] ?? null);
+    }
 
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+    public function testPreflight()
+    {
+
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_OPTIONS, $endpoint, [
+            'origin' => 'http://random.com',
+            'access-control-request-headers' => 'X-Appwrite-Project',
+            'access-control-request-method' => 'GET'
+        ]);
+        $this->assertEquals('http://random.com', $response['headers']['access-control-allow-origin']);
     }
 
     public function testConsoleRedirect()

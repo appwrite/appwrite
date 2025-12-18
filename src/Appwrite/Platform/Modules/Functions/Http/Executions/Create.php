@@ -69,7 +69,7 @@ class Create extends Base
                 description: <<<EOT
                 Trigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -98,6 +98,7 @@ class Create extends Base
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -121,7 +122,8 @@ class Create extends Base
         Reader $geodb,
         Store $store,
         Token $proofForToken,
-        Executor $executor
+        Executor $executor,
+        array $platform
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -367,8 +369,7 @@ class Create extends Base
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [

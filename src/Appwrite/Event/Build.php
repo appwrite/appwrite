@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
 
@@ -110,12 +111,18 @@ class Build extends Event
      */
     protected function preparePayload(): array
     {
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
-            'template' => $this->template
+            'template' => $this->template,
+            'platform' => $platform,
         ];
     }
 
@@ -130,6 +137,7 @@ class Build extends Event
         $this->resource = null;
         $this->deployment = null;
         $this->template = null;
+        $this->platform = [];
         parent::reset();
 
         return $this;

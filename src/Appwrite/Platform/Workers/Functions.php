@@ -87,6 +87,7 @@ class Functions extends Action
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
         $function = new Document($payload['function'] ?? []);
         $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
@@ -166,6 +167,7 @@ class Functions extends Action
                             'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
                             'content-type' => 'application/json'
                         ],
+                        platform: $platform,
                         data: null,
                         user: $user,
                         jwt: null,
@@ -206,6 +208,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -231,6 +234,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -346,6 +350,7 @@ class Functions extends Action
         string $path,
         string $method,
         array $headers,
+        array $platform,
         string $data = null,
         ?Document $user = null,
         string $jwt = null,
@@ -487,8 +492,7 @@ class Functions extends Action
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [

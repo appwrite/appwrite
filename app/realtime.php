@@ -8,6 +8,7 @@ use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Swoole\Coroutine;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Swoole\Runtime;
@@ -52,13 +53,13 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 if (!function_exists('getConsoleDB')) {
     function getConsoleDB(): Database
     {
-        global $register;
+        $ctx = Coroutine::getContext();
 
-        static $database = null;
-
-        if ($database !== null) {
-            return $database;
+        if (isset($ctx['dbForPlatform'])) {
+            return $ctx['dbForPlatform'];
         }
+
+        global $register;
 
         /** @var Group $pools */
         $pools = $register->get('pools');
@@ -69,10 +70,8 @@ if (!function_exists('getConsoleDB')) {
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');
-
         $database->setDocumentType('users', User::class);
-
-        return $database;
+        return $ctx['dbForPlatform'] = $database;
     }
 }
 
@@ -80,13 +79,17 @@ if (!function_exists('getConsoleDB')) {
 if (!function_exists('getProjectDB')) {
     function getProjectDB(Document $project): Database
     {
-        global $register;
+        $ctx = Coroutine::getContext();
 
-        static $databases = [];
-
-        if (isset($databases[$project->getSequence()])) {
-            return $databases[$project->getSequence()];
+        if (!isset($ctx['dbForProject'])) {
+            $ctx['dbForProject'] = [];
         }
+
+        if (isset($ctx['dbForProject'][$project->getSequence()])) {
+            return $ctx['dbForProject'][$project->getSequence()];
+        }
+
+        global $register;
 
         /** @var Group $pools */
         $pools = $register->get('pools');
@@ -125,7 +128,7 @@ if (!function_exists('getProjectDB')) {
 
         $database->setDocumentType('users', User::class);
 
-        return $databases[$project->getSequence()] = $database;
+        return $ctx['dbForProject'][$project->getSequence()] = $database;
     }
 }
 
@@ -133,13 +136,13 @@ if (!function_exists('getProjectDB')) {
 if (!function_exists('getCache')) {
     function getCache(): Cache
     {
-        global $register;
+        $ctx = Coroutine::getContext();
 
-        static $cache = null;
-
-        if ($cache !== null) {
-            return $cache;
+        if (isset($ctx['cache'])) {
+            return $ctx['cache'];
         }
+
+        global $register;
 
         $pools = $register->get('pools'); /** @var Group $pools */
 
@@ -150,7 +153,7 @@ if (!function_exists('getCache')) {
             $adapters[] = new CachePool($pools->get($value));
         }
 
-        return $cache = new Cache(new Sharding($adapters));
+        return $ctx['cache'] = new Cache(new Sharding($adapters));
     }
 }
 
@@ -158,10 +161,10 @@ if (!function_exists('getCache')) {
 if (!function_exists('getRedis')) {
     function getRedis(): \Redis
     {
-        static $redis = null;
+        $ctx = Coroutine::getContext();
 
-        if ($redis !== null) {
-            return $redis;
+        if (isset($ctx['redis'])) {
+            return $ctx['redis'];
         }
 
         $host = System::getEnv('_APP_REDIS_HOST', 'localhost');
@@ -175,46 +178,46 @@ if (!function_exists('getRedis')) {
         }
         $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-        return $redis;
+        return $ctx['redis'] = $redis;
     }
 }
 
 if (!function_exists('getTimelimit')) {
-    function getTimelimit(): TimeLimitRedis
+    function getTimelimit(string $key = "", int $limit = 0, int $seconds = 1): TimeLimitRedis
     {
-        static $timelimit = null;
+        $ctx = Coroutine::getContext();
 
-        if ($timelimit !== null) {
-            return $timelimit;
+        if (isset($ctx['timelimit'])) {
+            return $ctx['timelimit'];
         }
 
-        return $timelimit = new TimeLimitRedis("", 0, 1, getRedis());
+        return $ctx['timelimit'] = new TimeLimitRedis($key, $limit, $seconds, getRedis());
     }
 }
 
 if (!function_exists('getRealtime')) {
     function getRealtime(): Realtime
     {
-        static $realtime = null;
+        $ctx = Coroutine::getContext();
 
-        if ($realtime !== null) {
-            return $realtime;
+        if (isset($ctx['realtime'])) {
+            return $ctx['realtime'];
         }
 
-        return $realtime = new Realtime();
+        return $ctx['realtime'] = new Realtime();
     }
 }
 
 if (!function_exists('getTelemetry')) {
     function getTelemetry(int $workerId): Utopia\Telemetry\Adapter
     {
-        static $telemetry = null;
+        $ctx = Coroutine::getContext();
 
-        if ($telemetry !== null) {
-            return $telemetry;
+        if (isset($ctx['telemetry'])) {
+            return $ctx['telemetry'];
         }
 
-        return $telemetry = new NoTelemetry();
+        return $ctx['telemetry'] = new NoTelemetry();
     }
 }
 
@@ -540,7 +543,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $timelimit = $app->getResource('timelimit');
-        $platforms = $app->getResource('platforms');
         $user = $app->getResource('user'); /** @var User $user */
 
         /*
@@ -565,7 +567,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
-        $originValidator = new Origin($platforms);
+        $originValidator = $app->getResource('originValidator');
 
         if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());

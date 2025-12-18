@@ -98,16 +98,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/get.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get.md",
                     "auth": {
                         "Project": []
                     }
@@ -149,23 +151,27 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -240,16 +246,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-email.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email.md",
                     "auth": {
                         "Project": []
                     }
@@ -318,16 +326,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-identities.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-identities.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-identities.md",
                     "auth": {
                         "Project": []
                     }
@@ -389,16 +399,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-identity.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-identity.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-identity.md",
                     "auth": {
                         "Project": []
                     }
@@ -452,23 +464,27 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-jwt.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "rate-limit": 100,
                     "rate-time": 3600,
                     "rate-key": "url:{url},userId:{userId}",
                     "scope": "account",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-jwt.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ]
             }
@@ -501,16 +517,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-logs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-logs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-logs.md",
                     "auth": {
                         "Project": []
                     }
@@ -577,16 +595,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa.md",
                     "auth": {
                         "Project": []
                     }
@@ -650,16 +670,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-authenticator.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-authenticator.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-authenticator.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAAuthenticator"
@@ -686,6 +708,7 @@
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
                             "demo": "account\/create-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAAuthenticator"
@@ -711,7 +734,8 @@
                                 }
                             ],
                             "description": "Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](\/docs\/references\/cloud\/client-web\/account#updateMfaAuthenticator) method.",
-                            "demo": "account\/create-mfa-authenticator.md"
+                            "demo": "account\/create-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -770,16 +794,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-authenticator.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-authenticator.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-authenticator.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAAuthenticator"
@@ -808,6 +834,7 @@
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
                             "demo": "account\/update-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAAuthenticator"
@@ -835,7 +862,8 @@
                                 }
                             ],
                             "description": "Verify an authenticator app after adding it using the [add authenticator](\/docs\/references\/cloud\/client-web\/account#createMfaAuthenticator) method.",
-                            "demo": "account\/update-mfa-authenticator.md"
+                            "demo": "account\/update-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -907,16 +935,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-mfa-authenticator.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-mfa-authenticator.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-mfa-authenticator.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.deleteMFAAuthenticator"
@@ -942,6 +972,7 @@
                             ],
                             "description": "Delete an authenticator for a user by ID.",
                             "demo": "account\/delete-mfa-authenticator.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.deleteMFAAuthenticator"
@@ -966,7 +997,8 @@
                                 }
                             ],
                             "description": "Delete an authenticator for a user by ID.",
-                            "demo": "account\/delete-mfa-authenticator.md"
+                            "demo": "account\/delete-mfa-authenticator.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1027,16 +1059,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-challenge.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-challenge.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},userId:{userId}",
                     "scope": "account",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-challenge.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFAChallenge"
@@ -1063,6 +1097,7 @@
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
                             "demo": "account\/create-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFAChallenge"
@@ -1088,7 +1123,8 @@
                                 }
                             ],
                             "description": "Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](\/docs\/references\/cloud\/client-web\/account#updateMfaChallenge) method.",
-                            "demo": "account\/create-mfa-challenge.md"
+                            "demo": "account\/create-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1097,7 +1133,9 @@
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -1158,16 +1196,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-challenge.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-challenge.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},challengeId:{param-challengeId}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-challenge.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFAChallenge"
@@ -1196,6 +1236,7 @@
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/update-mfa-challenge.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFAChallenge"
@@ -1223,7 +1264,8 @@
                                 }
                             ],
                             "description": "Complete the MFA challenge by providing the one-time password. Finish the process of MFA verification by providing the one-time password. To begin the flow, use [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/update-mfa-challenge.md"
+                            "demo": "account\/update-mfa-challenge.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1294,16 +1336,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-mfa-factors.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-mfa-factors.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-mfa-factors.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.listMFAFactors"
@@ -1326,6 +1370,7 @@
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
                             "demo": "account\/list-mfa-factors.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.listMFAFactors"
@@ -1347,7 +1392,8 @@
                                 }
                             ],
                             "description": "List the factors available on the account to be used as a MFA challange.",
-                            "demo": "account\/list-mfa-factors.md"
+                            "demo": "account\/list-mfa-factors.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1391,16 +1437,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/get-mfa-recovery-codes.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-mfa-recovery-codes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-mfa-recovery-codes.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.getMFARecoveryCodes"
@@ -1423,6 +1471,7 @@
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
                             "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.getMFARecoveryCodes"
@@ -1444,7 +1493,8 @@
                                 }
                             ],
                             "description": "Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.",
-                            "demo": "account\/get-mfa-recovery-codes.md"
+                            "demo": "account\/get-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1488,16 +1538,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-recovery-codes.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-recovery-codes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": false,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-mfa-recovery-codes.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.createMFARecoveryCodes"
@@ -1520,6 +1572,7 @@
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
                             "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createMFARecoveryCodes"
@@ -1541,7 +1594,8 @@
                                 }
                             ],
                             "description": "Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](\/docs\/references\/cloud\/client-web\/account#createMfaChallenge) method.",
-                            "demo": "account\/create-mfa-recovery-codes.md"
+                            "demo": "account\/create-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1585,16 +1639,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-recovery-codes.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-recovery-codes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-mfa-recovery-codes.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "account.updateMFARecoveryCodes"
@@ -1617,6 +1673,7 @@
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
                             "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateMFARecoveryCodes"
@@ -1638,7 +1695,8 @@
                                 }
                             ],
                             "description": "Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](\/docs\/references\/cloud\/client-web\/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.",
-                            "demo": "account\/update-mfa-recovery-codes.md"
+                            "demo": "account\/update-mfa-recovery-codes.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -1684,16 +1742,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-name.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-name.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-name.md",
                     "auth": {
                         "Project": []
                     }
@@ -1757,16 +1817,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-password.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-password.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-password.md",
                     "auth": {
                         "Project": []
                     }
@@ -1836,16 +1898,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-phone.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone.md",
                     "auth": {
                         "Project": []
                     }
@@ -1914,16 +1978,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/get-prefs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-prefs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-prefs.md",
                     "auth": {
                         "Project": []
                     }
@@ -1965,16 +2031,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-prefs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-prefs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-prefs.md",
                     "auth": {
                         "Project": []
                     }
@@ -2038,7 +2106,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-recovery.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-recovery.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": [
@@ -2047,10 +2114,13 @@
                     ],
                     "scope": "sessions.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-recovery.md",
                     "auth": {
                         "Project": []
                     }
@@ -2119,16 +2189,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-recovery.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-recovery.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},userId:{param-userId}",
                     "scope": "sessions.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-recovery.md",
                     "auth": {
                         "Project": []
                     }
@@ -2204,16 +2276,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-sessions.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-sessions.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/list-sessions.md",
                     "auth": {
                         "Project": []
                     }
@@ -2250,16 +2324,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-sessions.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-sessions.md",
                     "rate-limit": 100,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-sessions.md",
                     "auth": {
                         "Project": []
                     }
@@ -2303,23 +2379,27 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-anonymous-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-anonymous.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
                     "rate-key": "ip:{ip}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-anonymous.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ]
             }
@@ -2354,23 +2434,27 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-email-password-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-email-password.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},email:{param-email}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-email-password.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -2432,16 +2516,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-magic-url-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "ip:{ip},userId:{param-userId}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2452,7 +2538,9 @@
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -2509,23 +2597,27 @@
                     "cookies": false,
                     "type": "webAuth",
                     "demo": "account\/create-o-auth-2-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
                     "rate-key": "ip:{ip}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session-oauth2.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -2646,16 +2738,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-phone-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "ip:{ip},userId:{param-userId}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "deprecated": {
                         "since": "1.6.0",
                         "replaceWith": "account.createSession"
@@ -2666,7 +2760,9 @@
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -2728,23 +2824,27 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "ip:{ip},userId:{param-userId}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-session.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -2804,16 +2904,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/get-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-session.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/get-session.md",
                     "auth": {
                         "Project": []
                     }
@@ -2865,16 +2967,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-session.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-session.md",
                     "auth": {
                         "Project": []
                     }
@@ -2921,16 +3025,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-session.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-session.md",
                     "rate-limit": 100,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-session.md",
                     "auth": {
                         "Project": []
                     }
@@ -2984,16 +3090,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-status.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-status.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-status.md",
                     "auth": {
                         "Project": []
                     }
@@ -3037,15 +3145,17 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "targets.write",
                     "platforms": [
+                        "console",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-push-target.md",
                     "auth": {
                         "Project": []
                     }
@@ -3121,15 +3231,17 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "targets.write",
                     "platforms": [
+                        "console",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-push-target.md",
                     "auth": {
                         "Project": []
                     }
@@ -3193,15 +3305,17 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-push-target.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "targets.write",
                     "platforms": [
+                        "console",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/delete-push-target.md",
                     "auth": {
                         "Project": []
                     }
@@ -3254,7 +3368,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-email-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-email.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": [
@@ -3263,17 +3376,22 @@
                     ],
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-email.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -3341,7 +3459,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-magic-url-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "rate-limit": 60,
                     "rate-time": 3600,
                     "rate-key": [
@@ -3350,17 +3467,22 @@
                     ],
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-magic-url.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -3429,23 +3551,27 @@
                     "cookies": false,
                     "type": "webAuth",
                     "demo": "account\/create-o-auth-2-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "rate-limit": 50,
                     "rate-time": 3600,
                     "rate-key": "ip:{ip}",
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-oauth2.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -3566,7 +3692,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-phone-token.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-phone.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": [
@@ -3575,17 +3700,22 @@
                     ],
                     "scope": "sessions.write",
                     "platforms": [
-                        "server",
-                        "client"
+                        "console",
+                        "client",
+                        "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-token-phone.md",
                     "auth": {
                         "Project": []
                     }
                 },
                 "security": [
                     {
-                        "Project": []
+                        "Project": [],
+                        "Session": [],
+                        "JWT": []
                     }
                 ],
                 "parameters": [
@@ -3647,16 +3777,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-email-verification.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},userId:{userId}",
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-email-verification.md",
                     "methods": [
                         {
                             "name": "createEmailVerification",
@@ -3678,7 +3810,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
-                            "demo": "account\/create-email-verification.md"
+                            "demo": "account\/create-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "createVerification",
@@ -3701,6 +3834,7 @@
                             ],
                             "description": "Use this endpoint to send a verification message to your user email address to confirm they are the valid owners of that address. Both the **userId** and **secret** arguments will be passed as query parameters to the URL you have provided to be attached to the verification email. The provided URL should redirect the user back to your app and allow you to complete the verification process by verifying both the **userId** and **secret** parameters. Learn more about how to [complete the verification process](https:\/\/appwrite.io\/docs\/references\/cloud\/client-web\/account#updateVerification). The verification link sent to the user's email address is valid for 7 days.\n\nPlease note that in order to avoid a [Redirect Attack](https:\/\/github.com\/OWASP\/CheatSheetSeries\/blob\/master\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md), the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.\n",
                             "demo": "account\/create-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.createEmailVerification"
@@ -3768,16 +3902,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-email-verification.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},userId:{param-userId}",
                     "scope": "public",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-email-verification.md",
                     "methods": [
                         {
                             "name": "updateEmailVerification",
@@ -3801,7 +3937,8 @@
                                 }
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
-                            "demo": "account\/update-email-verification.md"
+                            "demo": "account\/update-email-verification.md",
+                            "public": true
                         },
                         {
                             "name": "updateVerification",
@@ -3826,6 +3963,7 @@
                             ],
                             "description": "Use this endpoint to complete the user email verification process. Use both the **userId** and **secret** parameters that were attached to your app URL to verify the user email ownership. If confirmed this route will return a 200 status code.",
                             "demo": "account\/update-verification.md",
+                            "public": false,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "account.updateEmailVerification"
@@ -3902,7 +4040,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-phone-verification.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-phone-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": [
@@ -3911,10 +4048,13 @@
                     ],
                     "scope": "account",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/create-phone-verification.md",
                     "auth": {
                         "Project": []
                     }
@@ -3956,16 +4096,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-phone-verification.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone-verification.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "userId:{param-userId}",
                     "scope": "public",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/account\/update-phone-verification.md",
                     "auth": {
                         "Project": []
                     }
@@ -4034,16 +4176,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-browser.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-browser.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-browser.md",
                     "auth": {
                         "Project": []
                     }
@@ -4158,16 +4302,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-credit-card.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-credit-card.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-credit-card.md",
                     "auth": {
                         "Project": []
                     }
@@ -4288,16 +4434,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-favicon.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-favicon.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-favicon.md",
                     "auth": {
                         "Project": []
                     }
@@ -4350,16 +4498,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-flag.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-flag.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-flag.md",
                     "auth": {
                         "Project": []
                     }
@@ -4836,16 +4986,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-image.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-image.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-image.md",
                     "auth": {
                         "Project": []
                     }
@@ -4918,16 +5070,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-initials.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-initials.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-initials.md",
                     "auth": {
                         "Project": []
                     }
@@ -5008,16 +5162,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-qr.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-qr.md",
                     "auth": {
                         "Project": []
                     }
@@ -5098,16 +5254,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-screenshot.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-screenshot.md",
                     "rate-limit": 60,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "avatars.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/avatars\/get-screenshot.md",
                     "auth": {
                         "Project": []
                     }
@@ -5135,7 +5293,7 @@
                         "required": false,
                         "type": "object",
                         "default": [],
-                        "x-example": "{}",
+                        "x-example": "{\"Authorization\":\"Bearer token123\",\"X-Custom-Header\":\"value\"}",
                         "in": "query"
                     },
                     {
@@ -5144,7 +5302,7 @@
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 1,
+                        "x-example": "1920",
                         "default": 1280,
                         "in": "query"
                     },
@@ -5154,7 +5312,7 @@
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 1,
+                        "x-example": "1080",
                         "default": 720,
                         "in": "query"
                     },
@@ -5164,7 +5322,7 @@
                         "required": false,
                         "type": "number",
                         "format": "float",
-                        "x-example": 0.1,
+                        "x-example": "2",
                         "default": 1,
                         "in": "query"
                     },
@@ -5173,7 +5331,7 @@
                         "description": "Browser theme. Pass \"light\" or \"dark\". Defaults to \"light\".",
                         "required": false,
                         "type": "string",
-                        "x-example": "light",
+                        "x-example": "dark",
                         "enum": [
                             "light",
                             "dark"
@@ -5188,7 +5346,7 @@
                         "description": "Custom user agent string. Defaults to browser default.",
                         "required": false,
                         "type": "string",
-                        "x-example": "<USER_AGENT>",
+                        "x-example": "Mozilla\/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit\/605.1.15",
                         "default": "",
                         "in": "query"
                     },
@@ -5197,7 +5355,7 @@
                         "description": "Capture full page scroll. Pass 0 for viewport only, or 1 for full page. Defaults to 0.",
                         "required": false,
                         "type": "boolean",
-                        "x-example": false,
+                        "x-example": "true",
                         "default": false,
                         "in": "query"
                     },
@@ -5206,7 +5364,7 @@
                         "description": "Browser locale (e.g., \"en-US\", \"fr-FR\"). Defaults to browser default.",
                         "required": false,
                         "type": "string",
-                        "x-example": "<LOCALE>",
+                        "x-example": "en-US",
                         "default": "",
                         "in": "query"
                     },
@@ -5215,7 +5373,7 @@
                         "description": "IANA timezone identifier (e.g., \"America\/New_York\", \"Europe\/London\"). Defaults to browser default.",
                         "required": false,
                         "type": "string",
-                        "x-example": "africa\/abidjan",
+                        "x-example": "america\/new_york",
                         "enum": [
                             "africa\/abidjan",
                             "africa\/accra",
@@ -5648,7 +5806,7 @@
                         "required": false,
                         "type": "number",
                         "format": "float",
-                        "x-example": -90,
+                        "x-example": "37.7749",
                         "default": 0,
                         "in": "query"
                     },
@@ -5658,7 +5816,7 @@
                         "required": false,
                         "type": "number",
                         "format": "float",
-                        "x-example": -180,
+                        "x-example": "-122.4194",
                         "default": 0,
                         "in": "query"
                     },
@@ -5668,7 +5826,7 @@
                         "required": false,
                         "type": "number",
                         "format": "float",
-                        "x-example": 0,
+                        "x-example": "100",
                         "default": 0,
                         "in": "query"
                     },
@@ -5677,7 +5835,7 @@
                         "description": "Enable touch support. Pass 0 for no touch, or 1 for touch enabled. Defaults to 0.",
                         "required": false,
                         "type": "boolean",
-                        "x-example": false,
+                        "x-example": "true",
                         "default": false,
                         "in": "query"
                     },
@@ -5688,8 +5846,33 @@
                         "type": "array",
                         "collectionFormat": "multi",
                         "items": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "geolocation",
+                                "camera",
+                                "microphone",
+                                "notifications",
+                                "midi",
+                                "push",
+                                "clipboard-read",
+                                "clipboard-write",
+                                "payment-handler",
+                                "usb",
+                                "bluetooth",
+                                "accelerometer",
+                                "gyroscope",
+                                "magnetometer",
+                                "ambient-light-sensor",
+                                "background-sync",
+                                "persistent-storage",
+                                "screen-wake-lock",
+                                "web-share",
+                                "xr-spatial-tracking"
+                            ],
+                            "x-enum-name": "BrowserPermission",
+                            "x-enum-keys": []
                         },
+                        "x-example": "[\"geolocation\",\"notifications\"]",
                         "default": [],
                         "in": "query"
                     },
@@ -5699,7 +5882,7 @@
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
+                        "x-example": "3",
                         "default": 0,
                         "in": "query"
                     },
@@ -5709,7 +5892,7 @@
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
+                        "x-example": "800",
                         "default": 0,
                         "in": "query"
                     },
@@ -5719,7 +5902,7 @@
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": 0,
+                        "x-example": "600",
                         "default": 0,
                         "in": "query"
                     },
@@ -5729,7 +5912,7 @@
                         "required": false,
                         "type": "integer",
                         "format": "int32",
-                        "x-example": -1,
+                        "x-example": "85",
                         "default": -1,
                         "in": "query"
                     },
@@ -5738,7 +5921,7 @@
                         "description": "Output format type (jpeg, jpg, png, gif and webp).",
                         "required": false,
                         "type": "string",
-                        "x-example": "jpg",
+                        "x-example": "jpeg",
                         "enum": [
                             "jpg",
                             "jpeg",
@@ -5784,16 +5967,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-transactions.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-transactions.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "rows.read",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-transactions.md",
                     "auth": {
                         "Project": []
                     }
@@ -5849,16 +6034,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -5917,16 +6104,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "rows.read",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -5978,16 +6167,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -6055,16 +6246,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -6118,16 +6311,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-operations.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-operations.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-operations.md",
                     "auth": {
                         "Project": []
                     }
@@ -6197,16 +6392,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-documents.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/list-documents.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.listRows"
@@ -6299,16 +6496,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-document.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-document.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.createRow"
@@ -6343,6 +6542,7 @@
                             ],
                             "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/create-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.createRow"
@@ -6455,16 +6655,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-document.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/get-document.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.getRow"
@@ -6556,16 +6758,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/upsert-document.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/upsert-document.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.upsertRow"
@@ -6600,6 +6804,7 @@
                             ],
                             "description": "Create or update a Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection) API or directly from your database console.",
                             "demo": "databases\/upsert-document.md",
+                            "public": true,
                             "deprecated": {
                                 "since": "1.8.0",
                                 "replaceWith": "tablesDB.upsertRow"
@@ -6708,16 +6913,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-document.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-document.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.updateRow"
@@ -6816,16 +7023,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-document.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/delete-document.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.deleteRow"
@@ -6915,7 +7124,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/decrement-document-attribute.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -6926,6 +7134,8 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/decrement-document-attribute.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.decrementRowColumn"
@@ -7035,7 +7245,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/increment-document-attribute.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -7046,6 +7255,8 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/increment-document-attribute.md",
                     "deprecated": {
                         "since": "1.8.0",
                         "replaceWith": "tablesDB.incrementRowColumn"
@@ -7153,16 +7364,17 @@
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a list of all the current user function execution logs. You can use the query params to filter your results.",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "execution.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7235,16 +7447,17 @@
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterTrigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "execution.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7353,16 +7566,17 @@
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterGet a function execution log by its unique ID.",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "execution.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
                     "auth": {
                         "Project": []
                     }
@@ -7424,16 +7638,18 @@
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "graphql",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "auth": {
                         "Project": []
                     }
@@ -7497,16 +7713,18 @@
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "graphql",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/graphql\/post.md",
                     "auth": {
                         "Project": []
                     }
@@ -7568,16 +7786,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/get.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/get-locale.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/get-locale.md",
                     "auth": {
                         "Project": []
                     }
@@ -7619,16 +7839,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-codes.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-locale-codes.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-locale-codes.md",
                     "auth": {
                         "Project": []
                     }
@@ -7670,16 +7892,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-continents.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-continents.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-continents.md",
                     "auth": {
                         "Project": []
                     }
@@ -7721,16 +7945,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries.md",
                     "auth": {
                         "Project": []
                     }
@@ -7772,16 +7998,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-eu.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-eu.md",
                     "auth": {
                         "Project": []
                     }
@@ -7823,16 +8051,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-phones.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-phones.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-countries-phones.md",
                     "auth": {
                         "Project": []
                     }
@@ -7874,16 +8104,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-currencies.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-currencies.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-currencies.md",
                     "auth": {
                         "Project": []
                     }
@@ -7925,16 +8157,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-languages.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-languages.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "locale.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/locale\/list-languages.md",
                     "auth": {
                         "Project": []
                     }
@@ -7978,7 +8212,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/create-subscriber.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -7989,6 +8222,8 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/create-subscriber.md",
                     "auth": {
                         "Project": []
                     }
@@ -8062,7 +8297,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/delete-subscriber.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -8073,6 +8307,8 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/messaging\/delete-subscriber.md",
                     "auth": {
                         "Project": []
                     }
@@ -8132,16 +8368,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/list-files.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "files.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/list-files.md",
                     "auth": {
                         "Project": []
                     }
@@ -8223,16 +8461,18 @@
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/create-file.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}",
                     "scope": "files.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/create-file.md",
                     "auth": {
                         "Project": []
                     }
@@ -8312,16 +8552,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "files.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file.md",
                     "auth": {
                         "Project": []
                     }
@@ -8381,16 +8623,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/update-file.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "files.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/update-file.md",
                     "auth": {
                         "Project": []
                     }
@@ -8471,16 +8715,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/delete-file.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "files.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/delete-file.md",
                     "auth": {
                         "Project": []
                     }
@@ -8540,16 +8786,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-download.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "files.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-download.md",
                     "auth": {
                         "Project": []
                     }
@@ -8618,16 +8866,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-preview.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "files.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-preview.md",
                     "auth": {
                         "Project": []
                     }
@@ -8824,16 +9074,18 @@
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-view.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "files.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/storage\/get-file-view.md",
                     "auth": {
                         "Project": []
                     }
@@ -8902,7 +9154,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-transactions.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-transactions.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -8911,10 +9162,13 @@
                         "rows.read"
                     ],
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-transactions.md",
                     "auth": {
                         "Project": []
                     }
@@ -8970,7 +9224,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -8979,10 +9232,13 @@
                         "rows.write"
                     ],
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -9041,7 +9297,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9050,10 +9305,13 @@
                         "rows.read"
                     ],
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -9105,7 +9363,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9114,10 +9371,13 @@
                         "rows.write"
                     ],
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -9185,7 +9445,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-transaction.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-transaction.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9194,10 +9453,13 @@
                         "rows.write"
                     ],
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-transaction.md",
                     "auth": {
                         "Project": []
                     }
@@ -9251,7 +9513,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-operations.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-operations.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9260,10 +9521,13 @@
                         "rows.write"
                     ],
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-operations.md",
                     "auth": {
                         "Project": []
                     }
@@ -9333,7 +9597,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-rows.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9342,10 +9605,13 @@
                         "documents.read"
                     ],
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/list-rows.md",
                     "auth": {
                         "Project": []
                     }
@@ -9434,7 +9700,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -9443,10 +9708,13 @@
                         "documents.write"
                     ],
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-row.md",
                     "methods": [
                         {
                             "name": "createRow",
@@ -9476,7 +9744,8 @@
                                 }
                             ],
                             "description": "Create a new Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/create-row.md"
+                            "demo": "tablesdb\/create-row.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -9585,7 +9854,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -9594,10 +9862,13 @@
                         "documents.read"
                     ],
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/get-row.md",
                     "auth": {
                         "Project": []
                     }
@@ -9685,7 +9956,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -9694,10 +9964,13 @@
                         "documents.write"
                     ],
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/upsert-row.md",
                     "methods": [
                         {
                             "name": "upsertRow",
@@ -9726,7 +9999,8 @@
                                 }
                             ],
                             "description": "Create or update a Row. Before using this route, you should create a new table resource using either a [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable) API or directly from your database console.",
-                            "demo": "tablesdb\/upsert-row.md"
+                            "demo": "tablesdb\/upsert-row.md",
+                            "public": true
                         }
                     ],
                     "auth": {
@@ -9828,7 +10102,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -9837,10 +10110,13 @@
                         "documents.write"
                     ],
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-row.md",
                     "auth": {
                         "Project": []
                     }
@@ -9935,7 +10211,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-row.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "rate-limit": 60,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -9944,10 +10219,13 @@
                         "documents.write"
                     ],
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/delete-row.md",
                     "auth": {
                         "Project": []
                     }
@@ -10033,7 +10311,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/decrement-row-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -10047,6 +10324,8 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/decrement-row-column.md",
                     "auth": {
                         "Project": []
                     }
@@ -10152,7 +10431,6 @@
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/increment-row-column.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "rate-limit": 120,
                     "rate-time": 60,
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
@@ -10166,6 +10444,8 @@
                         "console"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/increment-row-column.md",
                     "auth": {
                         "Project": []
                     }
@@ -10269,16 +10549,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-teams.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-teams.md",
                     "auth": {
                         "Project": []
                     }
@@ -10352,16 +10634,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team.md",
                     "auth": {
                         "Project": []
                     }
@@ -10441,16 +10725,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team.md",
                     "auth": {
                         "Project": []
                     }
@@ -10502,16 +10788,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-name.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-name.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-name.md",
                     "auth": {
                         "Project": []
                     }
@@ -10576,16 +10864,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team.md",
                     "auth": {
                         "Project": []
                     }
@@ -10637,16 +10927,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list-memberships.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-team-members.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/list-team-members.md",
                     "auth": {
                         "Project": []
                     }
@@ -10728,16 +11020,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create-membership.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team-membership.md",
                     "rate-limit": 10,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/create-team-membership.md",
                     "auth": {
                         "Project": []
                     }
@@ -10788,7 +11082,14 @@
                                     "default": null,
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "developer",
+                                            "owner"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 },
                                 "url": {
@@ -10840,16 +11141,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-membership.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-member.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-member.md",
                     "auth": {
                         "Project": []
                     }
@@ -10909,16 +11212,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership.md",
                     "auth": {
                         "Project": []
                     }
@@ -10959,7 +11264,14 @@
                                     "default": null,
                                     "x-example": null,
                                     "items": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "developer",
+                                            "owner"
+                                        ],
+                                        "x-enum-name": null,
+                                        "x-enum-keys": []
                                     }
                                 }
                             },
@@ -10994,16 +11306,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete-membership.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team-membership.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/delete-team-membership.md",
                     "auth": {
                         "Project": []
                     }
@@ -11065,16 +11379,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership-status.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership-status.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "public",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-membership-status.md",
                     "auth": {
                         "Project": []
                     }
@@ -11159,16 +11475,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-prefs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-prefs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/get-team-prefs.md",
                     "auth": {
                         "Project": []
                     }
@@ -11220,16 +11538,18 @@
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-prefs.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-prefs.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "teams.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
                     "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/teams\/update-team-prefs.md",
                     "auth": {
                         "Project": []
                     }

@@ -87,6 +87,914 @@ trait DatabasesBase
     }
 
     /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithStringAttribute(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestStringAttr',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('TestStringAttr', $collection['body']['name']);
+        $this->assertCount(1, $collection['body']['attributes']);
+        $this->assertEquals('title', $collection['body']['attributes'][0]['key']);
+        $this->assertEquals('string', $collection['body']['attributes'][0]['type']);
+        $this->assertEquals(255, $collection['body']['attributes'][0]['size']);
+        $this->assertEquals(true, $collection['body']['attributes'][0]['required']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithMultipleAttributeTypes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestMultiAttr',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'name',
+                    'type' => 'string',
+                    'size' => 100,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'age',
+                    'type' => 'integer',
+                    'required' => false,
+                    'default' => 0,
+                    'min' => 0,
+                    'max' => 150,
+                ],
+                [
+                    'key' => 'score',
+                    'type' => 'float',
+                    'required' => false,
+                    'default' => 0.0,
+                    'min' => 0.0,
+                    'max' => 100.0,
+                ],
+                [
+                    'key' => 'isActive',
+                    'type' => 'boolean',
+                    'required' => false,
+                    'default' => true,
+                ],
+                [
+                    'key' => 'createdAt',
+                    'type' => 'datetime',
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('TestMultiAttr', $collection['body']['name']);
+        $this->assertCount(5, $collection['body']['attributes']);
+
+        // Verify each attribute type
+        $attributeKeys = array_column($collection['body']['attributes'], 'key');
+        $this->assertContains('name', $attributeKeys);
+        $this->assertContains('age', $attributeKeys);
+        $this->assertContains('score', $attributeKeys);
+        $this->assertContains('isActive', $attributeKeys);
+        $this->assertContains('createdAt', $attributeKeys);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithArrayAttribute(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestArrayAttr',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'tags',
+                    'type' => 'string',
+                    'size' => 50,
+                    'required' => false,
+                    'array' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('TestArrayAttr', $collection['body']['name']);
+        $this->assertCount(1, $collection['body']['attributes']);
+        $this->assertEquals('tags', $collection['body']['attributes'][0]['key']);
+        $this->assertEquals(true, $collection['body']['attributes'][0]['array']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithDefaultValues(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestDefaults',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'status',
+                    'type' => 'string',
+                    'size' => 20,
+                    'required' => false,
+                    'default' => 'pending',
+                ],
+                [
+                    'key' => 'count',
+                    'type' => 'integer',
+                    'required' => false,
+                    'default' => 0,
+                ],
+                [
+                    'key' => 'enabled',
+                    'type' => 'boolean',
+                    'required' => false,
+                    'default' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(3, $collection['body']['attributes']);
+
+        // Find and verify default values
+        foreach ($collection['body']['attributes'] as $attr) {
+            if ($attr['key'] === 'status') {
+                $this->assertEquals('pending', $attr['default']);
+            }
+            if ($attr['key'] === 'count') {
+                $this->assertEquals(0, $attr['default']);
+            }
+            if ($attr['key'] === 'enabled') {
+                $this->assertEquals(false, $attr['default']);
+            }
+        }
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithKeyIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestKeyIndex',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'title_idx',
+                    'type' => 'key',
+                    'attributes' => ['title'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(1, $collection['body']['attributes']);
+        $this->assertCount(1, $collection['body']['indexes']);
+        $this->assertEquals('title_idx', $collection['body']['indexes'][0]['key']);
+        $this->assertEquals('key', $collection['body']['indexes'][0]['type']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithUniqueIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestUniqueIndex',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'email',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'email_unique',
+                    'type' => 'unique',
+                    'attributes' => ['email'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(1, $collection['body']['indexes']);
+        $this->assertEquals('email_unique', $collection['body']['indexes'][0]['key']);
+        $this->assertEquals('unique', $collection['body']['indexes'][0]['type']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithFulltextIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestFulltextIndex',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'content',
+                    'type' => 'string',
+                    'size' => 10000,
+                    'required' => false,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'content_fulltext',
+                    'type' => 'fulltext',
+                    'attributes' => ['content'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(1, $collection['body']['indexes']);
+        $this->assertEquals('content_fulltext', $collection['body']['indexes'][0]['key']);
+        $this->assertEquals('fulltext', $collection['body']['indexes'][0]['type']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithCompoundIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestCompoundIndex',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'userId',
+                    'type' => 'string',
+                    'size' => 36,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'createdAt',
+                    'type' => 'datetime',
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'user_date_idx',
+                    'type' => 'key',
+                    'attributes' => ['userId', 'createdAt'],
+                    'orders' => ['ASC', 'DESC'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(2, $collection['body']['attributes']);
+        $this->assertCount(1, $collection['body']['indexes']);
+        $this->assertEquals('user_date_idx', $collection['body']['indexes'][0]['key']);
+        $this->assertCount(2, $collection['body']['indexes'][0]['attributes']);
+        $this->assertEquals(['ASC', 'DESC'], $collection['body']['indexes'][0]['orders']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithMultipleIndexes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestMultiIndex',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'slug',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'body',
+                    'type' => 'string',
+                    'size' => 50000,
+                    'required' => false,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'title_idx',
+                    'type' => 'key',
+                    'attributes' => ['title'],
+                ],
+                [
+                    'key' => 'slug_unique',
+                    'type' => 'unique',
+                    'attributes' => ['slug'],
+                ],
+                [
+                    'key' => 'body_fulltext',
+                    'type' => 'fulltext',
+                    'attributes' => ['body'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(3, $collection['body']['attributes']);
+        $this->assertCount(3, $collection['body']['indexes']);
+
+        $indexKeys = array_column($collection['body']['indexes'], 'key');
+        $this->assertContains('title_idx', $indexKeys);
+        $this->assertContains('slug_unique', $indexKeys);
+        $this->assertContains('body_fulltext', $indexKeys);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithEmptyArrays(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestEmptyArrays',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [],
+            'indexes' => [],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('TestEmptyArrays', $collection['body']['name']);
+        $this->assertCount(0, $collection['body']['attributes']);
+        $this->assertCount(0, $collection['body']['indexes']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithIntegerMinMax(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestIntMinMax',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'temperature',
+                    'type' => 'integer',
+                    'required' => false,
+                    'min' => -50,
+                    'max' => 50,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(1, $collection['body']['attributes']);
+        $this->assertEquals('temperature', $collection['body']['attributes'][0]['key']);
+        $this->assertEquals(-50, $collection['body']['attributes'][0]['min']);
+        $this->assertEquals(50, $collection['body']['attributes'][0]['max']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithFloatMinMax(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestFloatMinMax',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'rating',
+                    'type' => 'float',
+                    'required' => false,
+                    'min' => 0.0,
+                    'max' => 5.0,
+                    'default' => 0.0,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(1, $collection['body']['attributes']);
+        $this->assertEquals('rating', $collection['body']['attributes'][0]['key']);
+        $this->assertEquals(0.0, $collection['body']['attributes'][0]['min']);
+        $this->assertEquals(5.0, $collection['body']['attributes'][0]['max']);
+        $this->assertEquals(0.0, $collection['body']['attributes'][0]['default']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionInvalidAttributeType(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestInvalidType',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'key' => 'invalid',
+                    'type' => 'invalid_type',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionInvalidIndexType(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestInvalidIndex',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'invalid_idx',
+                    'type' => 'invalid_type',
+                    'attributes' => ['title'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionMissingAttributeKey(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestMissingKey',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'type' => 'string',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionMissingAttributeType(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestMissingType',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'key' => 'field',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionStringSizeMissing(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestMissingSize',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionIndexOnNonExistentAttribute(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestBadIndexAttr',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'nonexistent_idx',
+                    'type' => 'key',
+                    'attributes' => ['nonexistent_field'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionDuplicateAttributeKeys(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestDuplicateKeys',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionDuplicateIndexKeys(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestDuplicateIndexKeys',
+            'documentSecurity' => true,
+            'permissions' => [],
+            'attributes' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'title_idx',
+                    'type' => 'key',
+                    'attributes' => ['title'],
+                ],
+                [
+                    'key' => 'title_idx',
+                    'type' => 'unique',
+                    'attributes' => ['title'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateCollectionWithIndexLengths(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'TestIndexLengths',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'attributes' => [
+                [
+                    'key' => 'longText',
+                    'type' => 'string',
+                    'size' => 10000,
+                    'required' => false,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'text_idx',
+                    'type' => 'key',
+                    'attributes' => ['longText'],
+                    'lengths' => [255],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertCount(1, $collection['body']['indexes']);
+        $this->assertEquals([255], $collection['body']['indexes'][0]['lengths']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+        ];
+    }
+
+    /**
      * @depends testCreateCollection
      */
     public function testConsoleProject(array $data): void
@@ -1352,7 +2260,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1364,7 +2272,8 @@ trait DatabasesBase
             'attributes' => ['actors'],
         ]);
 
-        $this->assertEquals(202, $actorsArray['headers']['status-code']);
+        $this->assertEquals(400, $actorsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $actorsArray['body']['message']);
 
         $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1377,7 +2286,8 @@ trait DatabasesBase
             'orders' => ['DESC', 'DESC'],
         ]);
 
-        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $twoLevelsArray['body']['message']);
 
         $unknown = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1390,7 +2300,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown attribute: Unknown. Verify the attribute name or create the attribute.', $unknown['body']['message']);
+        $this->assertEquals('The attribute \'Unknown\' required for the index could not be found. Please confirm all your attributes are in the available state.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1403,7 +2313,8 @@ trait DatabasesBase
             'orders' => ['DESC'], // Check order is removed in API
         ]);
 
-        $this->assertEquals(202, $index1['headers']['status-code']);
+        $this->assertEquals(400, $index1['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index1['body']['message']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1415,7 +2326,8 @@ trait DatabasesBase
             'attributes' => ['integers'], // array attribute
         ]);
 
-        $this->assertEquals(202, $index2['headers']['status-code']);
+        $this->assertEquals(400, $index2['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index2['body']['message']);
 
         /**
          * Create Indexes by worker
@@ -1429,7 +2341,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertCount(4, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
@@ -1483,8 +2395,7 @@ trait DatabasesBase
         $this->assertEquals('lengthTestIndex', $index['body']['key']);
         $this->assertEquals([128, 200], $index['body']['lengths']);
 
-        // Test case for lengths array overriding
-        // set a length for an array attribute, it should get overriden with Database::MAX_ARRAY_INDEX_LENGTH
+        // Test case for array attribute index (should be blocked)
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1495,14 +2406,8 @@ trait DatabasesBase
             'attributes' => ['actors'],
             'lengths' => [120]
         ]);
-        $this->assertEquals(202, $create['headers']['status-code']);
-
-        $index = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$collectionId}/indexes/lengthOverrideTestIndex", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-        $this->assertEquals([Database::MAX_ARRAY_INDEX_LENGTH], $index['body']['lengths']);
+        $this->assertEquals(400, $create['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $create['body']['message']);
 
         // Test case for count of lengths greater than attributes (should throw 400)
         $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
@@ -6121,6 +7026,7 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $inc['headers']['status-code']);
         $this->assertEquals(6, $inc['body']['count']);
+        $this->assertEquals($collectionId, $inc['body']['$collectionId']);
 
         // Verify count = 6
         $get = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/collections/$collectionId/documents/$docId", array_merge([
@@ -6232,6 +7138,7 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $dec['headers']['status-code']);
         $this->assertEquals(9, $dec['body']['count']);
+        $this->assertEquals($collectionId, $dec['body']['$collectionId']);
 
         $get = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',

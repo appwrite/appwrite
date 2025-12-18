@@ -46,7 +46,7 @@ App::get('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'get',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         hide: true,
         description: '/docs/references/graphql/get.md',
         responses: [
@@ -93,7 +93,7 @@ App::post('/v1/graphql/mutation')
         namespace: 'graphql',
         group: 'graphql',
         name: 'mutation',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(
@@ -144,7 +144,7 @@ App::post('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'query',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(
