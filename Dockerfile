@@ -58,7 +58,7 @@ RUN mkdir -p /storage/uploads && \
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/rules && \
+    chmod +x /usr/local/bin/maintenance-rules && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule-functions && \
