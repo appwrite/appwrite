@@ -3,11 +3,13 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -20,9 +22,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
@@ -52,6 +54,7 @@ class Certificates extends Action
             ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
+            ->inject('queueForCertificates')
             ->inject('log')
             ->inject('certificates')
             ->inject('plan')
@@ -66,6 +69,7 @@ class Certificates extends Action
      * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
+     * @param Certificate $queueForCertificates
      * @param Log $log
      * @param CertificatesAdapter $certificates
      * @return void
@@ -80,6 +84,7 @@ class Certificates extends Action
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
         Realtime $queueForRealtime,
+        Certificate $queueForCertificates,
         Log $log,
         CertificatesAdapter $certificates,
         array $plan
@@ -95,10 +100,88 @@ class Certificates extends Action
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
         $validationDomain = $payload['validationDomain'] ?? null;
+        $action = $payload['action'] ?? Certificate::ACTION_GENERATION;
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $validationDomain);
+        switch ($action) {
+            case Certificate::ACTION_DOMAIN_VERIFICATION:
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $log, $queueForCertificates, $validationDomain);
+                break;
+
+            case Certificate::ACTION_GENERATION:
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $validationDomain);
+                break;
+
+            default:
+                throw new Exception('Invalid action: ' . $action);
+        }
+
+
+    }
+
+    /**
+     * @param Domain $domain
+     * @param Database $dbForPlatform
+     * @param Log $log
+     * @param Certificate $queueForCertificates
+     * @return void
+     * @throws Throwable
+     * @throws \Utopia\Database\Exception
+     */
+    private function handleDomainVerificationAction(
+        Domain $domain,
+        Database $dbForPlatform,
+        Log $log,
+        Certificate $queueForCertificates,
+        ?string $validationDomain = null,
+    ): void {
+        // Get rule
+        $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
+            ? ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
+            : ValidatorAuthorization::skip(fn () => $dbForPlatform->findOne('rules', [
+                Query::equal('domain', [$domain->get()]),
+                Query::limit(1),
+            ]));
+
+        // Skip if rule is not desired state (created but not verified yet).
+        if ($rule->getAttribute('status', '') !== RULE_STATUS_CREATED) {
+            Console::warning('Domain verification for ' . $rule->getAttribute('domain', '') . ' is not needed.');
+            return;
+        }
+
+        Console::info('Domain verification for ' . $rule->getAttribute('domain', '') . ' started.');
+
+        $updates = new Document();
+        try {
+            // Verify DNS records
+            $this->validateDomain($rule, $domain, $log, $validationDomain);
+            // Reset logs and status for the rule
+            $updates
+                ->setAttribute('logs', '')
+                ->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+
+            Console::success('Domain verification succeeded.');
+        } catch (AppwriteException $err) {
+            Console::warning('Domain verification failed: ' . $err->getMessage());
+            $updates->setAttribute('logs', $err->getMessage());
+        }
+
+        echo "updating rule with updates: " . \var_dump($updates);
+        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $updates);
+
+        // Issue a TLS certificate when domain is verified
+        if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
+            $queueForCertificates
+                ->setDomain(new Document([
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                ]))
+                ->setAction(Certificate::ACTION_GENERATION)
+                ->trigger();
+
+            Console::success('Certificate generation triggered successfully.');
+        }
     }
 
     /**
@@ -117,7 +200,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(
+    private function handleCertificateGenerationAction(
         Domain $domain,
         ?string $domainType,
         Database $dbForPlatform,
@@ -172,7 +255,7 @@ class Certificates extends Action
 
         // Rule not found (or) not in the expected state
         if ($rule->isEmpty() || $rule->getAttribute('status') !== RULE_STATUS_CERTIFICATE_GENERATING) {
-            Console::warning('Certificate generation for ' . $domain . ' is skipped as the associated rule is either empty or not in the expected state.');
+            Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
         }
 
         // Get associated certificate for the rule
@@ -195,7 +278,7 @@ class Certificates extends Action
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $this->validateDomain($rule, $domain, $validationDomain, $log);
+                $this->validateDomain($rule, $domain, $log, $validationDomain);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
@@ -355,13 +438,13 @@ class Certificates extends Action
      *
      * @param Document $rule Rule to validate
      * @param Domain $domain Domain to validate
-     * @param string|null $validationDomain Override for main domain check
      * @param Log $log Logger for adding metrics
+     * @param string|null $validationDomain Override for main domain check
      *
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, ?string $validationDomain = null, Log $log): void
+    private function validateDomain(Document $rule, Domain $domain, Log $log, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;

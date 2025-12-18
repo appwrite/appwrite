@@ -125,6 +125,7 @@ class Create extends Action
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
+                ->setAction(Certificate::ACTION_GENERATION)
                 ->trigger();
         }
 

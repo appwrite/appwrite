@@ -92,7 +92,6 @@ class Maintenance extends Action
                 ->trigger();
 
             $this->notifyDeleteConnections($queueForDeletes);
-            $this->renewCertificates($dbForPlatform, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
             $this->notifyDeleteCSVExports($queueForDeletes);
@@ -112,47 +111,6 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_CSV_EXPORTS)
             ->trigger();
-    }
-
-    private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void
-    {
-        $time = DatabaseDateTime::now();
-
-        $certificates = $dbForPlatform->find('certificates', [
-            Query::lessThan('attempts', 5), // Maximum 5 attempts
-            Query::isNotNull('renewDate'),
-            Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
-            Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
-        ]);
-
-
-        if (\count($certificates) > 0) {
-            Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
-
-            // TODO: (@Meldiron) Remove after 1.7.x migration
-            $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-
-            foreach ($certificates as $certificate) {
-                $domain = $certificate->getAttribute('domain');
-                $rule = $isMd5
-                    ? $dbForPlatform->getDocument('rules', md5($domain))
-                    : $dbForPlatform->findOne('rules', [
-                        Query::equal('domain', [$domain]),
-                    ]);
-
-                if ($rule->isEmpty() || $rule->getAttribute('region') !== System::getEnv('_APP_REGION', 'default')) {
-                    continue;
-                }
-
-                $queueForCertificate
-                    ->setDomain(new Document([
-                        'domain' => $certificate->getAttribute('domain')
-                    ]))
-                    ->trigger();
-            }
-        } else {
-            Console::info("[{$time}] No certificates for renewal.");
-        }
     }
 
     private function notifyDeleteCache($interval, Delete $queueForDeletes): void

@@ -7,7 +7,10 @@ use Utopia\Queue\Publisher;
 
 class Certificate extends Event
 {
+    public const string ACTION_DOMAIN_VERIFICATION = 'verification';
+    public const string ACTION_GENERATION = 'generation';
     protected bool $skipRenewCheck = false;
+    protected string $action = self::ACTION_GENERATION;
     protected ?Document $domain = null;
     protected ?string $validationDomain = null;
 
@@ -88,6 +91,28 @@ class Certificate extends Event
     public function getSkipRenewCheck(): bool
     {
         return $this->skipRenewCheck;
+    }
+
+    /**
+     * Set action for this certificate event.
+     *
+     * @param string $action
+     * @return self
+     */
+    public function setAction(string $action): self
+    {
+        $this->action = $action;
+        return $this;
+    }
+
+    /**
+     * Get action for this certificate event.
+     *
+     * @return string
+     */
+    public function getAction(): string
+    {
+        return $this->action;
     }
 
 
