@@ -95,15 +95,12 @@ class Key
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or a dynamic key (JWT).
      *
-     * @param Document $project
-     * @param string $key
-     * @return Key
      * @throws Exception
      */
     public static function decode(
         Document $project,
         string $key
-    ): Key {
+    ): static {
         if (\str_contains($key, '_')) {
             [$type, $secret] = \explode('_', $key, 2);
         } else {
