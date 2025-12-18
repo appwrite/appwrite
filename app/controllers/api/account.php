@@ -1639,9 +1639,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
 
-            /**
-             * Is verified is not used yet, since we don't know after an account is created anymore if it was verified or not.
-             */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
             $identity = $dbForProject->findOne('identities', [
@@ -1653,12 +1650,16 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
-            // If user is not found, check if there is an identity with the same provider user ID
+            // If user is not found, check if there is a user with the same email
+            // Only allow connecting to existing account if OAuth provider verified the email
             if ($user === false || $user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', [$email]),
                 ]);
                 if (!$userWithEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::USER_OAUTH2_BAD_REQUEST, 'OAuth provider did not verify the email address.');
+                    }
                     $user->setAttributes($userWithEmail->getArrayCopy());
                 }
             }
