@@ -87,6 +87,914 @@ trait DatabasesBase
     }
 
     /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithStringColumn(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestStringCol',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertEquals('TestStringCol', $table['body']['name']);
+        $this->assertCount(1, $table['body']['columns']);
+        $this->assertEquals('title', $table['body']['columns'][0]['key']);
+        $this->assertEquals('string', $table['body']['columns'][0]['type']);
+        $this->assertEquals(255, $table['body']['columns'][0]['size']);
+        $this->assertEquals(true, $table['body']['columns'][0]['required']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithMultipleColumnTypes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestMultiCol',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'name',
+                    'type' => 'string',
+                    'size' => 100,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'age',
+                    'type' => 'integer',
+                    'required' => false,
+                    'default' => 0,
+                    'min' => 0,
+                    'max' => 150,
+                ],
+                [
+                    'key' => 'score',
+                    'type' => 'float',
+                    'required' => false,
+                    'default' => 0.0,
+                    'min' => 0.0,
+                    'max' => 100.0,
+                ],
+                [
+                    'key' => 'isActive',
+                    'type' => 'boolean',
+                    'required' => false,
+                    'default' => true,
+                ],
+                [
+                    'key' => 'createdAt',
+                    'type' => 'datetime',
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertEquals('TestMultiCol', $table['body']['name']);
+        $this->assertCount(5, $table['body']['columns']);
+
+        // Verify each column type
+        $columnKeys = array_column($table['body']['columns'], 'key');
+        $this->assertContains('name', $columnKeys);
+        $this->assertContains('age', $columnKeys);
+        $this->assertContains('score', $columnKeys);
+        $this->assertContains('isActive', $columnKeys);
+        $this->assertContains('createdAt', $columnKeys);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithArrayColumn(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestArrayCol',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'tags',
+                    'type' => 'string',
+                    'size' => 50,
+                    'required' => false,
+                    'array' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertEquals('TestArrayCol', $table['body']['name']);
+        $this->assertCount(1, $table['body']['columns']);
+        $this->assertEquals('tags', $table['body']['columns'][0]['key']);
+        $this->assertEquals(true, $table['body']['columns'][0]['array']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithDefaultValues(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestDefaults',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'status',
+                    'type' => 'string',
+                    'size' => 20,
+                    'required' => false,
+                    'default' => 'pending',
+                ],
+                [
+                    'key' => 'count',
+                    'type' => 'integer',
+                    'required' => false,
+                    'default' => 0,
+                ],
+                [
+                    'key' => 'enabled',
+                    'type' => 'boolean',
+                    'required' => false,
+                    'default' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(3, $table['body']['columns']);
+
+        // Find and verify default values
+        foreach ($table['body']['columns'] as $col) {
+            if ($col['key'] === 'status') {
+                $this->assertEquals('pending', $col['default']);
+            }
+            if ($col['key'] === 'count') {
+                $this->assertEquals(0, $col['default']);
+            }
+            if ($col['key'] === 'enabled') {
+                $this->assertEquals(false, $col['default']);
+            }
+        }
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithKeyIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestKeyIndex',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'title_idx',
+                    'type' => 'key',
+                    'attributes' => ['title'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(1, $table['body']['columns']);
+        $this->assertCount(1, $table['body']['indexes']);
+        $this->assertEquals('title_idx', $table['body']['indexes'][0]['key']);
+        $this->assertEquals('key', $table['body']['indexes'][0]['type']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithUniqueIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestUniqueIndex',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'email',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'email_unique',
+                    'type' => 'unique',
+                    'attributes' => ['email'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(1, $table['body']['indexes']);
+        $this->assertEquals('email_unique', $table['body']['indexes'][0]['key']);
+        $this->assertEquals('unique', $table['body']['indexes'][0]['type']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithFulltextIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestFulltextIndex',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'content',
+                    'type' => 'string',
+                    'size' => 10000,
+                    'required' => false,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'content_fulltext',
+                    'type' => 'fulltext',
+                    'attributes' => ['content'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(1, $table['body']['indexes']);
+        $this->assertEquals('content_fulltext', $table['body']['indexes'][0]['key']);
+        $this->assertEquals('fulltext', $table['body']['indexes'][0]['type']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithCompoundIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestCompoundIndex',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'userId',
+                    'type' => 'string',
+                    'size' => 36,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'createdAt',
+                    'type' => 'datetime',
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'user_date_idx',
+                    'type' => 'key',
+                    'attributes' => ['userId', 'createdAt'],
+                    'orders' => ['ASC', 'DESC'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(2, $table['body']['columns']);
+        $this->assertCount(1, $table['body']['indexes']);
+        $this->assertEquals('user_date_idx', $table['body']['indexes'][0]['key']);
+        $this->assertCount(2, $table['body']['indexes'][0]['columns']);
+        $this->assertEquals(['ASC', 'DESC'], $table['body']['indexes'][0]['orders']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithMultipleIndexes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestMultiIndex',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'slug',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'body',
+                    'type' => 'string',
+                    'size' => 50000,
+                    'required' => false,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'title_idx',
+                    'type' => 'key',
+                    'attributes' => ['title'],
+                ],
+                [
+                    'key' => 'slug_unique',
+                    'type' => 'unique',
+                    'attributes' => ['slug'],
+                ],
+                [
+                    'key' => 'body_fulltext',
+                    'type' => 'fulltext',
+                    'attributes' => ['body'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(3, $table['body']['columns']);
+        $this->assertCount(3, $table['body']['indexes']);
+
+        $indexKeys = array_column($table['body']['indexes'], 'key');
+        $this->assertContains('title_idx', $indexKeys);
+        $this->assertContains('slug_unique', $indexKeys);
+        $this->assertContains('body_fulltext', $indexKeys);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithEmptyArrays(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestEmptyArrays',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [],
+            'indexes' => [],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertEquals('TestEmptyArrays', $table['body']['name']);
+        $this->assertCount(0, $table['body']['columns']);
+        $this->assertCount(0, $table['body']['indexes']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithIntegerMinMax(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestIntMinMax',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'temperature',
+                    'type' => 'integer',
+                    'required' => false,
+                    'min' => -50,
+                    'max' => 50,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(1, $table['body']['columns']);
+        $this->assertEquals('temperature', $table['body']['columns'][0]['key']);
+        $this->assertEquals(-50, $table['body']['columns'][0]['min']);
+        $this->assertEquals(50, $table['body']['columns'][0]['max']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithFloatMinMax(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestFloatMinMax',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'rating',
+                    'type' => 'float',
+                    'required' => false,
+                    'min' => 0.0,
+                    'max' => 5.0,
+                    'default' => 0.0,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(1, $table['body']['columns']);
+        $this->assertEquals('rating', $table['body']['columns'][0]['key']);
+        $this->assertEquals(0.0, $table['body']['columns'][0]['min']);
+        $this->assertEquals(5.0, $table['body']['columns'][0]['max']);
+        $this->assertEquals(0.0, $table['body']['columns'][0]['default']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableInvalidColumnType(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestInvalidType',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'key' => 'invalid',
+                    'type' => 'invalid_type',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableInvalidIndexType(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestInvalidIndex',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'invalid_idx',
+                    'type' => 'invalid_type',
+                    'attributes' => ['title'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableMissingColumnKey(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestMissingKey',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'type' => 'string',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableMissingColumnType(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestMissingType',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'key' => 'field',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableStringSizeMissing(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestMissingSize',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableIndexOnNonExistentColumn(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestBadIndexCol',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'nonexistent_idx',
+                    'type' => 'key',
+                    'attributes' => ['nonexistent_field'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableDuplicateColumnKeys(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestDuplicateKeys',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 100,
+                    'required' => false,
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableDuplicateIndexKeys(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestDuplicateIndexKeys',
+            'rowSecurity' => true,
+            'permissions' => [],
+            'columns' => [
+                [
+                    'key' => 'title',
+                    'type' => 'string',
+                    'size' => 255,
+                    'required' => true,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'title_idx',
+                    'type' => 'key',
+                    'attributes' => ['title'],
+                ],
+                [
+                    'key' => 'title_idx',
+                    'type' => 'unique',
+                    'attributes' => ['title'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $table['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testCreateTableWithIndexLengths(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'TestIndexLengths',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'columns' => [
+                [
+                    'key' => 'longText',
+                    'type' => 'string',
+                    'size' => 10000,
+                    'required' => false,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'text_idx',
+                    'type' => 'key',
+                    'attributes' => ['longText'],
+                    'lengths' => [255],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $this->assertCount(1, $table['body']['indexes']);
+        $this->assertEquals([255], $table['body']['indexes'][0]['lengths']);
+
+        return [
+            'databaseId' => $databaseId,
+            'tableId' => $table['body']['$id'],
+        ];
+    }
+
+    /**
      * @depends testCreateTable
      */
     public function testConsoleProject(array $data): void
