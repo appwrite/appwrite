@@ -127,7 +127,8 @@ class Certificate extends Event
             'project' => $this->project,
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck,
-            'validationDomain' => $this->validationDomain
+            'validationDomain' => $this->validationDomain,
+            'action' => $this->action
         ];
     }
 }

@@ -754,6 +754,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
+      - mariadb
       - redis
     environment:
       - _APP_ENV
@@ -797,6 +798,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
+      - mariadb
       - redis
     environment:
       - _APP_ENV
