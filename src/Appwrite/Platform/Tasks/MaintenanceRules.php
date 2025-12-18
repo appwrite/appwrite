@@ -38,7 +38,7 @@ class MaintenanceRules extends Action
 
         \go(function () use ($dbForPlatform, $queueForCertificates, $intervalRuleDomainVerification) {
             Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
-                $this->checkRuleVerification($dbForPlatform, $queueForCertificates);
+                $this->verifyDomain($dbForPlatform, $queueForCertificates);
             }, $intervalRuleDomainVerification);
         });
 
@@ -49,7 +49,7 @@ class MaintenanceRules extends Action
         });
     }
 
-    private function checkRuleVerification(Database $dbForPlatform, Certificate $queueForCertificate): void
+    private function verifyDomain(Database $dbForPlatform, Certificate $queueForCertificate): void
     {
         $time = DatabaseDateTime::now();
         $fromTime = new DateTime('-3 days'); // Max 3 days old
@@ -63,11 +63,11 @@ class MaintenanceRules extends Action
         ]);
 
         if (\count($rules) === 0) {
-            Console::info("[{$time}] No rules for verification.");
+            Console::info("[{$time}] No rules for domain verification.");
             return; // No rules to verify
         }
 
-        Console::info("[{$time}] Found " . \count($rules) . " rules for verification, scheduling jobs.");
+        Console::info("[{$time}] Found " . \count($rules) . " rules for domain verification, scheduling jobs.");
 
         foreach ($rules as $rule) {
             $queueForCertificate
