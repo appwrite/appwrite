@@ -95,12 +95,9 @@ class ColumnIndex extends Model
 
     public function filter(Document $document): Document
     {
-        $columns = $document->getAttribute('attributes', []);
-        $document
-            ->removeAttribute('attributes')
-            ->setAttribute('columns', $columns);
+        $attributes = $document->getAttribute('attributes', []);
+        $document->setAttribute('columns', $attributes);
 
         return $document;
-
     }
 }
