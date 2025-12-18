@@ -123,6 +123,14 @@ class Create extends Action
         $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $databaseKey = 'database_' . $database->getSequence();
 
+        // Map 'float' to 'double' (Database::VAR_FLOAT) before validation
+        $attributes = array_map(function ($attr) {
+            if (isset($attr['type']) && $attr['type'] === 'float') {
+                $attr['type'] = Database::VAR_FLOAT;
+            }
+            return $attr;
+        }, $attributes);
+
         $attributesValidator = new AttributesValidator(
             APP_LIMIT_ARRAY_PARAMS_SIZE,
             $dbForProject->getAdapter()->getSupportForSpatialAttributes()
@@ -235,6 +243,12 @@ class Create extends Action
 
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
         $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+
+        // Set attributes and indexes on the collection document for the response
+        // Use the full database documents for attributes (they have status and other fields needed for response models)
+        // Use the simpler collection documents for indexes (they have the basic fields without internal tracking)
+        $collection->setAttribute('attributes', $attributeDocuments);
+        $collection->setAttribute('indexes', $collectionIndexes);
 
         $queueForEvents
             ->setContext('database', $database)
