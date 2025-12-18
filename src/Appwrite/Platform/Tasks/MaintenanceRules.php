@@ -30,8 +30,8 @@ class MaintenanceRules extends Action
 
     public function action(Database $dbForPlatform, Certificate $queueForCertificates): void
     {
-        Console::title('Interval V1');
-        Console::success(APP_NAME . ' interval process v1 has started');
+        Console::title('Rule maintenance V1');
+        Console::success(APP_NAME . ' rule maintenance process v1 has started');
 
         $intervalRuleDomainVerification = (int) System::getEnv('_APP_MAINTENANCE_RULE_DOMAIN_VERIFICATION_INTERVAL', '60'); // 1 minute
         $intervalRuleCertificateRenewal = (int) System::getEnv('_APP_MAINTENANCE_RULE_CERTIFICATE_RENEWAL_INTERVAL', '86400'); // 1 day

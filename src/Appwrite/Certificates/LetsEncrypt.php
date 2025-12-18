@@ -2,6 +2,7 @@
 
 namespace Appwrite\Certificates;
 
+use Appwrite\Certificates\Exceptions\CertificateStatus as CertificateStatusException;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -87,6 +88,11 @@ class LetsEncrypt implements Adapter
     public function isInstantGeneration(string $domain, ?string $domainType): bool
     {
         return true;
+    }
+
+    public function getCertificateStatus(string $domain, ?string $domainType): string
+    {
+        throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
     }
 
     public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool
