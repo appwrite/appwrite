@@ -1658,7 +1658,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ]);
                 if (!$userWithEmail->isEmpty()) {
                     if (!$isVerified) {
-                        $failureRedirect(Exception::USER_OAUTH2_BAD_REQUEST, 'OAuth provider did not verify the email address.');
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
                 }
