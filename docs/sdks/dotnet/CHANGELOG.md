@@ -2,7 +2,7 @@
 
 ## 0.24.0
 
-* Added ability to create attributes and indexes synchronously while creating a collection
+* Added ability to create columns and indexes synchronously while creating a table
 
 ## 0.23.0
 

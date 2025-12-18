@@ -7393,7 +7393,7 @@
                                 },
                                 "attributes": {
                                     "type": "array",
-                                    "description": "Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.",
+                                    "description": "Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.",
                                     "default": [],
                                     "x-example": null,
                                     "items": {

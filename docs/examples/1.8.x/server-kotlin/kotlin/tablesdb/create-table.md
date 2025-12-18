@@ -17,5 +17,7 @@ val response = tablesDB.createTable(
     name = "<NAME>",
     permissions = listOf(Permission.read(Role.any())), // optional
     rowSecurity = false, // optional
-    enabled = false // optional
+    enabled = false, // optional
+    columns = listOf(), // optional
+    indexes = listOf() // optional
 )
