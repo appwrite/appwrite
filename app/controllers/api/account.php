@@ -1651,7 +1651,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is a user with the same email
-            // Only allow connecting to existing account if OAuth provider verified the email
             if ($user === false || $user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', [$email]),
@@ -1665,7 +1664,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             // If user is not found, check if there is an identity with the same email
-            // Only allow connecting to existing account if OAuth provider verified the email
             if ($user === false || $user->isEmpty()) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$email]),
