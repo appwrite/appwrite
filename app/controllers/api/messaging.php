@@ -340,6 +340,7 @@ App::post('/v1/messaging/providers/smtp')
                 since: '1.8.0',
                 replaceWith: 'messaging.createSMTPProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -873,6 +874,7 @@ App::post('/v1/messaging/providers/fcm')
                 since: '1.8.0',
                 replaceWith: 'messaging.createFCMProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -962,6 +964,7 @@ App::post('/v1/messaging/providers/apns')
                 since: '1.8.0',
                 replaceWith: 'messaging.createAPNSProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -1156,12 +1159,6 @@ App::get('/v1/messaging/providers/:providerId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'provider/' . $providerId;
@@ -1582,6 +1579,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateSMTPProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -2173,6 +2171,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateFCMProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -2268,6 +2267,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateAPNSProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -2564,12 +2564,6 @@ App::get('/v1/messaging/topics/:topicId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'topic/' . $topicId;
@@ -2987,12 +2981,6 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
-
         $audit = new Audit($dbForProject);
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, $queries);
@@ -3347,6 +3335,7 @@ App::post('/v1/messaging/messages/sms')
                 since: '1.8.0',
                 replaceWith: 'messaging.createSMS',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -3510,7 +3499,8 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->inject('platform')
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response, array $platform) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3566,8 +3556,8 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = System::getEnv('_APP_DOMAIN', 'localhost');
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
@@ -3587,7 +3577,7 @@ App::post('/v1/messaging/messages/push')
             $image = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
+                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 
@@ -3789,12 +3779,6 @@ App::get('/v1/messaging/messages/:messageId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
         $audit = new Audit($dbForProject);
         $resource = 'message/' . $messageId;
@@ -4197,6 +4181,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateSMS',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -4399,7 +4384,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->inject('platform')
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response, array $platform) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4567,9 +4553,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = System::getEnv('_APP_DOMAIN', 'localhost');
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
                 $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
@@ -4585,10 +4568,13 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 'projectId' => $project->getId(),
             ]);
 
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
             $pushData['image'] = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}"
+                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 

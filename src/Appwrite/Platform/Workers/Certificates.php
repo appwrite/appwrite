@@ -430,14 +430,13 @@ class Certificates extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime
     ): void {
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
-            $rule = $dbForPlatform->getDocument('rules', md5($domain));
-        } else {
-            $rule = $dbForPlatform->findOne('rules', [
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $rule = $isMd5
+            ? $dbForPlatform->getDocument('rules', md5($domain))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain]),
             ]);
-        }
 
         if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);

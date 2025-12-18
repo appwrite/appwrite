@@ -59,6 +59,7 @@ class Get extends Action
             ->param('type', '', new WhiteList(['rules']), 'Resource type.')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('platform')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -68,8 +69,10 @@ class Get extends Action
         string $type,
         Response $response,
         Database $dbForPlatform,
-        Authorization $authorization
+        array $platform,
+        Authorization $authorization,
     ) {
+        $domains = $platform['hostnames'] ?? [];
         if ($type === 'rules') {
             $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
             $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -91,13 +94,7 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
             }
 
-            $deniedDomains = [
-                'localhost',
-                APP_HOSTNAME_INTERNAL
-            ];
-
-            $mainDomain = System::getEnv('_APP_DOMAIN', '');
-            $deniedDomains[] = $mainDomain;
+            $deniedDomains = [...$domains];
 
             if (!empty($sitesDomain)) {
                 $deniedDomains[] = $sitesDomain;

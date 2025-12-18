@@ -112,6 +112,35 @@ abstract class Format
         return $this->params[$key] ?? $default;
     }
 
+    /**
+     * Set Services.
+     *
+     * Set services value
+     *
+     * @param array $services
+     *
+     * @return self
+     */
+    public function setServices(array $services): self
+    {
+        $this->services = $services;
+        return $this;
+    }
+
+    /**
+     * Set Services.
+     *
+     * Get services value
+     *
+     * @param array $services
+     *
+     * @return self
+     */
+    public function getServices(): array
+    {
+        return $this->services;
+    }
+
     protected function getRequestEnumName(string $service, string $method, string $param): ?string
     {
         /* `$service` is `$namespace` */

@@ -69,7 +69,7 @@ App::post('/v1/storage/buckets')
         group: 'buckets',
         name: 'createBucket',
         description: '/docs/references/storage/create-bucket.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -174,7 +174,7 @@ App::get('/v1/storage/buckets')
         group: 'buckets',
         name: 'listBuckets',
         description: '/docs/references/storage/list-buckets.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -249,7 +249,7 @@ App::get('/v1/storage/buckets/:bucketId')
         group: 'buckets',
         name: 'getBucket',
         description: '/docs/references/storage/get-bucket.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -284,7 +284,7 @@ App::put('/v1/storage/buckets/:bucketId')
         group: 'buckets',
         name: 'updateBucket',
         description: '/docs/references/storage/update-bucket.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -358,7 +358,7 @@ App::delete('/v1/storage/buckets/:bucketId')
         group: 'buckets',
         name: 'deleteBucket',
         description: '/docs/references/storage/delete-bucket.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -412,7 +412,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         group: 'files',
         name: 'createFile',
         description: '/docs/references/storage/create-file.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -788,7 +788,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         group: 'files',
         name: 'listFiles',
         description: '/docs/references/storage/list-files.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -889,7 +889,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         group: 'files',
         name: 'getFile',
         description: '/docs/references/storage/get-file.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -946,7 +946,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         group: 'files',
         name: 'getFilePreview',
         description: '/docs/references/storage/get-file-preview.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1159,7 +1159,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         group: 'files',
         name: 'getFileDownload',
         description: '/docs/references/storage/get-file-download.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1320,7 +1320,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         group: 'files',
         name: 'getFileView',
         description: '/docs/references/storage/get-file-view.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1653,7 +1653,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         group: 'files',
         name: 'updateFile',
         description: '/docs/references/storage/update-file.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1768,7 +1768,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         group: 'files',
         name: 'deleteFile',
         description: '/docs/references/storage/delete-file.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,

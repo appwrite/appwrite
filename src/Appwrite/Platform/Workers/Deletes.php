@@ -742,7 +742,7 @@ class Deletes extends Action
             Query::select([...$this->selects, '$createdAt', 'name', 'path']),
             Query::equal('bucketId', ['default']),
             Query::createdBefore($oneWeekAgo),
-            Query::endsWith('name', ['.csv']),
+            Query::endsWith('name', '.csv'),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {

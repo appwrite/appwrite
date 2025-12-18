@@ -64,7 +64,7 @@ class Create extends Action
 
                 Use the "command" param to set the entrypoint used to execute your code.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,

@@ -543,7 +543,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $timelimit = $app->getResource('timelimit');
-        $platforms = $app->getResource('platforms');
         $user = $app->getResource('user'); /** @var User $user */
 
         /*
@@ -568,7 +567,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
-        $originValidator = new Origin($platforms);
+        $originValidator = $app->getResource('originValidator');
 
         if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
