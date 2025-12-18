@@ -183,7 +183,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {

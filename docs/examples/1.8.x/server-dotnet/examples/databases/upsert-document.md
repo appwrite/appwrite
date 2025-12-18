@@ -13,7 +13,13 @@ Document result = await databases.UpsertDocument(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     documentId: "<DOCUMENT_ID>",
-    data: [object],
+    data: new {
+        username = "walter.obrien",
+        email = "walter.obrien@example.com",
+        fullName = "Walter O'Brien",
+        age = 30,
+        isAdmin = false
+    }, // optional
     permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     transactionId: "<TRANSACTION_ID>" // optional
 );

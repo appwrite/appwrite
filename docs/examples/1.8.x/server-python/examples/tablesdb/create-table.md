@@ -16,5 +16,7 @@ result = tables_db.create_table(
     name = '<NAME>',
     permissions = [Permission.read(Role.any())], # optional
     row_security = False, # optional
-    enabled = False # optional
+    enabled = False, # optional
+    columns = [], # optional
+    indexes = [] # optional
 )
