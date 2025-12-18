@@ -224,7 +224,7 @@ App::setResource('allowedSchemes', function (Document $project) {
 /**
  * Rule associated with a request origin.
  */
-App::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project) {
+App::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
     $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
     if (empty($domain)) {
         return new Document();
@@ -232,7 +232,7 @@ App::setResource('rule', function (Request $request, Database $dbForPlatform, Do
 
     // TODO: (@Meldiron) Remove after 1.7.x migration
     $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-    $rule = Authorization::skip(function () use ($dbForPlatform, $domain, $isMd5) {
+    $rule = $authorization->skip(function () use ($dbForPlatform, $domain, $isMd5) {
         if ($isMd5) {
             return $dbForPlatform->getDocument('rules', md5($domain));
         }
@@ -247,7 +247,7 @@ App::setResource('rule', function (Request $request, Database $dbForPlatform, Do
     }
 
     return $rule;
-}, ['request', 'dbForPlatform', 'project']);
+}, ['request', 'dbForPlatform', 'project', 'authorization']);
 
 /**
  * CORS service
