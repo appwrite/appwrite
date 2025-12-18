@@ -18,7 +18,13 @@ response, error := service.UpsertDocument(
     "<DATABASE_ID>",
     "<COLLECTION_ID>",
     "<DOCUMENT_ID>",
-    map[string]interface{}{},
+    databases.WithUpsertDocumentData(map[string]interface{}{
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 30,
+        "isAdmin": false
+    }),
     databases.WithUpsertDocumentPermissions(interface{}{"read("any")"}),
     databases.WithUpsertDocumentTransactionId("<TRANSACTION_ID>"),
 )
