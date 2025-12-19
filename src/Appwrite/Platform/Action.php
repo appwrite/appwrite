@@ -107,9 +107,11 @@ class Action extends UtopiaAction
         }
     }
 
-    public function disableSubqueries()
+    public function disableSubqueries(array $filters = []): void
     {
-        $filters = $this->filters;
+        if (empty($filters)) {
+            $filters = $this->filters;
+        }
 
         foreach ($filters as $filter) {
             Database::addFilter(
@@ -187,6 +189,11 @@ class Action extends UtopiaAction
             foreach ($query->getValues() as $attribute) {
                 $attributes[] = $attribute;
             }
+        }
+
+        // found a wildcard, return!
+        if (\in_array('*', $attributes)) {
+            return;
         }
 
         $responseModel = $response->getModel($model);

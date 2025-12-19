@@ -31,7 +31,6 @@ class Migrate extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('register')
-            ->inject('authorisation')
             ->callback($this->action(...));
     }
 
@@ -48,8 +47,8 @@ class Migrate extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Registry $register,
-        Authorization $authorization
     ): void {
+        Authorization::disable();
 
         if (!\array_key_exists($version, Migration::$versions)) {
             Console::error("No migration found for version $version.");
@@ -67,14 +66,14 @@ class Migrate extends Action
         $count = 0;
         $total = $dbForPlatform->count('projects') + 1;
 
-        $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total, $authorization) {
+        $dbForPlatform->foreach('projects', function (Document $project) use ($dbForPlatform, $getProjectDB, $register, $migration, &$count, $total) {
             /** @var Database $dbForProject */
             $dbForProject = $getProjectDB($project);
             $dbForProject->disableValidation();
 
             try {
                 $migration
-                    ->setProject($project, $dbForProject, $dbForPlatform, $authorization, $getProjectDB)
+                    ->setProject($project, $dbForProject, $dbForPlatform, $getProjectDB)
                     ->setPDO($register->get('db', true))
                     ->execute();
             } catch (\Throwable $th) {
@@ -89,7 +88,7 @@ class Migrate extends Action
 
         try {
             $migration
-                ->setProject($console, $getProjectDB($console), $dbForPlatform, $authorization, $getProjectDB)
+                ->setProject($console, $getProjectDB($console), $dbForPlatform, $getProjectDB)
                 ->setPDO($register->get('db', true))
                 ->execute();
         } catch (\Throwable $th) {
