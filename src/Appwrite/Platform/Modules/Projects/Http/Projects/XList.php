@@ -30,14 +30,14 @@ class XList extends Action
     // cached mapping of columns to their subQuery filters
     private static ?array $attributeToSubQueryFilters = null;
 
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
-    }
-
     public static function getName()
     {
         return 'listProjects';
+    }
+
+    protected function getQueriesValidator(): Validator
+    {
+        return new Projects();
     }
 
     public function __construct()
