@@ -191,6 +191,11 @@ class Action extends UtopiaAction
             }
         }
 
+        // found a wildcard, return!
+        if (\in_array('*', $attributes)) {
+            return;
+        }
+
         $responseModel = $response->getModel($model);
         foreach ($responseModel->getRules() as $ruleName => $rule) {
             if (\str_starts_with($ruleName, '$')) {

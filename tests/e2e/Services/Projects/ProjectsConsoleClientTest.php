@@ -644,6 +644,37 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayNotHasKey('authLimit', $project);
 
         /**
+         * Test Query.select with wildcard '*'
+         * Should return all fields like no select query
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('teamId', $project);
+        $this->assertArrayHasKey('platforms', $project);
+        $this->assertArrayHasKey('webhooks', $project);
+        $this->assertArrayHasKey('keys', $project);
+        $this->assertArrayHasKey('devKeys', $project);
+        $this->assertArrayHasKey('oAuthProviders', $project);
+        $this->assertArrayHasKey('smtpEnabled', $project);
+        $this->assertArrayHasKey('smtpHost', $project);
+        $this->assertArrayHasKey('authLimit', $project);
+        $this->assertArrayHasKey('authDuration', $project);
+
+        /**
          * Test Query.select with invalid attribute
          */
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
