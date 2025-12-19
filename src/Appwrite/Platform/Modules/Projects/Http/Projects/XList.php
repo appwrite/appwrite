@@ -108,14 +108,7 @@ class XList extends Action
             $selectQueries = Query::groupByType($queries)['selections'] ?? [];
             $filterQueries = Query::groupByType($queries)['filters'];
 
-            if (!empty($selectQueries)) {
-                // has selects, skip unnecessary filters
-                $projects = $this->findWithSelect($dbForPlatform, $queries, $selectQueries);
-            } else {
-                // has no selects, load all columns
-                $projects = $dbForPlatform->find('projects', $queries);
-            }
-
+            $projects = $this->find($dbForPlatform, $queries, $selectQueries);
             $total = $includeTotal ? $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (Order $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
@@ -161,12 +154,14 @@ class XList extends Action
         return self::$attributeToSubQueryFilters;
     }
 
-    // Find projects with a given select query
-    private function findWithSelect(Database $db, array $queries, array $selectQueries): array
+    private function find(Database $db, array $queries, array $selectQueries): array
     {
+        if (empty($selectQueries)) {
+            return $db->find('projects', $queries);
+        }
+
         $selectedAttributes = [];
         foreach ($selectQueries as $query) {
-            // nested selects aren't handled atm!
             foreach ($query->getValues() as $value) {
                 $selectedAttributes[] = $value;
             }
