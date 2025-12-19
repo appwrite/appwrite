@@ -644,7 +644,7 @@ return [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('resourceType'), // project, team, user
+                '$id' => ID::custom('resourceType'), // projects, teams, users
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
