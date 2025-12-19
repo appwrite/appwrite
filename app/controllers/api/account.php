@@ -1639,9 +1639,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
 
-            /**
-             * Is verified is not used yet, since we don't know after an account is created anymore if it was verified or not.
-             */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
             $identity = $dbForProject->findOne('identities', [
@@ -1653,13 +1650,29 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
-            // If user is not found, check if there is an identity with the same provider user ID
+            // If user is not found, check if there is a user with the same email
             if ($user === false || $user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', [$email]),
                 ]);
                 if (!$userWithEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
                     $user->setAttributes($userWithEmail->getArrayCopy());
+                }
+            }
+
+            // If user is not found, check if there is an identity with the same email
+            if ($user === false || $user->isEmpty()) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$email]),
+                ]);
+                if (!$identityWithMatchingEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                    $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
                 }
             }
 
@@ -1672,14 +1685,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     if ($total >= $limit) {
                         $failureRedirect(Exception::USER_COUNT_EXCEEDED);
                     }
-                }
-
-                // Makes sure this email is not already used in another identity
-                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                    Query::equal('providerEmail', [$email]),
-                ]);
-                if (!$identityWithMatchingEmail->isEmpty()) {
-                    $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -1735,7 +1740,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
-
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }

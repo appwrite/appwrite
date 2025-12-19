@@ -1034,7 +1034,8 @@ App::init()
    ->inject('dbForPlatform')
    ->inject('queueForCertificates')
    ->inject('platform')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform) {
+   ->inject('authorization')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization) {
        $hostname = $request->getHostname();
        $cache = Config::getParam('hostnames', []);
        $platformHostnames = $platform['hostnames'] ?? [];
@@ -1065,7 +1066,7 @@ App::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       Authorization::disable();
+       $authorization->disable();
        try {
            // TODO: (@Meldiron) Remove after 1.7.x migration
            $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1121,7 +1122,7 @@ App::init()
        } finally {
            $cache[$domain->get()] = true;
            Config::setParam('hostnames', $cache);
-           Authorization::reset();
+           $authorization->reset();
        }
    });
 
