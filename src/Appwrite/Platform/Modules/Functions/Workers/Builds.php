@@ -27,6 +27,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
@@ -927,11 +928,11 @@ class Builds extends Action
                     ->trigger();
 
                 try {
-                    $rule = $dbForPlatform->findOne('rules', [
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal('deploymentInternalId', [$deployment->getSequence()]),
-                    ]);
+                    ]));
 
                     if ($rule->isEmpty()) {
                         throw new \Exception("Rule for build not found");
@@ -941,7 +942,7 @@ class Builds extends Action
                     $client->setTimeout(\intval($resource->getAttribute('timeout', '15')));
                     $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
-                    $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+                    $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                     $configs = [
                         'screenshotLight' => [
@@ -1063,7 +1064,7 @@ class Builds extends Action
                             'metadata' => ['content_type' => $mimeType],
                         ]);
 
-                        $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file);
+                        Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
 
                         $deployment->setAttribute($key, $fileId);
                     }
@@ -1287,7 +1288,7 @@ class Builds extends Action
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
-                $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
 
             Console::info('Deployment action finished');
@@ -1496,6 +1497,7 @@ class Builds extends Action
      * @return void
      * @throws Structure
      * @throws \Utopia\Database\Exception
+     * @throws Authorization
      * @throws Conflict
      * @throws Restricted
      */
@@ -1584,11 +1586,11 @@ class Builds extends Action
                         default => throw new \Exception('Invalid resource type')
                     };
 
-                    $rule = $dbForPlatform->findOne('rules', [
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal("deploymentInternalId", [$deployment->getSequence()]),
-                    ]);
+                    ]));
 
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                     $previewUrl = match($resource->getCollection()) {
