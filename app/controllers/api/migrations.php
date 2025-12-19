@@ -342,7 +342,6 @@ App::post('/v1/migrations/csv/imports')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->inject('authorization')
     ->inject('project')
     ->inject('platform')
     ->inject('deviceForFiles')
@@ -357,7 +356,6 @@ App::post('/v1/migrations/csv/imports')
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Authorization $authorization,
         Document $project,
         array $platform,
         Device $deviceForFiles,
@@ -365,7 +363,7 @@ App::post('/v1/migrations/csv/imports')
         Event $queueForEvents,
         Migration $queueForMigrations
     ) {
-        $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
+        $bucket = Authorization::skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
             }
@@ -376,7 +374,7 @@ App::post('/v1/migrations/csv/imports')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        $file = Authorization::skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
@@ -493,7 +491,6 @@ App::post('/v1/migrations/csv/exports')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
-    ->inject('authorization')
     ->inject('project')
     ->inject('platform')
     ->inject('queueForEvents')
@@ -512,7 +509,6 @@ App::post('/v1/migrations/csv/exports')
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Authorization $authorization,
         Document $project,
         array $platform,
         Event $queueForEvents,
@@ -524,7 +520,7 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
+        $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
         if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
@@ -537,12 +533,12 @@ App::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }

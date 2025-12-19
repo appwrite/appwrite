@@ -79,7 +79,6 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('gitHub')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -98,8 +97,7 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github,
-        Authorization $authorization
+        GitHub $github
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -132,7 +130,6 @@ class Create extends Base
                 template: $template,
                 github: $github,
                 activate: $activate,
-                authorization: $authorization,
             );
 
             $queueForEvents
@@ -192,7 +189,7 @@ class Create extends Base
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        $authorization->skip(
+        Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -211,8 +208,6 @@ class Create extends Base
                 'region' => $project->getAttribute('region')
             ]))
         );
-
-        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

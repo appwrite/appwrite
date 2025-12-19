@@ -52,11 +52,10 @@ class XList extends Base
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $range, Response $response, Database $dbForProject, Authorization $authorization)
+    public function action(string $range, Response $response, Database $dbForProject)
     {
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -76,7 +75,7 @@ class XList extends Base
             str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS_FAILED),
         ];
 
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

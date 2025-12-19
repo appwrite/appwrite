@@ -13,7 +13,6 @@ use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -58,13 +57,12 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Authorization $authorization)
+    public function action(string $bucketId, string $fileId, array $queries, bool $includeTotal, Response $response, Database $dbForProject)
     {
-        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $bucketId, $fileId);
+        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $bucketId, $fileId);
 
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_FILES]);
