@@ -1,6 +1,8 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
+import io.appwrite.Permission
+import io.appwrite.Role
 
 val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +14,13 @@ val result = tablesDB.upsertRow(
     databaseId = "<DATABASE_ID>", 
     tableId = "<TABLE_ID>", 
     rowId = "<ROW_ID>", 
-    data = mapOf( "a" to "b" ), // (optional)
-    permissions = listOf("read("any")"), // (optional)
+    data = mapOf(
+        "username" to "walter.obrien",
+        "email" to "walter.obrien@example.com",
+        "fullName" to "Walter O'Brien",
+        "age" to 33,
+        "isAdmin" to false
+    ), // (optional)
+    permissions = listOf(Permission.read(Role.any())), // (optional)
     transactionId = "<TRANSACTION_ID>", // (optional)
 )

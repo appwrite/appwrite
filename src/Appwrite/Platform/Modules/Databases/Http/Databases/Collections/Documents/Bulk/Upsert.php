@@ -23,6 +23,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Nullable;
 
 class Upsert extends Action
 {
@@ -73,7 +74,7 @@ class Upsert extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
@@ -89,12 +90,12 @@ class Upsert extends Action
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $hasRelationships = \array_filter(
@@ -107,6 +108,9 @@ class Upsert extends Action
         }
 
         foreach ($documents as $key => $document) {
+            if ($transactionId === null) {
+                $document = $this->parseOperators($document, $collection);
+            }
             $document = $this->removeReadonlyAttributes($document, privileged: true);
             $documents[$key] = new Document($document);
         }
@@ -148,6 +152,8 @@ class Upsert extends Action
                 );
             });
 
+            $queueForEvents->reset();
+
             // Return successful response without actually upserting documents
             $response->dynamic(new Document([
                 $this->getSDKGroup() => [],
@@ -174,7 +180,7 @@ class Upsert extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: ['multiple']);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

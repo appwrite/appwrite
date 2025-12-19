@@ -376,6 +376,23 @@ class FunctionsCustomClientTest extends Scope
         $this->assertGreaterThan(0, $templates['body']['total']);
         $this->assertIsArray($templates['body']['templates']);
 
+        /**
+         * Test for SUCCESS with total=false
+         */
+        $templatesWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/functions/templates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $templatesWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($templatesWithIncludeTotalFalse['body']);
+        $this->assertIsArray($templatesWithIncludeTotalFalse['body']['templates']);
+        $this->assertIsInt($templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $templatesWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($templatesWithIncludeTotalFalse['body']['templates']));
+
         foreach ($templates['body']['templates'] as $template) {
             $this->assertArrayHasKey('name', $template);
             $this->assertArrayHasKey('id', $template);
@@ -405,7 +422,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'useCases' => ['starter', 'ai'],
-            'runtimes' => ['bun-1.0', 'dart-2.16']
+            'runtimes' => ['node-22']
         ]);
         $this->assertEquals(200, $templates['headers']['status-code']);
         $this->assertGreaterThanOrEqual(3, $templates['body']['total']);
@@ -419,8 +436,7 @@ class FunctionsCustomClientTest extends Scope
             $this->assertThat(
                 \array_column($template['runtimes'], 'name'),
                 $this->logicalOr(
-                    $this->containsEqual('bun-1.0'),
-                    $this->containsEqual('dart-2.16'),
+                    $this->containsEqual('node-22'),
                 ),
             );
         }

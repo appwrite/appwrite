@@ -1,5 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.Permission;
+import io.appwrite.Role;
 import io.appwrite.services.TablesDB;
 
 Client client = new Client()
@@ -13,9 +15,11 @@ tablesDB.createTable(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "<NAME>", // name
-    listOf("read("any")"), // permissions (optional)
+    List.of(Permission.read(Role.any())), // permissions (optional)
     false, // rowSecurity (optional)
     false, // enabled (optional)
+    List.of(), // columns (optional)
+    List.of(), // indexes (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

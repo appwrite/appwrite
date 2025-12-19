@@ -11,9 +11,11 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Update extends Action
@@ -45,7 +47,7 @@ class Update extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-relationship-attribute.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -61,15 +63,16 @@ class Update extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('key', '', new Key(), 'Attribute Key.')
-            ->param('onDelete', null, new WhiteList([
+            ->param('onDelete', null, new Nullable(new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true), 'Constraints option', true)
-            ->param('newKey', null, new Key(), 'New Attribute Key.', true)
+            ], true)), 'Constraints option', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New Attribute Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -81,7 +84,8 @@ class Update extends Action
         ?string        $newKey,
         UtopiaResponse $response,
         Database       $dbForProject,
-        Event          $queueForEvents
+        Event          $queueForEvents,
+        Authorization  $authorization
     ): void {
         $attribute = $this->updateAttribute(
             databaseId: $databaseId,
@@ -89,6 +93,7 @@ class Update extends Action
             key: $key,
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
+            authorization: $authorization,
             type: Database::VAR_RELATIONSHIP,
             required: false,
             options: [

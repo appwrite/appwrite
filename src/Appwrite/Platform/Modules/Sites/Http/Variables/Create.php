@@ -47,7 +47,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new site variable. These variables can be accessed during build and runtime (server-side rendering) as environment variables.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,

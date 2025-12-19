@@ -28,7 +28,7 @@ class Delete extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
             ->desc('Delete dev key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.write')
+            ->label('scope', 'devKeys.write')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',

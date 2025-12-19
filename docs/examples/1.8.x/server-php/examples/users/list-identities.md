@@ -12,5 +12,6 @@ $users = new Users($client);
 
 $result = $users->listIdentities(
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 );

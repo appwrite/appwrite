@@ -8,6 +8,6 @@ Client client = Client()
 Health health = Health(client);
 
 HealthQueue result = await health.getFailedJobs(
-    name: .v1Database,
+    name: Name.v1Database,
     threshold: 0, // (optional)
 );

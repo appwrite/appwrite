@@ -1,5 +1,23 @@
 # Change Log
 
+## 21.5.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 21.4.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 21.3.0
+
+* Add new `Realtime` service with methods for subscribing to channels and receiving messages
+* Fix `client.setSession` not working when using realtime
+* Deprecate `client.subscribe` method in favor of `Realtime` service
+
+> Note: Deprecated methods are still available for backwards compatibility, but might be removed in future versions.
+
 ## 21.2.1
 
 * Add transaction support for Databases and TablesDB

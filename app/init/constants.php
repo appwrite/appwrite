@@ -4,12 +4,17 @@ use Appwrite\Platform\Modules\Compute\Specification;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
+
+// Email
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
 const APP_EMAIL_LOGO_URL = 'https://cloud.appwrite.io/images/mails/logo.png';
 const APP_EMAIL_ACCENT_COLOR = '#fd366e';
 const APP_EMAIL_TERMS_URL = 'https://appwrite.io/terms';
 const APP_EMAIL_PRIVACY_URL = 'https://appwrite.io/privacy';
+const APP_EMAIL_PLATFORM_NAME = 'Appwrite';
+const APP_EMAIL_FOOTER_IMAGE_URL = 'https://appwrite.io/email/footer.png';
+
 const APP_USERAGENT = APP_NAME . '-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
@@ -55,6 +60,7 @@ const APP_DATABASE_TIMEOUT_MILLISECONDS_API = 15 * 1000; // 15 seconds
 const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
 const APP_DATABASE_TIMEOUT_MILLISECONDS_TASK = 300 * 1000; // 5 minutes
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
+const APP_DATABASE_QUERY_MAX_VALUES_WORKER = 5000;
 const APP_DATABASE_ENCRYPT_SIZE_MIN = 150;
 const APP_DATABASE_TXN_TTL_MIN = 60; // 1 minute
 const APP_DATABASE_TXN_TTL_MAX = 3600; // 1 hour
@@ -81,16 +87,79 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
-const APP_HOSTNAME_INTERNAL = 'appwrite';
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
-const APP_PLATFORM_SERVER = 'server';
-const APP_PLATFORM_CLIENT = 'client';
-const APP_PLATFORM_CONSOLE = 'console';
+const APP_SDK_PLATFORM_SERVER = 'server';
+const APP_SDK_PLATFORM_CLIENT = 'client';
+const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
+const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
+
+/**
+ * JWT for Resource Tokens.
+ */
+const RESOURCE_TOKEN_ALGORITHM = 'HS256';
+const RESOURCE_TOKEN_MAX_AGE = 86400 * 365 * 10; /* 10 years */
+const RESOURCE_TOKEN_LEEWAY = 10; // 10 seconds
+
+/**
+ * Token Expiration times.
+ */
+const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
+const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
+const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
+const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
+const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+
+/**
+ * Token Lengths.
+ */
+const TOKEN_LENGTH_MAGIC_URL = 64;
+const TOKEN_LENGTH_VERIFICATION = 256;
+const TOKEN_LENGTH_RECOVERY = 256;
+const TOKEN_LENGTH_OAUTH2 = 64;
+const TOKEN_LENGTH_SESSION = 256;
+
+/**
+ * Token Types.
+ */
+const TOKEN_TYPE_LOGIN = 1; // Deprecated
+const TOKEN_TYPE_VERIFICATION = 2;
+const TOKEN_TYPE_RECOVERY = 3;
+const TOKEN_TYPE_INVITE = 4;
+const TOKEN_TYPE_MAGIC_URL = 5;
+const TOKEN_TYPE_PHONE = 6;
+const TOKEN_TYPE_OAUTH2 = 7;
+const TOKEN_TYPE_GENERIC = 8;
+const TOKEN_TYPE_EMAIL = 9; // OTP
+
+/**
+ * Session Providers.
+ */
+const SESSION_PROVIDER_EMAIL = 'email';
+const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+const SESSION_PROVIDER_PHONE = 'phone';
+const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+const SESSION_PROVIDER_TOKEN = 'token';
+const SESSION_PROVIDER_SERVER = 'server';
+
+/**
+ * Activity associated with user or the app.
+ */
+const ACTIVITY_TYPE_APP = 'app';
+const ACTIVITY_TYPE_USER = 'user';
+const ACTIVITY_TYPE_GUEST = 'guest';
+
+/**
+ * MFA
+ */
+const MFA_RECENT_DURATION = 1800; // 30 mins
+
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
@@ -137,7 +206,14 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
+
+// Rule statuses
+const RULE_STATUS_CREATED = 'created'; // This is also the status when domain DNS verification fails.
+const RULE_STATUS_CERTIFICATE_GENERATING = 'verifying';
+const RULE_STATUS_CERTIFICATE_GENERATION_FAILED = 'unverified';
+const RULE_STATUS_VERIFIED = 'verified';
 
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
@@ -269,6 +345,9 @@ const METRIC_SITES_OUTBOUND = 'sites.outbound';
 const METRIC_SITES_ID_REQUESTS = 'sites.{siteInternalId}.requests';
 const METRIC_SITES_ID_INBOUND = 'sites.{siteInternalId}.inbound';
 const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
+const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
+const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
+const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
@@ -292,3 +371,6 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
+
+/** Preview cookie */
+const COOKIE_NAME_PREVIEW = 'a_jwt_console';

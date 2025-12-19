@@ -81,7 +81,7 @@ return [
             ],
             [
                 'name' => '_APP_DOMAIN',
-                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'.',
+                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
@@ -354,6 +354,15 @@ return [
                 'description' => 'This option allows you to set the minimum size in bytes for the response compression to be applied. The default value is 1024 bytes.',
                 'introduction' => '1.6.0',
                 'default' => 1024,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_TRUSTED_HEADERS',
+                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
+                'introduction' => '1.8.0',
+                'default' => 'x-forwarded-for',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -947,6 +956,16 @@ return [
                 'description' => 'The host used by Appwrite to communicate with the function executor.',
                 'introduction' => '0.13.0',
                 'default' => 'http://exc1/v1',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_BROWSER_HOST',
+                'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
+                'introduction' => '1.8.0',
+                'default' => 'http://appwrite-browser:3000/v1',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',

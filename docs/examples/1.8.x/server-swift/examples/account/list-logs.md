@@ -8,6 +8,7 @@ let client = Client()
 let account = Account(client)
 
 let logList = try await account.listLogs(
-    queries: [] // optional
+    queries: [], // optional
+    total: false // optional
 )
 

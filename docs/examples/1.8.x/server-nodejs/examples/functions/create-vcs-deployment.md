@@ -9,7 +9,7 @@ const functions = new sdk.Functions(client);
 
 const result = await functions.createVcsDeployment({
     functionId: '<FUNCTION_ID>',
-    type: sdk.VCSDeploymentType.Branch,
+    type: sdk.VCSReferenceType.Branch,
     reference: '<REFERENCE>',
     activate: false // optional
 });

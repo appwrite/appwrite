@@ -8,7 +8,8 @@ const vcs = new Vcs(client);
 
 const result = await vcs.listInstallations({
     queries: [], // optional
-    search: '<SEARCH>' // optional
+    search: '<SEARCH>', // optional
+    total: false // optional
 });
 
 console.log(result);

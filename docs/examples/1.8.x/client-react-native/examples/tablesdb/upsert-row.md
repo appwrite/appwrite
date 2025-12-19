@@ -1,4 +1,4 @@
-import { Client, TablesDB } from "react-native-appwrite";
+import { Client, TablesDB, Permission, Role } from "react-native-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -10,7 +10,13 @@ const result = await tablesDB.upsertRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
-    data: {}, // optional
+    data: {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": false
+    }, // optional
     permissions: ["read("any")"], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });

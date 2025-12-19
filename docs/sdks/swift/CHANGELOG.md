@@ -1,5 +1,26 @@
 # Change Log
 
+## 14.1.0
+
+* Added ability to create columns and indexes synchronously while creating a table
+
+## 14.0.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `createTemplateDeployment` method signature: replace `version` parameter with `type` (TemplateReferenceType) and `reference` parameters
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 13.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+* Add `createResendProvider` and `updateResendProvider` methods to `Messaging` service
+
+## 13.2.2
+
+* Fix issue: Missing AppwriteEnums dependency causing build failure
+
 ## 13.2.1
 
 * Add transaction support for Databases and TablesDB

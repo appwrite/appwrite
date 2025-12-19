@@ -68,7 +68,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new function. You can pass a list of [permissions](https://appwrite.io/docs/permissions) to allow different project users or team with access to execute the function using the client API.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -93,7 +93,7 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', APP_COMPUTE_SPECIFICATION_DEFAULT, fn (array $plan) => new Specification(
+            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
@@ -115,6 +115,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -152,7 +153,8 @@ class Create extends Base
         Func $queueForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github
+        GitHub $github,
+        Authorization $authorization
     ) {
 
         // Temporary abuse check
@@ -237,7 +239,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
         }
 
-        $schedule = Authorization::skip(
+        $schedule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
@@ -315,6 +317,7 @@ class Create extends Base
                     template: $template,
                     github: $github,
                     activate: true,
+                    authorization: $authorization,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
@@ -362,10 +365,11 @@ class Create extends Base
             if (!empty($functionsDomain)) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
-                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                $rule = Authorization::skip(
+                $rule = $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

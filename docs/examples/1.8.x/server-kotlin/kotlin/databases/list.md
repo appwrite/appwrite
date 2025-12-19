@@ -11,5 +11,6 @@ val databases = Databases(client)
 
 val response = databases.list(
     queries = listOf(), // optional
-    search = "<SEARCH>" // optional
+    search = "<SEARCH>", // optional
+    total = false // optional
 )
