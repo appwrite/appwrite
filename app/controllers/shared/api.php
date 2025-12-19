@@ -771,7 +771,8 @@ App::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->inject('authorization')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject, Authorization $authorization) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -779,7 +780,7 @@ App::shutdown()
             return;
         }
 
-        $user = $dbForProject->getDocument('users', $userId);
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
         if ($user->isEmpty()) {
             return;
         }
