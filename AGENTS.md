@@ -17,7 +17,7 @@ Appwrite is a self-hosted Backend-as-a-Service (BaaS) platform that provides dev
 ## Development Commands
 
 ```bash
-# Run Appwite
+# Run Appwrite
 docker compose up -d --force-recreate --build
 
 # Run specific test
