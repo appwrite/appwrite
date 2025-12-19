@@ -562,7 +562,8 @@ class Deletes extends Action
 
         // Delete Keys
         $this->deleteByGroup('keys', [
-            Query::equal('projectInternalId', [$projectInternalId]),
+            Query::equal('resourceInternalId', [$projectInternalId]),
+            Query::equal('resourceType', ['projects']),
             Query::orderAsc()
         ], $dbForPlatform);
 

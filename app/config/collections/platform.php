@@ -653,7 +653,7 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => []
-            ],            
+            ],
             [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
