@@ -12,7 +12,13 @@ val tablesDB = TablesDB(client)
 val response = tablesDB.updateRows(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
-    data = mapOf( "a" to "b" ), // optional
+    data = mapOf(
+        "username" to "walter.obrien",
+        "email" to "walter.obrien@example.com",
+        "fullName" to "Walter O'Brien",
+        "age" to 33,
+        "isAdmin" to false
+    ), // optional
     queries = listOf(), // optional
     transactionId = "<TRANSACTION_ID>" // optional
 )

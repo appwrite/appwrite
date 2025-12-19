@@ -47,7 +47,7 @@ class Create extends CollectionCreate
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/create-table.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
@@ -67,6 +67,7 @@ class Create extends CollectionCreate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

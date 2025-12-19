@@ -70,9 +70,9 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     unset($image);
 };
 
-$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, ?Logger $logger) {
+$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, Authorization $authorization, ?Logger $logger) {
     try {
-        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+        $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         $sessions = $user->getAttribute('sessions', []);
 
@@ -123,7 +123,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                     ->setAttribute('providerRefreshToken', $refreshToken)
                     ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
+                $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
                 $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
@@ -131,7 +131,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                 do {
                     $previousAccessToken = $gitHubSession->getAttribute('providerAccessToken');
 
-                    $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                    $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
                     $sessions = $user->getAttribute('sessions', []);
 
                     $gitHubSession = new Document();
@@ -178,7 +178,7 @@ App::get('/v1/avatars/credit-cards/:code')
         group: null,
         name: 'getCreditCard',
         description: '/docs/references/avatars/get-credit-card.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -206,7 +206,7 @@ App::get('/v1/avatars/browsers/:code')
         group: null,
         name: 'getBrowser',
         description: '/docs/references/avatars/get-browser.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -234,7 +234,7 @@ App::get('/v1/avatars/flags/:code')
         group: null,
         name: 'getFlag',
         description: '/docs/references/avatars/get-flag.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -262,7 +262,7 @@ App::get('/v1/avatars/image')
         group: null,
         name: 'getImage',
         description: '/docs/references/avatars/get-image.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -333,7 +333,7 @@ App::get('/v1/avatars/favicon')
         group: null,
         name: 'getFavicon',
         description: '/docs/references/avatars/get-favicon.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -507,7 +507,7 @@ App::get('/v1/avatars/qr')
         group: null,
         name: 'getQR',
         description: '/docs/references/avatars/get-qr.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -557,7 +557,7 @@ App::get('/v1/avatars/initials')
         group: null,
         name: 'getInitials',
         description: '/docs/references/avatars/get-initials.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -652,7 +652,7 @@ App::get('/v1/avatars/screenshots')
         group: null,
         name: 'getScreenshot',
         description: '/docs/references/avatars/get-screenshot.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -841,8 +841,9 @@ App::get('/v1/cards/cloud')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+    ->inject('authorization')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization) use ($getUserGitHub) {
+        $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -853,7 +854,7 @@ App::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $authorization, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -1048,8 +1049,9 @@ App::get('/v1/cards/cloud-back')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+    ->inject('authorization')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization) use ($getUserGitHub) {
+        $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -1059,7 +1061,7 @@ App::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $authorization, $logger);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -1126,8 +1128,9 @@ App::get('/v1/cards/cloud-og')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+    ->inject('authorization')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization) use ($getUserGitHub) {
+        $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -1142,7 +1145,7 @@ App::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $authorization, $logger);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 

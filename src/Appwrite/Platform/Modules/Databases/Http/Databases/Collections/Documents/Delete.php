@@ -59,7 +59,7 @@ class Delete extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/delete-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,
@@ -83,6 +83,7 @@ class Delete extends Action
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -97,18 +98,19 @@ class Delete extends Action
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
         TransactionState $transactionState,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ): void {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
@@ -121,7 +123,7 @@ class Delete extends Action
             // Use transaction-aware document retrieval to see changes from same transaction
             $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
-            $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            $document = $authorization->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -131,7 +133,7 @@ class Delete extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
-                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
@@ -205,6 +207,7 @@ class Delete extends Action
             document: $document,
             dbForProject: $dbForProject,
             collectionsCache: $collectionsCache,
+            authorization: $authorization
         );
 
         $queueForStatsUsage

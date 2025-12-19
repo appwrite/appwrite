@@ -1,0 +1,73 @@
+# Re-use public resolver to answer unknown queries
+. {
+    forward . 1.1.1.1
+}
+
+# Zones configuration
+webapp.com {
+    template IN A {
+        match "^webapp\.com\.$"
+        answer "{{ .Name }} 60 IN A 203.0.0.1"
+        fallthrough
+    }
+
+    template IN CNAME {
+        match "^stage-site\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN CNAME sites.localhost."
+        fallthrough
+    }
+
+    template IN CNAME {
+        match "^stage-function\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN CNAME functions.localhost."
+        fallthrough
+    }
+
+    template IN CNAME {
+        match "^stage\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN CNAME cname.localhost."
+        fallthrough
+    }
+
+    template IN CNAME {
+        match "^stage-wrong-cname\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN CNAME cname-wrong.tests.appwrite.io."
+        fallthrough
+    }
+
+    template IN A {
+        match "^stage-wrong-caa\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN A 203.0.0.1"
+        fallthrough
+    }
+
+    template IN CAA {
+        match "^stage-wrong-caa\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN CAA 0 issue \"unknown-issuer.org\""
+        fallthrough
+    }
+
+
+    template IN A {
+        match "^stage-correct-caa\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN A 203.0.0.1"
+        fallthrough
+    }
+
+    template IN CAA {
+        match "^stage-correct-caa\.webapp\.com\.$"
+        answer "{{ .Name }} 60 IN CAA 0 issue \"digicert.com\""
+        fallthrough
+    }
+
+    forward . 1.1.1.1
+}
+
+# Zones configuration
+wrong-a-webapp.com {
+    template IN A {
+        match "^wrong-a-webapp\.com\.$"
+        answer "{{ .Name }} 60 IN A 203.0.0.5"
+        fallthrough
+    }
+}

@@ -51,7 +51,7 @@ class Get extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/get-attribute.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -68,12 +68,13 @@ class Get extends Action
             ->param('key', '', new Key(), 'Attribute Key.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }

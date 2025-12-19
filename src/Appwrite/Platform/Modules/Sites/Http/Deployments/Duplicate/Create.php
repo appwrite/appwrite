@@ -47,7 +47,7 @@ class Create extends Action
                 description: <<<EOT
                 Create a new build for an existing site deployment. This endpoint allows you to rebuild a deployment with the updated site configuration, including its commands and output directory if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -65,6 +65,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForSites')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -78,7 +79,8 @@ class Create extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Build $queueForBuilds,
-        Device $deviceForSites
+        Device $deviceForSites,
+        Authorization $authorization
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -147,7 +149,7 @@ class Create extends Action
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),

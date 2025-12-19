@@ -15,7 +15,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -87,7 +86,7 @@ class Functions extends Action
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
-        $platform = $payload['platform'] ?? '';
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
         $function = new Document($payload['function'] ?? []);
         $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
@@ -330,7 +329,6 @@ class Functions extends Action
      * @param string|null $eventData
      * @param string|null $executionId
      * @return void
-     * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Conflict
@@ -491,9 +489,12 @@ class Functions extends Action
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
         // Appwrite vars
         $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
+            'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,

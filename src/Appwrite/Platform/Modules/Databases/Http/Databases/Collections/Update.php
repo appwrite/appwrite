@@ -49,7 +49,7 @@ class Update extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-collection.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -71,12 +71,13 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
