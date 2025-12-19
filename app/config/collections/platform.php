@@ -723,9 +723,9 @@ return [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_project'),
+                '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
+                'attributes' => ['resourceType', 'resourceInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
