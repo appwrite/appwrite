@@ -104,7 +104,7 @@ class Key
     public static function decode(
         Document $project,
         string $key
-    ): static {
+    ) {
         if (\str_contains($key, '_')) {
             [$type, $secret] = \explode('_', $key, 2);
         } else {
