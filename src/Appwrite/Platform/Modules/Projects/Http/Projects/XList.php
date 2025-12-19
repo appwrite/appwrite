@@ -154,10 +154,10 @@ class XList extends Action
         return self::$attributeToSubQueryFilters;
     }
 
-    private function find(Database $db, array $queries, array $selectQueries): array
+    private function find(Database $dbForPlatform, array $queries, array $selectQueries): array
     {
         if (empty($selectQueries)) {
-            return $db->find('projects', $queries);
+            return $dbForPlatform->find('projects', $queries);
         }
 
         $selectedAttributes = [];
@@ -168,7 +168,7 @@ class XList extends Action
         }
 
         if (\in_array('*', $selectedAttributes)) {
-            return $db->find('projects', $queries);
+            return $dbForPlatform->find('projects', $queries);
         }
 
         $filtersToSkipMap = [];
@@ -186,7 +186,7 @@ class XList extends Action
         $filtersToSkip = \array_keys($filtersToSkipMap);
 
         return empty($filtersToSkip)
-            ? $db->find('projects', $queries)
-            : $db->skipFilters(fn () => $db->find('projects', $queries), $filtersToSkip);
+            ? $dbForPlatform->find('projects', $queries)
+            : $dbForPlatform->skipFilters(fn () => $dbForPlatform->find('projects', $queries), $filtersToSkip);
     }
 }
