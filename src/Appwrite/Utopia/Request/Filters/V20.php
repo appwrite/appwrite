@@ -67,7 +67,7 @@ class V20 extends Filter
         $needsRelationships = empty($selections);
         if (!$needsRelationships) {
             foreach ($selections as $select) {
-                if (\in_array('*', $select->getValues(), true)) {
+                if ($select->getValue() === '*') {
                     $needsRelationships = true;
                     break;
                 }
@@ -88,7 +88,9 @@ class V20 extends Filter
             );
 
             // Add wildcard + relationship(s) selects
-            $parsed[] = Query::select($selects);
+            foreach ($selects as $select) {
+                $parsed[] = Query::select($select);
+            }
         }
 
         $resolvedQueries = [];

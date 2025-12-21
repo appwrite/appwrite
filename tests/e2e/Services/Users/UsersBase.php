@@ -453,7 +453,7 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['name'])->toString()
+                Query::select('name')->toString()
             ]
         ]);
         $this->assertEquals($response['headers']['status-code'], 400);
