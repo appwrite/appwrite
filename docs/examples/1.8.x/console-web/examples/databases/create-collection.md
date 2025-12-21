@@ -1,4 +1,4 @@
-import { Client, Databases } from "@appwrite.io/console";
+import { Client, Databases, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -10,9 +10,11 @@ const result = await databases.createCollection({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     documentSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    attributes: [], // optional
+    indexes: [] // optional
 });
 
 console.log(result);

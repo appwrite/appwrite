@@ -12,6 +12,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\IP;
+use Utopia\Validator\Nullable;
 
 class Create extends IPCreate
 {
@@ -42,7 +43,7 @@ class Create extends IPCreate
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/create-ip-column.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -54,12 +55,13 @@ class Create extends IPCreate
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new IP(), 'Default value. Cannot be set when column is required.', true)
+            ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when column is required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

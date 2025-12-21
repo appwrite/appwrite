@@ -11,7 +11,8 @@ Messaging messaging = new Messaging(client);
 
 messaging.listProviderLogs(
     "<PROVIDER_ID>", // providerId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
+    false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

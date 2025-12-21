@@ -12,6 +12,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
@@ -44,7 +45,7 @@ class Create extends StringCreate
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/create-string-column.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -57,7 +58,7 @@ class Create extends StringCreate
             ->param('key', '', new Key(), 'Column Key.')
             ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER), 'Column size for text columns, in number of characters.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('default', null, new Text(0, 0), 'Default value for column when not provided. Cannot be set when column is required.', true)
+            ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.', true)
             ->param('array', false, new Boolean(), 'Is column an array?', true)
             ->param('encrypt', false, new Boolean(), 'Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.', true)
             ->inject('response')
@@ -65,6 +66,7 @@ class Create extends StringCreate
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

@@ -12,6 +12,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Update extends RelationshipUpdate
@@ -43,7 +44,7 @@ class Update extends RelationshipUpdate
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/update-relationship-column.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -55,15 +56,16 @@ class Update extends RelationshipUpdate
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('key', '', new Key(), 'Column Key.')
-            ->param('onDelete', null, new WhiteList([
+            ->param('onDelete', null, new Nullable(new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
                 Database::RELATION_MUTATE_SET_NULL
-            ], true), 'Constraints option', true)
-            ->param('newKey', null, new Key(), 'New Column Key.', true)
+            ], true)), 'Constraints option', true)
+            ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

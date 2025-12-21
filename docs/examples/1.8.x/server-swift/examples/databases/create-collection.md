@@ -11,8 +11,10 @@ let collection = try await databases.createCollection(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     name: "<NAME>",
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     documentSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    attributes: [], // optional
+    indexes: [] // optional
 )
 

@@ -13,11 +13,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 
 class Create extends Action
@@ -49,7 +51,7 @@ class Create extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-float-attribute.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -65,18 +67,19 @@ class Create extends Action
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('key', '', new Key(), 'Attribute Key.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
-            ->param('min', null, new FloatValidator(), 'Minimum value.', true)
-            ->param('max', null, new FloatValidator(), 'Maximum value.', true)
-            ->param('default', null, new FloatValidator(), 'Default value. Cannot be set when required.', true)
+            ->param('min', null, new Nullable(new FloatValidator()), 'Minimum value.', true)
+            ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value.', true)
+            ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $min ??= -PHP_FLOAT_MAX;
         $max ??= PHP_FLOAT_MAX;
@@ -99,7 +102,7 @@ class Create extends Action
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_FLOAT_RANGE,
             'formatOptions' => ['min' => $min, 'max' => $max],
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         if (!empty($formatOptions)) {

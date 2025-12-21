@@ -18,4 +18,5 @@ response, error := service.List(
     "<BUCKET_ID>",
     "<FILE_ID>",
     tokens.WithListQueries([]interface{}{}),
+    tokens.WithListTotal(false),
 )

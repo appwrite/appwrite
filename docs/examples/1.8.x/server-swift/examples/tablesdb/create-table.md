@@ -11,8 +11,10 @@ let table = try await tablesDB.createTable(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     name: "<NAME>",
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     rowSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    columns: [], // optional
+    indexes: [] // optional
 )
 

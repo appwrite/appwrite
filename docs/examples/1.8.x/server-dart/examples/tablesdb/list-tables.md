@@ -11,4 +11,5 @@ TableList result = await tablesDB.listTables(
     databaseId: '<DATABASE_ID>',
     queries: [], // (optional)
     search: '<SEARCH>', // (optional)
+    total: false, // (optional)
 );

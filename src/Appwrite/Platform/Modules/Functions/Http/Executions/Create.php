@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -15,9 +14,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use MaxMind\Db\Reader;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -27,6 +29,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -36,6 +39,7 @@ use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -66,7 +70,7 @@ class Create extends Base
                 description: <<<EOT
                 Trigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.
                 EOT,
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -81,7 +85,7 @@ class Create extends Base
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
             ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'], true), 'HTTP method of execution. Default value is POST.', true)
             ->param('headers', [], new AnyOf([new Assoc(), new Text(65535)], AnyOf::TYPE_MIXED), 'HTTP headers of execution. Defaults to empty.', true)
-            ->param('scheduledAt', null, new Text(100), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
+            ->param('scheduledAt', null, new Nullable(new Text(100)), 'Scheduled execution time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
             ->inject('response')
             ->inject('request')
             ->inject('project')
@@ -92,7 +96,11 @@ class Create extends Base
             ->inject('queueForStatsUsage')
             ->inject('queueForFunctions')
             ->inject('geodb')
+            ->inject('store')
+            ->inject('proofForToken')
             ->inject('executor')
+            ->inject('platform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -114,7 +122,11 @@ class Create extends Base
         StatsUsage $queueForStatsUsage,
         Func $queueForFunctions,
         Reader $geodb,
-        Executor $executor
+        Store $store,
+        Token $proofForToken,
+        Executor $executor,
+        array $platform,
+        Authorization $authorization,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -152,10 +164,10 @@ class Create extends Base
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -171,7 +183,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', '')));
+        $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -185,10 +197,8 @@ class Create extends Base
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $validator = new Authorization('execute');
-
-        if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$authorization->isValid(new Input('execute', $function->getAttribute('execute')))) { // Check if user has write access to execute function
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $jwt = ''; // initialize
@@ -198,7 +208,7 @@ class Create extends Base
 
             foreach ($sessions as $session) {
                 /** @var Utopia\Database\Document $session */
-                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // Find most recent active session for user ID and JWT headers
                     $current = $session;
                 }
             }
@@ -286,7 +296,7 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -327,7 +337,7 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
 
             return $response
@@ -360,8 +370,7 @@ class Create extends Base
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [
@@ -480,7 +489,7 @@ class Create extends Base
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
 
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();

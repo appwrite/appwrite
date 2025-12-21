@@ -13,8 +13,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class XList extends Action
@@ -26,8 +26,10 @@ class XList extends Action
         return 'listRules';
     }
 
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/proxy/rules')
@@ -51,6 +53,7 @@ class XList extends Action
             ))
             ->param('queries', [], new Rules(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Rules::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -60,6 +63,7 @@ class XList extends Action
     public function action(
         array $queries,
         string $search,
+        bool $includeTotal,
         Response $response,
         Document $project,
         Database $dbForPlatform
@@ -106,13 +110,18 @@ class XList extends Action
         $rules = $dbForPlatform->find('rules', $queries);
         foreach ($rules as $rule) {
             $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', ''));
-            $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+
+            // Give priority to certificate generation logs if present
+            if (!empty($certificate->getAttribute('logs', ''))) {
+                $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+            }
+
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         }
 
         $response->dynamic(new Document([
             'rules' => $rules,
-            'total' => $dbForPlatform->count('rules', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $includeTotal ? $dbForPlatform->count('rules', $filterQueries, APP_LIMIT_COUNT) : 0,
         ]), Response::MODEL_PROXY_RULE_LIST);
     }
 }

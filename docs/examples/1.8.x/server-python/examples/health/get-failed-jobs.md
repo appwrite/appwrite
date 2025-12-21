@@ -1,6 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.health import Health
-from appwrite.enums import 
+from appwrite.enums import Name
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -10,6 +10,6 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 health = Health(client)
 
 result = health.get_failed_jobs(
-    name = .V1_DATABASE,
+    name = Name.V1_DATABASE,
     threshold = None # optional
 )

@@ -12,5 +12,6 @@ teams = Teams.new(client)
 result = teams.list_memberships(
     team_id: '<TEAM_ID>',
     queries: [], # optional
-    search: '<SEARCH>' # optional
+    search: '<SEARCH>', # optional
+    total: false # optional
 )

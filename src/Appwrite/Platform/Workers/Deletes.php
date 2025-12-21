@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -19,12 +18,10 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -179,6 +176,9 @@ class Deletes extends Action
             case DELETE_TYPE_SESSION_TARGETS:
                 $this->deleteSessionTargets($project, $getProjectDB, $document);
                 break;
+            case DELETE_TYPE_CSV_EXPORTS:
+                $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
+                break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -198,7 +198,6 @@ class Deletes extends Action
      * @param string $datetime
      * @param Document|null $document
      * @return void
-     * @throws Authorization
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
@@ -708,7 +707,7 @@ class Deletes extends Action
     private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
     {
         $dbForProject = $getProjectDB($project);
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
 
         // Delete Sessions
@@ -718,6 +717,41 @@ class Deletes extends Action
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForProject);
+    }
+
+    /**
+     * @param Database $dbForPlatform
+     * @param Device $deviceForFiles
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function deleteOldCSVExports(Database $dbForPlatform, Device $deviceForFiles): void
+    {
+        $bucket = $dbForPlatform->getDocument('buckets', 'default');
+
+        if ($bucket->isEmpty()) {
+            Console::warning('Default bucket not found, skipping CSV export cleanup');
+            return;
+        }
+
+        $oneWeekAgo = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7); // 1 week
+
+        Console::info("Deleting CSV export files older than " . $oneWeekAgo);
+
+        $this->deleteByGroup('bucket_' . $bucket->getSequence(), [
+            Query::select([...$this->selects, '$createdAt', 'name', 'path']),
+            Query::equal('bucketId', ['default']),
+            Query::createdBefore($oneWeekAgo),
+            Query::endsWith('name', '.csv'),
+            Query::orderDesc('$createdAt'),
+            Query::orderDesc(),
+        ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {
+            $path = $file->getAttribute('path');
+            if ($deviceForFiles->exists($path)) {
+                $deviceForFiles->delete($path);
+                Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
+            }
+        });
     }
 
     /**
@@ -954,14 +988,14 @@ class Deletes extends Action
         }
         Console::info("Deleting screenshots for deployment " . $deployment->getId());
 
-        $bucket = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+        $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
         if ($bucket->isEmpty()) {
             Console::error('Failed to get bucket for deployment screenshots');
             return;
         }
 
         foreach ($screenshotIds as $id) {
-            $file = ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $id));
+            $file = $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $id);
 
             if ($file->isEmpty()) {
                 Console::error('Failed to get deployment screenshot: ' . $id);

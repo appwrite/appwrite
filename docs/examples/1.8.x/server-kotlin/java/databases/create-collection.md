@@ -1,5 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.Permission;
+import io.appwrite.Role;
 import io.appwrite.services.Databases;
 
 Client client = new Client()
@@ -13,9 +15,11 @@ databases.createCollection(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
     "<NAME>", // name
-    listOf("read("any")"), // permissions (optional)
+    List.of(Permission.read(Role.any())), // permissions (optional)
     false, // documentSecurity (optional)
     false, // enabled (optional)
+    List.of(), // attributes (optional)
+    List.of(), // indexes (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

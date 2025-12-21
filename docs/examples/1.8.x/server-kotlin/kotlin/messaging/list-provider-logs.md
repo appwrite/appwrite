@@ -11,5 +11,6 @@ val messaging = Messaging(client)
 
 val response = messaging.listProviderLogs(
     providerId = "<PROVIDER_ID>",
-    queries = listOf() // optional
+    queries = listOf(), // optional
+    total = false // optional
 )

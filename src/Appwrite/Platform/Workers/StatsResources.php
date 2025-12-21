@@ -335,7 +335,11 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
-        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region) {
+
+        // Count runtimes
+        $runtimes = [];
+
+        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region, &$runtimes) {
             $functionDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
@@ -364,7 +368,19 @@ class StatsResources extends Action
             });
 
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
+
+            // Runtimes count
+            $runtime = $function->getAttribute('runtime');
+            if (!empty($runtime)) {
+                $runtimes[$runtime] = ($runtimes[$runtime] ?? 0) + 1;
+            }
         });
+
+        // Write runtimes counts
+        foreach ($runtimes as $runtime => $count) {
+            $this->createStatsDocuments($region, str_replace('{runtime}', $runtime, METRIC_FUNCTIONS_RUNTIME), $count);
+        }
+
     }
 
     protected function countForSites(Database $dbForProject, string $region)
@@ -385,7 +401,10 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
-        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region) {
+        // Count frameworks
+        $frameworks = [];
+
+        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region, &$frameworks) {
             $siteDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
@@ -410,7 +429,18 @@ class StatsResources extends Action
             ]);
 
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $siteBuildsStorage);
+
+            // Frameworks count
+            $framework = $site->getAttribute('framework');
+            if (!empty($framework)) {
+                $frameworks[$framework] = ($frameworks[$framework] ?? 0) + 1;
+            }
         });
+
+        // Write frameworks counts
+        foreach ($frameworks as $framework => $count) {
+            $this->createStatsDocuments($region, str_replace('{framework}', $framework, METRIC_SITES_FRAMEWORK), $count);
+        }
     }
 
     protected function createStatsDocuments(string $region, string $metric, int $value)

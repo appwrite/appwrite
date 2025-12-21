@@ -10,7 +10,7 @@ Functions functions = Functions(client);
 Func result = await functions.create(
     functionId: '<FUNCTION_ID>',
     name: '<NAME>',
-    runtime: .node145,
+    runtime: Runtime.node145,
     execute: ["any"], // (optional)
     events: [], // (optional)
     schedule: '', // (optional)

@@ -12,6 +12,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Create extends RelationshipCreate
@@ -43,7 +44,7 @@ class Create extends RelationshipCreate
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/create-relationship-column.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -61,8 +62,8 @@ class Create extends RelationshipCreate
                 Database::RELATION_ONE_TO_MANY
             ], true), 'Relation type')
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-            ->param('key', null, new Key(), 'Column Key.', true)
-            ->param('twoWayKey', null, new Key(), 'Two Way Column Key.', true)
+            ->param('key', null, new Nullable(new Key()), 'Column Key.', true)
+            ->param('twoWayKey', null, new Nullable(new Key()), 'Two Way Column Key.', true)
             ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
@@ -72,6 +73,7 @@ class Create extends RelationshipCreate
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

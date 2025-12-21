@@ -428,14 +428,13 @@ class StatsUsage extends Action
                 /**
                  * Sort by unique index key reduce locks/deadlocks
                  */
-                usort($projectStats['stats'], function ($a, $b) {
+                usort($projectStats['stats'], function ($a, $b) use ($sequence) {
                     // Metric DESC
                     $cmp = strcmp($b['metric'], $a['metric']);
                     if ($cmp !== 0) {
                         return $cmp;
                     }
 
-                    unset($this->projects[$sequence]);
                     // Period ASC
                     $cmp = strcmp($a['period'], $b['period']);
                     if ($cmp !== 0) {

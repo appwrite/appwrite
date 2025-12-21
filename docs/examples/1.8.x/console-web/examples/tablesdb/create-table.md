@@ -1,4 +1,4 @@
-import { Client, TablesDB } from "@appwrite.io/console";
+import { Client, TablesDB, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -10,9 +10,11 @@ const result = await tablesDB.createTable({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     name: '<NAME>',
-    permissions: ["read("any")"], // optional
+    permissions: [Permission.read(Role.any())], // optional
     rowSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    columns: [], // optional
+    indexes: [] // optional
 });
 
 console.log(result);

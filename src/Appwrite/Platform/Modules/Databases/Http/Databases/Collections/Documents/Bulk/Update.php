@@ -25,6 +25,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -73,9 +74,9 @@ class Update extends Action
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
+            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-            ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
@@ -99,12 +100,16 @@ class Update extends Action
 
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+        }
+
+        if ($transactionId === null) {
+            $data = $this->parseOperators($data, $collection);
         }
 
         $hasRelationships = \array_filter(
@@ -171,6 +176,8 @@ class Update extends Action
                     'operations',
                 );
             });
+
+            $queueForEvents->reset();
 
             // Return successful response without actually updating documents
             $response->dynamic(new Document([
