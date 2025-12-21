@@ -3051,10 +3051,10 @@ App::get('/v1/account/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-//        $validator = new Types([Query::TYPE_LIMIT, Query::TYPE_OFFSET]);
-//        if (!$validator->isValid($queries)) {
-//            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-//        }
+        //        $validator = new Types([Query::TYPE_LIMIT, Query::TYPE_OFFSET]);
+        //        if (!$validator->isValid($queries)) {
+        //            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+        //        }
 
         $audit = new EventAudit($dbForProject);
 

@@ -58,8 +58,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Locale\Locale;
