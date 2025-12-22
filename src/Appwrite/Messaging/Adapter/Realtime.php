@@ -2,12 +2,16 @@
 
 namespace Appwrite\Messaging\Adapter;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Utopia\Database\Query\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 class Realtime extends MessagingAdapter
 {
@@ -51,9 +55,10 @@ class Realtime extends MessagingAdapter
      * @param mixed $identifier
      * @param array $roles
      * @param array $channels
+     * @param array $queries
      * @return void
      */
-    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels): void
+    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels, array $queries = []): void
     {
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
@@ -72,7 +77,8 @@ class Realtime extends MessagingAdapter
         $this->connections[$identifier] = [
             'projectId' => $projectId,
             'roles' => $roles,
-            'channels' => $channels
+            'channels' => $channels,
+            'queries' => $queries
         ];
     }
 
@@ -206,7 +212,9 @@ class Realtime extends MessagingAdapter
                             /**
                              * To prevent duplicates, we save the connections as array keys.
                              */
-                            $receivers[$id] = 0;
+                            if (!empty(RuntimeQuery::filter($this->connections[$id]['queries'], $event['data']))) {
+                                $receivers[$id] = 0;
+                            }
                         }
                         break;
                     }
@@ -215,6 +223,19 @@ class Realtime extends MessagingAdapter
         }
 
         return array_keys($receivers);
+    }
+
+    public function filterEventData(array $documents, array $queries): array
+    {
+        if (empty($queries)) {
+            return $documents;
+        }
+        $filteredDocuments = [];
+        foreach ($documents as $document) {
+            $doc = new Document((array) $doc);
+        }
+
+        return $filteredDocuments;
     }
 
     /**
@@ -243,6 +264,24 @@ class Realtime extends MessagingAdapter
         }
 
         return $channels;
+    }
+
+    /**
+     * Converts the queries from the Query Params into an array.
+     * @param array $queries
+     * @return array
+     */
+    public static function convertQueries(array $queries): array
+    {
+        $queries = Query::parseQueries($queries);
+        foreach ($queries as $query) {
+            if (!in_array($query->getMethod(), RuntimeQuery::ALLOWED_QUERIES)) {
+                // TODO: add better error message with which queries are allowed
+                throw new QueryException(Exception::REALTIME_POLICY_VIOLATION, 'Query not supported');
+            }
+        }
+
+        return $queries;
     }
 
     /**

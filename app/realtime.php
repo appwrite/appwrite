@@ -471,19 +471,20 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $roles = $user->getRoles($database->getAuthorization());
                         $channels = $realtime->connections[$connection]['channels'];
+                        $queries = $realtime->connections[$connection]['queries'] ?? [];
 
                         $realtime->unsubscribe($connection);
-                        $realtime->subscribe($projectId, $connection, $roles, $channels);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels, $queries);
                     }
                 }
 
                 $receivers = $realtime->getSubscribers($event);
 
-                if (App::isDevelopment() && !empty($receivers)) {
-                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
-                }
+                // if (App::isDevelopment() && !empty($receivers)) {
+                //     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                //     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                //     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                // }
 
                 $server->send(
                     $receivers,
@@ -576,6 +577,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $roles = $user->getRoles($authorization);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
+        $queries = Realtime::convertQueries($request->getQuery('queries', []));
 
         /**
          * Channels Check
@@ -584,7 +586,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing channels');
         }
 
-        $realtime->subscribe($project->getId(), $connection, $roles, $channels);
+        $realtime->subscribe($project->getId(), $connection, $roles, $channels, $queries);
 
         $realtime->connections[$connection]['authorization'] = $authorization;
 
@@ -594,6 +596,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             'type' => 'connected',
             'data' => [
                 'channels' => array_keys($channels),
+                'queries' => array_keys($queries),
                 'user' => $user
             ]
         ]));
@@ -724,11 +727,12 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $roles = $user->getRoles($database->getAuthorization());
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
+                $queries = $realtime->connections[$connection]['queries'];
 
                 // Preserve authorization before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
 
-                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
+                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels, $queries);
 
                 // Restore authorization after subscribe
                 if ($authorization !== null) {
