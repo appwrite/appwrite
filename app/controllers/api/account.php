@@ -68,6 +68,7 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -2953,6 +2954,7 @@ App::post('/v1/account/jwts')
         ],
         contentType: ContentType::JSON,
     ))
+    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->label('abuse-limit', 100)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
