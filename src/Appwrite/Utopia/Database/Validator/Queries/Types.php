@@ -23,11 +23,22 @@ class Types extends Validator
     protected array $queries;
 
     /**
+     * @var QueryContext
+     */
+    protected ?QueryContext $context = null;
+
+    /**
      * @param array<string> $types
      */
-    public function __construct(array $types = [])
+    public function __construct(array $types = [], ?QueryContext $context = null)
     {
         $this->types = $types;
+
+        if ($context === null) {
+            $context = new QueryContext();
+        }
+
+        $this->context = $context;
     }
 
     /**
@@ -71,9 +82,7 @@ class Types extends Validator
                 }
             }
 
-            $context = new QueryContext();
-
-            $validator = new DocumentsValidator($context, Database::VAR_INTEGER);
+            $validator = new DocumentsValidator($this->context, Database::VAR_INTEGER);
 
             if (!$validator->isValid($value)) {
                 throw new \Exception($validator->getDescription());
@@ -84,7 +93,7 @@ class Types extends Validator
             var_dump($e->getFile());
             var_dump($e->getLine());
 
-            $this->message = 'Invalid query: ' . $e->getMessage();
+            $this->message = $e->getMessage();
             return false;
         }
 

@@ -6,13 +6,57 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-
-//use Utopia\Database\Validator\Query\Filter;
-//use Utopia\Database\Validator\Query\Order;
-//use Utopia\Database\Validator\Query\Select;
+use Utopia\Database\QueryContext;
 
 class Base extends Types
 {
+    protected Document $collection;
+
+    protected array $types = [
+        Query::TYPE_LIMIT,
+        Query::TYPE_OFFSET,
+        Query::TYPE_CURSOR_AFTER,
+        Query::TYPE_CURSOR_BEFORE,
+        Query::TYPE_ORDER_ASC,
+        Query::TYPE_ORDER_DESC,
+        Query::TYPE_ORDER_RANDOM,
+        Query::TYPE_EQUAL,
+        Query::TYPE_NOT_EQUAL,
+        Query::TYPE_LESSER,
+        Query::TYPE_LESSER_EQUAL,
+        Query::TYPE_GREATER,
+        Query::TYPE_GREATER_EQUAL,
+        Query::TYPE_SEARCH,
+        Query::TYPE_NOT_SEARCH,
+        Query::TYPE_IS_NULL,
+        Query::TYPE_IS_NOT_NULL,
+        Query::TYPE_BETWEEN,
+        Query::TYPE_NOT_BETWEEN,
+        Query::TYPE_STARTS_WITH,
+        Query::TYPE_NOT_STARTS_WITH,
+        Query::TYPE_ENDS_WITH,
+        Query::TYPE_NOT_ENDS_WITH,
+        Query::TYPE_CONTAINS,
+        Query::TYPE_NOT_CONTAINS,
+        Query::TYPE_AND,
+        Query::TYPE_OR,
+        Query::TYPE_CROSSES,
+        Query::TYPE_NOT_CROSSES,
+        Query::TYPE_DISTANCE_EQUAL,
+        Query::TYPE_DISTANCE_NOT_EQUAL,
+        Query::TYPE_DISTANCE_GREATER_THAN,
+        Query::TYPE_DISTANCE_LESS_THAN,
+        Query::TYPE_INTERSECTS,
+        Query::TYPE_NOT_INTERSECTS,
+        Query::TYPE_OVERLAPS,
+        Query::TYPE_NOT_OVERLAPS,
+        Query::TYPE_TOUCHES,
+        Query::TYPE_NOT_TOUCHES,
+        Query::TYPE_VECTOR_DOT,
+        Query::TYPE_VECTOR_COSINE,
+        Query::TYPE_VECTOR_EUCLIDEAN
+    ];
+
     /**
      * Expression constructor
      *
@@ -22,51 +66,6 @@ class Base extends Types
      */
     public function __construct(string $collection, array $allowedAttributes)
     {
-        $types = [
-            Query::TYPE_LIMIT,
-            Query::TYPE_OFFSET,
-            Query::TYPE_CURSOR_AFTER,
-            Query::TYPE_CURSOR_BEFORE,
-            Query::TYPE_ORDER_ASC,
-            Query::TYPE_ORDER_DESC,
-            Query::TYPE_ORDER_RANDOM,
-            Query::TYPE_EQUAL,
-            Query::TYPE_NOT_EQUAL,
-            Query::TYPE_LESSER,
-            Query::TYPE_LESSER_EQUAL,
-            Query::TYPE_GREATER,
-            Query::TYPE_GREATER_EQUAL,
-            Query::TYPE_SEARCH,
-            Query::TYPE_NOT_SEARCH,
-            Query::TYPE_IS_NULL,
-            Query::TYPE_IS_NOT_NULL,
-            Query::TYPE_BETWEEN,
-            Query::TYPE_NOT_BETWEEN,
-            Query::TYPE_STARTS_WITH,
-            Query::TYPE_NOT_STARTS_WITH,
-            Query::TYPE_ENDS_WITH,
-            Query::TYPE_NOT_ENDS_WITH,
-            Query::TYPE_CONTAINS,
-            Query::TYPE_NOT_CONTAINS,
-            Query::TYPE_AND,
-            Query::TYPE_OR,
-            Query::TYPE_CROSSES,
-            Query::TYPE_NOT_CROSSES,
-            Query::TYPE_DISTANCE_EQUAL,
-            Query::TYPE_DISTANCE_NOT_EQUAL,
-            Query::TYPE_DISTANCE_GREATER_THAN,
-            Query::TYPE_DISTANCE_LESS_THAN,
-            Query::TYPE_INTERSECTS,
-            Query::TYPE_NOT_INTERSECTS,
-            Query::TYPE_OVERLAPS,
-            Query::TYPE_NOT_OVERLAPS,
-            Query::TYPE_TOUCHES,
-            Query::TYPE_NOT_TOUCHES,
-            Query::TYPE_VECTOR_DOT,
-            Query::TYPE_VECTOR_COSINE,
-            Query::TYPE_VECTOR_EUCLIDEAN
-        ];
-
         $config = Config::getParam('collections', []);
 
         $collections = \array_merge(
@@ -79,26 +78,23 @@ class Base extends Types
 
         $collection = $collections[$collection];
 
-        $allowedAttributesLookup = [];
-        foreach ($allowedAttributes as $attribute) {
-            $allowedAttributesLookup[$attribute] = true;
-        }
+        $this->collection = new Document;
+        $this->collection->setAttribute('$id', $collection['$id']);
 
-        $allAttributes = [];
-        $attributes = [];
         foreach ($collection['attributes'] as $attribute) {
-            $key = $attribute['$id'];
-
-            $attributeDocument = new Document([
-                'key' => $key,
+            $attr = new Document([
+                'key' => $attribute['$id'],
                 'type' => $attribute['type'],
                 'array' => $attribute['array'],
             ]);
 
-            $allAttributes[] = $attributeDocument;
+            $this->collection->setAttribute('attributes', $attr, Document::SET_TYPE_APPEND);
 
-            if (isset($allowedAttributesLookup[$key])) {
-                $attributes[] = $attributeDocument;
+            if (in_array($attribute['$id'], $allowedAttributes)){
+                /**
+                 * todo find a way to Filter only allowed attribute, while selecting is ok
+                 */
+                //$this->collection->setAttribute('attributes', $attr, Document::SET_TYPE_APPEND);
             }
         }
 
@@ -126,15 +122,17 @@ class Base extends Types
         ];
 
         foreach ($internalAttributes as $attribute) {
-            $attributes[] = $attribute;
-            $allAttributes[] = $attribute;
+            $this->collection->setAttribute('attributes', $attribute, Document::SET_TYPE_APPEND);
         }
 
         if ($this->isSelectQueryAllowed()) {
-            $types[] = Query::TYPE_SELECT;
+            $this->types[] = Query::TYPE_SELECT;
         }
 
-        parent::__construct($types);
+        $context = new QueryContext;
+        $context->add($this->collection);
+
+        parent::__construct($this->types, $context);
     }
 
     public function isSelectQueryAllowed(): bool

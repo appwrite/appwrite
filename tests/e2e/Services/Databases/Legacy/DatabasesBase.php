@@ -400,7 +400,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'queries' => [Query::select(['key'])->toString()],
+            'queries' => [Query::select('key')->toString()],
         ]);
         $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1565,7 +1565,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'queries' => [
-                Query::select(['key'])->toString(),
+                Query::select('key')->toString(),
             ],
         ]);
         $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
@@ -1965,7 +1965,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['fullName', 'library.*'])->toString(),
+                Query::select('fullName')->toString(),
+                Query::select('library.*')->toString(),
                 Query::equal('library', ['library1'])->toString(),
             ],
         ]);
@@ -2003,7 +2004,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['fullName', 'library.*'])->toString(),
+                Query::select('fullName')->toString(),
+                Query::select('library.*')->toString(),
                 Query::equal('library', ['library1'])->toString(),
             ],
         ]);
@@ -2041,7 +2043,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['fullName', 'library.*'])->toString()
+                Query::select('fullName')->toString(),
+                Query::select('library.*')->toString(),
             ],
         ]);
         $this->assertEquals(2, $documents['body']['total']);
@@ -2200,7 +2203,8 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
-                    Query::select(['fullName', 'library.*'])->toString()
+                    Query::select('fullName')->toString(),
+                    Query::select('library.*')->toString(),
                 ],
             ]);
             $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
@@ -2411,7 +2415,9 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['title', 'releaseYear', '$id'])->toString(),
+                Query::select('title')->toString(),
+                Query::select('releaseYear')->toString(),
+                Query::select('$id')->toString(),
             ],
         ]);
 
@@ -5111,7 +5117,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['fullName', 'library.*'])->toString(),
+                Query::select('fullName')->toString(),
+                Query::select('library.*')->toString(),
                 Query::equal('library', ['library1'])->toString(),
             ],
         ]);
@@ -5125,7 +5132,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['library.*'])->toString(),
+                Query::select('library.*')->toString(),
                 Query::equal('library.libraryName', ['Library 1'])->toString(),
             ],
         ]);
@@ -5283,7 +5290,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'libraries.*'])->toString()
+                Query::select('*')->toString(),
+                Query::select('libraries.*')->toString()
             ]
         ]);
 
@@ -5297,7 +5305,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['person_one_to_many.$id'])->toString()
+                Query::select('person_one_to_many.$id')->toString()
             ]
         ]);
 
@@ -5451,7 +5459,9 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'artist.name', 'artist.$permissions'])->toString()
+                Query::select('*')->toString(),
+                Query::select('artist.name')->toString(),
+                Query::select('artist.$permissions')->toString()
             ]
         ]);
 
@@ -5467,7 +5477,10 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'albums.$id', 'albums.name', 'albums.$permissions'])->toString()
+                Query::select('*')->toString(),
+                Query::select('albums.$id')->toString(),
+                Query::select('albums.name')->toString(),
+                Query::select('albums.$permissions')->toString()
             ]
         ]);
 
@@ -5612,7 +5625,9 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'players.name', 'players.$permissions'])->toString()
+                Query::select('*')->toString(),
+                Query::select('players.name')->toString(),
+                Query::select('players.$permissions')->toString()
             ]
         ]);
 
@@ -5630,7 +5645,10 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*', 'sports.$id', 'sports.name', 'sports.$permissions'])->toString()
+                Query::select('*')->toString(),
+                Query::select('sports.$id')->toString(),
+                Query::select('sports.name')->toString(),
+                Query::select('sports.$permissions')->toString()
             ]
         ]);
 
@@ -5660,7 +5678,8 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::isNotNull('$id')->toString(),
-                Query::select(['*', 'libraries.*'])->toString(),
+                Query::select('*')->toString(),
+                Query::select('libraries.*')->toString(),
                 Query::startsWith('fullName', 'Stevie')->toString(),
                 Query::endsWith('fullName', 'Wonder')->toString(),
                 Query::between('$createdAt', '1975-12-06', '2050-12-01')->toString(),
@@ -5680,7 +5699,7 @@ trait DatabasesBase
             'queries' => [
                 Query::isNotNull('$id')->toString(),
                 Query::isNull('fullName')->toString(),
-                Query::select(['fullName'])->toString(),
+                Query::select('fullName')->toString(),
             ],
         ]);
 
@@ -5717,7 +5736,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['libraries.*', '$id'])->toString(),
+                Query::select('libraries.*')->toString(),
+                Query::select('$id')->toString(),
             ],
         ]);
         $document = $response['body']['documents'][0];
@@ -5731,7 +5751,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['fullName', '$id'])->toString(),
+                Query::select('fullName')->toString(),
+                Query::select('$id')->toString(),
             ],
         ]);
 
@@ -5861,7 +5882,8 @@ trait DatabasesBase
             ], $this->getHeaders()),
             [
                 'queries' => [
-                    Query::select(['first_name', 'last_name'])->toString(),
+                    Query::select('first_name')->toString(),
+                    Query::select('last_name')->toString(),
                     Query::or([
                         Query::equal('first_name', ['Donald']),
                         Query::equal('last_name', ['Bush'])
@@ -7342,7 +7364,10 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [Query::select(['name', 'pointAttr'])->toString()]
+            'queries' => [
+                Query::select('name')->toString(),
+                Query::select('pointAttr')->toString()
+            ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -7397,7 +7422,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['name', 'pointAttr'])->toString(),
+                Query::select('name')->toString(),
+                Query::select('pointAttr')->toString(),
                 Query::orderAsc('name')->toString(),
                 Query::limit(1)->toString()
             ]
@@ -7546,7 +7572,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['name', 'location.coordinates'])->toString()
+                Query::select('name')->toString(),
+                Query::select('location.coordinates')->toString()
             ]
         ]);
         $this->assertEquals(200, $fetched['headers']['status-code']);
@@ -7680,7 +7707,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['point', 'person.$id'])->toString()
+                Query::select('point')->toString(),
+                Query::select('person.$id')->toString()
             ]
         ]);
         $this->assertEquals(200, $visitDoc['headers']['status-code']);
@@ -7805,7 +7833,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['stores.$id'])->toString()
+                Query::select('stores.$id')->toString()
             ]
         ]);
         $this->assertEquals(200, $city['headers']['status-code']);
@@ -7930,7 +7958,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['drivers.$id'])->toString()
+                Query::select('drivers.$id')->toString()
             ]
         ]);
         $this->assertEquals(200, $zone['headers']['status-code']);

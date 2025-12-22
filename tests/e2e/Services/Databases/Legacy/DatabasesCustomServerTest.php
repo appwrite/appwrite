@@ -3830,7 +3830,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'queries' => [
-                Query::select(['new_level_2.*'])->toString()
+                Query::select('new_level_2.*')->toString()
             ]
         ]);
 
@@ -3944,7 +3944,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'queries' => [
-                Query::select(['new_level_2.*'])->toString()
+                Query::select('new_level_2.*')->toString()
             ]
         ]);
 
@@ -4058,7 +4058,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'queries' => [
-                Query::select(['new_level_2.*'])->toString()
+                Query::select('new_level_2.*')->toString()
             ]
         ]);
 
@@ -4073,7 +4073,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'queries' => [
-                Query::select(['*', 'level1.*'])->toString()
+                Query::select('*')->toString(),
+                Query::select('level1.*')->toString()
             ]
         ]);
 
@@ -4191,7 +4192,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'queries' => [
-                Query::select(['*', 'level1.*'])->toString()
+                Query::select('*')->toString(),
+                Query::select('level1.*')->toString()
             ]
         ]);
 
