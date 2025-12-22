@@ -67,8 +67,16 @@ class V17 extends Filter
         $parsed = [];
         foreach ($content['queries'] as $query) {
             try {
-                $query = $this->parseQuery($query);
-                $parsed[] = \json_encode(\array_filter($query->toArray()));
+                /** @var Query|Query[] $queries */
+                $queries = $this->parseQuery($query);
+
+                if ($queries instanceof Query){
+                    $queries = [$queries];
+                }
+
+                foreach ($queries as $q) {
+                    $parsed[] = json_encode(array_filter($q->toArray()));
+                }
             } catch (\Throwable $th) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
@@ -80,7 +88,13 @@ class V17 extends Filter
     }
 
     // 1.4 query parser
-    public function parseQuery(string $filter): Query
+
+    /**
+     * @param string $filter
+     * @return Query|array
+     * @throws \Utopia\Database\Exception\Query
+     */
+    public function parseQuery(string $filter): Query|array
     {
         // Init empty vars we fill later
         $method = '';
@@ -242,29 +256,55 @@ class V17 extends Filter
             case Query::TYPE_ENDS_WITH:
                 $attribute = $parsedParams[0] ?? '';
                 if (count($parsedParams) < 2) {
-                    return new Query($method, $attribute);
+                    return Query::parseQuery([
+                        'method' => $method,
+                        'attribute' => $attribute,
+                    ]);
                 }
-                return new Query($method, $attribute, \is_array($parsedParams[1]) ? $parsedParams[1] : [$parsedParams[1]]);
+
+                return Query::parseQuery([
+                    'method' => $method,
+                    'attribute' => $attribute,
+                    'values' => \is_array($parsedParams[1]) ? $parsedParams[1] : [$parsedParams[1]],
+                ]);
 
             case Query::TYPE_BETWEEN:
-                return new Query($method, $parsedParams[0], [$parsedParams[1], $parsedParams[2]]);
+                return Query::between($parsedParams[0], $parsedParams[1], $parsedParams[2]);
+
             case Query::TYPE_SELECT:
-                return new Query($method, values: $parsedParams[0]);
+                $selects = [];
+                foreach ($parsedParams[0] as $attribute) {
+                    $selects[] = Query::select($parsedParams[0], $parsedParams[1], $parsedParams[2]);
+                }
+
+                return $selects;
+
             case Query::TYPE_ORDER_ASC:
             case Query::TYPE_ORDER_DESC:
-                return new Query($method, $parsedParams[0] ?? '');
+                return Query::parseQuery([
+                    'method' => $method,
+                    'attribute' => $parsedParams[0] ?? '',
+                ]);
 
             case Query::TYPE_LIMIT:
             case Query::TYPE_OFFSET:
             case Query::TYPE_CURSOR_AFTER:
             case Query::TYPE_CURSOR_BEFORE:
                 if (count($parsedParams) > 0) {
-                    return new Query($method, values: [$parsedParams[0]]);
+                    return Query::parseQuery([
+                        'method' => $method,
+                        'values' => [$parsedParams[0]],
+                    ]);
                 }
-                return new Query($method);
+
+                return Query::parseQuery([
+                    'method' => $method,
+                ]);
 
             default:
-                return new Query($method);
+                return Query::parseQuery([
+                    'method' => $method,
+                ]);
         }
     }
 
