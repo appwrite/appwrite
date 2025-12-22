@@ -1499,6 +1499,9 @@ App::post('/v1/projects/:projectId/keys')
             ],
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
+            'resourceInternalId' => $project->getSequence(),
+            'resourceId' => $project->getId(),
+            'resourceType' => 'projects',
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
@@ -1587,7 +1590,13 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ])
         ]);
 
         if ($key->isEmpty()) {
@@ -1631,7 +1640,13 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ])
         ]);
 
         if ($key->isEmpty()) {
@@ -1682,7 +1697,13 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ])
         ]);
 
         if ($key->isEmpty()) {
