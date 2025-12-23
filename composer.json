@@ -29,12 +29,6 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/pools"
-        }
-    ],
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
