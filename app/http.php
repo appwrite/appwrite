@@ -421,7 +421,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
     $http->task([], 0);
 
     // listen ctrl + c
-    Process::signal(2, function () use ($http) {
+    Process::signal(SIGINT, function () use ($http) {
         Console::log('Stop by Ctrl+C');
         $http->shutdown();
     });
