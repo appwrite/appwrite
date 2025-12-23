@@ -333,6 +333,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
      * 5. Regardless of the results from steps 1-4, attempts to fetch the JWT token.
      * 6. If the JWT user has a valid session ID, updates the user variable with the user from `projectDB`,
      *    overwriting the previous value.
+     * 7. If account key is passed, use user of the account key as long as user ID header matches too
      */
 
     Authorization::setDefaultStatus(true);
