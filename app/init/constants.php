@@ -243,6 +243,8 @@ const MESSAGE_TYPE_PUSH = 'push';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_DYNAMIC = 'dynamic';
+const API_KEY_ORGANIZATION = 'organization';
+const API_KEY_ACCOUNT = 'account';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';

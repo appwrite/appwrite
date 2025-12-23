@@ -190,7 +190,7 @@ class Screenshot extends Action
             'cookie' => $cookieConsole
         ], [
             'name' => 'Screenshot API key',
-            'scopes' => \array_keys(Config::getParam('scopes', []))
+            'scopes' => \array_keys(Config::getParam('projectScopes', []))
         ]);
 
         if ($response['headers']['status-code'] !== 201) {

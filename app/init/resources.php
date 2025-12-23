@@ -1072,15 +1072,15 @@ App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
     return '';
 }, ['request', 'apiKey']);
 
-App::setResource('apiKey', function (Request $request, Document $project): ?Key {
+App::setResource('apiKey', function (Request $request, Document $project, Document $team, Document $user): ?Key {
     $key = $request->getHeader('x-appwrite-key');
 
     if (empty($key)) {
         return null;
     }
 
-    return Key::decode($project, $key);
-}, ['request', 'project']);
+    return Key::decode($project, $team, $user, $key);
+}, ['request', 'project', 'team', 'user']);
 
 App::setResource('executor', fn () => new Executor());
 

@@ -15,6 +15,8 @@ class Key
 {
     public function __construct(
         protected string $projectId,
+        protected string $teamId,
+        protected string $userId,
         protected string $type,
         protected string $role,
         protected array $scopes,
@@ -99,6 +101,8 @@ class Key
      */
     public static function decode(
         Document $project,
+        Document $team,
+        Document $user,
         string $key
     ): Key {
         if (\str_contains($key, '_')) {
@@ -115,6 +119,8 @@ class Key
 
         $guestKey = new Key(
             $project->getId(),
+            '',
+            '',
             $type,
             User::ROLE_GUESTS,
             $roles[User::ROLE_GUESTS]['scopes'] ?? [],
@@ -152,6 +158,8 @@ class Key
 
                 return new Key(
                     $projectId,
+                    '',
+                    '',
                     $type,
                     $role,
                     $scopes,
@@ -185,12 +193,90 @@ class Key
 
                 return new Key(
                     $project->getId(),
+                    '',
+                    '',
                     $type,
                     $role,
                     $scopes,
                     $name,
                     $expired
                 );
+            case API_KEY_ACCOUNT:
+                $key = $user->find(
+                    key: 'secret',
+                    find: $key,
+                    subject: 'keys'
+                );
+
+                // Invalid key
+                if (!$key) {
+                    return $guestKey;
+                }
+
+                $expire = $key->getAttribute('expire');
+                $expired = false;
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                    $expired = true;
+                }
+
+                $name = $key->getAttribute('name', 'UNKNOWN');
+
+                $role = User::ROLE_USERS;
+
+                $roles = Config::getParam('roles', []);
+                $scopes = $roles[$role]['scopes'] ?? [];
+                $scopes = $key->getAttribute('scopes', []);
+
+                $key = new Key(
+                    '',
+                    '',
+                    $user->getId(),
+                    $type,
+                    $role,
+                    $scopes,
+                    $name,
+                    $expired
+                );
+
+                return $key;
+            case API_KEY_ORGANIZATION:
+                $key = $team->find(
+                    key: 'secret',
+                    find: $key,
+                    subject: 'keys'
+                );
+
+                // Invalid key
+                if (!$key) {
+                    return $guestKey;
+                }
+
+                $expire = $key->getAttribute('expire');
+                $expired = false;
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                    $expired = true;
+                }
+
+                $name = $key->getAttribute('name', 'UNKNOWN');
+
+                $role = User::ROLE_APPS;
+
+                $roles = Config::getParam('roles', []);
+                $scopes = $roles[$role]['scopes'] ?? [];
+                $scopes = $key->getAttribute('scopes', []);
+
+                $key = new Key(
+                    '',
+                    $team->getId(),
+                    '',
+                    $type,
+                    $role,
+                    $scopes,
+                    $name,
+                    $expired
+                );
+
+                return $key;
             default:
                 return $guestKey;
         }

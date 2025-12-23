@@ -191,7 +191,7 @@ App::post('/v1/mock/api-key-unprefixed')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $scopes = array_keys(Config::getParam('scopes'));
+        $scopes = array_keys(Config::getParam('projectScopes'));
 
         $key = new Document([
             '$id' => ID::unique(),
