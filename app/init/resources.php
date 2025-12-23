@@ -433,9 +433,9 @@ App::setResource('user', function (string $mode, Document $project, Document $co
 
     // Account based on account API key
     $accountKey = $request->getHeader('x-appwrite-key', '');
-    $accountKeyId = $request->getHeader('x-appwrite-user', '');
-    if (!empty($accountKeyId) && !empty($accountKey)) {
-        $accountKeyUser = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $accountKeyId));
+    $accountKeyUserId = $request->getHeader('x-appwrite-user', '');
+    if (!empty($accountKeyUserId) && !empty($accountKey)) {
+        $accountKeyUser = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
         if (!$accountKeyUser->isEmpty()) {
             $key = $accountKeyUser->find(
                 key: 'secret',
