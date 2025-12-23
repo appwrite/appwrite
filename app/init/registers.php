@@ -231,7 +231,7 @@ $buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int
         throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
-    $poolSize = (int)($instanceConnections / $workerCount);
+    $poolSize = (int)(($instanceConnections / $workerCount)/2);
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
