@@ -430,6 +430,25 @@ App::setResource('user', function (string $mode, Document $project, Document $co
             }
         }
     }
+
+    // Account based on account API key
+    $accountKey = $request->getHeader('x-appwrite-key', '');
+    $accountKeyId = $request->getHeader('x-appwrite-user', '');
+    if (!empty($accountKeyId) && !empty($accountKey)) {
+        $accountKeyUser = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $accountKeyId));
+        if (!$accountKeyUser->isEmpty()) {
+            $key = $accountKeyUser->find(
+                key: 'secret',
+                find: $accountKey,
+                subject: 'keys'
+            );
+
+            if (!empty($key)) {
+                $user = $accountKeyUser;
+            }
+        }
+    }
+
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
 
