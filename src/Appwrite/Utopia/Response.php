@@ -702,6 +702,13 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
+
+//        if($model === 'attributeEnum'){
+//            var_dump('in 1');
+//            var_dump($model);
+//            var_dump($document);
+//            var_dump($this->getContentType());
+//        }
         $output = $this->output(clone $document, $model);
         $output = $this->applyFilters($output, $model);
 
@@ -747,6 +754,8 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
+        $print= $model === 'attributeEnum';
+
         $data       = clone $document;
         $model      = $this->getModel($model);
         $output     = [];
@@ -760,6 +769,14 @@ class Response extends SwooleResponse
         }
 
         foreach ($model->getRules() as $key => $rule) {
+            if($print && $key==='elements'){
+                var_dump('Output 1 ===++++ ');
+                var_dump($key);
+                var_dump($rule);
+                var_dump($data);
+                var_dump($data[$key]);
+            }
+
             if (!$data->isSet($key) && $rule['required']) { // do not set attribute in response if not required
                 if (\array_key_exists('default', $rule)) {
                     $data->setAttribute($key, $rule['default']);
@@ -773,11 +790,18 @@ class Response extends SwooleResponse
                 continue;
             }
 
+            if($print && $key==='elements'){
+                var_dump('Output 1 ===++++ ');
+                var_dump($key);
+                var_dump($rule);
+                var_dump($data);
+                var_dump($data['formatOptions'][$key]);
+            }
+
             if ($rule['array']) {
                 if (!is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
-
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
                         if (\is_array($rule['type'])) {
