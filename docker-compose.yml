@@ -1171,6 +1171,9 @@ services:
       - "traefik.http.routers.appwrite_maildev_https.rule=Host(`mail.localhost`)"
       - "traefik.http.routers.appwrite_maildev_https.service=appwrite_maildev"
       - "traefik.http.routers.appwrite_maildev_https.tls=true"
+    environment:
+      - MAILDEV_INCOMING_USER=${_APP_SMTP_USERNAME}
+      - MAILDEV_INCOMING_PASS=${_APP_SMTP_PASSWORD}
 
   request-catcher-webhook: # used mainly for dev tests (mock HTTP webhook)
     image: appwrite/requestcatcher:1.0.0
