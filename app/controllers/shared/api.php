@@ -301,10 +301,6 @@ App::init()
 
         // Step 5: API Key Authentication
         if (!empty($apiKey)) {
-            // Verify no user session exists simultaneously
-            if (!$user->isEmpty()) {
-                throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
-            }
             // Check if key is expired
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
