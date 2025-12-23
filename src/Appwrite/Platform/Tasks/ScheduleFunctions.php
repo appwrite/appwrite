@@ -19,7 +19,7 @@ class ScheduleFunctions extends ScheduleBase
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
 
-    protected ?float $lastEnqueueUpdate = null;
+    private ?float $lastEnqueueUpdate = null;
 
     public static function getName(): string
     {
@@ -34,11 +34,6 @@ class ScheduleFunctions extends ScheduleBase
     public static function getCollectionId(): string
     {
         return RESOURCE_TYPE_FUNCTIONS;
-    }
-
-    protected function getQueueForFunctions(): Func
-    {
-        return new Func($this->publisherFunctions);
     }
 
     protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void
@@ -100,7 +95,8 @@ class ScheduleFunctions extends ScheduleBase
 
                     $this->updateProjectAccess($schedule['project'], $dbForPlatform);
 
-                    $queueForFunctions = $this->getQueueForFunctions();
+                    $queueForFunctions = new Func($this->publisherFunctions);
+
                     $queueForFunctions
                         ->setType('schedule')
                         ->setFunction($schedule['resource'])
