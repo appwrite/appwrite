@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a7f3536c923e62048f6dc92415391d41",
+    "content-hash": "fe779980651e51a4cb8cde7515d14db1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4513,16 +4513,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.5",
+            "version": "dev-joins",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "6f366f1d4ac2796e59a97d1ba28cedc355e7122e"
+                "reference": "01e06cf23b120b20eff6b159bc6531dd412677d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/6f366f1d4ac2796e59a97d1ba28cedc355e7122e",
-                "reference": "6f366f1d4ac2796e59a97d1ba28cedc355e7122e",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/01e06cf23b120b20eff6b159bc6531dd412677d8",
+                "reference": "01e06cf23b120b20eff6b159bc6531dd412677d8",
                 "shasum": ""
             },
             "require": {
@@ -4531,7 +4531,7 @@
                 "ext-openssl": "*",
                 "php": ">=8.1",
                 "utopia-php/console": "0.0.*",
-                "utopia-php/database": "4.*",
+                "utopia-php/database": "dev-joins8 as 4.3.0",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "0.18.*"
             },
@@ -4562,9 +4562,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.3.5"
+                "source": "https://github.com/utopia-php/migration/tree/joins"
             },
-            "time": "2025-11-25T11:18:29+00:00"
+            "time": "2025-12-23T05:59:18+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5436,16 +5436,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.6.0",
+            "version": "1.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "5a14a029f741d1a23420a461d955f1ee53fc9139"
+                "reference": "14b9ebd7f5e3287cd24ef342c38dfa714808e80e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5a14a029f741d1a23420a461d955f1ee53fc9139",
-                "reference": "5a14a029f741d1a23420a461d955f1ee53fc9139",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/14b9ebd7f5e3287cd24ef342c38dfa714808e80e",
+                "reference": "14b9ebd7f5e3287cd24ef342c38dfa714808e80e",
                 "shasum": ""
             },
             "require": {
@@ -5481,9 +5481,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.6.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.7.1"
             },
-            "time": "2025-12-18T09:15:02+00:00"
+            "time": "2025-12-22T11:47:51+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8947,11 +8947,18 @@
             "version": "dev-joins8",
             "alias": "4.3.0",
             "alias_normalized": "4.3.0.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-joins",
+            "alias": "1.3.5",
+            "alias_normalized": "1.3.5.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/database": 20
+        "utopia-php/database": 20,
+        "utopia-php/migration": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
