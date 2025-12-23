@@ -24,8 +24,12 @@ class KeyTest extends TestCase
         $roleScopes = Config::getParam('roles', [])[User::ROLE_APPS]['scopes'];
 
         $key = static::generateKey($projectId, $usage, $scopes);
-        $project = new Document(['$id' => $projectId,]);
-        $decoded = Key::decode($project, $key);
+        $decoded = Key::decode(
+            project: new Document(['$id' => $projectId]),
+            team: new Document(),
+            user: new Document(),
+            key: $key,
+        );
 
         $this->assertEquals($projectId, $decoded->getProjectId());
         $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
