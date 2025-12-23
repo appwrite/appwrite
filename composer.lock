@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8ae1ada02b140a48fd3ce9ae74c95cad",
+    "content-hash": "59fcb531753c6e05c69624cd93d6360d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4734,12 +4734,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "c32a92afd4f1b4ad524a79fa0b04fc253317cc2d"
+                "reference": "a70164f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/c32a92afd4f1b4ad524a79fa0b04fc253317cc2d",
-                "reference": "c32a92afd4f1b4ad524a79fa0b04fc253317cc2d",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/a70164f",
+                "reference": "a70164f",
                 "shasum": ""
             },
             "require": {
