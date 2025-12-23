@@ -19,6 +19,21 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
+App::get('/v1/mock/tests/abuse')
+    ->desc('Abuse-protected mock endpoint')
+    ->groups(['mock', 'api'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->label('abuse-limit', 3)
+    ->label('abuse-time', 3600)
+    ->label('abuse-key', '{param-abuseKey}')
+    ->param('abuseKey', '', new Text(100), 'Any string to be used as abuse key.')
+    ->inject('response')
+    ->action(function (string $abuseKey, Response $response) {
+        $response->noContent();
+    });
+
 App::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])

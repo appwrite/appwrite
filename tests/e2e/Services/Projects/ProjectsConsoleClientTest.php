@@ -5378,6 +5378,52 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
+     * @group devKeys
+     */
+    public function testConsoleDevKeys(): void
+    {
+        $consoleDevKey = System::getEnv('_APP_CONSOLE_DEV_KEY_SECRET', '');
+        $abuseMockKey = 'key_' . \uniqid();
+
+        $this->assertNotEmpty($consoleDevKey);
+
+        $client = $this->client;
+        $hitMockEndpoint = function (bool $withDevKey) use ($client, $consoleDevKey, $abuseMockKey) {
+            $headers = [];
+            if ($withDevKey) {
+                $headers['x-appwrite-dev-key'] = $consoleDevKey;
+            }
+
+            $response = $client->call(Client::METHOD_GET, '/mock/tests/abuse', $headers, [
+                'abuseKey' => $abuseMockKey
+            ]);
+            return $response;
+        };
+
+        // 3 are OK
+        $response = $hitMockEndpoint(withDevKey: false);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $hitMockEndpoint(withDevKey: false);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $hitMockEndpoint(withDevKey: false);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        // Next is FAIL
+        $response = $hitMockEndpoint(withDevKey: false);
+        $this->assertEquals(429, $response['headers']['status-code']);
+
+        // Next SUCCEEDS with devkey
+        $response = $hitMockEndpoint(withDevKey: true);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $hitMockEndpoint(withDevKey: true);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $hitMockEndpoint(withDevKey: true);
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $hitMockEndpoint(withDevKey: true);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    /**
      * Devkeys Tests ends here ------------------------------------------------
      */
 }

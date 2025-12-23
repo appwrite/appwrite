@@ -5,6 +5,7 @@
  */
 
 use Appwrite\Network\Platform;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
@@ -49,6 +50,19 @@ $console = [
         'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
     ],
     'smtpBaseTemplate' => APP_BRANDED_EMAIL_BASE_TEMPLATE,
+    'devKeys' => [
+        new Document([
+            '$id' => ID::custom('consoleDevKey'),
+            '$permissions' => [],
+            'projectInternalId' => ID::custom('console'),
+            'projectId' => ID::custom('console'),
+            'name' => 'Console dev key',
+            'expire' => null,
+            'sdks' => [],
+            'accessedAt' => null,
+            'secret' => System::getEnv('_APP_CONSOLE_DEV_KEY_SECRET')
+        ])
+    ]
 ];
 
 return $console;
