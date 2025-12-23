@@ -130,7 +130,7 @@ docker compose up -d
 
 To get proper autocompletion for all the different functions and classes in the codebase, you'll need to install Appwrite dependencies on your local machine. You can easily do that with PHP's package manager, [Composer](https://getcomposer.org/). If you don't have Composer installed, you can use the Docker Hub image to get the same result:
 
-**Unix / macOS / Linux**
+## Unix / macOS / Linux
 
 ```bash
 docker run --rm --interactive --tty \
@@ -138,7 +138,7 @@ docker run --rm --interactive --tty \
   composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
 ```
 
-**Windows (PowerShell)**
+## Windows (PowerShell)
 
 ```powershell
 docker run --rm --interactive --tty `
@@ -146,7 +146,7 @@ docker run --rm --interactive --tty `
   composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
 ```
 
-**Windows (CMD)**
+## Windows (CMD)
 
 ```cmd
 docker run --rm --interactive --tty ^
