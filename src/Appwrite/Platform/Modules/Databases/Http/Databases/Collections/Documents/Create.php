@@ -443,12 +443,20 @@ class Create extends Action
         }
 
         try {
-            $dbForProject->withPreserveDates(
-                fn () => $dbForProject->createDocuments(
+            $results = [];
+
+            $dbForProject->withPreserveDates(function () use (&$results, $dbForProject, $database, $collection, $documents) {
+                $dbForProject->createDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documents,
-                )
-            );
+                    onNext: function ($doc) use (&$results) {
+                        $results[] = $doc;
+                    }
+                );
+            });
+
+            $documents = $results;
+
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (NotFoundException) {
