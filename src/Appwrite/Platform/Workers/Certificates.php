@@ -264,6 +264,7 @@ class Certificates extends Action
         // Rule not found (or) not in the expected state
         if ($rule->isEmpty() || $rule->getAttribute('status') !== RULE_STATUS_CERTIFICATE_GENERATING) {
             Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
+            return;
         }
 
         // Get associated certificate for the rule

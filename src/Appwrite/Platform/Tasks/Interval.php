@@ -12,17 +12,17 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
-class MaintenanceRules extends Action
+class Interval extends Action
 {
     public static function getName(): string
     {
-        return 'maintenance-rules';
+        return 'interval';
     }
 
     public function __construct()
     {
         $this
-          ->desc('Schedules periodic tasks for rule verification and certificate renewal')
+          ->desc('Schedules tasks on regular intervals by publishing them to our queues')
           ->inject('dbForPlatform')
           ->inject('queueForCertificates')
           ->callback($this->action(...));
@@ -30,22 +30,22 @@ class MaintenanceRules extends Action
 
     public function action(Database $dbForPlatform, Certificate $queueForCertificates): void
     {
-        Console::title('Rule maintenance V1');
-        Console::success(APP_NAME . ' rule maintenance process v1 has started');
+        Console::title('Interval V1');
+        Console::success(APP_NAME . ' interval process v1 has started');
 
-        $intervalRuleDomainVerification = (int) System::getEnv('_APP_MAINTENANCE_RULE_DOMAIN_VERIFICATION_INTERVAL', '60'); // 1 minute
-        $intervalRuleCertificateRenewal = (int) System::getEnv('_APP_MAINTENANCE_RULE_CERTIFICATE_RENEWAL_INTERVAL', '86400'); // 1 day
+        $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '60'); // 1 minute
+        $intervalCertificateRenewal = (int) System::getEnv('_APP_INTERVAL_CERTIFICATE_RENEWAL', '86400'); // 1 day
 
-        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalRuleDomainVerification) {
+        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalDomainVerification) {
             Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
                 $this->verifyDomain($dbForPlatform, $queueForCertificates);
-            }, $intervalRuleDomainVerification);
+            }, $intervalDomainVerification);
         });
 
-        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalRuleCertificateRenewal) {
+        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalCertificateRenewal) {
             Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
                 $this->renewCertificates($dbForPlatform, $queueForCertificates);
-            }, $intervalRuleCertificateRenewal);
+            }, $intervalCertificateRenewal);
         });
     }
 

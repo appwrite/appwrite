@@ -787,10 +787,10 @@ services:
       - _APP_MAINTENANCE_START_TIME
       - _APP_DATABASE_SHARED_TABLES
 
-  appwrite-task-maintenance-rules:
-    entrypoint: maintenance-rules
+  appwrite-task-interval:
+    entrypoint: interval
     <<: *x-logging
-    container_name: appwrite-task-maintenance-rules
+    container_name: appwrite-task-interval
     image: appwrite-dev
     networks:
       - appwrite
@@ -822,8 +822,8 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_MAINTENANCE_RULE_DOMAIN_VERIFICATION_INTERVAL
-      - _APP_MAINTENANCE_RULE_CERTIFICATE_RENEWAL_INTERVAL
+      - _APP_INTERVAL_DOMAIN_VERIFICATION
+      - _APP_INTERVAL_CERTIFICATE_RENEWAL
 
   appwrite-task-stats-resources:
     container_name: appwrite-task-stats-resources
