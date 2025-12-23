@@ -1549,7 +1549,13 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForPlatform->find('keys', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ]),
             Query::limit(5000),
         ]);
 
