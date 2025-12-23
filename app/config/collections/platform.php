@@ -6,7 +6,7 @@ use Utopia\Database\Helpers\ID;
 
 $providers = Config::getParam('oAuthProviders', []);
 
-return [
+$platformCollections = [
     'projects' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('projects'),
@@ -1914,3 +1914,31 @@ return [
         'indexes' => []
     ],
 ];
+
+// Organization API keys subquery
+$platformCollections['teams']['attributes'][] = [
+    '$id' => ID::custom('keys'),
+    'type' => Database::VAR_STRING,
+    'format' => '',
+    'size' => 16384,
+    'signed' => true,
+    'required' => false,
+    'default' => null,
+    'array' => false,
+    'filters' => ['subQueryOrganizationKeys'],
+];
+
+// Account API keys subquery
+$platformCollections['users']['attributes'][] = [
+    '$id' => ID::custom('keys'),
+    'type' => Database::VAR_STRING,
+    'format' => '',
+    'size' => 16384,
+    'signed' => true,
+    'required' => false,
+    'default' => null,
+    'array' => false,
+    'filters' => ['subQueryAccountKeys'],
+];
+
+return $platformCollections;
