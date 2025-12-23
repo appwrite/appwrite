@@ -4,8 +4,8 @@ namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
-use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Interval;
+use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\ScheduleExecutions;
