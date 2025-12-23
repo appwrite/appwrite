@@ -23,6 +23,8 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Pools\Adapter\Stack as Stack;
+use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
@@ -143,7 +145,14 @@ $register->set('realtimeLogger', function () {
     return new Logger($adapter);
 });
 
-$register->set('pools', function () {
+/**
+ * Build a pool Group with shared config.
+ *
+ * @param string $configPrefix Config param prefix (e.g. 'pools', 'coroutinepools')
+ * @param callable(): \Utopia\Pools\Adapter $adapterFactory Factory returning the Pool adapter (Stack or Swoole)
+ * @param int|null $syncTimeout Optional synchronization timeout to apply on each pool (null to skip)
+ */
+$buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int $syncTimeout = null): Group {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
@@ -236,7 +245,6 @@ $register->set('pools', function () {
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
-                //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
 
@@ -252,13 +260,6 @@ $register->set('pools', function () {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
-            /**
-             * Get Resource
-             *
-             * Creation could be reused across connection types like database, cache, queue, etc.
-             *
-             * Resource assignment to an adapter will happen below.
-             */
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -285,8 +286,8 @@ $register->set('pools', function () {
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
-            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
-                // Get Adapter
+            $poolAdapter = $adapterFactory();
+            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -294,7 +295,6 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             default => null
                         };
-
                         $adapter->setDatabase($dsn->getPath());
                         return $adapter;
                     case 'pubsub':
@@ -318,14 +318,25 @@ $register->set('pools', function () {
                 }
             });
 
+            if ($syncTimeout !== null) {
+                $pool->setSynchronizationTimeout($syncTimeout);
+            }
+
             $group->add($pool);
         }
 
-        Config::setParam('pools-' . $key, $config);
+        Config::setParam($configPrefix . '-' . $key, $config);
     }
 
     return $group;
-});
+};
+
+$register->set('pools', fn () => $buildPoolGroup('pools', fn () => new Stack(), null));
+
+/**
+ * Separate pool group for async/realtime contexts, using Swoole adapter and 10s sync timeout.
+ */
+$register->set('coroutinepools', fn () => $buildPoolGroup('coroutinepools', fn () => new SwoolePool(), 10));
 
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope

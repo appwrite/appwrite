@@ -62,7 +62,7 @@ if (!function_exists('getConsoleDB')) {
         global $register;
 
         /** @var Group $pools */
-        $pools = $register->get('pools');
+        $pools = $register->get('coroutinepools');
 
         $adapter = new DatabasePool($pools->get('console'));
         $database = new Database($adapter, getCache());
@@ -92,7 +92,7 @@ if (!function_exists('getProjectDB')) {
         global $register;
 
         /** @var Group $pools */
-        $pools = $register->get('pools');
+        $pools = $register->get('coroutinepools');
 
         if ($project->isEmpty() || $project->getId() === 'console') {
             return getConsoleDB();
@@ -144,7 +144,7 @@ if (!function_exists('getCache')) {
 
         global $register;
 
-        $pools = $register->get('pools'); /** @var Group $pools */
+        $pools = $register->get('coroutinepools'); /** @var Group $pools */
 
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
@@ -445,7 +445,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            $pubsub = new PubSubPool($register->get('pools')->get('pubsub'));
+            $pubsub = new PubSubPool($register->get('coroutinepools')->get('pubsub'));
 
             if ($pubsub->ping(true)) {
                 $attempts = 0;
@@ -519,7 +519,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('pools', fn () => $register->get('pools'));
+    App::setResource('pools', fn () => $register->get('coroutinepools'));
     App::setResource('request', fn () => $request);
     App::setResource('response', fn () => $response);
 
