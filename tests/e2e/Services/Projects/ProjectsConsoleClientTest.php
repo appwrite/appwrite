@@ -436,6 +436,267 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * @group projectsCRUD
+     */
+    public function testListProjectsQuerySelect(): void
+    {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Query Select Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Query Select Test Project',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        /**
+         * Test Query.select - basic fields
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('devKeys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('smtpHost', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+        $this->assertArrayNotHasKey('authDuration', $project);
+
+        /**
+         * Test Query.select - multiple fields
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'teamId', 'description', '$createdAt', '$updatedAt'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('teamId', $project);
+        $this->assertArrayHasKey('description', $project);
+        $this->assertArrayHasKey('$createdAt', $project);
+        $this->assertArrayHasKey('$updatedAt', $project);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('devKeys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select combined with filters
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'teamId'])->toString(),
+                Query::equal('name', ['Query Select Test Project'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('teamId', $project);
+        $this->assertEquals('Query Select Test Project', $project['name']);
+        $this->assertEquals($teamId, $project['teamId']);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('devKeys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select combined with limit
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name'])->toString(),
+                Query::limit(2)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertLessThanOrEqual(2, count($response['body']['projects']));
+
+        foreach ($response['body']['projects'] as $p) {
+            $this->assertArrayHasKey('$id', $p);
+            $this->assertArrayHasKey('name', $p);
+            $this->assertArrayNotHasKey('platforms', $p);
+            $this->assertArrayNotHasKey('webhooks', $p);
+            $this->assertArrayNotHasKey('keys', $p);
+            $this->assertArrayNotHasKey('devKeys', $p);
+            $this->assertArrayNotHasKey('oAuthProviders', $p);
+            $this->assertArrayNotHasKey('smtpEnabled', $p);
+            $this->assertArrayNotHasKey('authLimit', $p);
+        }
+
+        /**
+         * Test Query.select with subquery attributes (platforms, webhooks, etc.)
+         * When explicitly selected, subqueries should still run
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'platforms'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('platforms', $project);
+        $this->assertIsArray($project['platforms']);
+        $this->assertArrayNotHasKey('webhooks', $project);
+        $this->assertArrayNotHasKey('keys', $project);
+        $this->assertArrayNotHasKey('devKeys', $project);
+        $this->assertArrayNotHasKey('oAuthProviders', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select with expanded attributes
+         * webhooks and keys should load their subquery data when selected
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'name', 'webhooks', 'keys'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('webhooks', $project);
+        $this->assertArrayHasKey('keys', $project);
+        $this->assertIsArray($project['webhooks']);
+        $this->assertIsArray($project['keys']);
+        $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('devKeys', $project);
+        $this->assertArrayNotHasKey('smtpEnabled', $project);
+        $this->assertArrayNotHasKey('authLimit', $project);
+
+        /**
+         * Test Query.select with wildcard '*'
+         * Should return all fields like no select query
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['*'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, count($response['body']['projects']));
+
+        $project = $response['body']['projects'][0];
+        $this->assertArrayHasKey('$id', $project);
+        $this->assertArrayHasKey('name', $project);
+        $this->assertArrayHasKey('teamId', $project);
+        $this->assertArrayHasKey('platforms', $project);
+        $this->assertArrayHasKey('webhooks', $project);
+        $this->assertArrayHasKey('keys', $project);
+        $this->assertArrayHasKey('devKeys', $project);
+        $this->assertArrayHasKey('oAuthProviders', $project);
+        $this->assertArrayHasKey('smtpEnabled', $project);
+        $this->assertArrayHasKey('smtpHost', $project);
+        $this->assertArrayHasKey('authLimit', $project);
+        $this->assertArrayHasKey('authDuration', $project);
+
+        /**
+         * Test Query.select with invalid attribute
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['$id', 'invalidAttribute'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid `queries` param: Invalid query: Attribute not found in schema: invalidAttribute', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testGetProject(): void
     {
         // Create a team
