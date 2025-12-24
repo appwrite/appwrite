@@ -21,6 +21,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -247,14 +248,15 @@ App::post('/v1/projects')
             }
 
             if ($create || $projectTables) {
-                $adapter = new \Utopia\Audit\Adapter\Database($dbForProject);
+                $adapter = new AdapterDatabase($dbForProject);
                 $audit = new Audit($adapter);
                 $audit->setup();
             }
 
             if (!$create && $sharedTablesV1) {
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+                $adapter = new AdapterDatabase($dbForProject);
+                $attributes = $adapter->getAttributeDocuments();
+                $indexes = $adapter->getIndexDocuments();
                 $dbForProject->createDocument(Database::METADATA, new Document([
                     '$id' => ID::custom('audit'),
                     '$permissions' => [Permission::create(Role::any())],
