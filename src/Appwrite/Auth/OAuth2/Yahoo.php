@@ -23,10 +23,11 @@ class Yahoo extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'sdct-r',
-        'sdpp-w',
+        'openid',
+        'profile',
+        'email'
     ];
-
+    
     /**
      * @var array
      */
@@ -51,9 +52,12 @@ class Yahoo extends OAuth2
      *
      * @return array
      */
-    public function parseState(string $state)
+    public function parseState(string $state): array // Added return type
     {
-        return \json_decode(\html_entity_decode($state), true);
+    //Possible JSON decode errors: The code doesn't check if json_decode() returns null on failure.
+
+        $data = \json_decode(\html_entity_decode($state), true);
+        return \is_array($data) ? $data : [];
     }
 
     /**
