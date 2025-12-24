@@ -777,8 +777,6 @@ App::shutdown()
             return;
         }
 
-        // Purge cache to ensure we get fresh session count
-        $dbForProject->purgeCachedDocument('users', $userId);
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             return;
