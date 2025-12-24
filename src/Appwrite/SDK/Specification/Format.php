@@ -204,6 +204,8 @@ abstract class Format
                         switch ($param) {
                             case 'permissions':
                                 return 'BrowserPermission';
+                            case 'output':
+                                return 'ImageFormat';
                         }
                         break;
                 }
