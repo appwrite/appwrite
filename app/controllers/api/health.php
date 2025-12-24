@@ -945,18 +945,18 @@ App::get('/v1/health/queue/failed/:name')
         contentType: ContentType::JSON
     ))
     ->param('name', '', new WhiteList([
-        Event::DATABASE_QUEUE_NAME,
-        Event::DELETE_QUEUE_NAME,
-        Event::AUDITS_QUEUE_NAME,
-        Event::MAILS_QUEUE_NAME,
-        Event::FUNCTIONS_QUEUE_NAME,
-        Event::STATS_RESOURCES_QUEUE_NAME,
-        Event::STATS_USAGE_QUEUE_NAME,
-        Event::WEBHOOK_QUEUE_NAME,
-        Event::CERTIFICATES_QUEUE_NAME,
-        Event::BUILDS_QUEUE_NAME,
-        Event::MESSAGING_QUEUE_NAME,
-        Event::MIGRATIONS_QUEUE_NAME
+        System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME),
+        System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME),
+        System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME),
+        System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME),
+        System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME),
+        System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME),
+        System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME),
+        System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME),
+        System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME),
+        System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME),
+        System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
+        System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME)
     ]), 'The name of the queue')
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('response')
@@ -993,18 +993,18 @@ App::get('/v1/health/queue/failed/:name')
 
         /** @var Event $queue */
         $queue = match ($name) {
-            Event::DATABASE_QUEUE_NAME => $queueForDatabase,
-            Event::DELETE_QUEUE_NAME => $queueForDeletes,
-            Event::AUDITS_QUEUE_NAME => $queueForAudits,
-            Event::MAILS_QUEUE_NAME => $queueForMails,
-            Event::FUNCTIONS_QUEUE_NAME => $queueForFunctions,
-            Event::STATS_RESOURCES_QUEUE_NAME => $queueForStatsResources,
-            Event::STATS_USAGE_QUEUE_NAME => $queueForStatsUsage,
-            Event::WEBHOOK_QUEUE_NAME => $queueForWebhooks,
-            Event::CERTIFICATES_QUEUE_NAME => $queueForCertificates,
-            Event::BUILDS_QUEUE_NAME => $queueForBuilds,
-            Event::MESSAGING_QUEUE_NAME => $queueForMessaging,
-            Event::MIGRATIONS_QUEUE_NAME => $queueForMigrations,
+            System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
+            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $queueForDeletes,
+            System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $queueForAudits,
+            System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $queueForMails,
+            System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
+            System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $queueForStatsResources,
+            System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $queueForStatsUsage,
+            System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
+            System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $queueForCertificates,
+            System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,
+            System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $queueForMessaging,
+            System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $queueForMigrations,
         };
         $failed = $queue->getSize(failed: true);
 

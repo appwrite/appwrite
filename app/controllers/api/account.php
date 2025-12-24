@@ -68,6 +68,7 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -2953,20 +2954,22 @@ App::post('/v1/account/jwts')
         ],
         contentType: ContentType::JSON,
     ))
-    ->label('abuse-limit', 100)
+    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+    ->action(function (int $duration, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
