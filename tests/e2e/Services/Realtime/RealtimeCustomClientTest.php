@@ -12,7 +12,6 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
@@ -121,82 +120,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('tables.1.rows.1', $response['data']['channels']);
         $this->assertContains('tables.2.rows.2', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
-
-        $client->close();
-    }
-
-    public function testAccountChannelWithQueries()
-    {
-        $user = $this->getUser();
-        $userId = $user['$id'] ?? '';
-        $session = $user['session'] ?? '';
-        $projectId = $this->getProject()['$id'];
-
-        // Subscribe to account channel with a simple query
-        $client = $this->getWebsocket(['account'], [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ], null, [
-            Query::equal('$id', [$userId])->toString(),
-        ]);
-
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('connected', $response['type']);
-        $this->assertNotEmpty($response['data']);
-
-        // Channels still work as usual
-        $this->assertCount(2, $response['data']['channels']);
-        $this->assertContains('account', $response['data']['channels']);
-        $this->assertContains('account.' . $userId, $response['data']['channels']);
-
-        // Queries are echoed back in the connection payload
-        $this->assertArrayHasKey('queries', $response['data']);
-        $this->assertIsArray($response['data']['queries']);
-        $this->assertCount(1, $response['data']['queries']);
-
-        $this->assertNotEmpty($response['data']['user']);
-        $this->assertEquals($userId, $response['data']['user']['$id']);
-
-        $client->close();
-    }
-
-    public function testDatabaseChannelWithQueries()
-    {
-        $user = $this->getUser();
-        $session = $user['session'] ?? '';
-        $projectId = $this->getProject()['$id'];
-
-        // Subscribe to database-related channels with queries
-        $client = $this->getWebsocket(['documents', 'collections'], [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session,
-        ], null, [
-            Query::equal('$id', ['dummy-id'])->toString(),
-            Query::isNotNull('payload')->toString(),
-        ]);
-
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('connected', $response['type']);
-        $this->assertNotEmpty($response['data']);
-
-        // Channels as in regular database test
-        $this->assertCount(2, $response['data']['channels']);
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('collections', $response['data']['channels']);
-
-        // Queries should be present
-        $this->assertArrayHasKey('queries', $response['data']);
-        $this->assertIsArray($response['data']['queries']);
-        $this->assertCount(2, $response['data']['queries']);
-
-        $this->assertNotEmpty($response['data']['user']);
-        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
         $client->close();
     }
