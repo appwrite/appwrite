@@ -12,7 +12,13 @@ Databases databases = new Databases(client);
 databases.updateDocuments(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
-    Map.of("a", "b"), // data (optional)
+    Map.of(
+        "username", "walter.obrien",
+        "email", "walter.obrien@example.com",
+        "fullName", "Walter O'Brien",
+        "age", 33,
+        "isAdmin", false
+    ), // data (optional)
     List.of(), // queries (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {

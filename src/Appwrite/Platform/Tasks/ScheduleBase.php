@@ -123,6 +123,7 @@ abstract class ScheduleBase extends Action
         $total = 0;
         $latestDocument = null;
         $updatedProjectIds = []; // Track project IDs from updated/new schedules
+        $updatedSequences = []; // Track sequences that need project/resource loading
 
         while ($sum === $limit) {
             $paginationQueries = [Query::limit($limit)];
@@ -186,8 +187,9 @@ abstract class ScheduleBase extends Action
                     Console::info("Updating: {$candidate['resourceType']}::{$candidate['resourceId']}");
                     $this->schedules[$schedule->getSequence()] = $candidate;
 
-                    // Track projectId  for updated/new schedules
+                    // Track projectId and sequence for updated/new schedules
                     $updatedProjectIds[] = $candidate['projectId'];
+                    $updatedSequences[] = $schedule->getSequence();
                 }
             }
 
@@ -239,7 +241,13 @@ abstract class ScheduleBase extends Action
             Console::success("No new projects to load (using " . count($map) . " cached projects)");
         }
 
-        foreach ($this->schedules as $sequence => $schedule) {
+        // Only process updated/new schedules, not all schedules
+        foreach ($updatedSequences as $sequence) {
+            $schedule = $this->schedules[$sequence] ?? null;
+            if ($schedule === null) {
+                continue;
+            }
+
             $project = $map[$schedule['projectId']] ?? null;
 
             if ($project === null || $project->isEmpty()) {

@@ -2080,6 +2080,7 @@ App::patch('/v1/projects/:projectId/smtp')
         if ($enabled) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
+            $mail->SMTPAuth = (!empty($username) && !empty($password));
             $mail->Username = $username;
             $mail->Password = $password;
             $mail->Host = $host;
@@ -2095,7 +2096,7 @@ App::patch('/v1/projects/:projectId/smtp')
                     throw new Exception('Connection is not valid.');
                 }
             } catch (Throwable $error) {
-                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
+                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
             }
         }
 

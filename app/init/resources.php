@@ -277,12 +277,14 @@ App::setResource('cors', fn (array $allowedHostnames) => new Cors(
         'X-Appwrite-ID',
         'X-Appwrite-Timestamp',
         'X-Appwrite-Session',
+        'X-Appwrite-Platform', // for `$platform` injection and SDK generator
         // SDK generator
         'X-SDK-Version',
         'X-SDK-Name',
         'X-SDK-Language',
         'X-SDK-Platform',
         'X-SDK-GraphQL',
+        'X-SDK-Profile',
         // Caching
         'Range',
         'Cache-Control',

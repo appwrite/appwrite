@@ -68,13 +68,14 @@ use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-function sendSessionAlert(Locale $locale, Document $user, Document $project, Document $session, Mail $queueForMails)
+function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
     $preview = $locale->getText("emails.sessionAlert.preview");
@@ -157,13 +158,18 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         $session->setAttribute('clientName', $clientName);
     }
 
+    $projectName = $project->getAttribute('name');
+    if ($project->getId() === 'console') {
+        $projectName = $platform['platformName'];
+    }
+
     $emailVariables = [
         'direction' => $locale->getText('settings.direction'),
         'date' => (new \DateTime())->format('F j'),
         'year' => (new \DateTime())->format('YYYY'),
         'time' => (new \DateTime())->format('H:i:s'),
         'user' => $user->getAttribute('name'),
-        'project' => $project->getAttribute('name'),
+        'project' => $projectName,
         'device' => $session->getAttribute('clientName'),
         'ipAddress' => $session->getAttribute('ip'),
         'country' => $locale->getText('countries.' . $session->getAttribute('countryCode'), $locale->getText('locale.country.unknown')),
@@ -171,13 +177,14 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
 
     if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
         $emailVariables = array_merge($emailVariables, [
-            'accentColor' => APP_EMAIL_ACCENT_COLOR,
-            'logoUrl' => APP_EMAIL_LOGO_URL,
-            'twitterUrl' => APP_SOCIAL_TWITTER,
-            'discordUrl' => APP_SOCIAL_DISCORD,
-            'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-            'termsUrl' => APP_EMAIL_TERMS_URL,
-            'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+            'accentColor' => $platform['accentColor'],
+            'logoUrl' => $platform['logoUrl'],
+            'twitter' => $platform['twitterUrl'],
+            'discord' => $platform['discordUrl'],
+            'github' => $platform['githubUrl'],
+            'terms' => $platform['termsUrl'],
+            'privacy' => $platform['privacyUrl'],
+            'platform' => $platform['platformName'],
         ]);
     }
 
@@ -189,12 +196,18 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, Doc
         ->setBody($body)
         ->setBodyTemplate($bodyTemplate)
         ->setVariables($emailVariables)
-        ->setRecipient($email)
-        ->trigger();
-}
-;
+        ->setRecipient($email);
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode) {
+    // since this is console project, set email sender name!
+    if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+        $queueForMails->setSenderName($platform['emailSenderName']);
+    }
+
+    $queueForMails->trigger();
+}
+
+
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode) {
 
     /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
     $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -295,7 +308,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     ]) !== 1;
 
     if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
-        sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+        sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
     }
 
     $queueForEvents
@@ -953,6 +966,7 @@ App::post('/v1/account/sessions/email')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
@@ -961,7 +975,7 @@ App::post('/v1/account/sessions/email')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1062,7 +1076,7 @@ App::post('/v1/account/sessions/email')
                     Query::equal('userId', [$user->getId()]),
                 ]) !== 1
             ) {
-                sendSessionAlert($locale, $user, $project, $session, $queueForMails);
+                sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
             }
         }
 
@@ -1250,6 +1264,7 @@ App::post('/v1/account/sessions/token')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
@@ -1620,9 +1635,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
             }
 
-            /**
-             * Is verified is not used yet, since we don't know after an account is created anymore if it was verified or not.
-             */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
             $identity = $dbForProject->findOne('identities', [
@@ -1634,13 +1646,29 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
             }
 
-            // If user is not found, check if there is an identity with the same provider user ID
+            // If user is not found, check if there is a user with the same email
             if ($user === false || $user->isEmpty()) {
                 $userWithEmail = $dbForProject->findOne('users', [
                     Query::equal('email', [$email]),
                 ]);
                 if (!$userWithEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
                     $user->setAttributes($userWithEmail->getArrayCopy());
+                }
+            }
+
+            // If user is not found, check if there is an identity with the same email
+            if ($user === false || $user->isEmpty()) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$email]),
+                ]);
+                if (!$identityWithMatchingEmail->isEmpty()) {
+                    if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                    $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
                 }
             }
 
@@ -1653,14 +1681,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     if ($total >= $limit) {
                         $failureRedirect(Exception::USER_COUNT_EXCEEDED);
                     }
-                }
-
-                // Makes sure this email is not already used in another identity
-                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                    Query::equal('providerEmail', [$email]),
-                ]);
-                if (!$identityWithMatchingEmail->isEmpty()) {
-                    $failureRedirect(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -1716,7 +1736,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
-
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -2251,11 +2270,16 @@ App::post('/v1/account/tokens/magic-url')
                 ->setSmtpSenderName($senderName);
         }
 
+        $projectName = $project->getAttribute('name');
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $user->getAttribute('name'),
-            'project' => $project->getAttribute('name'),
+            'project' => $projectName,
             'redirect' => $url,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
@@ -2270,8 +2294,13 @@ App::post('/v1/account/tokens/magic-url')
             ->setPreview($preview)
             ->setBody($body)
             ->setVariables($emailVariables)
-            ->setRecipient($email)
-            ->trigger();
+            ->setRecipient($email);
+
+        if ($project->getId() === 'console') {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2318,13 +2347,14 @@ App::post('/v1/account/tokens/email')
     ->inject('response')
     ->inject('user')
     ->inject('project')
+    ->inject('platform')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForPassword')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2525,12 +2555,17 @@ App::post('/v1/account/tokens/email')
                 ->setSmtpSenderName($senderName);
         }
 
+        $projectName = $project->getAttribute('name');
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         $emailVariables = [
             'heading' => $heading,
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{project}} and {{otp}} are required in the templates
             'user' => $user->getAttribute('name'),
-            'project' => $project->getAttribute('name'),
+            'project' => $projectName,
             'otp' => $tokenSecret,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
@@ -2542,13 +2577,14 @@ App::post('/v1/account/tokens/email')
 
         if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
             $emailVariables = array_merge($emailVariables, [
-                'accentColor' => APP_EMAIL_ACCENT_COLOR,
-                'logoUrl' => APP_EMAIL_LOGO_URL,
-                'twitterUrl' => APP_SOCIAL_TWITTER,
-                'discordUrl' => APP_SOCIAL_DISCORD,
-                'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-                'termsUrl' => APP_EMAIL_TERMS_URL,
-                'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
             ]);
         }
 
@@ -2558,8 +2594,14 @@ App::post('/v1/account/tokens/email')
             ->setBody($body)
             ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
-            ->setRecipient($email)
-            ->trigger();
+            ->setRecipient($email);
+
+        // since this is console project, set email sender name!
+        if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2610,16 +2652,17 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('store')
     ->inject('proofForCode')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode);
     });
 
 App::put('/v1/account/sessions/phone')
@@ -2657,6 +2700,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
@@ -2697,6 +2741,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('response')
     ->inject('user')
     ->inject('project')
+    ->inject('platform')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
@@ -2706,7 +2751,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2823,9 +2868,14 @@ App::post('/v1/account/tokens/phone')
                 $message = $customTemplate['message'] ?? $message;
             }
 
+            $projectName = $project->getAttribute('name');
+            if ($project->getId() === 'console') {
+                $projectName = $platform['platformName'];
+            }
+
             $messageContent = Template::fromString($locale->getText("sms.verification.body"));
             $messageContent
-                ->setParam('{{project}}', $project->getAttribute('name'))
+                ->setParam('{{project}}', $projectName)
                 ->setParam('{{secret}}', $secret);
             $messageContent = \strip_tags($messageContent->render());
             $message = $message->setParam('{{token}}', $messageContent);
@@ -2904,20 +2954,22 @@ App::post('/v1/account/jwts')
         ],
         contentType: ContentType::JSON,
     ))
-    ->label('abuse-limit', 100)
+    ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
     ->inject('user')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (Response $response, User $user, Store $store, ProofsToken $proofForToken) {
+    ->action(function (int $duration, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3475,15 +3527,16 @@ App::post('/v1/account/recovery')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
     ->inject('proofForToken')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken) {
-
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
+
         $url = htmlentities($url);
         $email = \strtolower($email);
 
@@ -3530,7 +3583,14 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $projectName = $project->isEmpty()
+            ? 'Console'
+            : $project->getAttribute('name', '[APP-NAME]');
+
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
         $preview = $locale->getText("emails.recovery.preview");
@@ -3608,8 +3668,13 @@ App::post('/v1/account/recovery')
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)
-            ->setPreview($preview)
-            ->trigger();
+            ->setPreview($preview);
+
+        if ($project->getId() === 'console') {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $recovery->setAttribute('secret', $secret);
 
@@ -3769,13 +3834,14 @@ App::post('/v1/account/verifications/email')
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForToken')
-    ->action(function (string $url, Request $request, Response $response, Document $project, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken) {
+    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3819,7 +3885,15 @@ App::post('/v1/account/verifications/email')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $projectName = $project->isEmpty()
+            ? 'Console'
+            : $project->getAttribute('name', '[APP-NAME]');
+
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
+
         $body = $locale->getText("emails.verification.body");
         $preview = $locale->getText("emails.verification.preview");
         $subject = $locale->getText("emails.verification.subject");
@@ -3905,13 +3979,14 @@ App::post('/v1/account/verifications/email')
 
         if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
             $emailVariables = array_merge($emailVariables, [
-                'accentColor' => APP_EMAIL_ACCENT_COLOR,
-                'logoUrl' => APP_EMAIL_LOGO_URL,
-                'twitterUrl' => APP_SOCIAL_TWITTER,
-                'discordUrl' => APP_SOCIAL_DISCORD,
-                'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-                'termsUrl' => APP_EMAIL_TERMS_URL,
-                'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+                'accentColor' => $platform['accentColor'],
+                'logoUrl' => $platform['logoUrl'],
+                'twitter' => $platform['twitterUrl'],
+                'discord' => $platform['discordUrl'],
+                'github' => $platform['githubUrl'],
+                'terms' => $platform['termsUrl'],
+                'privacy' => $platform['privacyUrl'],
+                'platform' => $platform['platformName'],
             ]);
         }
 
@@ -3922,8 +3997,13 @@ App::post('/v1/account/verifications/email')
             ->setBodyTemplate($bodyTemplate)
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name') ?? '')
-            ->trigger();
+            ->setName($user->getAttribute('name') ?? '');
+
+        if ($project->getId() === 'console') {
+            $queueForMails->setSenderName($platform['emailSenderName']);
+        }
+
+        $queueForMails->trigger();
 
         $verification->setAttribute('secret', $verificationSecret);
 
