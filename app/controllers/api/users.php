@@ -255,7 +255,12 @@ App::post('/v1/users')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    // 1. Add the '?' before string $name
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        
+        // 2. Add this line at the very top of the action function
+        $name = $name ?? ''; 
+
         $plaintext = new Plaintext();
 
         $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
@@ -291,7 +296,8 @@ App::post('/v1/users/bcrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $name = $name ?? '';
         $bcrypt = new Bcrypt();
         $bcrypt->setCost(8); // Default cost
 
@@ -329,7 +335,8 @@ App::post('/v1/users/md5')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $name = $name ?? '';
         $md5 = new MD5();
 
         $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -366,7 +373,8 @@ App::post('/v1/users/argon2')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $name = $name ?? '';
         $argon2 = new Argon2();
 
         $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -404,7 +412,8 @@ App::post('/v1/users/sha')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $name = $name ?? '';
         $sha = new Sha();
         if (!empty($passwordVersion)) {
             $sha->setVersion($passwordVersion);
@@ -444,7 +453,8 @@ App::post('/v1/users/phpass')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $name = $name ?? '';
         $phpass = new PHPass();
 
         $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -486,7 +496,8 @@ App::post('/v1/users/scrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+        $name = $name ?? '';
         $scrypt = new Scrypt();
         $scrypt
             ->setSalt($passwordSalt)
