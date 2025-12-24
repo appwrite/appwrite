@@ -46,16 +46,48 @@ class RuntimeQuery extends Query
         $attribute = $query->getAttribute();
         $method = $query->getMethod();
         $values = $query->getValues();
-        if (!\array_key_exists($attribute, $payload)) {
+
+        // during 'and' and 'or' attribute will not be present
+        if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR])) {
+            switch ($method) {
+                case Query::TYPE_AND:
+                    // All subqueries must evaluate to true
+                    foreach ($query->getValues() as $subquery) {
+                        if (!self::evaluateFilter($subquery, $payload)) {
+                            return false;
+                        }
+                    }
+                    return true;
+
+                case Query::TYPE_OR:
+                    // At least one subquery must evaluate to true
+                    foreach ($query->getValues() as $subquery) {
+                        if (self::evaluateFilter($subquery, $payload)) {
+                            return true;
+                        }
+                    }
+                    return false;
+
+                default:
+                    throw new \InvalidArgumentException(
+                        "Unsupported query method: {$method}"
+                    );
+            }
+        }
+
+        $hasAttribute = \array_key_exists($attribute, $payload);
+        if (!$hasAttribute) {
             return false;
         }
+
+        // null can be a value as well
         $payloadAttributeValue = $payload[$attribute];
         switch ($method) {
             case Query::TYPE_EQUAL:
                 return self::anyMatch($values, fn ($value) => $payloadAttributeValue === $value);
 
             case Query::TYPE_NOT_EQUAL:
-                return self::anyMatch($values, fn ($value) => $payloadAttributeValue !== $value);
+                return !self::anyMatch($values, fn ($value) => $payloadAttributeValue === $value);
 
             case Query::TYPE_LESSER:
                 return self::anyMatch($values, fn ($value) => $payloadAttributeValue < $value);
@@ -75,26 +107,6 @@ class RuntimeQuery extends Query
             case Query::TYPE_IS_NOT_NULL:
                 return $payloadAttributeValue !== null;
 
-            case Query::TYPE_AND:
-                foreach ($query->getValues() as $subquery) {
-                    // if any evaluation gets to false then whole and is false
-                    if (!self::evaluateFilter($subquery, $payload)) {
-                        return false;
-                    }
-                    return true;
-                }
-
-                // no break
-            case Query::TYPE_OR:
-                foreach ($query->getValues() as $subquery) {
-                    // if any evaluation gets to true then whole or is true
-                    if (self::evaluateFilter($subquery, $payload)) {
-                        return true;
-                    }
-                    return false;
-                }
-
-                // no break
             default:
                 throw new \InvalidArgumentException(
                     "Unsupported query method: {$method}"

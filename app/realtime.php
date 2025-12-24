@@ -480,11 +480,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event);
 
-                // if (App::isDevelopment() && !empty($receivers)) {
-                //     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                //     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
-                //     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
-                // }
+                if (App::isDevelopment() && !empty($receivers)) {
+                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                }
 
                 $server->send(
                     $receivers,

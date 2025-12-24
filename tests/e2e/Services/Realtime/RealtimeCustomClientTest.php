@@ -3039,7 +3039,7 @@ class RealtimeCustomClientTest extends Scope
         sleep(1);
 
         try {
-            $client->receive(1); // 1 second timeout
+            $client->receive();
             $this->fail('Should not receive any event after rollback');
         } catch (TimeoutException $e) {
             // Expected - no event should be triggered
