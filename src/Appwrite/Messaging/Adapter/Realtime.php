@@ -212,7 +212,12 @@ class Realtime extends MessagingAdapter
                             /**
                              * To prevent duplicates, we save the connections as array keys.
                              */
-                            if (!empty(RuntimeQuery::filter($this->connections[$id]['queries'], $event['data']['payload']))) {
+                            $queries = $this->connections[$id]['queries'] ?? [];
+                            $payload = $event['data']['payload'] ?? [];
+                            if (
+                                empty($queries) ||
+                                !empty(RuntimeQuery::filter($queries, $payload))
+                            ) {
                                 $receivers[$id] = 0;
                             }
                         }

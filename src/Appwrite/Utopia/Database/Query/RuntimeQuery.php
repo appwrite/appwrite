@@ -101,6 +101,7 @@ class RuntimeQuery extends Query
             case Query::TYPE_GREATER_EQUAL:
                 return self::anyMatch($values, fn ($value) => $payloadAttributeValue >= $value);
 
+                // attribute must be present and should be explicitly null
             case Query::TYPE_IS_NULL:
                 return $payloadAttributeValue === null;
 
