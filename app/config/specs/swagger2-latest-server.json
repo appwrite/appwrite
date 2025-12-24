@@ -478,8 +478,8 @@
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-jwt.md",
-                    "rate-limit": 100,
-                    "rate-time": 3600,
+                    "rate-limit": 120,
+                    "rate-time": 60,
                     "rate-key": "url:{url},userId:{userId}",
                     "scope": "account",
                     "platforms": [
@@ -5680,7 +5680,7 @@
                             "avif",
                             "gif"
                         ],
-                        "x-enum-name": null,
+                        "x-enum-name": "ImageFormat",
                         "x-enum-keys": [],
                         "default": "",
                         "in": "query"
