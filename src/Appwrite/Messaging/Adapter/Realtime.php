@@ -230,19 +230,6 @@ class Realtime extends MessagingAdapter
         return array_keys($receivers);
     }
 
-    public function filterEventData(array $documents, array $queries): array
-    {
-        if (empty($queries)) {
-            return $documents;
-        }
-        $filteredDocuments = [];
-        foreach ($documents as $document) {
-            $doc = new Document((array) $doc);
-        }
-
-        return $filteredDocuments;
-    }
-
     /**
      * Converts the channels from the Query Params into an array.
      * Also renames the account channel to account.USER_ID and removes all illegal account channel variations.
@@ -281,8 +268,12 @@ class Realtime extends MessagingAdapter
         $queries = Query::parseQueries($queries);
         foreach ($queries as $query) {
             if (!in_array($query->getMethod(), RuntimeQuery::ALLOWED_QUERIES)) {
-                // TODO: add better error message with which queries are allowed
-                throw new QueryException(Exception::REALTIME_POLICY_VIOLATION, 'Query not supported');
+                $unsupportedMethod = $query->getMethod();
+                $allowedMethods = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+                throw new QueryException(
+                    Exception::REALTIME_POLICY_VIOLATION,
+                    "Query method '{$unsupportedMethod}' is not supported in Realtime queries. Allowed query methods are: {$allowedMethods}"
+                );
             }
         }
 

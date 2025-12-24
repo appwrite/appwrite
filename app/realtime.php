@@ -594,7 +594,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             'type' => 'connected',
             'data' => [
                 'channels' => array_keys($channels),
-                'queries' => array_keys($queries),
+                'queries' => $queries,
                 'user' => $user
             ]
         ]));
