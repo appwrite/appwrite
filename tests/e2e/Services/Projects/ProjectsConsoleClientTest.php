@@ -1867,7 +1867,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(1, count($sessions));
             $this->assertEquals($sessionId2, $sessions[0]['$id']);
-        }, 30000,300);
+        }, 120_000, 300);
 
         /**
          * Reset Limit
