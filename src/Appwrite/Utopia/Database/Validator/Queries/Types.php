@@ -69,6 +69,11 @@ class Types extends Validator
                     $query = Query::parse($query);
                 }
 
+                if (Query::isFilter($query->getMethod())) {
+                    throw new \Exception('shmuel');
+                    // Check only allowed attribtes!!
+                }
+
                 if ($query->isNested()) {
                     if (!self::isValid($query->getValues())) {
                         throw new \Exception('Invalid queries');
@@ -80,7 +85,10 @@ class Types extends Validator
                 }
             }
 
-            $validator = new DocumentsValidator($this->context, Database::VAR_INTEGER);
+            $validator = new DocumentsValidator(
+                $this->context,
+                Database::VAR_INTEGER
+            );
 
             if (!$validator->isValid($value)) {
                 throw new \Exception($validator->getDescription());
