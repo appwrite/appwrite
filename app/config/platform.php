@@ -6,8 +6,12 @@ use Utopia\System\System;
  * Platform configuration
  */
 return [
-    'domain' => System::getEnv('_APP_DOMAIN', 'localhost'),
-    'consoleDomain' => System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost')),
+    'apiHostname' => System::getEnv('_APP_DOMAIN', 'localhost'),
+    'consoleHostname' => System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', 'localhost')),
+    'hostnames' => array_filter(array_unique([
+        System::getEnv('_APP_DOMAIN', 'localhost'),
+        System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'),
+    ])),
     'platformName' => APP_EMAIL_PLATFORM_NAME,
     'logoUrl' => APP_EMAIL_LOGO_URL,
     'accentColor' => APP_EMAIL_ACCENT_COLOR,
@@ -18,4 +22,5 @@ return [
     'termsUrl' => APP_EMAIL_TERMS_URL,
     'privacyUrl' => APP_EMAIL_PRIVACY_URL,
     'websiteUrl' => 'https://' . APP_DOMAIN,
+    'emailSenderName' => APP_EMAIL_PLATFORM_NAME,
 ];

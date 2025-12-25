@@ -357,6 +357,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_TRUSTED_HEADERS',
+                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
+                'introduction' => '1.8.0',
+                'default' => 'x-forwarded-for',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],

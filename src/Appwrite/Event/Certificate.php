@@ -4,6 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Certificate extends Event
 {
@@ -16,8 +17,8 @@ class Certificate extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::CERTIFICATES_QUEUE_NAME)
-            ->setClass(Event::CERTIFICATES_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_CERTIFICATES_CLASS_NAME', Event::CERTIFICATES_CLASS_NAME));
     }
 
     /**

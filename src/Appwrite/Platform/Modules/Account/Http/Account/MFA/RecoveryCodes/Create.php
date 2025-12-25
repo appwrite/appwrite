@@ -43,7 +43,7 @@ class Create extends Action
                     group: 'mfa',
                     name: 'createMfaRecoveryCodes',
                     description: '/docs/references/account/create-mfa-recovery-codes.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,
@@ -62,7 +62,7 @@ class Create extends Action
                     group: 'mfa',
                     name: 'createMFARecoveryCodes',
                     description: '/docs/references/account/create-mfa-recovery-codes.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,
@@ -101,6 +101,8 @@ class Create extends Action
             'recoveryCodes' => $mfaRecoveryCodes
         ]);
 
-        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     }
 }

@@ -47,7 +47,7 @@ class Update extends Action
                     group: 'mfa',
                     name: 'updateMfaChallenge',
                     description: '/docs/references/account/update-mfa-challenge.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -66,7 +66,7 @@ class Update extends Action
                     group: 'mfa',
                     name: 'updateMFAChallenge',
                     description: '/docs/references/account/update-mfa-challenge.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -110,7 +110,7 @@ class Update extends Action
         $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
             if (
                 $challenge->isSet('type') &&
-                $challenge->getAttribute('type') === \strtolower(Type::RECOVERY_CODE)
+                $challenge->getAttribute('type') === Type::RECOVERY_CODE
             ) {
                 $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
                 if (\in_array($otp, $mfaRecoveryCodes)) {
@@ -132,7 +132,7 @@ class Update extends Action
             Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
-            \strtolower(Type::RECOVERY_CODE) => $recoveryCodeChallenge($challenge, $user, $otp),
+            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
             default => false
         });
 

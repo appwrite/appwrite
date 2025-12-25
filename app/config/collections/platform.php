@@ -1317,6 +1317,17 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('logs'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1000000,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

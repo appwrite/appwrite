@@ -59,7 +59,7 @@ class Get extends Action
             ->param('type', '', new WhiteList(['rules']), 'Resource type.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('domains')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -68,8 +68,9 @@ class Get extends Action
         string $type,
         Response $response,
         Database $dbForPlatform,
-        array $domains
+        array $platform
     ) {
+        $domains = $platform['hostnames'] ?? [];
         if ($type === 'rules') {
             $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
             $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');

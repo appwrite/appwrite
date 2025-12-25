@@ -55,7 +55,7 @@ class SDKs extends Action
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
         if (!$sdks) {
-            $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', Specs::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         } else {
             $sdks = explode(',', $sdks);
@@ -157,7 +157,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 switch ($language['key']) {
                     case 'web':
                         $config = new Web();
-                        if ($platform['key'] === APP_PLATFORM_CONSOLE) {
+                        if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
                             $config->setBowerPackage('@appwrite.io/console');
                         } else {

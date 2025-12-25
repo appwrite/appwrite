@@ -5,7 +5,9 @@ mutation {
         name: "<NAME>",
         permissions: ["read("any")"],
         rowSecurity: false,
-        enabled: false
+        enabled: false,
+        columns: [],
+        indexes: []
     ) {
         _id
         _createdAt

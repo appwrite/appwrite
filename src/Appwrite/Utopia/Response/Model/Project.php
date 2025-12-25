@@ -341,6 +341,20 @@ class Project extends Model
      */
     public function filter(Document $document): Document
     {
+        $this->expandSmtpFields($document);
+        $this->expandServiceFields($document);
+        $this->expandAuthFields($document);
+        $this->expandOAuthProviders($document);
+
+        return $document;
+    }
+
+    private function expandSmtpFields(Document $document): void
+    {
+        if (!$document->isSet('smtp')) {
+            return;
+        }
+
         // SMTP
         $smtp = $document->getAttribute('smtp', []);
         $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
@@ -352,8 +366,14 @@ class Project extends Model
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
         $document->setAttribute('smtpPassword', $smtp['password'] ?? '');
         $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
+    }
 
-        // Services
+    private function expandServiceFields(Document $document): void
+    {
+        if (!$document->isSet('services')) {
+            return;
+        }
+
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
@@ -365,8 +385,14 @@ class Project extends Model
             $value = $values[$key] ?? true;
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
         }
+    }
 
-        // Auth
+    private function expandAuthFields(Document $document): void
+    {
+        if (!$document->isSet('auths')) {
+            return;
+        }
+
         $authValues = $document->getAttribute('auths', []);
         $auth = Config::getParam('auth', []);
 
@@ -383,13 +409,19 @@ class Project extends Model
         $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
         $document->setAttribute('authInvalidateSessions', $authValues['invalidateSessions'] ?? false);
 
-        foreach ($auth as $index => $method) {
+        foreach ($auth as $method) {
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
+    }
 
-        // OAuth Providers
+    private function expandOAuthProviders(Document $document): void
+    {
+        if (!$document->isSet('oAuthProviders')) {
+            return;
+        }
+
         $providers = Config::getParam('oAuthProviders', []);
         $providerValues = $document->getAttribute('oAuthProviders', []);
         $projectProviders = [];
@@ -410,7 +442,5 @@ class Project extends Model
         }
 
         $document->setAttribute('oAuthProviders', $projectProviders);
-
-        return $document;
     }
 }

@@ -2,8 +2,10 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Migration extends Event
 {
@@ -15,8 +17,8 @@ class Migration extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::MIGRATIONS_QUEUE_NAME)
-            ->setClass(Event::MIGRATIONS_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_MIGRATIONS_CLASS_NAME', Event::MIGRATIONS_CLASS_NAME));
     }
 
     /**
@@ -73,11 +75,16 @@ class Migration extends Event
      */
     protected function preparePayload(): array
     {
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'user' => $this->user,
             'migration' => $this->migration,
-            'platform' => $this->platform,
+            'platform' => $platform,
         ];
     }
 }

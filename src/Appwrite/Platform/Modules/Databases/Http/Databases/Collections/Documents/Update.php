@@ -61,7 +61,7 @@ class Update extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -77,7 +77,7 @@ class Update extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documentId', '', new UID(), 'Document ID.')
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
+            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')

@@ -36,6 +36,21 @@ final class CorsTest extends TestCase
         $this->assertSame('https://foo.com', $result[Cors::HEADER_ALLOW_ORIGIN]);
     }
 
+    public function testSubdomainWildcardAllowsAnySubdomain(): void
+    {
+        $cors = new Cors(
+            allowedHosts: ['*.example.com'],
+            allowedMethods: ['GET'],
+            allowedHeaders: ['X-Test'],
+            exposedHeaders: [],
+            allowCredentials: false
+        );
+
+        $result = $cors->headers('https://foo.example.com');
+
+        $this->assertSame('https://foo.example.com', $result[Cors::HEADER_ALLOW_ORIGIN]);
+    }
+
     public function testEmptyOriginReturnsStaticHeadersOnly(): void
     {
         $cors = new Cors(
