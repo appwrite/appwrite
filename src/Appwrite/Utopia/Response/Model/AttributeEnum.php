@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Utopia\Database\Document;
 
 class AttributeEnum extends Attribute
 {
@@ -71,21 +70,4 @@ class AttributeEnum extends Attribute
     {
         return Response::MODEL_ATTRIBUTE_ENUM;
     }
-//
-//    /**
-//     * Process Document before returning it to the client
-//     *
-//     * @return Document
-//     */
-//    public function filter(Document $document): Document
-//    {
-//
-//        $formatOptions = $document->getAttribute('formatOptions');
-//
-//        if (!\is_null($formatOptions)) {
-//            $document->setAttribute('elements', $formatOptions['elements']);
-//        }
-//
-//        return $document;
-//    }
 }

@@ -702,13 +702,6 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-
-//        if($model === 'attributeEnum'){
-//            var_dump('in 1');
-//            var_dump($model);
-//            var_dump($document);
-//            var_dump($this->getContentType());
-//        }
         $output = $this->output(clone $document, $model);
         $output = $this->applyFilters($output, $model);
 
@@ -754,7 +747,7 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $print= $model === 'attributeEnum';
+        $print = $model === 'attributeEnum';
 
         $data       = clone $document;
         $model      = $this->getModel($model);
@@ -769,7 +762,7 @@ class Response extends SwooleResponse
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if($print && $key==='elements'){
+            if ($print && $key === 'elements') {
                 var_dump('Output 1 ===++++ ');
                 var_dump($key);
                 var_dump($rule);
@@ -790,7 +783,7 @@ class Response extends SwooleResponse
                 continue;
             }
 
-            if($print && $key==='elements'){
+            if ($print && $key === 'elements') {
                 var_dump('Output 1 ===++++ ');
                 var_dump($key);
                 var_dump($rule);

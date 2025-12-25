@@ -78,7 +78,7 @@ class Base extends Types
 
         $collection = $collections[$collection];
 
-        $this->collection = new Document;
+        $this->collection = new Document();
         $this->collection->setAttribute('$id', $collection['$id']);
 
         foreach ($collection['attributes'] as $attribute) {
@@ -90,7 +90,7 @@ class Base extends Types
 
             $this->collection->setAttribute('attributes', $attr, Document::SET_TYPE_APPEND);
 
-            if (in_array($attribute['$id'], $allowedAttributes)){
+            if (in_array($attribute['$id'], $allowedAttributes)) {
                 /**
                  * todo find a way to Filter only allowed attribute, while selecting is ok
                  */
@@ -129,7 +129,7 @@ class Base extends Types
             $this->types[] = Query::TYPE_SELECT;
         }
 
-        $context = new QueryContext;
+        $context = new QueryContext();
         $context->add($this->collection);
 
         parent::__construct($this->types, $context);

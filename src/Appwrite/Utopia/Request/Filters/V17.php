@@ -70,7 +70,7 @@ class V17 extends Filter
                 /** @var Query|Query[] $queries */
                 $queries = $this->parseQuery($query);
 
-                if ($queries instanceof Query){
+                if ($queries instanceof Query) {
                     $queries = [$queries];
                 }
 
