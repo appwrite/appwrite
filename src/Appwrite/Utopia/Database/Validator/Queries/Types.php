@@ -64,8 +64,6 @@ class Types extends Validator
                 throw new \Exception('Queries must be an array');
             }
 
-            var_dump($value);
-
             foreach ($value as $query) {
                 if (!$query instanceof Query) {
                     $query = Query::parse($query);
