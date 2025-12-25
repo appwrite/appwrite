@@ -4177,7 +4177,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'queries' => [
-                Query::select(['new_level_2.*'])->toString()
+                Query::select('new_level_2.*')->toString()
             ]
         ]);
 

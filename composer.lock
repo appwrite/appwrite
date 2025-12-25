@@ -3900,12 +3900,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a732ab42c10bf2dbe499f7c9c2c4918baa656a52"
+                "reference": "467a9ea2aed836e83fc435f0379d177c16f8e45c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a732ab42c10bf2dbe499f7c9c2c4918baa656a52",
-                "reference": "a732ab42c10bf2dbe499f7c9c2c4918baa656a52",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/467a9ea2aed836e83fc435f0379d177c16f8e45c",
+                "reference": "467a9ea2aed836e83fc435f0379d177c16f8e45c",
                 "shasum": ""
             },
             "require": {
@@ -3950,7 +3950,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/joins8"
             },
-            "time": "2025-12-18T13:55:36+00:00"
+            "time": "2025-12-25T08:22:28+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5436,16 +5436,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.7.1",
+            "version": "1.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "14b9ebd7f5e3287cd24ef342c38dfa714808e80e"
+                "reference": "3876d486e2c00b788fbda677ef9fcc77391b8898"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/14b9ebd7f5e3287cd24ef342c38dfa714808e80e",
-                "reference": "14b9ebd7f5e3287cd24ef342c38dfa714808e80e",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3876d486e2c00b788fbda677ef9fcc77391b8898",
+                "reference": "3876d486e2c00b788fbda677ef9fcc77391b8898",
                 "shasum": ""
             },
             "require": {
@@ -5481,9 +5481,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.7.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.7.2"
             },
-            "time": "2025-12-22T11:47:51+00:00"
+            "time": "2025-12-24T07:49:12+00:00"
         },
         {
             "name": "doctrine/annotations",

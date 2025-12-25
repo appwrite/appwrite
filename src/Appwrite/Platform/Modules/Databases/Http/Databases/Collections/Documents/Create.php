@@ -457,6 +457,9 @@ class Create extends Action
 
             $documents = $results;
 
+            var_dump('shmuel2');
+            var_dump($documents);
+
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (NotFoundException) {

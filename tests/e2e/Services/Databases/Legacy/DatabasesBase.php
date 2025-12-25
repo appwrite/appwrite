@@ -1608,6 +1608,7 @@ trait DatabasesBase
                 'title' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
                 'birthDay' => null,
+                'duration' => null,
                 'actors' => [
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
@@ -1666,6 +1667,7 @@ trait DatabasesBase
         $this->assertEquals($databaseId, $document1['body']['$databaseId']);
         $this->assertEquals($document1['body']['title'], 'Captain America');
         $this->assertEquals($document1['body']['releaseYear'], 1944);
+        $this->assertArrayNotHasKey('duration', $document1['body']);
         $this->assertIsArray($document1['body']['$permissions']);
         $this->assertCount(3, $document1['body']['$permissions']);
         $this->assertCount(2, $document1['body']['actors']);
@@ -2203,6 +2205,7 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
+                    Query::select('$permissions')->toString(),
                     Query::select('fullName')->toString(),
                     Query::select('library.*')->toString(),
                 ],
@@ -5722,7 +5725,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('fullName', ['Stevie Wonder'])->toString(),
-                Query::select(['fullName'])->toString(),
+                Query::select('fullName')->toString(),
             ],
         ]);
 
