@@ -1566,6 +1566,7 @@ trait DatabasesBase
                 'title' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
                 'birthDay' => null,
+                'duration' => null,
                 'actors' => [
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
@@ -2179,6 +2180,7 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
+                    Query::select('$permissions')->toString(),
                     Query::select('fullName')->toString(),
                     Query::select('library.*')->toString()
                 ],
