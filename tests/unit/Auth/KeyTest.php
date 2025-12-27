@@ -10,6 +10,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
 
+// TODO: Check diff of Key.php, and update unit tests accordingly
 class KeyTest extends TestCase
 {
     public function testDecode(): void
