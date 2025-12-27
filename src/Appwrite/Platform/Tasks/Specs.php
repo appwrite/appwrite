@@ -239,7 +239,7 @@ class Specs extends Action
         App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
-        $platforms = self::getPlatforms();
+        $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
 
