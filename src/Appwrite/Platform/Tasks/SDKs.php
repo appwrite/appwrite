@@ -36,6 +36,11 @@ class SDKs extends Action
         return 'sdks';
     }
 
+    public static function getPlatforms(): array
+    {
+        return Specs::getPlatforms();
+    }
+
     public function __construct()
     {
         $this
@@ -55,7 +60,7 @@ class SDKs extends Action
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
         if (!$sdks) {
-            $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_SDK_PLATFORM_CLIENT . '", "' . APP_SDK_PLATFORM_SERVER . '", "' . APP_SDK_PLATFORM_CONSOLE . '" or "*" for all):');
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         } else {
             $sdks = explode(',', $sdks);
