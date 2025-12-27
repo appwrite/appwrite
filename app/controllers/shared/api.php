@@ -330,22 +330,46 @@ App::init()
 
             // For standard keys, update last accessed time
             if ($apiKey->getType() === API_KEY_STANDARD) {
-                $dbKey = $project->find(
-                    key: 'secret',
-                    find: $request->getHeader('x-appwrite-key', ''),
-                    subject: 'keys'
-                );
+                if (!empty($apiKey->getProjectId())) {
+                    $dbKey = $project->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                } elseif (!empty($apiKey->getUserId())) {
+                    $dbKey = $user->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                } elseif (!empty($apiKey->getTeamId())) {
+                    $dbKey = $team->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                }
 
                 if (!$dbKey) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
+                $purgeResource = function () use ($apiKey, $dbForPlatform, $project, $user, $team) {
+                    if (!empty($apiKey->getProjectId())) {
+                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                    } elseif (!empty($apiKey->getUserId())) {
+                        $dbForPlatform->purgeCachedDocument('users', $user->getId());
+                    } elseif (!empty($apiKey->getTeamId())) {
+                        $dbForPlatform->purgeCachedDocument('teams', $team->getId());
+                    }
+                };
+
+                $updates = new Document();
+
                 $accessedAt = $dbKey->getAttribute('accessedAt', 0);
 
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                    $dbKey->setAttribute('accessedAt', DateTime::now());
-                    $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                    $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                    $updates->setAttribute('accessedAt', DateTime::now());
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
@@ -356,13 +380,15 @@ App::init()
 
                     if (!in_array($sdk, $sdks)) {
                         $sdks[] = $sdk;
-                        $dbKey->setAttribute('sdks', $sdks);
 
-                        /** Update access time as well */
-                        $dbKey->setAttribute('accessedAt', Datetime::now());
-                        $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                        $updates->setAttribute('sdks', $sdks);
+                        $updates->setAttribute('accessedAt', Datetime::now());
                     }
+                }
+
+                if (!$updates->isEmpty()) {
+                    $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates);
+                    $purgeResource();
                 }
 
                 $queueForAudits->setUser($user);

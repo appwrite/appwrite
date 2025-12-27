@@ -36,6 +36,16 @@ class Key
         return $this->projectId;
     }
 
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
+    public function getTeamId(): string
+    {
+        return $this->teamId;
+    }
+
     public function getType(): string
     {
         return $this->type;
