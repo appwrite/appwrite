@@ -1402,7 +1402,7 @@ App::error()
         $template = $error->getView() ?? (($route) ? $route->getLabel('error', null) : null);
 
         // TODO: Ideally use group 'api' here, but all wildcard routes seem to have 'api' at the moment
-        if (!\str_starts_with($route->getPath(), '/v1')) {
+        if (empty($route) || !\str_starts_with($route->getPath(), '/v1')) {
             $template = __DIR__ . '/../views/general/error.phtml';
         }
 

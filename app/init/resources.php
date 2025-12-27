@@ -1017,7 +1017,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         $teamInternalId = $project->getAttribute('teamInternalId', '');
     } else {
         $route = $utopia->match($request);
-        $path = $route->getPath();
+        $path = !empty($route) ? $route->getPath() : $request->getURI();
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
