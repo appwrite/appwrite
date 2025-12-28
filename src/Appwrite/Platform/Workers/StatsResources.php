@@ -180,26 +180,25 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForBuckets($dbForProject, $dbForLogs, $region);
+                $dbForProject->skipFilters(fn () => $this->countForBuckets($dbForProject, $dbForLogs, $region), $this->filters);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
 
             try {
-                $this->countImageTransformations($dbForProject, $dbForLogs, $region);
+                $dbForProject->skipFilters(fn () => $this->countImageTransformations($dbForProject, $dbForLogs, $region), $this->filters);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
             }
 
             try {
-                $this->countForDatabase($dbForProject, $region);
+                $dbForProject->skipFilters(fn () => $this->countForDatabase($dbForProject, $region), $this->filters);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
             }
 
             try {
-                $dbForProject->skipFilters(fn () => $this->countForSitesAndFunctions($dbForProject, $region), ['subQueryVariables', 'subQueryProjectVariables']);
-
+                $dbForProject->skipFilters(fn () => $this->countForSitesAndFunctions($dbForProject, $region), $this->filters);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
