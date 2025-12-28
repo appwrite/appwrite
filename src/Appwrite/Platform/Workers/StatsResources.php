@@ -100,8 +100,7 @@ class StatsResources extends Action
             return;
         }
     
-        $dbForPlatform->disableFilters();
-        $dbForProject->disableFilters();
+        $this->disableSubqueries();
 
         try {
             $region = $project->getAttribute('region');
