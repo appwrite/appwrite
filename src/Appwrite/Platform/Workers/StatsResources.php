@@ -77,7 +77,7 @@ class StatsResources extends Action
         $this->documents = [];
 
         $startTime = microtime(true);
-        $dbForPlatform->skipFilters(fn () => $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project));
+        $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
         $endTime = microtime(true);
         $executionTime = $endTime - $startTime;
         Console::info('Project: ' . $project->getId() . '(' . $project->getSequence() . ') aggregated in ' . $executionTime .' seconds');
@@ -99,9 +99,8 @@ class StatsResources extends Action
             Console::error($th->getMessage());
             return;
         }
-
-        $dbForPlatform->disableFilters();
-        $dbForProject->disableFilters();
+    
+        $this->disableSubqueries();
 
         try {
             $region = $project->getAttribute('region');
@@ -122,91 +121,88 @@ class StatsResources extends Action
             ]);
 
 
-            $dbForProject->skipFilters(function () use ($dbForProject, $dbForLogs, $region, $project, $platforms, $webhooks, $keys, $domains) {
-                $databases = $dbForProject->count('databases');
-                $buckets = $dbForProject->count('buckets');
-                $users = $dbForProject->count('users');
+            $databases = $dbForProject->count('databases');
+            $buckets = $dbForProject->count('buckets');
+            $users = $dbForProject->count('users');
 
-                $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
-                $usersMAU = $dbForProject->count('users', [
-                    Query::greaterThanEqual('accessedAt', $last30Days)
-                ]);
-                $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d h:m:00');
-                $usersDAU = $dbForProject->count('users', [
-                    Query::greaterThanEqual('accessedAt', $last24Hours)
-                ]);
-                $last7Days = (new \DateTime())->sub(\DateInterval::createFromDateString('7 days'))->format('Y-m-d 00:00:00');
-                $usersWAU = $dbForProject->count('users', [
-                    Query::greaterThanEqual('accessedAt', $last7Days)
-                ]);
-                $teams = $dbForProject->count('teams');
-                $functions = $dbForProject->count('functions');
+            $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
+            $usersMAU = $dbForProject->count('users', [
+                Query::greaterThanEqual('accessedAt', $last30Days)
+            ]);
+            $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d h:m:00');
+            $usersDAU = $dbForProject->count('users', [
+                Query::greaterThanEqual('accessedAt', $last24Hours)
+            ]);
+            $last7Days = (new \DateTime())->sub(\DateInterval::createFromDateString('7 days'))->format('Y-m-d 00:00:00');
+            $usersWAU = $dbForProject->count('users', [
+                Query::greaterThanEqual('accessedAt', $last7Days)
+            ]);
+            $teams = $dbForProject->count('teams');
+            $functions = $dbForProject->count('functions');
 
-                $messages = $dbForProject->count('messages');
-                $providers = $dbForProject->count('providers');
-                $topics = $dbForProject->count('topics');
-                $targets = $dbForProject->count('targets');
-                $emailTargets = $dbForProject->count('targets', [
-                    Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
-                ]);
-                $pushTargets = $dbForProject->count('targets', [
-                    Query::equal('providerType', [MESSAGE_TYPE_PUSH])
-                ]);
-                $smsTargets = $dbForProject->count('targets', [
-                    Query::equal('providerType', [MESSAGE_TYPE_SMS])
-                ]);
+            $messages = $dbForProject->count('messages');
+            $providers = $dbForProject->count('providers');
+            $topics = $dbForProject->count('topics');
+            $targets = $dbForProject->count('targets');
+            $emailTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
+            ]);
+            $pushTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH])
+            ]);
+            $smsTargets = $dbForProject->count('targets', [
+                Query::equal('providerType', [MESSAGE_TYPE_SMS])
+            ]);
 
-                $metrics = [
-                    METRIC_DATABASES => $databases,
-                    METRIC_BUCKETS => $buckets,
-                    METRIC_USERS => $users,
-                    METRIC_FUNCTIONS => $functions,
-                    METRIC_TEAMS => $teams,
-                    METRIC_MESSAGES => $messages,
-                    METRIC_MAU => $usersMAU,
-                    METRIC_DAU => $usersDAU,
-                    METRIC_WAU => $usersWAU,
-                    METRIC_WEBHOOKS => $webhooks,
-                    METRIC_PLATFORMS => $platforms,
-                    METRIC_PROVIDERS => $providers,
-                    METRIC_TOPICS => $topics,
-                    METRIC_KEYS => $keys,
-                    METRIC_DOMAINS => $domains,
-                    METRIC_TARGETS => $targets,
-                    str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS) => $emailTargets,
-                    str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS) => $pushTargets,
-                    str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS) => $smsTargets,
-                ];
+            $metrics = [
+                METRIC_DATABASES => $databases,
+                METRIC_BUCKETS => $buckets,
+                METRIC_USERS => $users,
+                METRIC_FUNCTIONS => $functions,
+                METRIC_TEAMS => $teams,
+                METRIC_MESSAGES => $messages,
+                METRIC_MAU => $usersMAU,
+                METRIC_DAU => $usersDAU,
+                METRIC_WAU => $usersWAU,
+                METRIC_WEBHOOKS => $webhooks,
+                METRIC_PLATFORMS => $platforms,
+                METRIC_PROVIDERS => $providers,
+                METRIC_TOPICS => $topics,
+                METRIC_KEYS => $keys,
+                METRIC_DOMAINS => $domains,
+                METRIC_TARGETS => $targets,
+                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS) => $emailTargets,
+                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS) => $pushTargets,
+                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS) => $smsTargets,
+            ];
 
-                foreach ($metrics as $metric => $value) {
-                    $this->createStatsDocuments($region, $metric, $value);
-                }
+            foreach ($metrics as $metric => $value) {
+                $this->createStatsDocuments($region, $metric, $value);
+            }
 
-                try {
-                    $this->countForBuckets($dbForProject, $dbForLogs, $region);
-                } catch (Throwable $th) {
-                    call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
-                }
+            try {
+                $this->countForBuckets($dbForProject, $dbForLogs, $region);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
+            }
 
-                try {
-                    $this->countImageTransformations($dbForProject, $dbForLogs, $region);
-                } catch (Throwable $th) {
-                    call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
-                }
+            try {
+                $this->countImageTransformations($dbForProject, $dbForLogs, $region);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
+            }
 
-                try {
-                    $this->countForDatabase($dbForProject, $region);
-                } catch (Throwable $th) {
-                    call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
-                }
+            try {
+                $this->countForDatabase($dbForProject, $region);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
+            }
 
-                try {
-                    $this->countForSitesAndFunctions($dbForProject, $region);
-                } catch (Throwable $th) {
-                    call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
-                }
-            });
-
+            try {
+                $this->countForSitesAndFunctions($dbForProject, $region);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
+            }
 
             $this->writeDocuments($dbForLogs, $project);
         } catch (Throwable $th) {
