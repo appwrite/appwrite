@@ -241,6 +241,11 @@ class Create extends Base
         $headers['x-appwrite-continent-eu'] = 'false';
         $ip = $request->getIP();
         $headers['x-appwrite-client-ip'] = $ip;
+        // Set standard geo headers for function runtime geo detection
+        if (!empty($ip)) {
+            $headers['x-real-ip'] ??= $ip;
+            $headers['x-forwarded-for'] ??= $ip;
+        }
 
         if (!empty($ip)) {
             $record = $geodb->get($ip);
