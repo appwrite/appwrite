@@ -46,7 +46,7 @@ class Action extends UtopiaAction
      *
      * @return void
      */
-    protected function foreachDocument(Database $database, string $collection, array $queries = [], callable $callback = null, int $limit = 1000, bool $concurrent = false): void
+    protected function foreachDocument(Database $database, string $collection, array $queries = [], callable $callback = null, int $limit = 1000, bool $concurrent = false, bool $filters = true): void
     {
         $results = [];
         $sum = $limit;
