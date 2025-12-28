@@ -241,11 +241,6 @@ class Create extends Base
         $headers['x-appwrite-continent-eu'] = 'false';
         $ip = $request->getIP();
         $headers['x-appwrite-client-ip'] = $ip;
-        // Set standard geo headers for function runtime geo detection
-        if (!empty($ip)) {
-            $headers['x-real-ip'] ??= $ip;
-            $headers['x-forwarded-for'] ??= $ip;
-        }
 
         if (!empty($ip)) {
             $record = $geodb->get($ip);
@@ -264,6 +259,12 @@ class Create extends Base
             if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
+        }
+
+        // Set server-authoritative geo headers after filtering to prevent client-side IP spoofing
+        if (!empty($ip)) {
+            $headersFiltered['x-real-ip'] = $ip;
+            $headersFiltered['x-forwarded-for'] = $ip;
         }
 
 
@@ -307,7 +308,7 @@ class Create extends Base
                     ->setExecution($execution)
                     ->setFunction($function)
                     ->setBody($body)
-                    ->setHeaders($headers)
+                    ->setHeaders($headersFiltered)
                     ->setPath($path)
                     ->setMethod($method)
                     ->setJWT($jwt)
@@ -318,7 +319,7 @@ class Create extends Base
                     ->trigger();
             } else {
                 $data = [
-                    'headers' => $headers,
+                    'headers' => $headersFiltered,
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
@@ -424,7 +425,7 @@ class Create extends Base
                 version: $version,
                 path: $path,
                 method: $method,
-                headers: $headers,
+                headers: $headersFiltered,
                 runtimeEntrypoint: $command,
                 cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
                 memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
