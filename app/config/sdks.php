@@ -116,6 +116,7 @@ return [
             [
                 'key' => 'android',
                 'name' => 'Android',
+                'namespace' => 'io.appwrite',
                 'version' => '11.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-android',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-android',
@@ -395,6 +396,7 @@ return [
             [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
+                'namespace' => 'io.appwrite',
                 'version' => '13.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-kotlin',
                 'package' => 'https://search.maven.org/artifact/io.appwrite/sdk-for-kotlin',
