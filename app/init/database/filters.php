@@ -171,6 +171,44 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'subQueryWebhookEvents',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $webhooks = $database
+            ->find('webhooks', [
+                Query::equal('projectInternalId', [$document->getSequence()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
+
+        $events = [];
+        foreach ($webhooks as $webhook) {
+            $webhookEvents = $webhook->getAttribute('events', []);
+            if (!empty($webhookEvents)) {
+                $events = array_merge($events, $webhookEvents);
+            }
+        }
+
+        return array_unique($events);
+    }
+);
+
+Database::addFilter(
+    'subQueryFunctionEvents',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        // Functions are stored in the project database, not platform database
+        // This filter will return empty array when called from platform DB
+        // Function events will need to be computed separately when dbForProject is available
+        // For now, return empty to avoid errors
+        return [];
+    }
+);
+
+Database::addFilter(
     'subQuerySessions',
     function (mixed $value) {
         return;

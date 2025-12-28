@@ -378,11 +378,21 @@ abstract class Action extends DatabasesAction
                 ->from($queueForEvents)
                 ->trigger();
 
-            $queueForFunctions
-                ->from($queueForEvents)
-                ->trigger();
+            $project = $queueForEvents->getProject();
+            $generatedEvents = Event::generateEvents(
+                $queueForEvents->getEvent(),
+                $queueForEvents->getParams()
+            );
 
-            if (!empty($queueForEvents->getProject()?->getAttribute('webhooks', []))) {
+            $functionEvents = $project?->getAttribute('functionEvents', []);
+            if (!empty($functionEvents) && !empty(array_intersect($functionEvents, $generatedEvents))) {
+                $queueForFunctions
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
+
+            $webhookEvents = $project?->getAttribute('webhookEvents', []);
+            if (!empty($webhookEvents) && !empty(array_intersect($webhookEvents, $generatedEvents))) {
                 $queueForWebhooks
                     ->from($queueForEvents)
                     ->trigger();
