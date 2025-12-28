@@ -198,7 +198,8 @@ class StatsResources extends Action
             }
 
             try {
-                $dbForProject->skipFilters(fn () => $this->countForSitesAndFunctions($dbForProject, $region), $this->filters);
+                $dbForProject->skipFilters(fn () => $this->countForSitesAndFunctions($dbForProject, $region), ['subQueryVariables', 'subQueryProjectVariables']);
+
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
