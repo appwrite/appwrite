@@ -99,10 +99,9 @@ class StatsResources extends Action
             Console::error($th->getMessage());
             return;
         }
-    
-        $this->disableSubqueries();
 
         try {
+
             $region = $project->getAttribute('region');
 
             $platforms = $dbForPlatform->count('platforms', [
