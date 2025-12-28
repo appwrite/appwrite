@@ -261,10 +261,16 @@ class Create extends Base
             }
         }
 
-        // Set server-authoritative geo headers after filtering to prevent client-side IP spoofing
+        // Rebuild $headers as an associative array from allowed headers only
+        $headers = [];
+        foreach ($headersFiltered as $header) {
+            $headers[$header['name']] = $header['value'];
+        }
+
+        // Set server-authoritative geo headers ALWAYS overwriting any client values to prevent IP spoofing
         if (!empty($ip)) {
-            $headersFiltered['x-real-ip'] = $ip;
-            $headersFiltered['x-forwarded-for'] = $ip;
+            $headers['x-real-ip'] = $ip;
+            $headers['x-forwarded-for'] = $ip;
         }
 
 
@@ -308,7 +314,7 @@ class Create extends Base
                     ->setExecution($execution)
                     ->setFunction($function)
                     ->setBody($body)
-                    ->setHeaders($headersFiltered)
+                    ->setHeaders($headers)
                     ->setPath($path)
                     ->setMethod($method)
                     ->setJWT($jwt)
@@ -319,7 +325,7 @@ class Create extends Base
                     ->trigger();
             } else {
                 $data = [
-                    'headers' => $headersFiltered,
+                    'headers' => $headers,
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
@@ -425,7 +431,7 @@ class Create extends Base
                 version: $version,
                 path: $path,
                 method: $method,
-                headers: $headersFiltered,
+                headers: $headers,
                 runtimeEntrypoint: $command,
                 cpus: $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT,
                 memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
