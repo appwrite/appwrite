@@ -461,7 +461,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Add permissions for current the user if none were provided.
         if (\is_null($permissions)) {
             $permissions = [];
-            if (!empty($user->getId())) {
+            if (!empty($user->getId()) && !$isPrivilegedUser) {
                 foreach ($allowedPermissions as $permission) {
                     $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
@@ -470,7 +470,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-        if (!User::isApp($roles) && !User::isPrivileged($roles)) {
+        if (!$isAPIKey && !$isPrivilegedUser) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
