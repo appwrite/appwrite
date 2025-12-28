@@ -22,9 +22,9 @@ class Action extends UtopiaAction
     protected mixed $logError;
 
     protected array $filters = [
-        'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryProjectVariables', 'subQueryBlocks', 'subQueryDevKeys', // Project
+        'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys', // Project
         'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
-        'subQueryVariables', // Sites
+        'subQueryVariables', 'subQueryProjectVariables' // Sites / Functions
     ];
 
     /**
