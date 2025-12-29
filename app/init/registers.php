@@ -237,6 +237,17 @@ $register->set('pools', function () {
                         ));
                     });
                 },
+                'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase}", $dsnUser, $dsnPass, array(
+                            \PDO::ATTR_TIMEOUT => 3, // Seconds
+                            \PDO::ATTR_PERSISTENT => false,
+                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                            \PDO::ATTR_EMULATE_PREPARES => true,
+                            \PDO::ATTR_STRINGIFY_FETCHES => true
+                        ));
+                    });
+                },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
                     @$redis->pconnect($dsnHost, (int)$dsnPort);
