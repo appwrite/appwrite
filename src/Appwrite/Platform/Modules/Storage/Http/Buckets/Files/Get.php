@@ -60,7 +60,7 @@ class Get extends Action
         Database $dbForProject,
         string $mode
     ) {
-        $bucket = Authorization::skip(fn() => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = User::isApp(Authorization::getRoles());
         $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
@@ -79,7 +79,7 @@ class Get extends Action
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if ($file->isEmpty()) {

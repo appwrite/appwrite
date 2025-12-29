@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
-use Ahc\Jwt\JWT;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -108,7 +107,7 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForLocal
     ) {
-        $bucket = Authorization::skip(fn() => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = User::isApp(Authorization::getRoles());
         $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
@@ -384,7 +383,7 @@ class Create extends Action
                 if (!$validator->isValid($bucket->getCreate())) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-                $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
         } else {
             if ($file->isEmpty()) {
@@ -431,7 +430,7 @@ class Create extends Action
                 }
 
                 try {
-                    $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
                 } catch (NotFoundException) {
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
