@@ -1067,27 +1067,6 @@ services:
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
-  openruntimes-proxy:
-    container_name: openruntimes-proxy
-    hostname: proxy
-    <<: *x-logging
-    stop_signal: SIGINT
-    image: openruntimes/proxy:0.5.5
-    networks:
-      - appwrite
-      - runtimes
-    environment:
-      - OPR_PROXY_WORKER_PER_CORE=$_APP_WORKER_PER_CORE
-      - OPR_PROXY_ENV=$_APP_ENV
-      - OPR_PROXY_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_PROXY_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-      - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=exc1
-      - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
-      - OPR_PROXY_MAX_TIMEOUT=600
-      - OPR_PROXY_HEALTHCHECK=enabled
-
   mariadb:
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
