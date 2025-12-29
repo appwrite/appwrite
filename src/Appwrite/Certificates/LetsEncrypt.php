@@ -2,6 +2,7 @@
 
 namespace Appwrite\Certificates;
 
+use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -82,6 +83,16 @@ class LetsEncrypt implements Adapter
         $validTo = $certData['validTo_time_t'] ?? null;
         $dt = (new \DateTime())->setTimestamp($validTo);
         return DateTime::addSeconds($dt, -60 * 60 * 24 * 30);
+    }
+
+    public function isInstantGeneration(string $domain, ?string $domainType): bool
+    {
+        return true;
+    }
+
+    public function getCertificateStatus(string $domain, ?string $domainType): string
+    {
+        throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
     }
 
     public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool
