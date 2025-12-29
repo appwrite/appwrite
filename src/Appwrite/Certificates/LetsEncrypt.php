@@ -2,7 +2,7 @@
 
 namespace Appwrite\Certificates;
 
-use Appwrite\Certificates\Exceptions\CertificateStatus as CertificateStatusException;
+use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;

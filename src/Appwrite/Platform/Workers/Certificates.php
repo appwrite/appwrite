@@ -116,8 +116,6 @@ class Certificates extends Action
             default:
                 throw new Exception('Invalid action: ' . $action);
         }
-
-
     }
 
     /**
@@ -143,7 +141,7 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Certificate $queueForCertificates,
         Log $log,
-        ?string $validationDomain = null,
+        ?string $validationDomain = null
     ): void {
         // Get rule
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
@@ -176,7 +174,6 @@ class Certificates extends Action
             // Update rule and emit events
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
-
 
         // Issue a TLS certificate when domain is verified
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
@@ -317,7 +314,7 @@ class Certificates extends Action
             $date = \date('H:i:s');
             $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
 
-            $attempts = $certificate->getAttribute('attempts', 0) + 1; // // Increase attempts count
+            $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
 
             // Update attributes on certificate document
             $certificate->setAttributes([
@@ -379,7 +376,7 @@ class Certificates extends Action
 
     /**
      * Update all existing domain documents so they have relation to correct certificate document.
-     * This solved issues:
+     * This solves issues:
      * - when adding a domain for which there is already a certificate
      * - when renew creates new document? It might?
      * - overall makes it more reliable

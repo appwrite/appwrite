@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Certificates\Exceptions;
+namespace Appwrite\Certificates\Exception;
 
 use Exception;
 

@@ -42,7 +42,7 @@ class Interval extends Action
         });
     }
 
-    private function verifyDomain(Database $dbForPlatform, Certificate $queueForCertificate): void
+    private function verifyDomain(Database $dbForPlatform, Certificate $queueForCertificates): void
     {
         $time = DatabaseDateTime::now();
         $fromTime = new DateTime('-3 days'); // Max 3 days old
@@ -63,7 +63,7 @@ class Interval extends Action
         Console::info("[{$time}] Found " . \count($rules) . " rules for domain verification, scheduling jobs.");
 
         foreach ($rules as $rule) {
-            $queueForCertificate
+            $queueForCertificates
                 ->setDomain(new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
