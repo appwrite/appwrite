@@ -146,6 +146,7 @@ class Key
                     leeway: 0
                 );
 
+                $payload = [];
                 try {
                     $payload = $jwtObj->decode($secret);
                 } catch (JWTException) {
@@ -233,8 +234,6 @@ class Key
 
                 $role = User::ROLE_USERS;
 
-                $roles = Config::getParam('roles', []);
-                $scopes = $roles[$role]['scopes'] ?? [];
                 $scopes = $key->getAttribute('scopes', []);
 
                 $key = new Key(
@@ -271,8 +270,6 @@ class Key
 
                 $role = User::ROLE_APPS;
 
-                $roles = Config::getParam('roles', []);
-                $scopes = $roles[$role]['scopes'] ?? [];
                 $scopes = $key->getAttribute('scopes', []);
 
                 $key = new Key(
