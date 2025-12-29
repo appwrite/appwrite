@@ -9,12 +9,15 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 
 class Delete extends Action
 {
@@ -37,6 +40,9 @@ class Delete extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].delete')
             ->label('audits.event', 'file.delete')
             ->label('audits.resource', 'file/{request.fileId}')
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -51,12 +57,13 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('bucketId', '', new UID(), 'Bucket unique ID.')
+            ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForDeletes')
             ->inject('queueForEvents')
+            ->inject('deviceForFiles')
+            ->inject('queueForDeletes')
             ->callback($this->action(...));
     }
 
@@ -65,47 +72,78 @@ class Delete extends Action
         string $fileId,
         Response $response,
         Database $dbForProject,
+        Event $queueForEvents,
+        Device $deviceForFiles,
         DeleteEvent $queueForDeletes,
-        Event $queueForEvents
     ) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty()) {
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        // Validate delete permission
-        $validator = new Authorization(Database::PERMISSION_DELETE);
-        $validBucketDelete = $validator->isValid($bucket->getDelete());
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-
-        if (!$validBucketDelete && !$fileSecurity) {
+        $validator = new Authorization(Database::PERMISSION_DELETE);
+        $valid = $validator->isValid($bucket->getDelete());
+        if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        // Fetch file based on security
-        if ($fileSecurity && !$validBucketDelete) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
-        } else {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-        }
+        // Read permission should not be required for delete
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if (!$dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+        // Make sure we don't delete the file before the document permission check occurs
+        if ($fileSecurity && !$valid && !$validator->isValid($file->getDelete())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($file);
+        $deviceDeleted = false;
+        if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
+            $deviceDeleted = $deviceForFiles->abort(
+                $file->getAttribute('path'),
+                ($file->getAttribute('metadata', [])['uploadId'] ?? '')
+            );
+        } else {
+            $deviceDeleted = $deviceForFiles->delete($file->getAttribute('path'));
+        }
+
+        if ($deviceDeleted) {
+            $queueForDeletes
+                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setResourceType('bucket/' . $bucket->getId())
+                ->setResource('file/' . $fileId)
+            ;
+
+            try {
+                if ($fileSecurity && !$valid) {
+                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId);
+                } else {
+                    $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
+                }
+            } catch (NotFoundException) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            if (!$deleted) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+            }
+        } else {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');
+        }
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setPayload($response->output($file, Response::MODEL_FILE));
+            ->setContext('bucket', $bucket)
+            ->setPayload($response->output($file, Response::MODEL_FILE))
+        ;
 
         $response->noContent();
     }

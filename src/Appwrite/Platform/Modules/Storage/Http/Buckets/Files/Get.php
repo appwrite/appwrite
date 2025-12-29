@@ -49,7 +49,6 @@ class Get extends Action
             ->param('fileId', '', new UID(), 'File ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('mode')
             ->callback($this->action(...));
     }
 
@@ -58,7 +57,6 @@ class Get extends Action
         string $fileId,
         Response $response,
         Database $dbForProject,
-        string $mode
     ) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -70,7 +68,7 @@ class Get extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(\Utopia\Database\Database::PERMISSION_READ);
+        $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
