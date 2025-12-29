@@ -330,6 +330,7 @@ App::init()
 
             // For standard keys, update last accessed time
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
+                $dbKey = null;
                 if (!empty($apiKey->getProjectId())) {
                     $dbKey = $project->find(
                         key: 'secret',

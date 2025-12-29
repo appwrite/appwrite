@@ -437,13 +437,14 @@ App::delete('/v1/teams/:teamId')
         $deletes = new Deletes();
         $deletes->deleteMemberships($getProjectDB, $clone, $project);
 
+        // Async delete
         if ($project->getId() === 'console') {
             $queueForDeletes
                 ->setType(DELETE_TYPE_TEAM_PROJECTS)
-                ->setDocument($clone);
+                ->setDocument($clone)
+                ->trigger();
         }
 
-        // Async delete
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($clone);

@@ -10,6 +10,6 @@ return [
         "description" => 'Access to read account\'s organizations.',
     ],
     "teams.write" => [
-        "description" => 'Access to create, update and delete account\'s organizations and it\'s memberships.',
+        "description" => 'Access to create, update and delete account\'s organizations and its memberships.',
     ],
 ];

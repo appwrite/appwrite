@@ -41,7 +41,7 @@ class KeyTest extends TestCase
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertEquals('Dynamic Key', $decoded->getName());
 
-        // Decode dyamic key with extras
+        // Decode dynamic key with extras
         $extra = [
             'disabledMetrics' => ['metric123'],
             'hostnameOverride' => true,
@@ -127,7 +127,7 @@ class KeyTest extends TestCase
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertEquals('Standard key', $decoded->getName());
 
-        // Decode depricated standard key
+        // Decode deprecated standard key
         $scopes = ['custom.write'];
         $decoded = Key::decode(
             project: new Document(['$id' => $projectId, 'keys' => [
