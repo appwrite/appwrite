@@ -5,9 +5,11 @@
 return [
     "account" => [
         "description" => 'Access to manage account, it\'s organizations, sessions, tokens, and billing.',
-    ],"teams.read" => [
+    ],
+    "teams.read" => [
         "description" => 'Access to read account\'s organizations.',
-    ],"teams.write" => [
+    ],
+    "teams.write" => [
         "description" => 'Access to create, update and delete account\'s organizations and it\'s memberships.',
     ],
 ];
