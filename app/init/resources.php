@@ -44,7 +44,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
-use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -445,14 +444,16 @@ App::setResource('user', function (string $mode, Document $project, Document $co
                 subject: 'keys'
             );
 
-            $expired = false;
-            $expire = $key->getAttribute('expire');
-            if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-                $expired = true;
-            }
+            if (!empty($key)) {
+                $expired = false;
+                $expire = $key->getAttribute('expire');
+                if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                    $expired = true;
+                }
 
-            if (!empty($key) && !$expired) {
-                $user = $accountKeyUser;
+                if (!$expired) {
+                    $user = $accountKeyUser;
+                }
             }
         }
     }

@@ -4,7 +4,7 @@
 
 return [
     "account" => [
-        "description" => 'Access to manage account, it\'s organizations, sessions, tokens, and billing.',
+        "description" => 'Access to manage account, its organizations, sessions, tokens, and billing.',
     ],
     "teams.read" => [
         "description" => 'Access to read account\'s organizations.',
