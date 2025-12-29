@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
+namespace Appwrite\Platform\Modules\Proxy;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
