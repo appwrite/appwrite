@@ -57,11 +57,11 @@ class Update extends Action
             contentType: ContentType::JSON
         ))
         ->param('tokenId', '', new UID(), 'Token unique ID.')
-        ->param('expire', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
+        ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'File token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
-        ->callback([$this, 'action']);
+        ->callback($this->action(...));
     }
 
     public function action(string $tokenId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents)

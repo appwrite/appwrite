@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -105,7 +104,7 @@ class Project extends Model
             ->addRule('authDuration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Session duration in seconds.',
-                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+                'default' => TOKEN_EXPIRATION_LOGIN_LONG,
                 'example' => 60,
             ])
             ->addRule('authLimit', [
@@ -166,6 +165,12 @@ class Project extends Model
             ->addRule('authMembershipsMfa', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to show user MFA status in the teams membership response.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authInvalidateSessions', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not all existing sessions should be invalidated on password change',
                 'default' => false,
                 'example' => true,
             ])
@@ -336,6 +341,20 @@ class Project extends Model
      */
     public function filter(Document $document): Document
     {
+        $this->expandSmtpFields($document);
+        $this->expandServiceFields($document);
+        $this->expandAuthFields($document);
+        $this->expandOAuthProviders($document);
+
+        return $document;
+    }
+
+    private function expandSmtpFields(Document $document): void
+    {
+        if (!$document->isSet('smtp')) {
+            return;
+        }
+
         // SMTP
         $smtp = $document->getAttribute('smtp', []);
         $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
@@ -347,8 +366,14 @@ class Project extends Model
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
         $document->setAttribute('smtpPassword', $smtp['password'] ?? '');
         $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
+    }
 
-        // Services
+    private function expandServiceFields(Document $document): void
+    {
+        if (!$document->isSet('services')) {
+            return;
+        }
+
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
@@ -360,13 +385,19 @@ class Project extends Model
             $value = $values[$key] ?? true;
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
         }
+    }
 
-        // Auth
+    private function expandAuthFields(Document $document): void
+    {
+        if (!$document->isSet('auths')) {
+            return;
+        }
+
         $authValues = $document->getAttribute('auths', []);
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
-        $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
@@ -376,14 +407,21 @@ class Project extends Model
         $document->setAttribute('authMembershipsUserName', $authValues['membershipsUserName'] ?? true);
         $document->setAttribute('authMembershipsUserEmail', $authValues['membershipsUserEmail'] ?? true);
         $document->setAttribute('authMembershipsMfa', $authValues['membershipsMfa'] ?? true);
+        $document->setAttribute('authInvalidateSessions', $authValues['invalidateSessions'] ?? false);
 
-        foreach ($auth as $index => $method) {
+        foreach ($auth as $method) {
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
+    }
 
-        // OAuth Providers
+    private function expandOAuthProviders(Document $document): void
+    {
+        if (!$document->isSet('oAuthProviders')) {
+            return;
+        }
+
         $providers = Config::getParam('oAuthProviders', []);
         $providerValues = $document->getAttribute('oAuthProviders', []);
         $projectProviders = [];
@@ -404,7 +442,5 @@ class Project extends Model
         }
 
         $document->setAttribute('oAuthProviders', $projectProviders);
-
-        return $document;
     }
 }

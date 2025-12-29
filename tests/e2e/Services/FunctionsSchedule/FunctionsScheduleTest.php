@@ -25,8 +25,8 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -36,8 +36,7 @@ class FunctionsScheduleTest extends Scope
         ]);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -63,6 +62,9 @@ class FunctionsScheduleTest extends Scope
             $this->assertNotEmpty($asyncExecution['logs']);
             $this->assertNotEmpty($asyncExecution['errors']);
             $this->assertGreaterThan(0, $asyncExecution['duration']);
+            $this->assertNotEmpty($asyncExecution['$id']);
+            $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
+            $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
         }, 60000, 500);
 
         $this->cleanupFunction($functionId);
@@ -77,14 +79,13 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
             'logging' => true,
         ]);
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 
@@ -120,7 +121,9 @@ class FunctionsScheduleTest extends Scope
         $this->assertEquals('scheduled', $execution['body']['status']);
         $this->assertEquals('PATCH', $execution['body']['requestMethod']);
         $this->assertEquals('/custom-path', $execution['body']['requestPath']);
-        $this->assertCount(0, $execution['body']['requestHeaders']);
+        $this->assertCount(1, $execution['body']['requestHeaders']);
+        $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
+        $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
 
         \sleep(120);
 
@@ -179,15 +182,14 @@ class FunctionsScheduleTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
-            'runtime' => 'php-8.0',
-            'entrypoint' => 'index.php',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
             'timeout' => 10,
             'logging' => true,
         ]);
 
         $this->setupDeployment($functionId, [
-            'entrypoint' => 'index.php',
-            'code' => $this->packageFunction('php'),
+            'code' => $this->packageFunction('basic'),
             'activate' => true
         ]);
 

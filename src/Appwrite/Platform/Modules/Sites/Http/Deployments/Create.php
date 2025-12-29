@@ -29,6 +29,7 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -57,9 +58,9 @@ class Create extends Action
                 group: 'deployments',
                 name: 'createDeployment',
                 description: <<<EOT
-                Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the function's deployment to use your new deployment ID.
+                Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the site's deployment to use your new deployment ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -71,9 +72,9 @@ class Create extends Action
                 packaging: true,
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('installCommand', null, new Text(8192, 0), 'Install Commands.', true)
-            ->param('buildCommand', null, new Text(8192, 0), 'Build Commands.', true)
-            ->param('outputDirectory', null, new Text(8192, 0), 'Output Directory.', true)
+            ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
+            ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
+            ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
             ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
             ->inject('request')
@@ -86,7 +87,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -271,8 +272,9 @@ class Create extends Action
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
 
-                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
                 Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([

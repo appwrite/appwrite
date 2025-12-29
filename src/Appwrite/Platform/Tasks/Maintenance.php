@@ -29,7 +29,7 @@ class Maintenance extends Action
             ->inject('console')
             ->inject('queueForCertificates')
             ->inject('queueForDeletes')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(Database $dbForPlatform, Document $console, Certificate $queueForCertificates, Delete $queueForDeletes): void
@@ -95,6 +95,7 @@ class Maintenance extends Action
             $this->renewCertificates($dbForPlatform, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
+            $this->notifyDeleteCSVExports($queueForDeletes);
         }, $interval, $delay);
     }
 
@@ -103,6 +104,13 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_REALTIME)
             ->setDatetime(DatabaseDateTime::addSeconds(new \DateTime(), -60))
+            ->trigger();
+    }
+
+    private function notifyDeleteCSVExports(Delete $queueForDeletes): void
+    {
+        $queueForDeletes
+            ->setType(DELETE_TYPE_CSV_EXPORTS)
             ->trigger();
     }
 
@@ -117,19 +125,36 @@ class Maintenance extends Action
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
 
-
-        if (\count($certificates) > 0) {
-            Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
-
-            foreach ($certificates as $certificate) {
-                $queueForCertificate
-                    ->setDomain(new Document([
-                        'domain' => $certificate->getAttribute('domain')
-                    ]))
-                    ->trigger();
-            }
-        } else {
+        if (\count($certificates) === 0) {
             Console::info("[{$time}] No certificates for renewal.");
+            return;
+        }
+
+        Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
+
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $appRegion = System::getEnv('_APP_REGION', 'default');
+
+        foreach ($certificates as $certificate) {
+            $domain = $certificate->getAttribute('domain');
+            $rule = $isMd5 ?
+                $dbForPlatform->getDocument('rules', md5($domain)) :
+                    $dbForPlatform->findOne('rules', [
+                        Query::equal('domain', [$domain]),
+                        Query::limit(1)
+                    ]);
+
+            if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
+                continue;
+            }
+
+            $queueForCertificate
+                ->setDomain(new Document([
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                ]))
+                ->setAction(Certificate::ACTION_GENERATION)
+                ->trigger();
         }
     }
 

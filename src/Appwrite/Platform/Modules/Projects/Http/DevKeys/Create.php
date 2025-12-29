@@ -34,7 +34,7 @@ class Create extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys')
             ->desc('Create dev key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.write')
+            ->label('scope', 'devKeys.write')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',
@@ -57,7 +57,7 @@ class Create extends Action
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $projectId, string $name, ?string $expire, Document $user, Response $response, Database $dbForPlatform)

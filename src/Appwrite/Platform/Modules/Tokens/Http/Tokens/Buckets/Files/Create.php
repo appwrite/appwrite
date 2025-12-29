@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -10,6 +9,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -61,16 +61,15 @@ class Create extends Action
         ))
         ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
         ->param('fileId', '', new UID(), 'File unique ID.')
-        ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
+        ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')
-        ->callback([$this, 'action']);
+        ->callback($this->action(...));
     }
 
     public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents): void
     {
-
         /**
          * @var Document $bucket
          * @var Document $file
@@ -92,7 +91,7 @@ class Create extends Action
 
         $token = $dbForProject->createDocument('resourceTokens', new Document([
             '$id' => ID::unique(),
-            'secret' => Auth::tokenGenerator(128),
+            'secret' => (new Token(128))->generate(),
             'resourceId' => $bucketId . ':' . $fileId,
             'resourceInternalId' => $bucket->getSequence() . ':' . $file->getSequence(),
             'resourceType' => TOKENS_RESOURCE_TYPE_FILES,

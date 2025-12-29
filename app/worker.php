@@ -17,10 +17,9 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
-use Swoole\Process;
 use Swoole\Runtime;
-use Swoole\Timer;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
@@ -57,7 +56,7 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register)
     $adapter = new DatabasePool($pools->get('console'));
     $dbForPlatform = new Database($adapter, $cache);
     $dbForPlatform->setNamespace('_console');
-
+    $dbForPlatform->setDocumentType('users', User::class);
     return $dbForPlatform;
 }, ['cache', 'register']);
 
@@ -88,13 +87,14 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
+    $database->setDocumentType('users', User::class);
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getSequence())
+            ->setTenant((int)$project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -131,7 +131,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getSequence())
+                    ->setTenant((int)$project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -153,7 +153,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getSequence())
+                ->setTenant((int)$project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -172,7 +172,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
     $database = null;
     return function (?Document $project = null) use ($pools, $cache, $database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $database->setTenant((int)$project->getSequence());
             return $database;
         }
 
@@ -183,11 +183,11 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $database->setTenant((int)$project->getSequence());
         }
 
         return $database;
@@ -249,9 +249,41 @@ Server::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
 
+Server::setResource('publisherDatabases', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherFunctions', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherMigrations', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
+Server::setResource('publisherMessaging', function (BrokerPool $publisher) {
+    return $publisher;
+}, ['publisher']);
+
 Server::setResource('consumer', function (Group $pools) {
     return new BrokerPool(consumer: $pools->get('consumer'));
 }, ['pools']);
+
+Server::setResource('consumerDatabases', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+
+Server::setResource('consumerMigrations', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
+
+Server::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
+    return $consumer;
+}, ['consumer']);
 
 Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
@@ -319,7 +351,7 @@ Server::setResource('deviceForSites', function (Document $project, Telemetry $te
     return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_SITES . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 
-Server::setResource('deviceForImports', function (Document $project, Telemetry $telemetry) {
+Server::setResource('deviceForMigrations', function (Document $project, Telemetry $telemetry) {
     return new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $project->getId()));
 }, ['project', 'telemetry']);
 
@@ -379,6 +411,13 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
 
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
+                }
+                $log->addExtra('previousFile', $error->getPrevious()->getFile());
+                $log->addExtra('previousLine', $error->getPrevious()->getLine());
+            }
 
             foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
@@ -399,6 +438,13 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
         Console::warning("Failed: {$error->getMessage()}");
         Console::warning($error->getTraceAsString());
+
+        if ($error->getPrevious() !== null) {
+            if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                Console::warning("Previous Failed: {$error->getPrevious()->getMessage()}");
+            }
+            Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
+        }
     };
 }, ['register', 'project']);
 
@@ -484,15 +530,8 @@ $worker
     });
 
 $worker->workerStart()
-    ->action(function () use ($worker, $workerName) {
-        Console::info("Worker $workerName started");
-
-        Process::signal(SIGTERM, function () use ($worker, $workerName) {
-            Console::info("Stopping worker $workerName.");
-
-            $worker->stop();
-            Timer::clearAll();
-        });
+    ->action(function () use ($workerName) {
+        Console::info("Worker $workerName  started");
     });
 
 $worker->start();

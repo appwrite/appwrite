@@ -30,8 +30,6 @@ class ProjectsCustomServerTest extends Scope
             'domain' => $testId . '-api.appwrite.test',
         ]);
 
-        \var_dump($response);
-
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $headers, [
@@ -83,16 +81,11 @@ class ProjectsCustomServerTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
         $deniedDomains = [
-            $mainDomain,
-            $sitesDomain,
-            $functionsDomain,
-            'localhost',
-            APP_HOSTNAME_INTERNAL,
+            'sites.localhost',
+            'functions.localhost',
+            'appwrite.test',
+            'localhost'
         ];
 
         foreach ($deniedDomains as $deniedDomain) {

@@ -13,5 +13,5 @@ $databases = new Databases($client);
 $result = $databases->upsertDocuments(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    documents: [] // optional
+    documents: []
 );

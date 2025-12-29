@@ -55,7 +55,7 @@ class Rule extends Model
             ->addRule('redirectStatusCode', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Status code to apply during redirect. Used if type is "redirect"',
-                'default' => '',
+                'default' => 301,
                 'example' => 301,
             ])
             ->addRule('deploymentId', [
@@ -65,10 +65,11 @@ class Rule extends Model
                 'example' => 'n3u9feiwmf',
             ])
             ->addRule('deploymentResourceType', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Type of deployment. Possible values are "function", "site". Used if rule\'s type is "deployment".',
                 'default' => '',
                 'example' => 'function',
+                'enum' => ['function', 'site'],
             ])
             ->addRule('deploymentResourceId', [
                 'type' => self::TYPE_STRING,
@@ -80,19 +81,20 @@ class Rule extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Name of Git branch that updates rule. Used if type is "deployment"',
                 'default' => '',
-                'example' => 'function',
+                'example' => 'main',
             ])
             ->addRule('status', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ENUM,
                 'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
-                'default' => false,
+                'default' => 'created',
                 'example' => 'verified',
+                'enum' => ['created', 'verifying', 'verified', 'unverified'],
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate generation logs. This will return an empty string if generation did not run, or succeeded.',
+                'description' => 'Logs from rule verification or certificate generation. Certificate generation logs are prioritized if both are available.',
                 'default' => '',
-                'example' => 'HTTP challegne failed.',
+                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
             ])
             ->addRule('renewAt', [
                 'type' => self::TYPE_DATETIME,

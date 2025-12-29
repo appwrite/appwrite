@@ -96,6 +96,8 @@ $dbService = $this->getParam('database');
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -179,7 +181,7 @@ $dbService = $this->getParam('database');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:6.0.13
+    image: <?php echo $organization; ?>/console:7.4.7
     restart: unless-stopped
     networks:
       - appwrite
@@ -480,6 +482,8 @@ $dbService = $this->getParam('database');
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
       - _APP_EMAIL_CERTIFICATES
       - _APP_REDIS_HOST
@@ -643,6 +647,8 @@ $dbService = $this->getParam('database');
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_EMAIL_SECURITY
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -676,6 +682,8 @@ $dbService = $this->getParam('database');
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
+      - _APP_DOMAIN_TARGET_CAA
+      - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -864,7 +872,7 @@ $dbService = $this->getParam('database');
       - _APP_DB_ADAPTER
 
   appwrite-assistant:
-    image: appwrite/assistant:0.4.0
+    image: appwrite/assistant:0.8.4
     container_name: appwrite-assistant
     <<: *x-logging
     restart: unless-stopped
@@ -872,9 +880,9 @@ $dbService = $this->getParam('database');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-      
+
   appwrite-browser:
-    image: appwrite/browser:0.2.4
+    image: appwrite/browser:0.3.2
     container_name: appwrite-browser
     <<: *x-logging
     restart: unless-stopped
@@ -887,7 +895,7 @@ $dbService = $this->getParam('database');
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.20
+    image: openruntimes/executor:0.7.22
     networks:
       - appwrite
       - runtimes

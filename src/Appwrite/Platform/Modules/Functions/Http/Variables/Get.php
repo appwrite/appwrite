@@ -40,7 +40,7 @@ class Get extends Base
                     description: <<<EOT
                     Get a variable by its unique ID.
                     EOT,
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -53,7 +53,7 @@ class Get extends Base
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $functionId, string $variableId, Response $response, Database $dbForProject)

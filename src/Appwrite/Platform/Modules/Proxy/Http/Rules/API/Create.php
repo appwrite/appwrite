@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\DNS;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -14,13 +14,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
-use Utopia\Domains\Domain;
-use Utopia\Platform\Action;
+use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
-use Utopia\Validator\AnyOf;
 use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\IP;
 
 class Create extends Action
 {
@@ -31,8 +28,10 @@ class Create extends Action
         return 'createAPIRule';
     }
 
-    public function __construct()
+    public function __construct(...$params)
     {
+        parent::__construct(...$params);
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/proxy/rules/api')
@@ -66,87 +65,28 @@ class Create extends Action
             ->inject('queueForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->inject('platform')
+            ->inject('log')
+            ->callback($this->action(...));
     }
 
-    public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform)
+    public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, array $platform, Log $log)
     {
-        $deniedDomains = [
-            'localhost',
-            APP_HOSTNAME_INTERNAL
-        ];
-
-        $mainDomain = System::getEnv('_APP_DOMAIN', '');
-        $deniedDomains[] = $mainDomain;
+        $this->validateDomainRestrictions($domain, $platform);
 
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        if (!empty($sitesDomain)) {
-            $deniedDomains[] = $sitesDomain;
-        }
-
         $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        if (!empty($functionsDomain)) {
-            $deniedDomains[] = $functionsDomain;
-        }
 
-        $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
-        $denyListDomains = \array_map('trim', explode(',', $denyListDomains));
-        foreach ($denyListDomains as $denyListDomain) {
-            if (empty($denyListDomain)) {
-                continue;
-            }
-            $deniedDomains[] = $denyListDomain;
-        }
-
-        if (\in_array($domain, $deniedDomains)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        if (\str_starts_with($domain, 'commit-') || \str_starts_with($domain, 'branch-')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        try {
-            $domain = new Domain($domain);
-        } catch (\Throwable) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
-        }
-
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain->get()) : ID::unique();
-
-        $status = 'created';
-        if (\str_ends_with($domain->get(), $functionsDomain) || \str_ends_with($domain->get(), $sitesDomain)) {
-            $status = 'verified';
-        }
-        if ($status === 'created') {
-            $validators = [];
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
-            if ($targetCNAME->isKnown() && !$targetCNAME->isTest()) {
-                $validators[] = new DNS($targetCNAME->get(), DNS::RECORD_CNAME);
-            }
-            if ((new IP(IP::V4))->isValid(System::getEnv('_APP_DOMAIN_TARGET_A', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_A', ''), DNS::RECORD_A);
-            }
-            if ((new IP(IP::V6))->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''))) {
-                $validators[] = new DNS(System::getEnv('_APP_DOMAIN_TARGET_AAAA', ''), DNS::RECORD_AAAA);
-            }
-
-            if (empty($validators)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'At least one of domain targets environment variable must be configured.');
-            }
-
-            $validator = new AnyOf($validators, AnyOf::TYPE_STRING);
-            if ($validator->isValid($domain->get())) {
-                $status = 'verifying';
-            }
-        }
-
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        $status = RULE_STATUS_CREATED;
         $owner = '';
+
         if (
-            ($functionsDomain != '' && \str_ends_with($domain->get(), $functionsDomain)) ||
-            ($sitesDomain != '' && \str_ends_with($domain->get(), $sitesDomain))
+            ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
+            ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
         ) {
+            $status = RULE_STATUS_VERIFIED;
             $owner = 'Appwrite';
         }
 
@@ -154,15 +94,24 @@ class Create extends Action
             '$id' => $ruleId,
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
-            'domain' => $domain->get(),
+            'domain' => $domain,
             'status' => $status,
             'type' => 'api',
             'trigger' => 'manual',
             'certificateId' => '',
-            'search' => implode(' ', [$ruleId, $domain->get()]),
+            'search' => implode(' ', [$ruleId, $domain]),
             'owner' => $owner,
             'region' => $project->getAttribute('region')
         ]);
+
+        if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
+            try {
+                $this->verifyRule($rule, $log);
+                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+            } catch (Exception $err) {
+                $rule->setAttribute('logs', $err->getMessage());
+            }
+        }
 
         try {
             $rule = $dbForPlatform->createDocument('rules', $rule);
@@ -170,12 +119,13 @@ class Create extends Action
             throw new Exception(Exception::RULE_ALREADY_EXISTS);
         }
 
-        if ($rule->getAttribute('status', '') === 'verifying') {
+        if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
             $queueForCertificates
                 ->setDomain(new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
+                ->setAction(Certificate::ACTION_GENERATION)
                 ->trigger();
         }
 

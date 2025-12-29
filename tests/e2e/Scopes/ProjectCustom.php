@@ -70,8 +70,12 @@ trait ProjectCustom
                 'databases.write',
                 'collections.read',
                 'collections.write',
+                'tables.read',
+                'tables.write',
                 'documents.read',
                 'documents.write',
+                'rows.read',
+                'rows.write',
                 'files.read',
                 'files.write',
                 'buckets.read',
@@ -140,7 +144,7 @@ trait ProjectCustom
                 'teams.*',
                 'users.*'
             ],
-            'url' => 'http://request-catcher:5000/webhook',
+            'url' => 'http://request-catcher-webhook:5000/',
             'security' => false,
         ]);
 
@@ -157,9 +161,9 @@ trait ProjectCustom
             'senderEmail' => 'mailer@appwrite.io',
             'senderName' => 'Mailer',
             'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'port' => intval(System::getEnv('_APP_SMTP_PORT', "1025")),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
         ]);
 
         $project = [
@@ -199,5 +203,18 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']['secret']);
 
         return $key['body']['secret'];
+    }
+    public function updateProjectinvalidateSessionsProperty(bool $value)
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . self::$project['$id'] . '/auth/session-invalidation', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]), [
+            'enabled' => $value,
+        ]);
+
+        return $response['headers']['status-code'];
     }
 }

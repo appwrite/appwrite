@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
 use Utopia\Audit\Audit;
@@ -45,7 +44,7 @@ class Audits extends Action
             ->inject('message')
             ->inject('getProjectDB')
             ->inject('project')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
 
         $this->lastTriggeredTime = time();
     }
@@ -85,7 +84,7 @@ class Audits extends Action
 
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', Auth::ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
 
         // Create event data
         $eventData = [
@@ -131,21 +130,23 @@ class Audits extends Action
             return new NoCommit();
         }
 
-        try {
-            foreach ($this->logs as $sequence => $projectLogs) {
-                $dbForProject = $getProjectDB($projectLogs['project']);
+        foreach ($this->logs as $sequence => $projectLogs) {
+            try {
+                Console::log('Processing Project "' . $sequence . '" batch with ' . count($projectLogs['logs']) . ' events');
 
-                Console::log('Processing batch with ' . count($projectLogs['logs']) . ' events');
+                $projectDocument = $projectLogs['project'];
+                $dbForProject = $getProjectDB($projectDocument);
                 $audit = new Audit($dbForProject);
-
                 $audit->logBatch($projectLogs['logs']);
-                Console::success('Audit logs processed successfully');
 
+                Console::success('Audit logs processed successfully');
+            } catch (Throwable $e) {
+                Console::error('Error processing audit logs for Project "' . $sequence . '": ' . $e->getMessage());
+            } finally {
                 unset($this->logs[$sequence]);
             }
-        } catch (Throwable $e) {
-            Console::error('Error processing audit logs: ' . $e->getMessage());
         }
+
         $this->lastTriggeredTime = time();
         return new Commit();
     }

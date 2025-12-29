@@ -46,7 +46,7 @@ class Delete extends Action
                 description: <<<EOT
                 Delete a site deployment by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -62,7 +62,7 @@ class Delete extends Action
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

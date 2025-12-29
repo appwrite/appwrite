@@ -2,8 +2,13 @@
 
 namespace Appwrite\Platform;
 
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Swoole\Coroutine as Co;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action as UtopiaAction;
 
@@ -15,6 +20,20 @@ class Action extends UtopiaAction
      * @var callable
      */
     protected mixed $logError;
+
+    protected array $filters = [
+        'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys', // Project
+        'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
+        'subQueryVariables', 'subQueryProjectVariables' // Sites / Functions
+    ];
+
+    /**
+     * Attributes to remove from relationship path documents per API
+     * Default is empty - APIs should set their specific attributes
+     *
+     * @var array
+     */
+    protected array $removableAttributes = [];
 
     /**
      * Foreach Document
@@ -85,6 +104,107 @@ class Action extends UtopiaAction
             }
 
             $latestDocument = $results[array_key_last($results)];
+        }
+    }
+
+    public function disableSubqueries(array $filters = []): void
+    {
+        if (empty($filters)) {
+            $filters = $this->filters;
+        }
+
+        foreach ($filters as $filter) {
+            Database::addFilter(
+                $filter,
+                function (mixed $value) {
+                    return;
+                },
+                function (mixed $value, Document $document, Database $database) {
+                    return [];
+                }
+            );
+        }
+    }
+
+    /**
+     * Dump Log Message
+     *
+     * Logs messages to console with timestamp, method context, and project details.
+     * Supports multiple log types: success, error, log, warning, and info (default).
+     *
+     * @param string $method The calling method name
+     * @param string $log The log message
+     * @param string $type The log type (success, error, log, warning, info)
+     * @param Document|null $project The project document for context
+     * @param string $collectionId The collection identifier
+     * @return void
+     */
+    public function dump(string $method, string $log, string $type = 'info', ?Document $project = null, string $collectionId = ''): void
+    {
+        if (empty($project)) {
+            $project = new Document([]);
+        }
+        switch ($type) {
+            case 'success':
+                Console::success("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'error':
+                Console::error("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'log':
+                Console::log("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            case 'warning':
+                Console::warning("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+                break;
+            default:
+                Console::info("[" . DateTime::now() . "] " . $method . ' ' . $type . ' ' . $project->getSequence() . ' ' . $project->getId() . ' ' . $collectionId . ' ' . $log);
+        }
+    }
+
+
+    /**
+     * Helper to apply (request) select queries to response model.
+     *
+     * This prevents default values of rules to be presnet for not-selected attributes
+     *
+     * @param Request $request
+     * @param Document $document
+     * @return void
+     */
+    public function applySelectQueries(Request $request, Response $response, string $model): void
+    {
+        $queries = $request->getParam('queries', []);
+
+        $queries = Query::parseQueries($queries);
+        $selectQueries = Query::groupByType($queries)['selections'] ?? [];
+
+        // No select queries means no filtering out
+        if (empty($selectQueries)) {
+            return;
+        }
+
+        $attributes = [];
+        foreach ($selectQueries as $query) {
+            foreach ($query->getValues() as $attribute) {
+                $attributes[] = $attribute;
+            }
+        }
+
+        // found a wildcard, return!
+        if (\in_array('*', $attributes)) {
+            return;
+        }
+
+        $responseModel = $response->getModel($model);
+        foreach ($responseModel->getRules() as $ruleName => $rule) {
+            if (\str_starts_with($ruleName, '$')) {
+                continue;
+            }
+
+            if (!\in_array($ruleName, $attributes)) {
+                $responseModel->removeRule($ruleName);
+            }
         }
     }
 }

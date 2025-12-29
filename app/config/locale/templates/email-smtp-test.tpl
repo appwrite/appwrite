@@ -9,4 +9,4 @@
 <p>If you have trouble with the sender's image, ensure it is set in the <a href="https://gravatar.com/">Gravatar database</a>.</p>
 
 <p style="margin-block-end: 0;">Best regards,</p>
-<p style="margin-block-start: 0;">Appwrtite team</p>
+<p style="margin-block-start: 0;">Appwrite team</p>

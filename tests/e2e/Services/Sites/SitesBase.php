@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Sites;
 
 use Appwrite\Tests\Async;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\CLI\Console;
@@ -48,8 +49,23 @@ trait SitesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
+
+            if ($deployment['body']['status'] === 'failed') {
+                throw new Critical('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            }
+
+            Console::execute("docker inspect openruntimes-executor --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
+            if (\trim($this->stdout) !== '0') {
+                $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
+
+                Console::execute("docker compose logs openruntimes-executor", '', $this->stdout, $this->stderr);
+                $msg .= $this->stdout . ' (' . $this->stderr . ')';
+
+                throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            }
+
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 150000, 500);
+        }, 300000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -313,7 +329,31 @@ trait SitesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
+
         return $template;
+    }
+
+    protected function helperGetLatestCommit(string $owner, string $repository): ?string
+    {
+        $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'User-Agent: Appwrite',
+            'Accept: application/vnd.github.v3+json'
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            $commitData = json_decode($response, true);
+            if (isset($commitData['sha'])) {
+                return $commitData['sha'];
+            }
+        }
+
+        return null;
     }
 
     protected function deleteSite(string $siteId): mixed

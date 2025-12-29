@@ -81,7 +81,7 @@ return [
             ],
             [
                 'name' => '_APP_DOMAIN',
-                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'.',
+                'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
@@ -147,6 +147,24 @@ return [
                 'description' => 'An IPV4 that can be used as DNS A record to point to instance of Appwrite server.',
                 'introduction' => '',
                 'default' => '127.0.0.1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_TARGET_CAA',
+                'description' => 'A CAA record domain that can be used to validate custom domains. Value should be domain\'s hostname.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DNS',
+                'description' => 'DNS server to use for domain validation. Default: 8.8.8.8',
+                'introduction' => '',
+                'default' => '8.8.8.8',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -347,6 +365,15 @@ return [
                 'default' => 'mariadb',
                 'required' => true,
                 'question' => 'Choose your database (mariadb|postgresql)',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_TRUSTED_HEADERS',
+                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
+                'introduction' => '1.8.0',
+                'default' => 'x-forwarded-for',
+                'required' => false,
+                'question' => '',
                 'filter' => ''
             ]
         ],
@@ -836,7 +863,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.config.json.',
                 'introduction' => '0.7.0',
                 'default' => '900',
                 'required' => false,
@@ -938,6 +965,16 @@ return [
                 'description' => 'The host used by Appwrite to communicate with the function executor.',
                 'introduction' => '0.13.0',
                 'default' => 'http://exc1/v1',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_BROWSER_HOST',
+                'description' => 'The host used by Appwrite to communicate with the browser service for screenshots.',
+                'introduction' => '1.8.0',
+                'default' => 'http://appwrite-browser:3000/v1',
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
@@ -1079,7 +1116,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SITES_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.json.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.config.json.',
                 'introduction' => '1.7.0',
                 'default' => '900',
                 'required' => false,

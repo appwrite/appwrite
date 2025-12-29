@@ -42,7 +42,7 @@ class Get extends Action
                 description: <<<EOT
                 Get a site deployment content by its unique ID. The endpoint response return with a 'Content-Disposition: attachment' header that tells the browser to start downloading the file to user downloads directory.
                 EOT,
-                auth: [AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -60,7 +60,7 @@ class Get extends Action
             ->inject('dbForProject')
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -102,16 +102,14 @@ class Get extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $response
-            ->setContentType('application/gzip')
-            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->addHeader('Expires', '0')
-            ->addHeader('Pragma', 'no-cache')
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
-
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
+
+        $response
+            ->setContentType('application/gzip')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
 
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
@@ -133,6 +131,7 @@ class Get extends Action
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
             $response->send($device->read($path, $start, ($end - $start + 1)));
+            return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {

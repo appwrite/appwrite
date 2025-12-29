@@ -53,7 +53,7 @@ class Functions extends Action
             ->inject('log')
             ->inject('executor')
             ->inject('isResourceBlocked')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -87,6 +87,7 @@ class Functions extends Action
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
         $function = new Document($payload['function'] ?? []);
         $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
@@ -101,7 +102,7 @@ class Functions extends Action
         }
 
         if (empty($jwt) && !$user->isEmpty()) {
-            $jwtExpiry = $function->getAttribute('timeout', 900);
+            $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
             $jwt = $jwtObj->encode([
                 'userId' => $user->getId(),
@@ -121,14 +122,16 @@ class Functions extends Action
         $log->addTag('type', $type);
 
         if (!empty($events)) {
-            $limit = 30;
-            $sum = 30;
+            $limit = 100;
+            $sum = 100;
             $offset = 0;
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
+                    Query::select(['$id', 'events']), // Skip variables subqueries
+                    Query::contains('events', $events),
                     Query::limit($limit),
                     Query::offset($offset),
-                    Query::orderAsc('name'),
+                    Query::orderAsc('$sequence'),
                 ]);
 
                 $sum = \count($functions);
@@ -145,6 +148,11 @@ class Functions extends Action
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
+
+                    /**
+                     * get variables subqueries cached
+                     */
+                    $function = $dbForProject->getDocument('functions', $function->getId());
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
@@ -166,6 +174,7 @@ class Functions extends Action
                             'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
                             'content-type' => 'application/json'
                         ],
+                        platform: $platform,
                         data: null,
                         user: $user,
                         jwt: null,
@@ -206,6 +215,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -231,6 +241,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -264,6 +275,8 @@ class Functions extends Action
         string $jwt = null,
         string $event = null,
     ): void {
+        $executionId = ID::unique();
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
@@ -276,7 +289,6 @@ class Functions extends Action
             }
         }
 
-        $executionId = ID::unique();
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
@@ -345,6 +357,7 @@ class Functions extends Action
         string $path,
         string $method,
         array $headers,
+        array $platform,
         string $data = null,
         ?Document $user = null,
         string $jwt = null,
@@ -390,13 +403,14 @@ class Functions extends Action
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
-        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
             'projectId' => $project->getId(),
             'scopes' => $function->getAttribute('scopes', [])
         ]);
 
+        $headers['x-appwrite-execution-id'] = $executionId ?? '';
         $headers['x-appwrite-key'] = API_KEY_DYNAMIC . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
@@ -409,6 +423,8 @@ class Functions extends Action
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
+            $executionId = ID::unique();
+            $headers['x-appwrite-execution-id'] = $executionId;
             $headersFiltered = [];
             foreach ($headers as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
@@ -416,7 +432,6 @@ class Functions extends Action
                 }
             }
 
-            $executionId = ID::unique();
             $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
@@ -484,8 +499,7 @@ class Functions extends Action
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [
@@ -519,7 +533,9 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
+            $source = $deployment->getAttribute('buildPath', '');
+            $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
+            $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
@@ -527,7 +543,7 @@ class Functions extends Action
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $deployment->getAttribute('buildPath', ''),
+                source: $source,
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 version: $version,
                 path: $path,
@@ -541,6 +557,8 @@ class Functions extends Action
 
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
+            $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
@@ -548,14 +566,36 @@ class Functions extends Action
                 }
             }
 
+            $maxLogLength = APP_FUNCTION_LOG_LENGTH_LIMIT;
+            $logs = $executionResponse['logs'] ?? '';
+
+            if (\is_string($logs) && \strlen($logs) > $maxLogLength) {
+                $warningMessage = "[WARNING] Logs truncated. The output exceeded {$maxLogLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxLogLength - $warningLength;
+                $logs = $warningMessage . \substr($logs, -$maxContentLength);
+            }
+
+            // Truncate errors if they exceed the limit
+            $maxErrorLength = APP_FUNCTION_ERROR_LENGTH_LIMIT;
+            $errors = $executionResponse['errors'] ?? '';
+
+            if (\is_string($errors) && \strlen($errors) > $maxErrorLength) {
+                $warningMessage = "[WARNING] Errors truncated. The output exceeded {$maxErrorLength} characters.\n";
+                $warningLength = \strlen($warningMessage);
+                $maxContentLength = $maxErrorLength - $warningLength;
+                $errors = $warningMessage . \substr($errors, -$maxContentLength);
+            }
+
             /** Update execution status */
             $execution
                 ->setAttribute('status', $status)
                 ->setAttribute('responseStatusCode', $executionResponse['statusCode'])
                 ->setAttribute('responseHeaders', $headersFiltered)
-                ->setAttribute('logs', $executionResponse['logs'])
-                ->setAttribute('errors', $executionResponse['errors'])
+                ->setAttribute('logs', $logs)
+                ->setAttribute('errors', $errors)
                 ->setAttribute('duration', $executionResponse['duration']);
+
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
             $execution

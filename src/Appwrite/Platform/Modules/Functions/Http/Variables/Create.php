@@ -49,7 +49,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -65,7 +65,7 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
@@ -9,13 +8,16 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\SDK\Method;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
@@ -30,9 +32,10 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
 
-$parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
+$parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
     foreach ($matches[1] ?? [] as $pos => $match) {
         $find = $matches[0][$pos];
@@ -52,12 +55,31 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         };
 
         if (array_key_exists($replace, $params)) {
-            $label = \str_replace($find, $params[$replace], $label);
+            $replacement = $params[$replace];
+            // Convert to string if it's not already a string
+            if (!is_string($replacement)) {
+                if (is_array($replacement)) {
+                    $replacement = json_encode($replacement);
+                } elseif (is_object($replacement) && method_exists($replacement, '__toString')) {
+                    $replacement = (string)$replacement;
+                } elseif (is_scalar($replacement)) {
+                    $replacement = (string)$replacement;
+                } else {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
+                }
+            }
+            $label = \str_replace($find, $replacement, $label);
         }
     }
     return $label;
 };
 
+/**
+ * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
+ *
+ * Accounts can be created in many ways beyond `createAccount`
+ * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
+ */
 $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
     // Only trigger events for user creation with the database listener.
     if ($document->getCollection() !== 'users') {
@@ -211,41 +233,97 @@ App::init()
     ->inject('mode')
     ->inject('team')
     ->inject('apiKey')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
         $route = $utopia->getRoute();
 
+        /**
+         * Handle user authentication and session validation.
+         *
+         * This function follows a series of steps to determine the appropriate user session
+         * based on cookies, headers, and JWT tokens.
+         *
+         * Process:
+         *
+         * Project & Role Validation:
+         * 1. Check if the project is empty. If so, throw an exception.
+         * 2. Get the roles configuration.
+         * 3. Determine the role for the user based on the user document.
+         * 4. Get the scopes for the role.
+         *
+         * API Key Authentication:
+         * 5. If there is an API key:
+         *    - Verify no user session exists simultaneously
+         *    - Check if key is expired
+         *    - Set role and scopes from API key
+         *    - Handle special app role case
+         *    - For standard keys, update last accessed time
+         *
+         * User Activity:
+         * 6. If the project is not the console and user is not admin:
+         *    - Update user's last activity timestamp
+         *
+         * Access Control:
+         * 7. Get the method from the route
+         * 8. Validate namespace permissions
+         * 9. Validate scope permissions
+         * 10. Check if user is blocked
+         *
+         * Security Checks:
+         * 11. Verify password status (check if reset required)
+         * 12. Validate MFA requirements:
+         *     - Check if MFA is enabled
+         *     - Verify email status
+         *     - Verify phone status
+         *     - Verify authenticator status
+         * 13. Handle Multi-Factor Authentication:
+         *     - Check remaining required factors
+         *     - Validate factor completion
+         *     - Throw exception if factors incomplete
+         */
+
+        // Step 1: Check if project is empty
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        // Step 2: Get roles configuration
         $roles = Config::getParam('roles', []);
+
+        // Step 3: Determine role for user
+        // TODO get scopes from the identity instead of the user roles config. The identity will containn the scopes the user authorized for the access token.
 
         $role = $user->isEmpty()
             ? Role::guests()->toString()
             : Role::users()->toString();
 
+        // Step 4: Get scopes for the role
         $scopes = $roles[$role]['scopes'];
 
-        // API Key authentication
+        // Step 5: API Key Authentication
         if (!empty($apiKey)) {
+            // Verify no user session exists simultaneously
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
+            // Check if key is expired
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
+            // Set role and scopes from API key
             $role = $apiKey->getRole();
             $scopes = $apiKey->getScopes();
 
-            // Disable authorization checks for API keys
-            Authorization::setDefaultStatus(false);
 
-            if ($apiKey->getRole() === Auth::USER_ROLE_APPS) {
-                $user = new Document([
+            // Handle special app role case
+            if ($apiKey->getRole() === User::ROLE_APPS) {
+                // Disable authorization checks for API keys
+                Authorization::setDefaultStatus(false);
+
+                $user = new User([
                     '$id' => '',
                     'status' => true,
-                    'type' => Auth::ACTIVITY_TYPE_APP,
+                    'type' => ACTIVITY_TYPE_APP,
                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
                     'password' => '',
                     'name' => $apiKey->getName(),
@@ -254,6 +332,7 @@ App::init()
                 $queueForAudits->setUser($user);
             }
 
+            // For standard keys, update last accessed time
             if ($apiKey->getType() === API_KEY_STANDARD) {
                 $dbKey = $project->find(
                     key: 'secret',
@@ -319,11 +398,11 @@ App::init()
         $scopes = \array_unique($scopes);
 
         Authorization::setRole($role);
-        foreach (Auth::getRoles($user) as $authRole) {
+        foreach ($user->getRoles() as $authRole) {
             Authorization::setRole($authRole);
         }
 
-        // Update project last activity
+        // Step 6: Update project and user last activity
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
@@ -332,7 +411,6 @@ App::init()
             }
         }
 
-        // Update user last activity
         if (!empty($user->getId())) {
             $accessedAt = $user->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
@@ -346,6 +424,7 @@ App::init()
             }
         }
 
+        // Steps 7-9: Access Control - Method, Namespace and Scope Validation
         /**
          * @var ?Method $method
          */
@@ -363,27 +442,29 @@ App::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && !$project->getAttribute('services', [])[$namespace]
-                && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+                && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
         }
 
-        // Do now allow access if scope is not allowed
-        $scope = $route->getLabel('scope', 'none');
-        if (!\in_array($scope, $scopes)) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
+        // Step 9: Validate scope permissions
+        $allowed = (array)$route->getLabel('scope', 'none');
+        if (empty(\array_intersect($allowed, $scopes))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
 
-        // Do not allow access to blocked accounts
+        // Step 10: Check if user is blocked
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
         }
 
+        // Step 11: Verify password status
         if ($user->getAttribute('reset')) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
+        // Step 12: Validate MFA requirements
         $mfaEnabled = $user->getAttribute('mfa', false);
         $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
         $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
@@ -391,6 +472,7 @@ App::init()
         $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
         $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
+        // Step 13: Handle Multi-Factor Authentication
         if (!in_array('mfa', $route->getGroups())) {
             if ($session && \count($session->getAttribute('factors', [])) < $minimumFactors) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
@@ -406,6 +488,8 @@ App::init()
     ->inject('project')
     ->inject('user')
     ->inject('publisher')
+    ->inject('publisherFunctions')
+    ->inject('publisherWebhooks')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -413,6 +497,9 @@ App::init()
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
     ->inject('queueForStatsUsage')
+    ->inject('queueForFunctions')
+    ->inject('queueForMails')
+    ->inject('queueForMigrations')
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('resourceToken')
@@ -420,14 +507,16 @@ App::init()
     ->inject('apiKey')
     ->inject('plan')
     ->inject('devKey')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('telemetry')
+    ->inject('platform')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Migration $queueForMigrations, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['rest']
-            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -458,8 +547,8 @@ App::init()
         $closestLimit = null;
 
         $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
+        $isPrivilegedUser = User::isPrivileged($roles);
+        $isAppUser = User::isApp($roles);
 
         foreach ($timeLimitArray as $timeLimit) {
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
@@ -494,6 +583,10 @@ App::init()
             }
         }
 
+        /**
+         *  TODO: (@loks0n)
+         *  Avoid mutating the message across file boundaries - it's difficult to reason about at scale.
+         */
         /*
         * Background Jobs
         */
@@ -514,7 +607,7 @@ App::init()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         }
 
@@ -524,16 +617,23 @@ App::init()
             }
         }
 
+        /* Auto-set projects */
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
-        $queueForBuilds->setProject($project);
         $queueForMessaging->setProject($project);
+        $queueForFunctions->setProject($project);
+        $queueForBuilds->setProject($project);
+
+        /* Auto-set platforms */
+        $queueForFunctions->setPlatform($platform);
+        $queueForBuilds->setPlatform($platform);
+        $queueForMails->setPlatform($platform);
 
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
-        $queueForFunctions = new Func($publisher);
-        $queueForWebhooks = new Webhook($publisher);
+        $queueForFunctions = new Func($publisherFunctions);
+        $queueForWebhooks = new Webhook($publisherWebhooks);
         $queueForRealtime = new Realtime();
 
         $dbForProject
@@ -553,20 +653,25 @@ App::init()
             ));
 
         $useCache = $route->getLabel('cache', false);
+        $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !Auth::isPrivilegedUser(Authorization::getRoles());
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged(Authorization::getRoles());
 
             $key = $request->cacheIdentifier();
             $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
-            $timestamp = 60 * 60 * 24 * 30;
+            $timestamp = 60 * 60 * 24 * 180; // Temporarily increase the TTL to 180 day to ensure files in the cache are still fetched.
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
+                $usageMetric = $route->getLabel('usage.metric', null);
+                if ($usageMetric === METRIC_AVATARS_SCREENSHOTS_GENERATED) {
+                    $queueForStatsUsage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
+                }
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
@@ -575,11 +680,14 @@ App::init()
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+                    $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    }
+
+                    if (!$bucket->getAttribute('transformations', true) && !$isAppUser && !$isPrivilegedUser) {
+                        throw new Exception(Exception::STORAGE_BUCKET_TRANSFORMATIONS_DISABLED);
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
@@ -606,7 +714,7 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                     //Do not update transformedAt if it's a console user
-                    if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+                    if (!User::isPrivileged(Authorization::getRoles())) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
@@ -619,10 +727,12 @@ App::init()
                     ->addHeader('Cache-Control', sprintf('private, max-age=%d', $timestamp))
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+                $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (!$isImageTransformation || !$isDisabled) {
                     $response->send($data);
                 }
             } else {
+                $storageCacheOperationsCounter->add(1, ['result' => 'miss']);
                 $response
                     ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                     ->addHeader('Pragma', 'no-cache')
@@ -704,7 +814,7 @@ App::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -752,7 +862,7 @@ App::shutdown()
         if (!$user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', Auth::ACTIVITY_TYPE_USER);
+            $userClone->setAttribute('type', ACTIVITY_TYPE_USER);
             $queueForAudits->setUser($userClone);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**
@@ -763,10 +873,10 @@ App::shutdown()
              *
              * Therefore, we consider this an anonymous request and create a relevant user.
              */
-            $user = new Document([
+            $user = new User([
                 '$id' => '',
                 'status' => true,
-                'type' => Auth::ACTIVITY_TYPE_GUEST,
+                'type' => ACTIVITY_TYPE_GUEST,
                 'email' => 'guest.' . $project->getId() . '@service.' . $request->getHostname(),
                 'password' => '',
                 'name' => 'Guest',
@@ -824,6 +934,10 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
+                $cache = new Cache(
+                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                );
+
                 $key = $request->cacheIdentifier();
                 $signature = md5($data['payload']);
                 $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -841,19 +955,18 @@ App::shutdown()
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                    // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
+                    $cache->save($key, $data['payload']);
                 }
 
                 if ($signature !== $cacheLog->getAttribute('signature')) {
-                    $cache = new Cache(
-                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                    );
                     $cache->save($key, $data['payload']);
                 }
             }
         }
 
         if ($project->getId() !== 'console') {
-            if (!Auth::isPrivilegedUser(Authorization::getRoles())) {
+            if (!User::isPrivileged(Authorization::getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {

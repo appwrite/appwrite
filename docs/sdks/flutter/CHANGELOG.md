@@ -1,9 +1,87 @@
 # Change Log
 
-## 16.1.1
+## 20.3.2
+
+* Fix OAuth2 browser infinite redirect issue
+
+## 20.3.1
+
+* Fix passing of `null` values and stripping only non-nullable optional parameters from the request body
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 20.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+
+## 20.2.2
+
+* Widen `device_info_plus` and `package_info_plus` dependencies to allow for newer versions for Android 15+ support
+* Fix `CHUNK_SIZE` constant to `chunkSize`
+* Fix missing `@override` annotation to `toMap` method in all model classes
+
+## 20.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 20.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 19.1.0
+
+* Add `orderRandom` query support
+
+## 19.0.0
+
+* Rename `CreditCard` enum value `unionChinaPay` to `unionPay`
+* Add time between query support
+* Add spatial query support
+
+## 18.0.0
+
+* Support for Appwrite 1.8
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
+* Deprecated `updateMagicURLSession`
+* Deprecated `updatePhoneSession`
+* Deprecated Databases service
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
+
+## 17.1.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `gif` support to `ImageFormat` enum
+* Add `sequence` support to `Document` model
+
+## 17.0.2
+
+* Add `gif` support to `ImageFormat` enum
+* Fix `convertTo()` method in `Document` and `Preferences` models to correctly accept `Map<String, dynamic>`
+
+## 17.0.1
+
+* Fix `devKeys` support by conditionally including credentials during requests
+
+## 17.0.0
 
 * Update `flutter_web_auth_2` dependency to version 4.1.0
 * Update `auth.html` example in README.md to align with `flutter_web_auth_2` documentation
+* Breaking changes:
+  * Minimum iOS version supported is now 17.4 due to the updated requirements of `flutter_web_auth_2` version 4.1.0
 
 ## 16.1.0
 

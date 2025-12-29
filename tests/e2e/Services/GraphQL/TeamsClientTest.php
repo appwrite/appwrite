@@ -17,7 +17,7 @@ class TeamsClientTest extends Scope
     public function testCreateTeam(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_TEAM);
+        $query = $this->getQuery(self::CREATE_TEAM);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -46,7 +46,7 @@ class TeamsClientTest extends Scope
     public function testCreateTeamMembership($team): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::CREATE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -75,7 +75,7 @@ class TeamsClientTest extends Scope
     public function testGetTeams()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAMS);
+        $query = $this->getQuery(self::GET_TEAMS);
         $graphQLPayload = [
             'query' => $query,
         ];
@@ -95,7 +95,7 @@ class TeamsClientTest extends Scope
     public function testGetTeam($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM);
+        $query = $this->getQuery(self::GET_TEAM);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -120,7 +120,7 @@ class TeamsClientTest extends Scope
     public function testGetTeamMemberships($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM_MEMBERSHIPS);
+        $query = $this->getQuery(self::GET_TEAM_MEMBERSHIPS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -145,7 +145,7 @@ class TeamsClientTest extends Scope
     public function testGetTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::GET_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -170,7 +170,7 @@ class TeamsClientTest extends Scope
     public function testDeleteTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_TEAM_MEMBERSHIP);
+        $query = $this->getQuery(self::DELETE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

@@ -227,7 +227,7 @@ trait ProxyBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'functionId' => ID::unique(),
-            'runtime' => 'node-18.0',
+            'runtime' => 'node-22',
             'name' => 'Proxy Function',
             'entrypoint' => 'index.js',
             'commands' => '',
@@ -244,7 +244,7 @@ trait ProxyBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'code' => $this->packageFunction('node'),
+            'code' => $this->packageFunction('basic'),
             'activate' => 'true'
         ]);
 

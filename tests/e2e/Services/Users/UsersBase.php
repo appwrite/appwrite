@@ -445,6 +445,19 @@ trait UsersBase
 
         $user1 = $response['body']['users'][1];
 
+        // This test ensures that by default, endpoints dont support select queries
+        // If we add select query to this endpoint, you will need to remove this test
+        // Please make sure to add it to another place, unless all endpoints support select queries
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select(['name'])->toString()
+            ]
+        ]);
+        $this->assertEquals($response['headers']['status-code'], 400);
+
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -786,6 +799,23 @@ trait UsersBase
         $this->assertGreaterThan(0, $users['body']['total']);
 
         /**
+         * Test for SUCCESS with total=false
+         */
+        $usersWithIncludeTotalFalse = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false
+        ]);
+
+        $this->assertEquals(200, $usersWithIncludeTotalFalse['headers']['status-code']);
+        $this->assertIsArray($usersWithIncludeTotalFalse['body']);
+        $this->assertIsArray($usersWithIncludeTotalFalse['body']['users']);
+        $this->assertIsInt($usersWithIncludeTotalFalse['body']['total']);
+        $this->assertEquals(0, $usersWithIncludeTotalFalse['body']['total']);
+        $this->assertGreaterThan(0, count($usersWithIncludeTotalFalse['body']['users']));
+
+        /**
          * Test for FAILURE
          */
         $user = $this->client->call(Client::METHOD_GET, '/users/non_existent', array_merge([
@@ -1117,7 +1147,7 @@ trait UsersBase
         ]);
 
         $this->assertEquals(401, $session['headers']['status-code']);
-
+        $this->updateProjectinvalidateSessionsProperty(true);
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1129,6 +1159,15 @@ trait UsersBase
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertNotEmpty($user['body']['password']);
 
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($sessions['headers']['status-code'], 200);
+        $this->assertIsArray($sessions['body']);
+        $this->assertEmpty($sessions['body']['sessions']);
+
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1138,7 +1177,7 @@ trait UsersBase
         ]);
 
         $this->assertEquals($session['headers']['status-code'], 201);
-
+        $this->updateProjectinvalidateSessionsProperty(false);
         return $data;
     }
 

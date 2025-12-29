@@ -12,5 +12,5 @@ Databases databases = new Databases(client);
 DocumentList result = await databases.UpsertDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    documents: new List<object>() // optional
+    documents: new List<object>()
 );

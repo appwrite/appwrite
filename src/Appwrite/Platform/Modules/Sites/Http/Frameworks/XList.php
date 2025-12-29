@@ -37,7 +37,7 @@ class XList extends Base
                 description: <<<EOT
                 Get a list of all frameworks that are currently available on the server instance.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -46,7 +46,7 @@ class XList extends Base
                 ]
             ))
             ->inject('response')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(Response $response)

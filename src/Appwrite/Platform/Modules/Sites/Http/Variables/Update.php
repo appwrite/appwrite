@@ -14,6 +14,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -43,7 +44,7 @@ class Update extends Base
                 description: <<<EOT
                 Update variable by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -54,11 +55,11 @@ class Update extends Base
             ->param('siteId', '', new UID(), 'Site unique ID.', false)
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-            ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
-            ->param('secret', null, new Boolean(), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
+            ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
+            ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

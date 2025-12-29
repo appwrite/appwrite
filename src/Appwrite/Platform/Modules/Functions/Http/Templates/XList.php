@@ -12,6 +12,7 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
@@ -52,11 +53,12 @@ class XList extends Base
             ->param('useCases', [], new ArrayList(new WhiteList(['dev-tools','starter','databases','ai','messaging','utilities']), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of use cases allowed for filtering function templates. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' use cases are allowed.', true)
             ->param('limit', 25, new Range(1, 5000), 'Limit the number of templates returned in the response. Default limit is 25, and maximum limit is 5000.', true)
             ->param('offset', 0, new Range(0, 5000), 'Offset the list of returned templates. Maximum offset is 5000.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
-    public function action(array $runtimes, array $usecases, int $limit, int $offset, Response $response)
+    public function action(array $runtimes, array $usecases, int $limit, int $offset, bool $includeTotal, Response $response)
     {
         $templates = Config::getParam('templates-function', []);
 
@@ -76,7 +78,7 @@ class XList extends Base
             return $b['score'] <=> $a['score'];
         });
 
-        $total = \count($templates);
+        $total = $includeTotal ? \count($templates) : 0;
         $templates = \array_slice($templates, $offset, $limit);
         $response->dynamic(new Document([
             'templates' => $templates,

@@ -20,7 +20,7 @@ App::get('/v1/locale')
         group: null,
         name: 'get',
         description: '/docs/references/locale/get-locale.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -37,7 +37,6 @@ App::get('/v1/locale')
         $currencies = Config::getParam('locale-currencies');
         $output = [];
         $ip = $request->getIP();
-        $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $output['ip'] = $ip;
 
@@ -68,10 +67,6 @@ App::get('/v1/locale')
             $output['currency'] = $currency;
         }
 
-        $response
-            ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-        ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 
@@ -84,7 +79,7 @@ App::get('/v1/locale/codes')
         group: null,
         name: 'listCodes',
         description: '/docs/references/locale/list-locale-codes.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -110,7 +105,7 @@ App::get('/v1/locale/countries')
         group: null,
         name: 'listCountries',
         description: '/docs/references/locale/list-countries.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -147,7 +142,7 @@ App::get('/v1/locale/countries/eu')
         group: null,
         name: 'listCountriesEU',
         description: '/docs/references/locale/list-countries-eu.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -186,7 +181,7 @@ App::get('/v1/locale/countries/phones')
         group: null,
         name: 'listCountriesPhones',
         description: '/docs/references/locale/list-countries-phones.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -224,7 +219,7 @@ App::get('/v1/locale/continents')
         group: null,
         name: 'listContinents',
         description: '/docs/references/locale/list-continents.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -260,7 +255,7 @@ App::get('/v1/locale/currencies')
         group: null,
         name: 'listCurrencies',
         description: '/docs/references/locale/list-currencies.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -287,7 +282,7 @@ App::get('/v1/locale/languages')
         group: null,
         name: 'listLanguages',
         description: '/docs/references/locale/list-languages.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,

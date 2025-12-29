@@ -41,7 +41,7 @@ class Delete extends Base
                 description: <<<EOT
                 Delete a variable by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
@@ -54,7 +54,7 @@ class Delete extends Base
             ->param('variableId', '', new UID(), 'Variable unique ID.', false)
             ->inject('response')
             ->inject('dbForProject')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $siteId, string $variableId, Response $response, Database $dbForProject)

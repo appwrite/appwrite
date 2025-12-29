@@ -28,7 +28,7 @@ class Delete extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
             ->desc('Delete dev key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.write')
+            ->label('scope', 'devKeys.write')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',
@@ -49,7 +49,7 @@ class Delete extends Action
             ->param('keyId', '', new UID(), 'Key unique ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $projectId, string $keyId, Response $response, Database $dbForPlatform)

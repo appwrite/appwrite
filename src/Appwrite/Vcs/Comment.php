@@ -9,11 +9,43 @@ use Utopia\System\System;
 
 class Comment
 {
+    public function __construct(
+        private array $platform
+    ) {
+    }
+
     // TODO: Add more tips
     protected array $tips = [
-        'Appwrite has a Discord community with over 16 000 members.',
-        'You can use Avatars API to generate QR code for any text or URLs.',
-        'Cursor pagination performs better than offset pagination when loading further pages.',
+        'Appwrite has crossed the 50K GitHub stars milestone with hundreds of active contributors',
+        'Our Discord community has grown to 24K developers, and counting',
+        'Sites auto-generate unique domains with the pattern https://randomstring.appwrite.network',
+        'Every Git commit and branch gets its own deployment URL automatically',
+        'Custom domains work with both CNAME for subdomains and NS records for apex domains',
+        'HTTPS and SSL certificates are handled automatically for all your Sites',
+        'Functions can run for up to 15 minutes before timing out',
+        'Schedule functions to run as often as every minute with cron expressions',
+        'Environment variables can be scoped per function or shared across your project',
+        'Function scopes give you fine-grained control over API permissions',
+        'Sites support three domain rule types: Active deployment, Git branch, and Redirect',
+        'Preview deployments create instant URLs for every branch and commit',
+        'Trigger functions via HTTP, SDKs, events, webhooks, or scheduled cron jobs',
+        'Each function runs in its own isolated container with custom environment variables',
+        'Build commands execute in runtime containers during deployment',
+        'Dynamic API keys are generated automatically for each function execution',
+        'JWT tokens let functions act on behalf of users while preserving their permissions',
+        'Storage files get ClamAV malware scanning and encryption by default',
+        'Roll back Sites deployments instantly by switching between versions',
+        'Git integration provides automatic deployments with optional PR comments',
+        'Silent mode disables those chatty PR comments if you prefer peace and quiet',
+        'Environment variable changes require redeployment to take effect',
+        'SSR frameworks are fully supported with configurable build runtimes',
+        'Global CDN and DDoS protection come free with every Sites deployment',
+        'Deploy functions via zip upload or connect directly to your Git repo',
+        'Realtime gives you live updates for users, storage, functions, and databases',
+        'GraphQL API works alongside REST and WebSocket protocols',
+        'Messaging handles push notifications, emails, and SMS through one unified API',
+        'Teams feature lets you group users with membership management and role permissions',
+        'MCP server integration brings LLM superpowers to Claude Desktop and Cursor IDE',
     ];
 
     protected string $statePrefix = '[appwrite]: #';
@@ -86,8 +118,8 @@ class Comment
 
         $i = 0;
         foreach ($projects as $projectId => $project) {
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $hostname = $this->platform['consoleHostname'] ?? '';
 
             $text .= "## {$project['name']}\n\n";
             $text .= "Project ID: `{$projectId}`\n\n";
@@ -193,15 +225,15 @@ class Comment
         }
 
         $tip = $this->tips[array_rand($this->tips)];
-        $text .= "\n<br>\n\n> [!NOTE]\n> $tip\n\n";
+        $text .= "\n<br>\n\n> [!TIP]\n> $tip\n\n";
 
         return $text;
     }
 
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN'));
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $hostname = $this->platform['consoleHostname'] ?? '';
 
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;

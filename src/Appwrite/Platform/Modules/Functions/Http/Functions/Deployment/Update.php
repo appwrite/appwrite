@@ -47,7 +47,7 @@ class Update extends Base
                 description: <<<EOT
                 Update the function active deployment. Use this endpoint to switch the code deployment that should be used when visitor opens your function.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -62,7 +62,7 @@ class Update extends Base
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(

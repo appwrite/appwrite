@@ -32,7 +32,7 @@ class XList extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys')
             ->desc('List dev keys')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.read')
+            ->label('scope', 'devKeys.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',
@@ -53,7 +53,7 @@ class XList extends Action
             ->param('queries', [], new DevKeys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', DevKeys::ALLOWED_ATTRIBUTES), true)
             ->inject('response')
             ->inject('dbForPlatform')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(string $projectId, ?array $queries, Response $response, Database $dbForPlatform)

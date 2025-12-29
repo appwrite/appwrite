@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Migration extends Model
 {
@@ -85,6 +86,12 @@ class Migration extends Model
                 'default' => [],
                 'example' => [],
             ])
+            ->addRule('options', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Migration options used during the migration process.',
+                'default' => [],
+                'example' => '{"bucketId": "exports", "notify": false}',
+            ])
         ;
     }
 
@@ -106,5 +113,28 @@ class Migration extends Model
     public function getType(): string
     {
         return Response::MODEL_MIGRATION;
+    }
+
+    public function filter(Document $document): Document
+    {
+        $errors = $document->getAttribute('errors', []);
+        if (empty($errors)) {
+            return $document;
+        }
+
+        foreach ($errors as $index => $error) {
+            $decoded = \json_decode($error, true);
+
+            if (\is_array($decoded)) {
+                if (isset($decoded['trace'])) {
+                    unset($decoded['trace']);
+                }
+                $errors[$index] = \json_encode($decoded);
+            }
+        }
+
+        $document->setAttribute('errors', $errors);
+
+        return $document;
     }
 }

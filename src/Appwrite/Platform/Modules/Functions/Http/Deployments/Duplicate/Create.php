@@ -46,7 +46,7 @@ class Create extends Action
                 description: <<<EOT
                 Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -62,7 +62,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForFunctions')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
@@ -97,8 +97,8 @@ class Create extends Action
         $deviceForFunctions->transfer($path, $destination, $deviceForFunctions);
 
         $deployment->removeAttribute('$sequence');
+
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$sequence' => '',
             '$id' => $deploymentId,
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),

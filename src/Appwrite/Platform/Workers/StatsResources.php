@@ -49,7 +49,7 @@ class StatsResources extends Action
             ->inject('getLogsDB')
             ->inject('dbForPlatform')
             ->inject('logError')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     /**
@@ -192,13 +192,13 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForDatabase($dbForProject, $region);
+                $dbForProject->skipFilters(fn () => $this->countForDatabase($dbForProject, $region), ['subQueryAttributes', 'subQueryIndexes']);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
             }
 
             try {
-                $this->countForSitesAndFunctions($dbForProject, $region);
+                $dbForProject->skipFilters(fn () => $this->countForSitesAndFunctions($dbForProject, $region), ['subQueryVariables', 'subQueryProjectVariables']);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }
@@ -335,7 +335,11 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
-        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region) {
+
+        // Count runtimes
+        $runtimes = [];
+
+        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region, &$runtimes) {
             $functionDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$function->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
@@ -364,7 +368,19 @@ class StatsResources extends Action
             });
 
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
+
+            // Runtimes count
+            $runtime = $function->getAttribute('runtime');
+            if (!empty($runtime)) {
+                $runtimes[$runtime] = ($runtimes[$runtime] ?? 0) + 1;
+            }
         });
+
+        // Write runtimes counts
+        foreach ($runtimes as $runtime => $count) {
+            $this->createStatsDocuments($region, str_replace('{runtime}', $runtime, METRIC_FUNCTIONS_RUNTIME), $count);
+        }
+
     }
 
     protected function countForSites(Database $dbForProject, string $region)
@@ -385,7 +401,10 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
         $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
 
-        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region) {
+        // Count frameworks
+        $frameworks = [];
+
+        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region, &$frameworks) {
             $siteDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
                 Query::equal('resourceInternalId', [$site->getSequence()]),
                 Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
@@ -410,7 +429,18 @@ class StatsResources extends Action
             ]);
 
             $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $siteBuildsStorage);
+
+            // Frameworks count
+            $framework = $site->getAttribute('framework');
+            if (!empty($framework)) {
+                $frameworks[$framework] = ($frameworks[$framework] ?? 0) + 1;
+            }
         });
+
+        // Write frameworks counts
+        foreach ($frameworks as $framework => $count) {
+            $this->createStatsDocuments($region, str_replace('{framework}', $framework, METRIC_SITES_FRAMEWORK), $count);
+        }
     }
 
     protected function createStatsDocuments(string $region, string $metric, int $value)
@@ -432,11 +462,45 @@ class StatsResources extends Action
 
     protected function writeDocuments(Database $dbForLogs, Document $project): void
     {
-        $dbForLogs->createOrUpdateDocuments(
-            'stats',
-            $this->documents
-        );
-        $this->documents = [];
-        Console::success('Stats  written to logs db for project: ' . $project->getId() . '(' . $project->getSequence() . ')');
+        $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
+
+        /**
+         * sort by unique index key reduce locks/deadlocks
+         */
+        usort($this->documents, function ($a, $b) {
+            // Metric DESC
+            $cmp = strcmp($b['metric'], $a['metric']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            // Period ASC
+            $cmp = strcmp($a['period'], $b['period']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            // Time ASC, NULLs first
+            if ($a['time'] === null) {
+                return ($b['time'] === null) ? 0 : -1;
+            }
+            if ($b['time'] === null) {
+                return 1;
+            }
+
+            return strcmp($a['time'], $b['time']);
+        });
+
+        try {
+            $dbForLogs->upsertDocuments(
+                'stats',
+                $this->documents,
+            );
+
+            Console::success($message . ' | Documents: ' . count($this->documents));
+        } catch (\Throwable $e) {
+            Console::error('Error: ' . $message . ' | Exception: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }

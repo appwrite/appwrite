@@ -51,7 +51,7 @@ class Create extends Base
 
                 This endpoint lets you create deployment from a branch, commit, or a tag.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -72,7 +72,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('gitHub')
-            ->callback([$this, 'action']);
+            ->callback($this->action(...));
     }
 
     public function action(
