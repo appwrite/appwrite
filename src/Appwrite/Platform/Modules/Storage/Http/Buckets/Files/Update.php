@@ -7,9 +7,12 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -73,42 +76,80 @@ class Update extends Action
     ) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty()) {
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-
-        $bucketUpdateValidator = new Authorization(Database::PERMISSION_UPDATE);
-        $bucketUpdateValid = $bucketUpdateValidator->isValid($bucket->getUpdate());
-
-        if (!$bucketUpdateValid && !$fileSecurity) {
+        $validator = new Authorization(Database::PERMISSION_UPDATE);
+        $valid = $validator->isValid($bucket->getUpdate());
+        if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        // Fetch file depending on fileSecurity & bucket permission
-        if ($fileSecurity && !$bucketUpdateValid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
-        } else {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-        }
+        // Read permission should not be required for update
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        // Aggregate provided permissions with existing ones if null
-        $permissions = Permission::aggregate($permissions ?? $file->getPermissions());
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
 
-        $name ??= $file->getAttribute('name');
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!User::isApp($roles) && !User::isPrivileged($roles) && !\is_null($permissions)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
+                        continue;
+                    }
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    }
+                }
+            }
+        }
 
-        $file = $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file
-            ->setAttribute('name', $name)
-            ->setAttribute('$permissions', $permissions));
+        if (\is_null($permissions)) {
+            $permissions = $file->getPermissions() ?? [];
+        }
+
+        $file->setAttribute('$permissions', $permissions);
+
+        if (!is_null($name)) {
+            $file->setAttribute('name', $name);
+        }
+
+        try {
+            if ($fileSecurity && !$valid) {
+                $file = $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file);
+            } else {
+                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+            }
+        } catch (NotFoundException) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
-            ->setParam('fileId', $file->getId());
+            ->setParam('fileId', $file->getId())
+            ->setContext('bucket', $bucket)
+        ;
 
         $response->dynamic($file, Response::MODEL_FILE);
     }
