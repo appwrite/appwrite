@@ -92,6 +92,7 @@ class Maintenance extends Action
                 ->trigger();
 
             $this->notifyDeleteConnections($queueForDeletes);
+            $this->renewCertificates($dbForPlatform, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
             $this->notifyDeleteCSVExports($queueForDeletes);
@@ -111,6 +112,50 @@ class Maintenance extends Action
         $queueForDeletes
             ->setType(DELETE_TYPE_CSV_EXPORTS)
             ->trigger();
+    }
+
+    private function renewCertificates(Database $dbForPlatform, Certificate $queueForCertificate): void
+    {
+        $time = DatabaseDateTime::now();
+
+        $certificates = $dbForPlatform->find('certificates', [
+            Query::lessThan('attempts', 5), // Maximum 5 attempts
+            Query::isNotNull('renewDate'),
+            Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
+            Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+        ]);
+
+        if (\count($certificates) === 0) {
+            Console::info("[{$time}] No certificates for renewal.");
+            return;
+        }
+
+        Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
+
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $appRegion = System::getEnv('_APP_REGION', 'default');
+
+        foreach ($certificates as $certificate) {
+            $domain = $certificate->getAttribute('domain');
+            $rule = $isMd5 ?
+                $dbForPlatform->getDocument('rules', md5($domain)) :
+                    $dbForPlatform->findOne('rules', [
+                        Query::equal('domain', [$domain]),
+                        Query::limit(1)
+                    ]);
+
+            if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
+                continue;
+            }
+
+            $queueForCertificate
+                ->setDomain(new Document([
+                    'domain' => $rule->getAttribute('domain'),
+                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                ]))
+                ->setAction(Certificate::ACTION_GENERATION)
+                ->trigger();
+        }
     }
 
     private function notifyDeleteCache($interval, Delete $queueForDeletes): void
