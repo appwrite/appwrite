@@ -36,6 +36,11 @@ class SDKs extends Action
         return 'sdks';
     }
 
+    public static function getPlatforms(): array
+    {
+        return Specs::getPlatforms();
+    }
+
     public function __construct()
     {
         $this
@@ -55,7 +60,7 @@ class SDKs extends Action
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
         if (!$sdks) {
-            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', Specs::getPlatforms()) . '" or "*" for all):');
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         } else {
             $sdks = explode(',', $sdks);
@@ -374,7 +379,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $sdk
                     ->setName($language['name'])
-                    ->setNamespace('io appwrite')
+                    ->setNamespace($language['namespace'] ?? 'appwrite')
                     ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way. Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
                     ->setShortDescription('Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API')
                     ->setLicense($license)
