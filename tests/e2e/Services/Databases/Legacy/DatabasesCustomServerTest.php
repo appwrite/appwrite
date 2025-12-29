@@ -6957,6 +6957,184 @@ class DatabasesCustomServerTest extends Scope
         ]));
     }
 
+    public function testCreateCollectionWithSpatialAttributesAndIndexes(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Spatial Multi Create',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Test: Create collection with spatial attributes and indexes in one call
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::custom('locations'),
+            'name' => 'Locations',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+            'attributes' => [
+                [
+                    'key' => 'name',
+                    'type' => Database::VAR_STRING,
+                    'size' => 256,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'point',
+                    'type' => Database::VAR_POINT,
+                    'required' => true,
+                ],
+                [
+                    'key' => 'route',
+                    'type' => Database::VAR_LINESTRING,
+                    'required' => false,
+                ],
+                [
+                    'key' => 'area',
+                    'type' => Database::VAR_POLYGON,
+                    'required' => false,
+                ],
+            ],
+            'indexes' => [
+                [
+                    'key' => 'idx_name',
+                    'type' => Database::INDEX_KEY,
+                    'attributes' => ['name'],
+                ],
+                [
+                    'key' => 'idx_point',
+                    'type' => Database::INDEX_SPATIAL,
+                    'attributes' => ['point'],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('Locations', $collection['body']['name']);
+        $this->assertEquals('locations', $collection['body']['$id']);
+
+        // Wait for attributes to be available
+        sleep(2);
+
+        // Verify attributes were created and are available
+        $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/locations/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attributes['headers']['status-code']);
+        $this->assertEquals(4, $attributes['body']['total']);
+
+        $attrByKey = [];
+        foreach ($attributes['body']['attributes'] as $attr) {
+            $attrByKey[$attr['key']] = $attr;
+        }
+
+        $this->assertEquals('available', $attrByKey['name']['status']);
+        $this->assertEquals(Database::VAR_STRING, $attrByKey['name']['type']);
+        $this->assertEquals(256, $attrByKey['name']['size']);
+        $this->assertTrue($attrByKey['name']['required']);
+
+        $this->assertEquals('available', $attrByKey['point']['status']);
+        $this->assertEquals(Database::VAR_POINT, $attrByKey['point']['type']);
+        $this->assertTrue($attrByKey['point']['required']);
+
+        $this->assertEquals('available', $attrByKey['route']['status']);
+        $this->assertEquals(Database::VAR_LINESTRING, $attrByKey['route']['type']);
+        $this->assertFalse($attrByKey['route']['required']);
+
+        $this->assertEquals('available', $attrByKey['area']['status']);
+        $this->assertEquals(Database::VAR_POLYGON, $attrByKey['area']['type']);
+        $this->assertFalse($attrByKey['area']['required']);
+
+        // Wait for indexes to be available
+        sleep(2);
+
+        // Verify indexes were created and are available
+        $indexes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/locations/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $indexes['headers']['status-code']);
+        $this->assertEquals(2, $indexes['body']['total']);
+
+        $idxByKey = [];
+        foreach ($indexes['body']['indexes'] as $idx) {
+            $idxByKey[$idx['key']] = $idx;
+        }
+
+        $this->assertEquals('available', $idxByKey['idx_name']['status']);
+        $this->assertEquals(Database::INDEX_KEY, $idxByKey['idx_name']['type']);
+        $this->assertEquals(['name'], $idxByKey['idx_name']['attributes']);
+
+        $this->assertEquals('available', $idxByKey['idx_point']['status']);
+        $this->assertEquals(Database::INDEX_SPATIAL, $idxByKey['idx_point']['type']);
+        $this->assertEquals(['point'], $idxByKey['idx_point']['attributes']);
+
+        // Verify we can create documents using the spatial attributes
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/locations/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'name' => 'New York',
+                'point' => [40.7128, -74.0060],
+                'route' => [[40.7128, -74.0060], [40.7589, -73.9851]],
+                'area' => [[[40.7128, -74.0060], [40.7589, -73.9851], [40.7589, -74.0060], [40.7128, -74.0060]]],
+            ],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals('New York', $document['body']['name']);
+        $this->assertEquals([40.7128, -74.0060], $document['body']['point']);
+        $this->assertEquals([[40.7128, -74.0060], [40.7589, -73.9851]], $document['body']['route']);
+        $this->assertEquals([[[40.7128, -74.0060], [40.7589, -73.9851], [40.7589, -74.0060], [40.7128, -74.0060]]], $document['body']['area']);
+
+        // Test: Create document with only required spatial attribute
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/locations/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'name' => 'Los Angeles',
+                'point' => [34.0522, -77.2437],
+            ],
+        ]);
+
+        $this->assertEquals(201, $document2['headers']['status-code']);
+        $this->assertEquals('Los Angeles', $document2['body']['name']);
+        $this->assertEquals([34.0522, -77.2437], $document2['body']['point']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+    }
+
     public function testCreateCollectionWithAttributesAndIndexesErrors(): void
     {
         // Create database
