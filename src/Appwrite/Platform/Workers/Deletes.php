@@ -120,6 +120,9 @@ class Deletes extends Action
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
+                    case DELETE_TYPE_TEAMS:
+                        $this->deleteTeam($getProjectDB, $document, $project);
+                        break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
                         break;
@@ -634,6 +637,24 @@ class Deletes extends Action
         $deviceForCache->delete($deviceForCache->getRoot(), true);
     }
 
+    private function deleteTeam(callable $getProjectDB, Document $document, Document $project): void
+    {
+        $teamId = $document->getId();
+        $teamInternalId = $document->getSequence();
+        $dbForProject = $getProjectDB($project);
+
+        if ($project->getId() === 'console') {
+            // Delete Keys
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceInternalId', [$teamInternalId]),
+                Query::equal('resourceType', ['teams']),
+                Query::orderAsc()
+            ], $dbForProject);
+        }
+
+        $dbForProject->purgeCachedDocument('teams', $teamId);
+    }
+
     /**
      * @param callable $getProjectDB
      * @param Document $document user document
@@ -652,6 +673,15 @@ class Deletes extends Action
             Query::equal('userInternalId', [$userInternalId]),
             Query::orderAsc()
         ], $dbForProject);
+
+        if ($project->getId() === 'console') {
+            // Delete Keys
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceInternalId', [$userInternalId]),
+                Query::equal('resourceType', ['users']),
+                Query::orderAsc()
+            ], $dbForProject);
+        }
 
         $dbForProject->purgeCachedDocument('users', $userId);
 
