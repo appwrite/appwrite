@@ -1048,18 +1048,15 @@ App::init()
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
            $cache[$domain->get()] = false;
            Config::setParam('hostnames', $cache);
-           Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
            return;
        }
 
        if (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
-           Console::warning('Skipping SSL certificates generation on ACME challenge.');
            return;
        }
 
        // 3. Check if domain is a main domain
        if (!in_array($domain->get(), $platformHostnames)) {
-           Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
            return;
        }
 
