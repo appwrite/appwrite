@@ -151,19 +151,17 @@ class Mails extends Action
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        $customMailOptions = $payload['customMailOptions'] ?? [];
+        $senderEmail = $payload['senderEmail'] ?? '';
+        $senderName = $payload['senderName'] ?? '';
 
         // fallback hierarchy: Custom options > SMTP config > Defaults.
-        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
-            $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
-            $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
+        if (!empty($senderEmail) || !empty($senderName)) {
+            $fromEmail = $senderEmail ?: $mail->From;
+            $fromName = $senderName ?: $mail->FromName;
             $mail->setFrom($fromEmail, $fromName);
         }
 
-        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
-            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
-            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
-        } elseif (!empty($smtp)) {
+        if (!empty($smtp)) {
             $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
             $replyToName = $smtp['senderName'] ?? $replyToName;
         }
