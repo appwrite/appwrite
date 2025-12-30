@@ -2,7 +2,7 @@
 
 > Before reading this file, also read Appwrite's base [AGENTS.md](../../../AGENTS.md).
 
-Modules are the building blocks of the Appwrite platform. They are responsible for handling specific tasks and providing APIs for other modules to use. Each module should have its own directory within the `src/Appwrite/Platform` directory.
+Modules are the building blocks of the Appwrite platform. They are responsible for handling specific tasks, defining background workers, and providing API endpoints. Each module should have its own directory within the `src/Appwrite/Platform` directory.
 
 Generally-speaking, each service is its own module, but there are some exceptions. The goal is to always put related code that achieves a specific goal under one roof.
 
