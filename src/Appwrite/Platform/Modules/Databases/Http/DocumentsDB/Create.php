@@ -37,7 +37,7 @@ class Create extends DatabaseCreate
                 group: 'documentsdb',
                 name: 'create',
                 description: '/docs/references/documentsdb/create.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,

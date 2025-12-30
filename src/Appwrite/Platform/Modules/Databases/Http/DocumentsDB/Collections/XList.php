@@ -40,7 +40,7 @@ class XList extends CollectionXList
                 group: 'collections',
                 name: 'listCollections',
                 description: '/docs/references/documentsdb/list-collections.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

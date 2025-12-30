@@ -34,7 +34,7 @@ class XList extends DatabaseXList
                 group: 'documentsdb',
                 name: 'list',
                 description: '/docs/references/documentsdb/list.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

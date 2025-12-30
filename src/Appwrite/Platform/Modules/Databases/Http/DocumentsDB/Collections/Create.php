@@ -46,7 +46,7 @@ class Create extends CollectionCreate
                 group: 'collections',
                 name: 'createCollection',
                 description: '/docs/references/documentsdb/create-collection.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,

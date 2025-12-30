@@ -32,7 +32,7 @@ class Get extends DatabaseGet
                 group: 'documentsdb',
                 name: 'get',
                 description: '/docs/references/documentsdb/get.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

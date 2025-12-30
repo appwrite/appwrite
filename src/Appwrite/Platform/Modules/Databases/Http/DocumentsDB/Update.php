@@ -37,7 +37,7 @@ class Update extends DatabaseUpdate
                 group: 'documentsdb',
                 name: 'update',
                 description: '/docs/references/documentsdb/update.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

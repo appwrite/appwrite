@@ -39,7 +39,7 @@ class XList extends IndexXList
                 group: $this->getSdkGroup(),
                 name: 'listIndexes', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/documentsdb/list-indexes.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
