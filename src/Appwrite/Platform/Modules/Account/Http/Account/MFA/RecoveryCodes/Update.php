@@ -43,7 +43,7 @@ class Update extends Action
                     group: 'mfa',
                     name: 'updateMfaRecoveryCodes',
                     description: '/docs/references/account/update-mfa-recovery-codes.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -61,7 +61,7 @@ class Update extends Action
                     group: 'mfa',
                     name: 'updateMFARecoveryCodes',
                     description: '/docs/references/account/update-mfa-recovery-codes.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,

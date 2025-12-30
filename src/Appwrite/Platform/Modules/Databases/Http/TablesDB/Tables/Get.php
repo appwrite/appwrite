@@ -38,7 +38,7 @@ class Get extends CollectionGet
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/get-table.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

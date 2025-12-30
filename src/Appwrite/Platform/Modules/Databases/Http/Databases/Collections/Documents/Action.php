@@ -418,9 +418,11 @@ abstract class Action extends DatabasesAction
                 ->from($queueForEvents)
                 ->trigger();
 
-            $queueForWebhooks
-                ->from($queueForEvents)
-                ->trigger();
+            if (!empty($queueForEvents->getProject()?->getAttribute('webhooks', []))) {
+                $queueForWebhooks
+                    ->from($queueForEvents)
+                    ->trigger();
+            }
         }
 
         $queueForEvents->reset();

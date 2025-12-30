@@ -46,7 +46,7 @@ class Delete extends IndexDelete
                 group: $this->getSDKGroup(),
                 name: 'deleteIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/tablesdb/delete-index.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,

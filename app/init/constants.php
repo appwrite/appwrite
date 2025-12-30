@@ -60,6 +60,7 @@ const APP_DATABASE_TIMEOUT_MILLISECONDS_API = 15 * 1000; // 15 seconds
 const APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER = 300 * 1000; // 5 minutes
 const APP_DATABASE_TIMEOUT_MILLISECONDS_TASK = 300 * 1000; // 5 minutes
 const APP_DATABASE_QUERY_MAX_VALUES = 500;
+const APP_DATABASE_QUERY_MAX_VALUES_WORKER = 5000;
 const APP_DATABASE_ENCRYPT_SIZE_MIN = 150;
 const APP_DATABASE_TXN_TTL_MIN = 60; // 1 minute
 const APP_DATABASE_TXN_TTL_MAX = 3600; // 1 hour
@@ -89,9 +90,9 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
-const APP_PLATFORM_SERVER = 'server';
-const APP_PLATFORM_CLIENT = 'client';
-const APP_PLATFORM_CONSOLE = 'console';
+const APP_SDK_PLATFORM_SERVER = 'server';
+const APP_SDK_PLATFORM_CLIENT = 'client';
+const APP_SDK_PLATFORM_CONSOLE = 'console';
 const APP_VCS_GITHUB_USERNAME = 'Appwrite';
 const APP_VCS_GITHUB_EMAIL = 'team@appwrite.io';
 const APP_VCS_GITHUB_URL = 'https://github.com/TeamAppwrite';
@@ -207,6 +208,12 @@ const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
+
+// Rule statuses
+const RULE_STATUS_CREATED = 'created'; // This is also the status when domain DNS verification fails.
+const RULE_STATUS_CERTIFICATE_GENERATING = 'verifying';
+const RULE_STATUS_CERTIFICATE_GENERATION_FAILED = 'unverified';
+const RULE_STATUS_VERIFIED = 'verified';
 
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';

@@ -39,7 +39,7 @@ class Get extends IndexGet
                 group: $this->getSDKGroup(),
                 name: 'getIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/tablesdb/get-index.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

@@ -13,6 +13,7 @@ return [
         'tests' => false,
         'optional' => false,
         'icon' => '',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'web/console' => [
         'key' => 'web/console',
@@ -26,6 +27,7 @@ return [
         'tests' => false,
         'optional' => false,
         'icon' => '',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'account' => [
         'key' => 'account',
@@ -39,6 +41,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/account.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'avatars' => [
         'key' => 'avatars',
@@ -52,6 +55,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/avatars.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'databases' => [
         'key' => 'databases',
@@ -65,6 +69,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/databases.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'tablesdb' => [
         'key' => 'tablesdb',
@@ -78,6 +83,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/databases.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'locale' => [
         'key' => 'locale',
@@ -91,6 +97,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/locale.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'health' => [
         'key' => 'health',
@@ -104,6 +111,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/health.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'projects' => [
         'key' => 'projects',
@@ -117,6 +125,7 @@ return [
         'tests' => false,
         'optional' => false,
         'icon' => '',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'project' => [
         'key' => 'project',
@@ -130,19 +139,21 @@ return [
         'tests' => false,
         'optional' => false,
         'icon' => '',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'storage' => [
         'key' => 'storage',
         'name' => 'Storage',
         'subtitle' => 'The Storage service allows you to manage your project files.',
         'description' => '/docs/services/storage.md',
-        'controller' => 'api/storage.php',
+        'controller' => '',
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/storage',
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/storage.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'teams' => [
         'key' => 'teams',
@@ -156,6 +167,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/teams.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'users' => [
         'key' => 'users',
@@ -169,6 +181,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/users.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'vcs' => [
         'key' => 'vcs',
@@ -182,6 +195,7 @@ return [
         'tests' => false,
         'optional' => false,
         'icon' => '',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'sites' => [
         'key' => 'sites',
@@ -195,6 +209,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/sites.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'functions' => [
         'key' => 'functions',
@@ -208,6 +223,7 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/functions.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'proxy' => [
         'key' => 'proxy',
@@ -221,6 +237,7 @@ return [
         'tests' => false,
         'optional' => false,
         'icon' => '/images/services/proxy.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'mock' => [
         'key' => 'mock',
@@ -234,6 +251,7 @@ return [
         'tests' => true,
         'optional' => false,
         'icon' => '',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'graphql' => [
         'key' => 'graphql',
@@ -247,6 +265,7 @@ return [
         'tests' => true,
         'optional' => true,
         'icon' => '/images/services/graphql.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'console' => [
         'key' => 'console',
@@ -260,6 +279,7 @@ return [
         'tests' => false,
         'optional' => false,
         'icon' => '',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'migrations' => [
         'key' => 'migrations',
@@ -273,6 +293,7 @@ return [
         'tests' => true,
         'optional' => false,
         'icon' => '/images/services/migrations.png',
+        'platforms' => ['client', 'server', 'console'],
     ],
     'messaging' => [
         'key' => 'messaging',
@@ -286,5 +307,6 @@ return [
         'tests' => true,
         'optional' => true,
         'icon' => '/images/services/messaging.png',
+        'platforms' => ['client', 'server', 'console'],
     ]
 ];

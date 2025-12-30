@@ -587,7 +587,13 @@ class Deletes extends Action
 
         // Delete Keys
         $this->deleteByGroup('keys', [
-            Query::equal('projectInternalId', [$projectInternalId]),
+            Query::or([
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$projectInternalId]),
+                ])
+            ]),
             Query::orderAsc()
         ], $dbForPlatform);
 
@@ -775,7 +781,7 @@ class Deletes extends Action
             Query::select([...$this->selects, '$createdAt', 'name', 'path']),
             Query::equal('bucketId', ['default']),
             Query::createdBefore($oneWeekAgo),
-            Query::endsWith('name', ['.csv']),
+            Query::endsWith('name', '.csv'),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {

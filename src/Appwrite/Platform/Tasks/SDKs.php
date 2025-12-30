@@ -36,6 +36,11 @@ class SDKs extends Action
         return 'sdks';
     }
 
+    public static function getPlatforms(): array
+    {
+        return Specs::getPlatforms();
+    }
+
     public function __construct()
     {
         $this
@@ -55,7 +60,7 @@ class SDKs extends Action
     public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
         if (!$sdks) {
-            $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         } else {
             $sdks = explode(',', $sdks);
@@ -133,7 +138,7 @@ class SDKs extends Action
                 $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
                 $readme = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
-                $gettingStarted = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
+                $gettingStarted = $language['gettingStarted'] ?? \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
                 $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
@@ -157,7 +162,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 switch ($language['key']) {
                     case 'web':
                         $config = new Web();
-                        if ($platform['key'] === APP_PLATFORM_CONSOLE) {
+                        if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
                             $config->setBowerPackage('@appwrite.io/console');
                         } else {
@@ -188,8 +193,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'php':
                         $config = new PHP();
-                        $config->setComposerVendor('appwrite');
-                        $config->setComposerPackage('appwrite');
+                        $config->setComposerVendor($language['composerVendor'] ?? 'appwrite');
+                        $config->setComposerPackage($language['composerPackage'] ?? 'appwrite');
                         break;
                     case 'nodejs':
                         $config = new Node();
@@ -374,9 +379,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $sdk
                     ->setName($language['name'])
-                    ->setNamespace('io appwrite')
-                    ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way. Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
-                    ->setShortDescription('Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API')
+                    ->setNamespace($language['namespace'] ?? 'appwrite')
+                    ->setDescription($language['description'] ?? "Appwrite is an open-source backend as a service server that abstracts and simplifies complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way. Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
+                    ->setShortDescription($language['shortDescription'] ?? 'Appwrite is an open-source self-hosted backend server that abstracts and simplifies complex and repetitive development tasks behind a very simple REST API')
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
                     ->setVersion($language['version'])

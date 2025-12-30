@@ -42,7 +42,7 @@ class Update extends Action
                     group: 'databases',
                     name: 'update',
                     description: '/docs/references/databases/update.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,

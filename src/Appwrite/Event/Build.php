@@ -2,8 +2,10 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Build extends Event
 {
@@ -17,8 +19,8 @@ class Build extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::BUILDS_QUEUE_NAME)
-            ->setClass(Event::BUILDS_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_BUILDS_CLASS_NAME', Event::BUILDS_CLASS_NAME));
     }
 
     /**
@@ -110,13 +112,18 @@ class Build extends Event
      */
     protected function preparePayload(): array
     {
+        $platform = $this->platform;
+        if (empty($platform)) {
+            $platform = Config::getParam('platform', []);
+        }
+
         return [
             'project' => $this->project,
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
             'template' => $this->template,
-            'platform' => $this->platform
+            'platform' => $platform,
         ];
     }
 

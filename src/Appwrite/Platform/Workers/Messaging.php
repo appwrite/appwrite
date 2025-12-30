@@ -62,9 +62,6 @@ class Messaging extends Action
      */
     public function __construct()
     {
-
-        $this->adapter = $this->createInternalSMSAdapter();
-
         $this
             ->desc('Messaging worker')
             ->inject('message')
@@ -390,6 +387,10 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
+        if ($this->adapter === null) {
+            $this->adapter = $this->createInternalSMSAdapter();
+        }
+
         if ($this->adapter === null) {
             Console::warning('Skipped SMS processing. SMS adapter is not set.');
             return;
