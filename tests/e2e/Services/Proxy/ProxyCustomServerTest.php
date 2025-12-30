@@ -15,6 +15,36 @@ class ProxyCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
+    protected function tearDown(): void
+    {
+        // Cleanup for testRuleVerification test
+        // Required as it uses static domain name
+        $rules = $this->listRules([
+            'queries' => [
+                Query::endsWith('domain', 'webapp.com')->toString(),
+                Query::limit(1000)->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        foreach ($rules['body']['rules'] as $rule) {
+            $ruleId = $rule['$id'];
+            $response = $this->deleteRule($ruleId);
+            $this->assertEquals(204, $response['headers']['status-code']);
+        }
+
+        if ($rules['body']['total'] > 0) {
+            $rules = $this->listRules([
+                'queries' => [
+                    Query::endsWith('domain', 'webapp.com')->toString(),
+                    Query::limit(1)->toString()
+                ]
+            ]);
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, count($rules['body']['rules']));
+            $this->assertEquals(0, $rules['body']['total']);
+        }
+    }
+
     public function testCreateRule(): void
     {
         $domain = \uniqid() . '-api.myapp.com';
@@ -538,5 +568,172 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertEquals(0, $rules['body']['total']);
         $this->assertCount(0, $rules['body']['rules']);
+    }
+
+    public function testRuleVerification(): void
+    {
+
+        // 1. Site rule can verify
+        $site = $this->setupSite();
+        $siteId = $site['siteId'];
+
+        $rule = $this->createSiteRule('stage-site.webapp.com', $siteId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+        $this->assertNotEmpty($rule['body']['$id']);
+        $ruleId = $rule['body']['$id'];
+
+        $rule = $this->updateRuleVerification($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals($ruleId, $rule['body']['$id']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+        $this->cleanupSite($siteId);
+
+        // 2. Function rule can verify
+        $function = $this->setupFunction();
+        $functionId = $function['functionId'];
+
+        $rule = $this->createFunctionRule('stage-function.webapp.com', $functionId);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $rule = $this->createAPIRule('stage-site.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
+        $this->cleanupRule($rule['body']['$id']);
+
+        $this->cleanupFunction($functionId);
+
+        // 3. Wrong A record fails to verify
+        $rule = $this->createAPIRule('wrong-a-webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleVerification($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 4. Correct A record can verify
+        $rule = $this->createAPIRule('webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+
+        // 5. Correct CNAME record can verify (no CAA record)
+        $rule = $this->createAPIRule('stage.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+
+        // 6. Missing CNAME record fails to verify
+        $rule = $this->createAPIRule('stage-missing-cname.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleVerification($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('is missing CNAME record', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 7. Wrong CNAME record fails to verify
+        $rule = $this->createAPIRule('stage-wrong-cname.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleVerification($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 8. Wrong CAA record fails to verify
+        $rule = $this->createAPIRule('stage-wrong-caa.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+        $this->assertStringContainsString('has incorrect CAA value', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleVerification($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('has incorrect CAA value', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+
+        // 9. Correct CAA record can verify
+        $rule = $this->createAPIRule('stage-correct-caa.webapp.com');
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
+    public function testUpdateRuleVerificationWithSameDataUpdatesTimestamp(): void
+    {
+        $domain = \uniqid() . '-timestamp-test.webapp.com';
+        $rule = $this->createAPIRule($domain);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('created', $rule['body']['status']);
+        $this->assertNotEmpty($rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $initialUpdatedAt = $rule['body']['$updatedAt'];
+        $initiallogs = $rule['body']['logs'];
+
+        sleep(1);
+
+        $updatedRule = $this->updateRuleVerification($ruleId);
+
+        $this->assertEquals(400, $updatedRule['headers']['status-code']);
+        $this->assertStringContainsString($initiallogs, $updatedRule['body']['message']);
+
+        $ruleAfterUpdate = $this->getRule($ruleId);
+        $this->assertEquals(200, $ruleAfterUpdate['headers']['status-code']);
+        $this->assertEquals('created', $ruleAfterUpdate['body']['status']);
+        $this->assertEquals($initiallogs, $ruleAfterUpdate['body']['logs']);
+        $this->assertNotEquals($initialUpdatedAt, $ruleAfterUpdate['body']['$updatedAt']);
+
+        $initialTime = new \DateTime($initialUpdatedAt);
+        $updatedTime = new \DateTime($ruleAfterUpdate['body']['$updatedAt']);
+        $this->assertGreaterThan($initialTime, $updatedTime);
+
+        $this->cleanupRule($ruleId);
     }
 }

@@ -655,7 +655,6 @@ App::init()
         $queueForFunctions->setPlatform($platform);
         $queueForBuilds->setPlatform($platform);
         $queueForMails->setPlatform($platform);
-        $queueForMigrations->setPlatform($platform);
 
         // Clone the queues, to prevent events triggered by the database listener
         // from overwriting the events that are supposed to be triggered in the shutdown hook.

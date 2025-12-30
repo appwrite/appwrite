@@ -16,4 +16,6 @@ Collection result = await databases.createCollection(
     permissions: [Permission.read(Role.any())], // (optional)
     documentSecurity: false, // (optional)
     enabled: false, // (optional)
+    attributes: [], // (optional)
+    indexes: [], // (optional)
 );

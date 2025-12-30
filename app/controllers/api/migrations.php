@@ -77,10 +77,11 @@ App::post('/v1/migrations/appwrite')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -104,6 +105,7 @@ App::post('/v1/migrations/appwrite')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -136,10 +138,11 @@ App::post('/v1/migrations/firebase')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $serviceAccountData = json_decode($serviceAccount, true);
 
         if (empty($serviceAccountData)) {
@@ -171,6 +174,7 @@ App::post('/v1/migrations/firebase')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -208,10 +212,11 @@ App::post('/v1/migrations/supabase')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -238,6 +243,7 @@ App::post('/v1/migrations/supabase')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -276,10 +282,11 @@ App::post('/v1/migrations/nhost')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -307,6 +314,7 @@ App::post('/v1/migrations/nhost')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -343,6 +351,7 @@ App::post('/v1/migrations/csv/imports')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
+    ->inject('platform')
     ->inject('deviceForFiles')
     ->inject('deviceForMigrations')
     ->inject('queueForEvents')
@@ -356,6 +365,7 @@ App::post('/v1/migrations/csv/imports')
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
+        array $platform,
         Device $deviceForFiles,
         Device $deviceForMigrations,
         Event $queueForEvents,
@@ -457,6 +467,7 @@ App::post('/v1/migrations/csv/imports')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setProject($project)
             ->trigger();
 
         $response
@@ -497,6 +508,7 @@ App::post('/v1/migrations/csv/exports')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('project')
+    ->inject('platform')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
     ->action(function (
@@ -514,6 +526,7 @@ App::post('/v1/migrations/csv/exports')
         Database $dbForProject,
         Database $dbForPlatform,
         Document $project,
+        array $platform,
         Event $queueForEvents,
         Migration $queueForMigrations
     ) {
@@ -597,6 +610,7 @@ App::post('/v1/migrations/csv/exports')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->trigger();
 
         $response
@@ -927,9 +941,10 @@ App::patch('/v1/migrations/:migrationId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForMigrations')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, Document $user, Migration $queueForMigrations) {
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Migration $queueForMigrations) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -948,6 +963,7 @@ App::patch('/v1/migrations/:migrationId')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 

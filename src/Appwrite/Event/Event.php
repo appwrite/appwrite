@@ -92,9 +92,9 @@ class Event
      * Set queue used for this event.
      *
      * @param string $queue
-     * @return Event
+     * @return static
      */
-    public function setQueue(string $queue): self
+    public function setQueue(string $queue): static
     {
         $this->queue = $queue;
 
@@ -114,9 +114,9 @@ class Event
     /**
      * Set event name used for this event.
      * @param string $event
-     * @return Event
+     * @return static
      */
-    public function setEvent(string $event): self
+    public function setEvent(string $event): static
     {
         $this->event = $event;
 
@@ -137,9 +137,9 @@ class Event
      * Set project for this event.
      *
      * @param Document $project
-     * @return self
+     * @return static
      */
-    public function setProject(Document $project): self
+    public function setProject(Document $project): static
     {
         $this->project = $project;
         return $this;
@@ -159,9 +159,9 @@ class Event
      * Set platform for this event.
      *
      * @param array $platform
-     * @return self
+     * @return static
      */
-    public function setPlatform(array $platform): self
+    public function setPlatform(array $platform): static
     {
         $this->platform = $platform;
         return $this;
@@ -181,9 +181,9 @@ class Event
      * Set user for this event.
      *
      * @param Document $user
-     * @return self
+     * @return static
      */
-    public function setUser(Document $user): self
+    public function setUser(Document $user): static
     {
         $this->user = $user;
 
@@ -193,9 +193,9 @@ class Event
     /**
      * Set user ID for this event.
      *
-     * @return self
+     * @return static
      */
-    public function setUserId(string $userId): self
+    public function setUserId(string $userId): static
     {
         $this->userId = $userId;
 
@@ -225,9 +225,9 @@ class Event
      *
      * @param array $payload
      * @param array $sensitive
-     * @return self
+     * @return static
      */
-    public function setPayload(array $payload, array $sensitive = []): self
+    public function setPayload(array $payload, array $sensitive = []): static
     {
         $this->payload = $payload;
 

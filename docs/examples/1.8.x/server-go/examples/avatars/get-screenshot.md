@@ -27,7 +27,7 @@ response, error := service.GetScreenshot(
     avatars.WithGetScreenshotUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15"),
     avatars.WithGetScreenshotFullpage(true),
     avatars.WithGetScreenshotLocale("en-US"),
-    avatars.WithGetScreenshotTimezone("America/New_York"),
+    avatars.WithGetScreenshotTimezone("america/new_york"),
     avatars.WithGetScreenshotLatitude(37.7749),
     avatars.WithGetScreenshotLongitude(-122.4194),
     avatars.WithGetScreenshotAccuracy(100),

@@ -41,7 +41,7 @@ class Delete extends CollectionDelete
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/delete-table.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,

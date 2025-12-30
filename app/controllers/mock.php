@@ -116,6 +116,28 @@ App::get('/v1/mock/tests/general/oauth2/user')
             'id' => 1,
             'name' => 'User Name',
             'email' => 'useroauth@localhost.test',
+            'verified' => true,
+        ]);
+    });
+
+App::get('/v1/mock/tests/general/oauth2/user-unverified')
+    ->desc('OAuth2 User Unverified')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
+    ->inject('response')
+    ->action(function (string $token, Response $response) {
+
+        if ($token != '123456') {
+            throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
+        }
+
+        $response->json([
+            'id' => 2,
+            'name' => 'User Name Unverified',
+            'email' => 'useroauthunverified@localhost.test',
+            'verified' => false,
         ]);
     });
 

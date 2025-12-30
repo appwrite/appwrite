@@ -458,10 +458,13 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
         // Appwrite vars
         if ($type === 'function') {
             $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
+                'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
                 'APPWRITE_FUNCTION_ID' => $resource->getId(),
                 'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
                 'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -473,7 +476,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             ]);
         } elseif ($type === 'site') {
             $vars = \array_merge($vars, [
-                'APPWRITE_SITE_API_ENDPOINT' => $platform['endpoint'],
+                'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
                 'APPWRITE_SITE_ID' => $resource->getId(),
                 'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),
                 'APPWRITE_SITE_DEPLOYMENT' => $deployment->getId(),
@@ -1045,18 +1048,15 @@ App::init()
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
            $cache[$domain->get()] = false;
            Config::setParam('hostnames', $cache);
-           Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
            return;
        }
 
        if (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
-           Console::warning('Skipping SSL certificates generation on ACME challenge.');
            return;
        }
 
        // 3. Check if domain is a main domain
        if (!in_array($domain->get(), $platformHostnames)) {
-           Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
            return;
        }
 

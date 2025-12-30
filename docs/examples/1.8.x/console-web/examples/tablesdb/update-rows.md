@@ -9,7 +9,13 @@ const tablesDB = new TablesDB(client);
 const result = await tablesDB.updateRows({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    data: {}, // optional
+    data: {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": false
+    }, // optional
     queries: [], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });

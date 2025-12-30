@@ -178,7 +178,7 @@ App::get('/v1/avatars/credit-cards/:code')
         group: null,
         name: 'getCreditCard',
         description: '/docs/references/avatars/get-credit-card.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -206,7 +206,7 @@ App::get('/v1/avatars/browsers/:code')
         group: null,
         name: 'getBrowser',
         description: '/docs/references/avatars/get-browser.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -234,7 +234,7 @@ App::get('/v1/avatars/flags/:code')
         group: null,
         name: 'getFlag',
         description: '/docs/references/avatars/get-flag.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -262,7 +262,7 @@ App::get('/v1/avatars/image')
         group: null,
         name: 'getImage',
         description: '/docs/references/avatars/get-image.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -333,7 +333,7 @@ App::get('/v1/avatars/favicon')
         group: null,
         name: 'getFavicon',
         description: '/docs/references/avatars/get-favicon.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -507,7 +507,7 @@ App::get('/v1/avatars/qr')
         group: null,
         name: 'getQR',
         description: '/docs/references/avatars/get-qr.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -557,7 +557,7 @@ App::get('/v1/avatars/initials')
         group: null,
         name: 'getInitials',
         description: '/docs/references/avatars/get-initials.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(
@@ -652,7 +652,7 @@ App::get('/v1/avatars/screenshots')
         group: null,
         name: 'getScreenshot',
         description: '/docs/references/avatars/get-screenshot.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         type: MethodType::LOCATION,
         responses: [
             new SDKResponse(

@@ -2,6 +2,7 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
+use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
@@ -119,27 +120,9 @@ class Swagger2 extends Format
             $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
-            $sdkPlatforms = [];
 
-            foreach ($routeSecurity as $value) {
-                switch ($value) {
-                    case AuthType::SESSION:
-                        $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                        break;
-                    case AuthType::JWT:
-                    case AuthType::KEY:
-                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                        break;
-                    case AuthType::ADMIN:
-                        $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
-                        break;
-                }
-            }
-
-            if (empty($routeSecurity)) {
-                $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-            }
+            $specs = new Specs();
+            $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
 
             $sdkPlatforms = array_values(array_unique($sdkPlatforms));
             $namespace = $sdk->getNamespace() ?? 'default';
@@ -163,7 +146,6 @@ class Swagger2 extends Format
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' .  $sdk->getDescription() ?? '',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
@@ -173,6 +155,10 @@ class Swagger2 extends Format
                     'public' => $sdk->isPublic(),
                 ],
             ];
+
+            if ($sdk->getDescriptionFilePath() !== null) {
+                $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
+            }
 
             if ($sdk->getDeprecated()) {
                 $temp['x-appwrite']['deprecated'] = [
@@ -192,28 +178,9 @@ class Swagger2 extends Format
                     $desc = $methodObj->getDescriptionFilePath();
 
                     $methodSecurities = $methodObj->getAuth();
-                    $methodSdkPlatforms = [];
-                    foreach ($methodSecurities as $value) {
-                        switch ($value) {
-                            case AuthType::SESSION:
-                                $methodSdkPlatforms[] = APP_PLATFORM_CLIENT;
-                                break;
-                            case AuthType::JWT:
-                            case AuthType::KEY:
-                                $methodSdkPlatforms[] = APP_PLATFORM_SERVER;
-                                break;
-                            case AuthType::ADMIN:
-                                $methodSdkPlatforms[] = APP_PLATFORM_CONSOLE;
-                                break;
-                        }
-                    }
+                    $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
 
-                    if (empty($methodSecurities)) {
-                        $methodSdkPlatforms[] = APP_PLATFORM_SERVER;
-                        $methodSdkPlatforms[] = APP_PLATFORM_CLIENT;
-                    }
-
-                    if ($this->platform !== APP_PLATFORM_CONSOLE && !\in_array($this->platform, $methodSdkPlatforms)) {
+                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
                         continue;
                     }
 

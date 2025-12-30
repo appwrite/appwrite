@@ -164,21 +164,9 @@ App::setResource('queueForStatsResources', function (Publisher $publisher) {
 /**
  * Platform configuration
  */
-App::setResource('platform', function (Request $request) {
-    $platform = Config::getParam('platform', []);
-    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-
-    $port = '';
-    if ($request->getPort() === '443' && $protocol !== 'https') {
-        $port = ':443';
-    }
-    if ($request->getPort() === '80' && $protocol !== 'http') {
-        $port = ':80';
-    }
-    $platform['endpoint'] = "$protocol://{$platform['apiHostname']}{$port}/v1";
-
-    return $platform;
-}, ['request']);
+App::setResource('platform', function () {
+    return Config::getParam('platform', []);
+}, []);
 
 /**
  * List of allowed request hostnames for the request.
@@ -287,12 +275,14 @@ App::setResource('cors', fn (array $allowedHostnames) => new Cors(
         'X-Appwrite-ID',
         'X-Appwrite-Timestamp',
         'X-Appwrite-Session',
+        'X-Appwrite-Platform', // for `$platform` injection and SDK generator
         // SDK generator
         'X-SDK-Version',
         'X-SDK-Name',
         'X-SDK-Language',
         'X-SDK-Platform',
         'X-SDK-GraphQL',
+        'X-SDK-Profile',
         // Caching
         'Range',
         'Cache-Control',
@@ -960,7 +950,7 @@ App::setResource('passwordsDictionary', function ($register) {
 
 App::setResource('servers', function () {
     $platforms = Config::getParam('sdks');
-    $server = $platforms[APP_PLATFORM_SERVER];
+    $server = $platforms[APP_SDK_PLATFORM_SERVER];
 
     $languages = array_map(function ($language) {
         return strtolower($language['name']);

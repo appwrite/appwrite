@@ -179,6 +179,7 @@ class Decrement extends Action
                 value: $value,
                 min: $min
             );
+            $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException) {
