@@ -4,11 +4,11 @@
 
 Modules are the building blocks of the Appwrite platform. They are responsible for handling specific tasks and providing APIs for other modules to use. Each module should have its own directory within the `src/Appwrite/Platform` directory.
 
-Generally-speaking, each service is it's own module, but there are some exceptions. The goal is to always put related code that achieves a specific goal under one roof.
+Generally-speaking, each service is its own module, but there are some exceptions. The goal is to always put related code that achieves a specific goal under one roof.
 
 ## Structure and Naming Conventions
 
-When adding a module, always add a new directory under `src/Appwrite/Platform`. The directory name should be PascalCase, and if possible, only include one word. For example, `User`, `Database`, `Storage`, etc. Avoid using shorthands, unless they are standardized, such as `DB`, `JWT`, or `SMTP`.
+When adding a module, always add a new directory under `src/Appwrite/Platform`. The directory name should be PascalCase, and if possible, use only one word. For example, `User`, `Database`, `Storage`, etc. Avoid using shorthands, unless they are standardized, such as `DB`, `JWT`, or `SMTP`.
 
 A module consists of:
 
@@ -30,11 +30,11 @@ Inside module, the `Services` directory can contain:
 
 Inside module's `Http` directory, there are multiple rules to follow:
 
-1. Directly in `Http` directory, there should only be directories for services (and hooks, check point number 2). If a module is a single service, it's okay to only have one directory. with same name as service, for example `src/Appwrite/Platform/Account/Http/Account.php`. An example with multiple services is `src/Appwrite/Platform/Databases/Http/Databases` and `src/Appwrite/Platform/Databases/Http/TablesDB`.
+1. Directly in `Http` directory, there should only be directories for services (and hooks, check point number 2). If a module is a single service, it's okay to only have one directory, with the same name as the service, for example `src/Appwrite/Platform/Account/Http/Account.php`. An example with multiple services is `src/Appwrite/Platform/Databases/Http/Databases` and `src/Appwrite/Platform/Databases/Http/TablesDB`.
 
 2. Hooks should live in `Hooks` directory, under `Init`, `Shutdown`, or `Error` directories, inside `Http` directory. For example, an init hook to prevent unauthorized access might live in `src/Appwrite/Platform/Functions/Http/Hooks/Init/Authentication.php`.
 
-3. Inside `Http` directories for services, file names can only be `Get.php`, `Update.php`, `Create.php`, `Delete.php` or `XList.php`. We call it `XList`, because `List` is reserved keyword and PHP would not like that. Never use any other words! Let's say you want a method to be `blockUser`, tempting to add `Users/Block.php`, instead, think of resource and property it affects. Better naming would be `Users/Status/Update.php` (update user's status). Doing so also nicely reflects to HTTP endpoint, `PATCH /v1/users/:userId/status`.
+3. Inside `Http` directories for services, file names can only be `Get.php`, `Update.php`, `Create.php`, `Delete.php` or `XList.php`. We call it `XList`, because `List` is a reserved keyword and PHP would not like that. Never use any other words! Let's say you want a method to be `blockUser`, tempting to add `Users/Block.php`, instead, think of the resource and property it affects. Better naming would be `Users/Status/Update.php` (update user's status). Doing so also nicely reflects in the HTTP endpoint, `PATCH /v1/users/:userId/status`.
 
 4. It's allowed to nest directories in `Http` service directories. For example, if you want to create a new deployment for a function based on a template, an endpoint might live in `src/Appwrite/Platform/Functions/Http/Functions/Deployments/Template/Create.php`.
 
@@ -48,7 +48,18 @@ src/Appwrite/Platform/Functions
 ├── Tasks
 │   └── Block.php
 ├── Http
-│   └── MyEndpoint.php
+│   └── Functions
+│       ├── Create.php
+│       ├── XList.php
+│       ├── Update.php
+│       ├── Delete.php
+│       ├── Get.php
+│       └── Deployments
+│           ├── XList.php
+│           ├── Delete.php
+│           ├── Get.php
+│           └── Template
+│               └── Create.php
 └── Services
     ├── Http.php
     ├── Workers.php
