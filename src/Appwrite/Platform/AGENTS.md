@@ -40,7 +40,7 @@ Inside module's `Http` directory, there are multiple rules to follow:
 
 ### Sample module directory structure
 
-```
+```bash
 src/Appwrite/Platform/Functions
 ├── Module.php
 ├── Workers
