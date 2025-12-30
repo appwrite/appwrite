@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Site;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Http\Rules\Action;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -143,6 +143,7 @@ class Create extends Action
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
+                ->setAction(Certificate::ACTION_GENERATION)
                 ->trigger();
         }
 
