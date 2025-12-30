@@ -23,7 +23,7 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
-use Utopia\Pools\Adapter\Stack as Stack;
+use Utopia\Pools\Adapter\Stack as StackPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
@@ -145,14 +145,7 @@ $register->set('realtimeLogger', function () {
     return new Logger($adapter);
 });
 
-/**
- * Build a pool Group with shared config.
- *
- * @param string $configPrefix Config param prefix (e.g. 'pools', 'coroutinepools')
- * @param callable(): \Utopia\Pools\Adapter $adapterFactory Factory returning the Pool adapter (Stack or Swoole)
- * @param int|null $syncTimeout Optional synchronization timeout to apply on each pool (null to skip)
- */
-$buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int $syncTimeout = null): Group {
+$register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
@@ -231,7 +224,7 @@ $buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int
         throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
-    $poolSize = (int)(($instanceConnections / $workerCount) / 2);
+    $poolSize = (int)($instanceConnections / $workerCount);
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
@@ -245,6 +238,7 @@ $buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
+                //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
 
@@ -260,6 +254,13 @@ $buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
+            /**
+             * Get Resource
+             *
+             * Creation could be reused across connection types like database, cache, queue, etc.
+             *
+             * Resource assignment to an adapter will happen below.
+             */
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -286,8 +287,10 @@ $buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
-            $poolAdapter = $adapterFactory();
+            $poolAdapter = System::getEnv('COROUTINE_POOLS', 'disabled') === 'enabled' ? new SwoolePool() : new StackPool();
+
             $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
+                // Get Adapter
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -295,6 +298,7 @@ $buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int
                             'mysql' => new MySQL($resource()),
                             default => null
                         };
+
                         $adapter->setDatabase($dsn->getPath());
                         return $adapter;
                     case 'pubsub':
@@ -318,25 +322,14 @@ $buildPoolGroup = function (string $configPrefix, callable $adapterFactory, ?int
                 }
             });
 
-            if ($syncTimeout !== null) {
-                $pool->setSynchronizationTimeout($syncTimeout);
-            }
-
             $group->add($pool);
         }
 
-        Config::setParam($configPrefix . '-' . $key, $config);
+        Config::setParam('pools-' . $key, $config);
     }
 
     return $group;
-};
-
-$register->set('pools', fn () => $buildPoolGroup('pools', fn () => new Stack(), null));
-
-/**
- * Separate pool group for async/realtime contexts, using Swoole adapter and 10s sync timeout.
- */
-$register->set('coroutinepools', fn () => $buildPoolGroup('coroutinepools', fn () => new SwoolePool(), 10));
+});
 
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope
