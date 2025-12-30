@@ -5,6 +5,7 @@ namespace Appwrite\Event;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Func extends Event
 {
@@ -25,8 +26,8 @@ class Func extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
-            ->setClass(Event::FUNCTIONS_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_FUNCTIONS_CLASS_NAME', Event::FUNCTIONS_CLASS_NAME));
     }
 
     /**
