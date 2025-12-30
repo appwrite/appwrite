@@ -167,7 +167,9 @@ class Mails extends Action
         }
 
         $mail->addReplyTo($replyTo, $replyToName);
-
+        if ($isBatchMode && count($recipients) > 1000) {
+        throw new Exception('Batch recipient count (' . count($recipients) . ') exceeds maximum allowed (1000). Please split into multiple batches.');
+        }
         if ($isBatchMode && empty($smtp)) {
             $this->sendBatch($mail, $recipients, $subject, $body, $attachment, $log);
         } elseif ($isBatchMode && !empty($smtp)) {
@@ -261,7 +263,7 @@ class Mails extends Action
         $mail->clearAllRecipients();
         $mail->clearBCCs();
         $mail->clearAttachments();
-        $mail->addAddress($mail->From, $mail->FromName);
+        $mail->addAddress(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Batch Mail');
 
         $recipientCount = 0;
         foreach ($recipients as $email => $recipientName) {
