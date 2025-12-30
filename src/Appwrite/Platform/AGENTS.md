@@ -30,13 +30,13 @@ Inside module, the `Services` directory can contain:
 
 Inside module's `Http` directory, there are multiple rules to follow:
 
-1. Directly in `Http` directory, there should only be directories for services (and hooks, check point number 2). If a module is a single service, it's okay to only have one directory, with the same name as the service, for example `src/Appwrite/Platform/Account/Http/Account.php`. An example with multiple services is `src/Appwrite/Platform/Databases/Http/Databases` and `src/Appwrite/Platform/Databases/Http/TablesDB`.
+1. Directly in `Http` directory, there should only be directories for services (and hooks, check point number 2). If a module is a single service, it's okay to only have one directory, with the same name as the service, for example `src/Appwrite/Platform/Account/Http/Account`. An example with multiple services is `src/Appwrite/Platform/Databases/Http/Databases` and `src/Appwrite/Platform/Databases/Http/TablesDB`.
 
 2. Hooks should live in `Hooks` directory, under `Init`, `Shutdown`, or `Error` directories, inside `Http` directory. For example, an init hook to prevent unauthorized access might live in `src/Appwrite/Platform/Functions/Http/Hooks/Init/Authentication.php`.
 
 3. Inside `Http` directories for services, file names can only be `Get.php`, `Update.php`, `Create.php`, `Delete.php` or `XList.php`. We call it `XList`, because `List` is a reserved keyword and PHP would not like that. Never use any other words! Let's say you want a method to be `blockUser`, tempting to add `Users/Block.php`, instead, think of the resource and property it affects. Better naming would be `Users/Status/Update.php` (update user's status). Doing so also nicely reflects in the HTTP endpoint, `PATCH /v1/users/:userId/status`.
 
-4. It's allowed to nest directories in `Http` service directories. For example, if you want to create a new deployment for a function based on a template, an endpoint might live in `src/Appwrite/Platform/Functions/Http/Functions/Deployments/Template/Create.php`.
+4. It's allowed to nest directories in `Http` service directories. For example, if you want to create a new deployment for a function based on a template, an endpoint might live in `src/Appwrite/Platform/Functions/Http/Functions/Deployments/Template/Create.php`. In this example, notice functions and deployments are resources, and template is property - both resources and properties can be nested, and have separate directories.
 
 ### Sample module directory structure
 
