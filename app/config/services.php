@@ -146,7 +146,7 @@ return [
         'name' => 'Storage',
         'subtitle' => 'The Storage service allows you to manage your project files.',
         'description' => '/docs/services/storage.md',
-        'controller' => 'api/storage.php',
+        'controller' => '',
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/storage',
