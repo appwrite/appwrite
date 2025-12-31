@@ -185,6 +185,12 @@ class Site extends Model
                 'default' => null,
                 'example' => 'index.html',
             ])
+            ->addRule('deploymentScreenshots', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether to generate screenshots during deployment.',
+                'default' => true,
+                'example' => true,
+            ])
         ;
     }
 

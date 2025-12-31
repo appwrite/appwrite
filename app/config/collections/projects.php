@@ -1222,6 +1222,17 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('deploymentScreenshots'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => true,
+                'array' => false,
+            ],
         ],
         'indexes' => [
             [

@@ -141,4 +141,62 @@ class SitesConsoleClientTest extends Scope
 
         $this->cleanupSite($siteId);
     }
+
+    /**
+     * @group screenshots
+    */
+    public function testSiteScreenshotDisabled(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Themed site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+            'deploymentScreenshots' => false
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertFalse($site['body']['deploymentScreenshots']);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static-themed'),
+            'activate' => 'true'
+        ]);
+
+        $this->assertNotEmpty($deploymentId);
+
+        $domain = $this->getSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertStringContainsString("Themed website", $response['body']);
+        $this->assertStringContainsString("@media (prefers-color-scheme: dark)", $response['body']);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEmpty($deployment['body']['screenshotLight']);
+        $this->assertEmpty($deployment['body']['screenshotDark']);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEmpty($site['body']['deploymentScreenshotLight']);
+        $this->assertEmpty($site['body']['deploymentScreenshotDark']);
+
+        $this->cleanupSite($siteId);
+    }
 }

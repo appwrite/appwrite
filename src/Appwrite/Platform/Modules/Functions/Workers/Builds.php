@@ -916,7 +916,7 @@ class Builds extends Action
             $logs = $deployment->getAttribute('buildLogs', '');
 
             /** Screenshot site */
-            if ($resource->getCollection() === 'sites') {
+            if ($resource->getCollection() === 'sites' && $resource->getAttribute('deploymentScreenshots', true)) {
                 Console::log('Site screenshot started');
 
                 $date = \date('H:i:s');

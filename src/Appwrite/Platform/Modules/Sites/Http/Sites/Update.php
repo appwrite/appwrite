@@ -82,6 +82,7 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
+            ->param('deploymentScreenshots', true, new Boolean(), 'Whether to generate screenshots during deployment.', true)
             ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
@@ -118,6 +119,7 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
+        bool $deploymentScreenshots,
         string $specification,
         Request $request,
         Response $response,
@@ -268,6 +270,7 @@ class Update extends Base
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,
+            'deploymentScreenshots' => $deploymentScreenshots,
         ])));
 
         // Redeploy logic

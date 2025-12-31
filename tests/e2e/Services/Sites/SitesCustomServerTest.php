@@ -625,6 +625,68 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSiteWithoutDeploymentScreenshot(): void
+    {
+        $site = $this->createSite([
+            'siteId' => ID::unique(),
+            'name' => 'Static site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'deploymentScreenshots' => true
+        ]);
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertTrue($site['body']['deploymentScreenshots']);
+
+        $siteId = $site['body']['$id'];
+
+        $this->assertNotEmpty($siteId);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertTrue($site['body']['deploymentScreenshots']);
+
+        $site = $this->updateSite([
+            'name' => 'Static site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'deploymentScreenshots' => false, // Important change
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertFalse($site['body']['deploymentScreenshots']);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertFalse($site['body']['deploymentScreenshots']);
+
+        $site = $this->updateSite([
+            'name' => 'Static site',
+            'framework' => 'astro',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm install',
+            'deploymentScreenshots' => true, // Important change
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertTrue($site['body']['deploymentScreenshots']);
+
+        $site = $this->getSite($siteId);
+        $this->assertEquals('200', $site['headers']['status-code']);
+        $this->assertTrue($site['body']['deploymentScreenshots']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListSites(): void
     {
         /**
