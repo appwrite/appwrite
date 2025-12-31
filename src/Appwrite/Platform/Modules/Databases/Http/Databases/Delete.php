@@ -41,7 +41,7 @@ class Delete extends Action
                     group: 'databases',
                     name: 'delete',
                     description: '/docs/references/databases/delete.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_NOCONTENT,
@@ -69,7 +69,7 @@ class Delete extends Action
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         if (!$dbForProject->deleteDocument('databases', $databaseId)) {

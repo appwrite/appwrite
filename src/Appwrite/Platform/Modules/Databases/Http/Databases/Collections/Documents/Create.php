@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
@@ -12,6 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -69,7 +69,7 @@ class Create extends Action
                     name: self::getName(),
                     desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
@@ -178,8 +178,8 @@ class Create extends Action
             $documents = [$data];
         }
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         if ($isBulk && !$isAPIKey && !$isPrivilegedUser) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
@@ -187,12 +187,12 @@ class Create extends Action
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $hasRelationships = \array_filter(
@@ -227,7 +227,7 @@ class Create extends Action
             // Add permissions for current the user if none were provided.
             if (\is_null($permissions)) {
                 $permissions = [];
-                if (!empty($user->getId())) {
+                if (!empty($user->getId()) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
                         $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                     }
@@ -372,7 +372,7 @@ class Create extends Action
                 ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -444,9 +444,9 @@ class Create extends Action
                 )
             );
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (NotFoundException) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

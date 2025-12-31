@@ -1989,7 +1989,7 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'referer' => $url,
-            'origin' => $url
+            'origin' => $url,
         ]));
 
         $this->assertEquals($url, $response['headers']['access-control-allow-origin']);
@@ -1998,11 +1998,10 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'unknown',
             'referer' => $url,
-            'origin' => $url
+            'origin' => $url,
         ]));
 
-        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+        $this->assertArrayNotHasKey('access-control-allow-origin', $response['headers']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
@@ -2011,8 +2010,7 @@ class SitesCustomServerTest extends Scope
             'origin' => 'http://unknown.com'
         ]));
 
-        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+        $this->assertArrayNotHasKey('access-control-allow-origin', $response['headers']);
     }
 
     public function testSiteDownload(): void

@@ -237,8 +237,9 @@ class Base extends Action
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
 
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
         Authorization::skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([

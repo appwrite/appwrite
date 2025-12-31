@@ -470,7 +470,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals("completed", $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals("Pong", $execution['body']['responseBody']);
-        $this->assertEmpty($execution['body']['errors']);
+        $this->assertEmpty($execution['body']['errors'], 'Failed to execute function, ' . json_encode($execution['body']['errors']));
 
         // Test execution logged correct total users
         $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([

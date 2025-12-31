@@ -8,8 +8,6 @@ use Utopia\Validator\Hostname;
 
 class Origin extends Validator
 {
-    protected array $hostnames = [];
-    protected array $schemes = [];
     protected ?string $scheme = null;
     protected ?string $host = null;
     protected string $origin = '';
@@ -17,12 +15,11 @@ class Origin extends Validator
     /**
      * Constructor
      *
-     * @param array<\Utopia\Database\Document> $platforms
+     * @param array<string> $allowedHostnames
+     * @param array<string> $allowedSchemes
      */
-    public function __construct(array $platforms)
+    public function __construct(protected array $allowedHostnames, protected array $allowedSchemes)
     {
-        $this->hostnames = Platform::getHostnames($platforms);
-        $this->schemes = Platform::getSchemes($platforms);
     }
 
 
@@ -53,11 +50,11 @@ class Origin extends Validator
             Platform::SCHEME_EDGE_EXTENSION,
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {
-            $validator = new Hostname($this->hostnames);
+            $validator = new Hostname($this->allowedHostnames);
             return $validator->isValid($this->host);
         }
 
-        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) {
+        if (!empty($this->scheme) && in_array($this->scheme, $this->allowedSchemes, true)) {
             return true;
         }
 

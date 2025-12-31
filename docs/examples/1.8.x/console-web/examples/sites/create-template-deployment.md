@@ -1,4 +1,4 @@
-import { Client, Sites,  } from "@appwrite.io/console";
+import { Client, Sites, TemplateReferenceType } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,7 +11,7 @@ const result = await sites.createTemplateDeployment({
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    type: .Branch,
+    type: TemplateReferenceType.Branch,
     reference: '<REFERENCE>',
     activate: false // optional
 });

@@ -398,7 +398,7 @@ class DatabasesCustomClientTest extends Scope
         \sleep(2);
 
         $this->assertEquals(409, $relation['body']['code']);
-        $this->assertEquals('Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.', $relation['body']['message']);
+        $this->assertEquals('Column with the requested key \'same_key\' already exists. Column keys must be unique, try again with a different key.', $relation['body']['message']);
 
         // twoWayKey is null TwoWayKey is default
         $relation = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
@@ -433,7 +433,7 @@ class DatabasesCustomClientTest extends Scope
 
         \sleep(2);
 
-        $this->assertEquals('Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.', $relation['body']['message']);
+        $this->assertEquals('Column with the requested key \'attr4\' already exists. Column keys must be unique, try again with a different key.', $relation['body']['message']);
         $this->assertEquals(409, $relation['body']['code']);
 
         // RelationshipManyToMany

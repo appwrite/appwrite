@@ -1334,7 +1334,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1346,7 +1346,8 @@ trait DatabasesBase
             'columns' => ['actors'],
         ]);
 
-        $this->assertEquals(202, $actorsArray['headers']['status-code']);
+        $this->assertEquals(400, $actorsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $actorsArray['body']['message']);
 
         $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1359,7 +1360,8 @@ trait DatabasesBase
             'orders' => ['DESC', 'DESC'],
         ]);
 
-        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $twoLevelsArray['body']['message']);
 
         $unknown = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1372,7 +1374,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown column: Unknown. Verify the column name or create the column.', $unknown['body']['message']);
+        $this->assertEquals('The column \'Unknown\' required for the index could not be found. Please confirm all your columns are in the available state.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1385,7 +1387,8 @@ trait DatabasesBase
             'orders' => ['DESC'], // Check order is removed in API
         ]);
 
-        $this->assertEquals(202, $index1['headers']['status-code']);
+        $this->assertEquals(400, $index1['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index1['body']['message']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1397,7 +1400,8 @@ trait DatabasesBase
             'columns' => ['integers'], // array column
         ]);
 
-        $this->assertEquals(202, $index2['headers']['status-code']);
+        $this->assertEquals(400, $index2['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index2['body']['message']);
 
         /**
          * Create Indexes by worker
@@ -1411,7 +1415,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertCount(4, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
@@ -7756,6 +7760,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
         $this->assertEquals(200, $inc['headers']['status-code']);
+        $this->assertEquals($tableId, $inc['body']['$tableId']);
         $this->assertEquals(6, $inc['body']['count']);
 
         // Verify count = 6
@@ -7868,6 +7873,7 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $dec['headers']['status-code']);
         $this->assertEquals(9, $dec['body']['count']);
+        $this->assertEquals($tableId, $dec['body']['$tableId']);
 
         $get = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, array_merge([
             'content-type' => 'application/json',
