@@ -330,7 +330,18 @@ $platformCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
-            ]
+            ],
+            [
+                '$id' => ID::custom('labels'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
