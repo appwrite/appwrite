@@ -13,6 +13,6 @@ class Get extends Base
 
     protected function getPath(): string
     {
-        return 'auth/*';
+        return '/auth/*';
     }
 }
