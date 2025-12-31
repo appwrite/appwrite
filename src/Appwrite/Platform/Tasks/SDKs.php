@@ -75,15 +75,10 @@ class SDKs extends Action
             $git = ($git === 'yes');
 
             $prUrls = [];
-            $createPr = false;
 
             if ($git) {
-                $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
-                $production = $production === 'Appwrite';
+                $production = ($production === 'yes');
                 $message ??= Console::confirm('Please enter your commit message:');
-
-                $createPr = Console::confirm('Should we create pull request automatically? (yes/no)');
-                $createPr = ($createPr === 'yes');
             }
         }
 
@@ -452,7 +447,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-                    if ($createPr) {
+                    if ($git) {
                         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
                         $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
 
