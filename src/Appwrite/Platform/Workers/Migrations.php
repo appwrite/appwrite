@@ -363,10 +363,10 @@ class Migrations extends Action
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
                 );
-            }
 
-            $destination->shutdown();
-            $source->shutdown();
+                $destination->shutdown();
+                $source->shutdown();
+            }
 
             $sourceErrors = $source->getErrors();
             $destinationErrors = $destination->getErrors();
