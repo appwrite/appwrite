@@ -149,9 +149,28 @@ class Install extends Action
         }
 
         $enableAssistant = false;
+        $assistantExistsInOldCompose = false;
+
+        if ($data !== false && isset($compose)) {
+            try {
+                $assistantService = $compose->getService('appwrite-assistant');
+                $assistantExistsInOldCompose = $assistantService !== null;
+            } catch (\Throwable) {
+                // assistant service doesn't exist, keep default false
+            }
+        }
+
         if ($interactive == 'Y' && Console::isInteractive()) {
-            $answer = Console::confirm('Add Appwrite Assistant? (Y/n)');
-            $enableAssistant = !empty($answer) && \strtolower($answer) === 'y';
+            $prompt = 'Add Appwrite Assistant? (Y/n)' . ($assistantExistsInOldCompose ? ' [Currently enabled]' : '');
+            $answer = Console::confirm($prompt);
+
+            if (empty($answer)) {
+                $enableAssistant = $assistantExistsInOldCompose;
+            } else {
+                $enableAssistant = \strtolower($answer) === 'y';
+            }
+        } elseif ($assistantExistsInOldCompose) {
+            $enableAssistant = true;
         }
 
         $input = [];
