@@ -69,6 +69,7 @@ class Create extends Base
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
+            ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
@@ -79,12 +80,19 @@ class Create extends Base
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
             ->param('deploymentScreenshots', true, new Boolean(), 'Whether to generate screenshots during deployment.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Framework specification for the site and builds.', true, ['plan'])
+            ), 'Build specification for the site deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function SSR executions.', true, ['plan'])
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -102,6 +110,7 @@ class Create extends Base
         int $timeout,
         string $installCommand,
         string $buildCommand,
+        string $startCommand,
         string $outputDirectory,
         string $buildRuntime,
         string $adapter,
@@ -112,7 +121,9 @@ class Create extends Base
         bool $providerSilentMode,
         string $providerRootDirectory,
         bool $deploymentScreenshots,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
+        int $deploymentRetention,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -147,11 +158,13 @@ class Create extends Base
             'logging' => $logging,
             'name' => $name,
             'framework' => $framework,
+            'deploymentRetention' => $deploymentRetention,
             'deploymentInternalId' => '',
             'deploymentId' => '',
             'timeout' => $timeout,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
+            'startCommand' => $startCommand,
             'outputDirectory' => $outputDirectory,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'fallbackFile' => $fallbackFile,
@@ -163,7 +176,8 @@ class Create extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'deploymentScreenshots' => $deploymentScreenshots,

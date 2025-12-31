@@ -172,7 +172,7 @@ class Create extends Base
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('specifications')[$function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -403,6 +403,11 @@ class Create extends Base
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
+
+            if (!empty($deployment->getAttribute('startCommand', ''))) {
+                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
+            }
+
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";

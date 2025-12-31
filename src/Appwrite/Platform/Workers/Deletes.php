@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
@@ -63,6 +64,7 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
+            ->inject('queueForDeletes')
             ->inject('getAudit')
             ->callback($this->action(...));
     }
@@ -87,6 +89,7 @@ class Deletes extends Action
         string $executionRetention,
         string $auditRetention,
         Log $log,
+        DeleteEvent $queueForDeletes,
         callable $getAudit,
     ): void {
         $payload = $message->getPayload() ?? [];
@@ -191,6 +194,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
+                $this->deleteOldDeployments($queueForDeletes, $project, $getProjectDB);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
@@ -308,6 +312,61 @@ class Deletes extends Action
     private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
     {
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
+    }
+
+    private function deleteOldDeployments(DeleteEvent $queueForDeletes, Document $project, callable $getProjectDB): void
+    {
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $removalCallback = function (Document $resource) use ($dbForProject, $queueForDeletes, $project) {
+            $retention = $resource->getAttribute('deploymentRetention', 0);
+
+            // 0 means unlimited - never delete
+            if ($retention === 0) {
+                return;
+            }
+
+            $activeDeploymentId = $resource->getAttribute('deploymentId', '');
+
+            $queries = [
+                Query::createdBefore(DateTime::addSeconds(new \DateTime(), -1 * $retention * 24 * 60 * 60)),
+                Query::equal('resourceInternalId', [$resource->getSequence()]),
+                Query::equal('resourceType', [$resource->getCollection()]),
+                Query::orderDesc('$createdAt'),
+            ];
+
+            if (!empty($activeDeploymentId)) {
+                $queries[] = Query::notEqual('$id', $activeDeploymentId);
+            }
+
+            $this->deleteByGroup(
+                'deployments',
+                $queries,
+                $dbForProject,
+                function (Document $deployment) use ($queueForDeletes, $project) {
+                    $queueForDeletes
+                        ->setType(DELETE_TYPE_DOCUMENT)
+                        ->setDocument($deployment)
+                        ->setProject($project)
+                        ->trigger();
+                }
+            );
+        };
+
+        $this->listByGroup(
+            'functions',
+            [],
+            $dbForProject,
+            $removalCallback
+        );
+
+        $this->listByGroup(
+            'sites',
+            [],
+            $dbForProject,
+            $removalCallback
+        );
     }
 
     /**

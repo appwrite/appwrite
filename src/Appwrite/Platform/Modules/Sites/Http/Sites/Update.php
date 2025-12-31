@@ -73,6 +73,7 @@ class Update extends Base
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
+            ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
@@ -83,12 +84,19 @@ class Update extends Base
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
             ->param('deploymentScreenshots', true, new Boolean(), 'Whether to generate screenshots during deployment.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Framework specification for the site and builds.', true, ['plan'])
+            ), 'Build specification for the site deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function SSR executions.', true, ['plan'])
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -110,6 +118,7 @@ class Update extends Base
         int $timeout,
         string $installCommand,
         string $buildCommand,
+        string $startCommand,
         string $outputDirectory,
         string $buildRuntime,
         string $adapter,
@@ -120,7 +129,9 @@ class Update extends Base
         bool $providerSilentMode,
         string $providerRootDirectory,
         bool $deploymentScreenshots,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
+        int $deploymentRetention,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -228,6 +239,7 @@ class Update extends Base
             $site->getAttribute('name') !== $name ||
             $site->getAttribute('buildCommand') !== $buildCommand ||
             $site->getAttribute('installCommand') !== $installCommand ||
+            $site->getAttribute('startCommand') !== $startCommand ||
             $site->getAttribute('outputDirectory') !== $outputDirectory ||
             $site->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
             $site->getAttribute('framework') !== $framework
@@ -235,14 +247,22 @@ class Update extends Base
             $live = false;
         }
 
-        // Enforce Cold Start if spec limits change.
-        if ($site->getAttribute('specification') !== $specification && !empty($site->getAttribute('deploymentId'))) {
-            try {
-                $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
-            } catch (\Throwable $th) {
-                // Don't throw if the deployment doesn't exist
-                if ($th->getCode() !== 404) {
-                    throw $th;
+        if (!empty($site->getAttribute('deploymentId'))) {
+            $specsChanged = false;
+            if ($site->getAttribute('runtimeSpecification') !== $runtimeSpecification) {
+                $specsChanged = true;
+            } elseif ($site->getAttribute('buildSpecification') !== $buildSpecification) {
+                $specsChanged = true;
+            }
+
+            if ($specsChanged) {
+                try {
+                    $executor->deleteRuntime($project->getId(), $site->getAttribute('deploymentId'));
+                } catch (\Throwable $th) {
+                    // Don't throw if the deployment doesn't exist
+                    if ($th->getCode() !== 404) {
+                        throw $th;
+                    }
                 }
             }
         }
@@ -254,8 +274,10 @@ class Update extends Base
             'logging' => $logging,
             'live' => $live,
             'timeout' => $timeout,
+            'deploymentRetention' => $deploymentRetention,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
+            'startCommand' => $startCommand,
             'outputDirectory' => $outputDirectory,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
@@ -265,7 +287,8 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,

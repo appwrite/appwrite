@@ -368,7 +368,7 @@ class Functions extends Action
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
-        $spec = Config::getParam('specifications')[$function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $log->addTag('deploymentId', $deploymentId);
 
@@ -533,6 +533,11 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
+
+            if (!empty($deployment->getAttribute('startCommand', ''))) {
+                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
+            }
+
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
