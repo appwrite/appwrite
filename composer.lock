@@ -2673,16 +2673,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.1",
+            "version": "v7.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "26cc224ea7103dda90e9694d9e139a389092d007"
+                "reference": "d01dfac1e0dc99f18da48b18101c23ce57929616"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/26cc224ea7103dda90e9694d9e139a389092d007",
-                "reference": "26cc224ea7103dda90e9694d9e139a389092d007",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/d01dfac1e0dc99f18da48b18101c23ce57929616",
+                "reference": "d01dfac1e0dc99f18da48b18101c23ce57929616",
                 "shasum": ""
             },
             "require": {
@@ -2750,7 +2750,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.1"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.3"
             },
             "funding": [
                 {
@@ -2770,7 +2770,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-12-04T21:12:57+00:00"
+            "time": "2025-12-23T14:50:43+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -5438,16 +5438,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.7.2",
+            "version": "1.8.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3876d486e2c00b788fbda677ef9fcc77391b8898"
+                "reference": "b6cc29d3bd247e193f3c06b4168dc69d884645f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3876d486e2c00b788fbda677ef9fcc77391b8898",
-                "reference": "3876d486e2c00b788fbda677ef9fcc77391b8898",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b6cc29d3bd247e193f3c06b4168dc69d884645f0",
+                "reference": "b6cc29d3bd247e193f3c06b4168dc69d884645f0",
                 "shasum": ""
             },
             "require": {
@@ -5483,9 +5483,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.7.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.6"
             },
-            "time": "2025-12-24T07:49:12+00:00"
+            "time": "2025-12-31T10:22:17+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -7933,16 +7933,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v8.0.1",
+            "version": "v8.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "fcb73f69d655b48fcb894a262f074218df08bd58"
+                "reference": "6145b304a5c1ea0bdbd0b04d297a5864f9a7d587"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/fcb73f69d655b48fcb894a262f074218df08bd58",
-                "reference": "fcb73f69d655b48fcb894a262f074218df08bd58",
+                "url": "https://api.github.com/repos/symfony/console/zipball/6145b304a5c1ea0bdbd0b04d297a5864f9a7d587",
+                "reference": "6145b304a5c1ea0bdbd0b04d297a5864f9a7d587",
                 "shasum": ""
             },
             "require": {
@@ -7999,7 +7999,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v8.0.1"
+                "source": "https://github.com/symfony/console/tree/v8.0.3"
             },
             "funding": [
                 {
@@ -8019,7 +8019,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-12-05T15:25:33+00:00"
+            "time": "2025-12-23T14:52:06+00:00"
         },
         {
             "name": "symfony/filesystem",
@@ -8093,16 +8093,16 @@
         },
         {
             "name": "symfony/finder",
-            "version": "v8.0.0",
+            "version": "v8.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "7598dd5770580fa3517ec83e8da0c9b9e01f4291"
+                "reference": "dd3a2953570a283a2ba4e17063bb98c734cf5b12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/7598dd5770580fa3517ec83e8da0c9b9e01f4291",
-                "reference": "7598dd5770580fa3517ec83e8da0c9b9e01f4291",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/dd3a2953570a283a2ba4e17063bb98c734cf5b12",
+                "reference": "dd3a2953570a283a2ba4e17063bb98c734cf5b12",
                 "shasum": ""
             },
             "require": {
@@ -8137,7 +8137,7 @@
             "description": "Finds files and directories via an intuitive fluent interface",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/finder/tree/v8.0.0"
+                "source": "https://github.com/symfony/finder/tree/v8.0.3"
             },
             "funding": [
                 {
@@ -8157,7 +8157,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-11-05T14:36:47+00:00"
+            "time": "2025-12-23T14:52:06+00:00"
         },
         {
             "name": "symfony/options-resolver",
