@@ -224,7 +224,7 @@ services:
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
-      - _APP_CONSOLE_DEV_KEY_SECRET
+      - _APP_PLATFORM_DEV_KEY_SECRET
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

@@ -52,15 +52,15 @@ $console = [
     'smtpBaseTemplate' => APP_BRANDED_EMAIL_BASE_TEMPLATE,
     'devKeys' => [
         new Document([
-            '$id' => ID::custom('consoleDevKey'),
+            '$id' => ID::custom('platformDevKey'),
             '$permissions' => [],
             'projectInternalId' => ID::custom('console'),
             'projectId' => ID::custom('console'),
-            'name' => 'Console dev key',
+            'name' => 'Platform dev key',
             'expire' => null,
             'sdks' => [],
             'accessedAt' => null,
-            'secret' => System::getEnv('_APP_CONSOLE_DEV_KEY_SECRET')
+            'secret' => System::getEnv('_APP_PLATFORM_DEV_KEY_SECRET')
         ])
     ]
 ];

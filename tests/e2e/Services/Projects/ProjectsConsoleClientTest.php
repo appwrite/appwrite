@@ -5382,16 +5382,16 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testConsoleDevKeys(): void
     {
-        $consoleDevKey = System::getEnv('_APP_CONSOLE_DEV_KEY_SECRET', '');
+        $platformDevKey = System::getEnv('_APP_PLATFORM_DEV_KEY_SECRET', '');
         $abuseMockKey = 'key_' . \uniqid();
 
-        $this->assertNotEmpty($consoleDevKey);
+        $this->assertNotEmpty($platformDevKey);
 
         $client = $this->client;
-        $hitMockEndpoint = function (bool $withDevKey) use ($client, $consoleDevKey, $abuseMockKey) {
+        $hitMockEndpoint = function (bool $withDevKey) use ($client, $platformDevKey, $abuseMockKey) {
             $headers = [];
             if ($withDevKey) {
-                $headers['x-appwrite-dev-key'] = $consoleDevKey;
+                $headers['x-appwrite-dev-key'] = $platformDevKey;
             }
 
             $response = $client->call(Client::METHOD_GET, '/mock/tests/abuse', $headers, [
