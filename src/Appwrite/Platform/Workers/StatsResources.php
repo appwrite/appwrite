@@ -111,7 +111,13 @@ class StatsResources extends Action
                 Query::equal('projectInternalId', [$project->getSequence()])
             ]);
             $keys = $dbForPlatform->count('keys', [
-                Query::equal('projectInternalId', [$project->getSequence()])
+                Query::or([
+                    Query::equal('projectInternalId', [$project->getSequence()]),
+                    Query::and([
+                        Query::equal('resourceType', ['projects']),
+                        Query::equal('resourceInternalId', [$project->getSequence()]),
+                    ])
+                ]),
             ]);
 
             $domains = $dbForPlatform->count('rules', [
@@ -192,13 +198,13 @@ class StatsResources extends Action
             }
 
             try {
-                $this->countForDatabase($dbForProject, $region);
+                $dbForProject->skipFilters(fn () => $this->countForDatabase($dbForProject, $region), ['subQueryAttributes', 'subQueryIndexes']);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_database_{$project->getId()}"]);
             }
 
             try {
-                $this->countForSitesAndFunctions($dbForProject, $region);
+                $dbForProject->skipFilters(fn () => $this->countForSitesAndFunctions($dbForProject, $region), ['subQueryVariables', 'subQueryProjectVariables']);
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_functions_{$project->getId()}"]);
             }

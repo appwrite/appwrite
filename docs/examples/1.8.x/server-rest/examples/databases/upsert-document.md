@@ -8,7 +8,13 @@ X-Appwrite-Key: <YOUR_API_KEY>
 X-Appwrite-JWT: <YOUR_JWT>
 
 {
-  "data": {},
+  "data": {
+    "username": "walter.obrien",
+    "email": "walter.obrien@example.com",
+    "fullName": "Walter O'Brien",
+    "age": 30,
+    "isAdmin": false
+  },
   "permissions": ["read(\"any\")"],
   "transactionId": "<TRANSACTION_ID>"
 }

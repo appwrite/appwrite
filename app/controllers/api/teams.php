@@ -72,7 +72,7 @@ App::post('/v1/teams')
         group: 'teams',
         name: 'create',
         description: '/docs/references/teams/create-team.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -163,7 +163,7 @@ App::get('/v1/teams')
         group: 'teams',
         name: 'list',
         description: '/docs/references/teams/list-teams.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -237,7 +237,7 @@ App::get('/v1/teams/:teamId')
         group: 'teams',
         name: 'get',
         description: '/docs/references/teams/get-team.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -268,7 +268,7 @@ App::get('/v1/teams/:teamId/prefs')
         group: 'teams',
         name: 'getPrefs',
         description: '/docs/references/teams/get-team-prefs.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -310,7 +310,7 @@ App::put('/v1/teams/:teamId')
         group: 'teams',
         name: 'updateName',
         description: '/docs/references/teams/update-team-name.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -356,7 +356,7 @@ App::put('/v1/teams/:teamId/prefs')
         group: 'teams',
         name: 'updatePrefs',
         description: '/docs/references/teams/update-team-prefs.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -403,7 +403,7 @@ App::delete('/v1/teams/:teamId')
         group: 'teams',
         name: 'delete',
         description: '/docs/references/teams/delete-team.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -462,7 +462,7 @@ App::post('/v1/teams/:teamId/memberships')
         group: 'memberships',
         name: 'createMembership',
         description: '/docs/references/teams/create-team-membership.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -848,7 +848,7 @@ App::get('/v1/teams/:teamId/memberships')
         group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/teams/list-team-members.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -991,7 +991,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         group: 'memberships',
         name: 'getMembership',
         description: '/docs/references/teams/get-team-member.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1078,7 +1078,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         group: 'memberships',
         name: 'updateMembership',
         description: '/docs/references/teams/update-team-membership.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1188,7 +1188,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         group: 'memberships',
         name: 'updateMembershipStatus',
         description: '/docs/references/teams/update-team-membership-status.md',
-        auth: [AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1353,7 +1353,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         group: 'memberships',
         name: 'deleteMembership',
         description: '/docs/references/teams/delete-team-membership.md',
-        auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -1464,7 +1464,8 @@ App::get('/v1/teams/:teamId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1478,9 +1479,12 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'team/' . $team->getId();
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -1527,7 +1531,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

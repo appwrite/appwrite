@@ -129,8 +129,7 @@ class Builds extends Action
         $resource = new Document($payload['resource'] ?? []);
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
-        $platform = $payload['platform'] ?? [];
-
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
 
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
@@ -435,18 +434,19 @@ class Builds extends Action
                 // Build from template
                 $templateRepositoryName = $template->getAttribute('repositoryName', '');
                 $templateOwnerName = $template->getAttribute('ownerName', '');
-                $templateVersion = $template->getAttribute('version', '');
+                $templateReferenceType = $template->getAttribute('referenceType', '');
+                $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
                 $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateVersion)) {
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateReferenceType) && !empty($templateReferenceValue)) {
                     // Clone template repo
                     $tmpTemplateDirectory = '/tmp/builds/' . $deploymentId . '/template';
 
-                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateVersion, GitHub::CLONE_TYPE_TAG, $tmpTemplateDirectory, $templateRootDirectory);
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateReferenceValue, $templateReferenceType, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
@@ -635,11 +635,14 @@ class Builds extends Action
                 'APPWRITE_VCS_ROOT_DIRECTORY' => $deployment->getAttribute('providerRootDirectory', ''),
             ]);
 
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
             switch ($resource->getCollection()) {
                 case 'functions':
                     $vars = [
                         ...$vars,
-                        'APPWRITE_FUNCTION_API_ENDPOINT' => $platform['endpoint'],
+                        'APPWRITE_FUNCTION_API_ENDPOINT' => $endpoint,
                         'APPWRITE_FUNCTION_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_FUNCTION_ID' => $resource->getId(),
                         'APPWRITE_FUNCTION_NAME' => $resource->getAttribute('name'),
@@ -654,7 +657,7 @@ class Builds extends Action
                 case 'sites':
                     $vars = [
                         ...$vars,
-                        'APPWRITE_SITE_API_ENDPOINT' => $platform['endpoint'],
+                        'APPWRITE_SITE_API_ENDPOINT' => $endpoint,
                         'APPWRITE_SITE_API_KEY' => API_KEY_DYNAMIC . '_' . $apiKey,
                         'APPWRITE_SITE_ID' => $resource->getId(),
                         'APPWRITE_SITE_NAME' => $resource->getAttribute('name'),

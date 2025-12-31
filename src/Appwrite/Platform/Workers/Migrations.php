@@ -41,18 +41,12 @@ use Utopia\System\System;
 
 class Migrations extends Action
 {
-    protected Database $dbForProject;
-
-    protected Database $dbForPlatform;
-
-    protected Device $deviceForMigrations;
-    protected Device $deviceForFiles;
-
-    protected Document $project;
-
-    protected array $plan;
-
-    protected array $platform;
+    protected ?Database $dbForProject;
+    protected ?Database $dbForPlatform;
+    protected ?Device $deviceForMigrations;
+    protected ?Device $deviceForFiles;
+    protected ?Document $project;
+    protected array $plan = [];
 
     /**
      * @var array<string, int>
@@ -60,9 +54,9 @@ class Migrations extends Action
     protected array $sourceReport = [];
 
     /**
-     * @var callable
+     * @var callable|null
      */
-    protected $logError;
+    protected $logError = null;
 
     public static function getName(): string
     {
@@ -108,7 +102,6 @@ class Migrations extends Action
         $this->deviceForMigrations = $deviceForMigrations;
         $this->deviceForFiles = $deviceForFiles;
         $this->plan = $plan;
-        $this->platform = $payload['platform'] ?? [];
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
@@ -126,17 +119,32 @@ class Migrations extends Action
         $this->project = $project;
         $this->logError = $logError;
 
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
+
         if (!empty($events)) {
             return;
         }
 
-        $this->processMigration($migration, $queueForRealtime, $queueForMails);
+        try {
+            $this->processMigration($migration, $queueForRealtime, $queueForMails, $platform);
+        } finally {
+            $this->dbForProject = null;
+            $this->dbForPlatform = null;
+            $this->project = null;
+            $this->logError = null;
+            $this->deviceForMigrations = null;
+            $this->deviceForFiles = null;
+            $this->plan = [];
+            $this->sourceReport = [];
+
+            gc_collect_cycles();
+        }
     }
 
     /**
      * @throws Exception
      */
-    protected function processSource(Document $migration): Source
+    protected function processSource(Document $migration, array $platform): Source
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
@@ -144,7 +152,6 @@ class Migrations extends Action
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
         $dataSource = Appwrite::SOURCE_API;
-        $endpoint = $this->platform['endpoint'] ?: ($credentials['endpoint'] ?? 'http://appwrite.test/v1');
         $database = null;
         $queries = [];
 
@@ -178,7 +185,7 @@ class Migrations extends Action
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
-                $endpoint,
+                $credentials['endpoint'],
                 $credentials['apiKey'],
                 $dataSource,
                 $database,
@@ -193,7 +200,8 @@ class Migrations extends Action
             default => throw new \Exception('Invalid source type'),
         };
 
-        $this->sourceReport = $migrationSource->report();
+        $resources = $migration->getAttribute('resources', []);
+        $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
     }
@@ -201,15 +209,17 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processDestination(Document $migration, string $apiKey): Destination
+    protected function processDestination(Document $migration, string $apiKey, array $platform): Destination
     {
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $this->project->getId(),
-                $this->platform['endpoint'],
+                $protocol . '://' . $platform['apiHostname'] . '/v1',
                 $apiKey,
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
@@ -300,6 +310,7 @@ class Migrations extends Action
         Document $migration,
         Realtime $queueForRealtime,
         Mail $queueForMails,
+        array $platform,
     ): void {
         $project = $this->dbForPlatform->getDocument('projects', $this->project->getId());
         $tempAPIKey = $this->generateAPIKey($project);
@@ -313,8 +324,15 @@ class Migrations extends Action
             ) {
                 $credentials = $migration->getAttribute('credentials', []);
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
-                $credentials['endpoint'] = $credentials['endpoint'] ?? $this->platform['endpoint'];
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
+
+                /**
+                 * endpoint set
+                 */
+                if (empty($credentials['endpoint'])) {
+                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+                    $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
+                }
                 $migration->setAttribute('credentials', $credentials);
             }
 
@@ -322,8 +340,8 @@ class Migrations extends Action
             $migration->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-            $source = $this->processSource($migration);
-            $destination = $this->processDestination($migration, $tempAPIKey);
+            $source = $this->processSource($migration, $platform);
+            $destination = $this->processDestination($migration, $tempAPIKey, $platform);
 
             $transfer = new Transfer(
                 $source,
@@ -363,7 +381,9 @@ class Migrations extends Action
             $migration->setAttribute('status', 'completed');
             $migration->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {
-            Console::error($th->getMessage());
+            Console::error('Message: ' . $th->getMessage());
+            Console::error('File: ' . $th->getFile());
+            Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
             if (! $migration->isEmpty()) {
@@ -415,9 +435,13 @@ class Migrations extends Action
                 $source?->success();
 
                 if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime);
+                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
                 }
             }
+
+            $transfer = null;
+            $source = null;
+            $destination = null;
         }
     }
 
@@ -438,6 +462,7 @@ class Migrations extends Action
         Document $migration,
         Mail $queueForMails,
         Realtime $queueForRealtime,
+        array $platform,
     ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
@@ -487,6 +512,7 @@ class Migrations extends Action
                     user: $user,
                     options: $options,
                     queueForMails: $queueForMails,
+                    platform: $platform,
                     sizeMB: $sizeMB
                 );
 
@@ -546,6 +572,7 @@ class Migrations extends Action
             user: $user,
             options: $options,
             queueForMails: $queueForMails,
+            platform: $platform,
             downloadUrl: $downloadUrl
         );
     }
@@ -558,6 +585,7 @@ class Migrations extends Action
      * @param Document $user The user who triggered the operation
      * @param array $options Migration options
      * @param Mail $queueForMails
+     * @param array $platform
      * @param string $downloadUrl Download URL for successful exports
      * @param float $sizeMB File size in MB for failed exports
      * @return void
@@ -569,15 +597,16 @@ class Migrations extends Action
         Document $user,
         array $options,
         Mail $queueForMails,
+        array $platform,
         string $downloadUrl = '',
-        float $sizeMB = 0.0
+        float $sizeMB = 0.0,
     ): void {
         if (!($options['notify'] ?? false)) {
             return;
         }
 
         if ($user->isEmpty()) {
-            Console::warning("User not found for CSV export notification: {$user->getInternalId()}");
+            Console::warning("User not found for CSV export notification: {$user->getSequence()}");
             return;
         }
 
@@ -624,13 +653,14 @@ class Migrations extends Action
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            'logoUrl' => $this->plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
-            'accentColor' => $this->plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
-            'twitterUrl' => $this->plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
-            'discordUrl' => $this->plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
-            'githubUrl' => $this->plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
-            'termsUrl' => $this->plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
-            'privacyUrl' => $this->plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+            'logoUrl' => $platform['logoUrl'],
+            'accentColor' => $platform['accentColor'],
+            'twitter' => $platform['twitterUrl'],
+            'discord' => $platform['discordUrl'],
+            'github' => $platform['githubUrl'],
+            'terms' => $platform['termsUrl'],
+            'privacy' => $platform['privacyUrl'],
+            'platform' => $platform['platformName'],
         ];
 
         $queueForMails
@@ -641,6 +671,7 @@ class Migrations extends Action
             ->setVariables($emailVariables)
             ->setName($user->getAttribute('name', $user->getAttribute('email')))
             ->setRecipient($user->getAttribute('email'))
+            ->setSenderName($platform['emailSenderName'])
             ->trigger();
 
         Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));

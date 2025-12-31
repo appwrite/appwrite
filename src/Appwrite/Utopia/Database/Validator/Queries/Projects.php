@@ -17,4 +17,9 @@ class Projects extends Base
     {
         parent::__construct('projects', self::ALLOWED_ATTRIBUTES);
     }
+
+    public function isSelectQueryAllowed(): bool
+    {
+        return true;
+    }
 }

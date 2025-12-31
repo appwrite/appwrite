@@ -69,7 +69,7 @@ class Create extends Action
                     name: self::getName(),
                     desc: 'Create document',
                     description: '/docs/references/databases/create-document.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
@@ -227,7 +227,7 @@ class Create extends Action
             // Add permissions for current the user if none were provided.
             if (\is_null($permissions)) {
                 $permissions = [];
-                if (!empty($user->getId())) {
+                if (!empty($user->getId()) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
                         $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                     }

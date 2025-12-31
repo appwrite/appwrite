@@ -47,7 +47,7 @@ class Update extends Action
                     group: 'mfa',
                     name: 'updateMfaAuthenticator',
                     description: '/docs/references/account/update-mfa-authenticator.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -66,7 +66,7 @@ class Update extends Action
                     group: 'mfa',
                     name: 'updateMFAAuthenticator',
                     description: '/docs/references/account/update-mfa-authenticator.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
