@@ -20,7 +20,7 @@ return [
         'name' => 'Console',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'web/console.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -270,9 +270,9 @@ return [
     'console' => [
         'key' => 'console',
         'name' => 'Console',
-        'subtitle' => 'The Console service allows you to interact with console relevant informations.',
+        'subtitle' => 'The Console service allows you to interact with console relevant information.',
         'description' => '',
-        'controller' => 'api/console.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',
