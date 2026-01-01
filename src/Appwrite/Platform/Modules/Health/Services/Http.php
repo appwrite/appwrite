@@ -8,11 +8,6 @@ use Appwrite\Platform\Modules\Health\Http\Health\Certificate\Get as GetCertifica
 use Appwrite\Platform\Modules\Health\Http\Health\DB\Get as GetDB;
 use Appwrite\Platform\Modules\Health\Http\Health\Get as GetHealth;
 use Appwrite\Platform\Modules\Health\Http\Health\PubSub\Get as GetPubSub;
-use Appwrite\Platform\Modules\Health\Http\Health\Stats\Get as GetStats;
-use Appwrite\Platform\Modules\Health\Http\Health\Time\Get as GetTime;
-use Appwrite\Platform\Modules\Health\Http\Health\Version\Get as GetHealthVersion;
-use Appwrite\Platform\Modules\Health\Http\Health\Storage\Get as GetStorage;
-use Appwrite\Platform\Modules\Health\Http\Health\Storage\Local\Get as GetStorageLocal;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Builds\Get as GetQueueBuilds;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Certificates\Get as GetQueueCertificates;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Databases\Get as GetQueueDatabases;
@@ -26,6 +21,11 @@ use Appwrite\Platform\Modules\Health\Http\Health\Queue\Migrations\Get as GetQueu
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsResources\Get as GetQueueStatsResources;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsUsage\Get as GetQueueUsage;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Webhooks\Get as GetQueueWebhooks;
+use Appwrite\Platform\Modules\Health\Http\Health\Stats\Get as GetStats;
+use Appwrite\Platform\Modules\Health\Http\Health\Storage\Get as GetStorage;
+use Appwrite\Platform\Modules\Health\Http\Health\Storage\Local\Get as GetStorageLocal;
+use Appwrite\Platform\Modules\Health\Http\Health\Time\Get as GetTime;
+use Appwrite\Platform\Modules\Health\Http\Health\Version\Get as GetHealthVersion;
 use Utopia\Platform\Service;
 
 class Http extends Service
