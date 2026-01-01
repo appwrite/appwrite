@@ -65,12 +65,27 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
             }
 
-            if ($device->read($filePath) !== 'test') {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
-            }
-
-            if (!$device->delete($filePath)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
+            $readError = null;
+            try {
+                if ($device->read($filePath) !== 'test') {
+                    $readError = new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
+                }
+            } catch (\Throwable $e) {
+                $readError = $e;
+            } finally {
+                // Always attempt to clean up test file
+                if (!$device->delete($filePath)) {
+                    if ($readError !== null) {
+                        // If read already failed, wrap delete error but preserve original
+                        \error_log('Failed deleting test file from ' . $device->getRoot() . ' during read error recovery');
+                    } else {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
+                    }
+                }
+                // Re-throw read error if it occurred
+                if ($readError !== null) {
+                    throw $readError;
+                }
             }
         }
 
