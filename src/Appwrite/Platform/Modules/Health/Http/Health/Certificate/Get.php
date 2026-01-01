@@ -72,9 +72,9 @@ class Get extends Action
         $streamContextParams = stream_context_get_params($sslSocket);
         $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'];
         $certificatePayload = openssl_x509_parse($peerCertificate);
-        
+
         fclose($sslSocket); // Close the socket to prevent resource leak
-        
+
         if ($certificatePayload === false) {
             throw new Exception(Exception::HEALTH_INVALID_HOST);
         }
@@ -94,4 +94,5 @@ class Get extends Action
             'validTo' => $certificatePayload['validTo_time_t'],
             'signatureTypeSN' => $certificatePayload['signatureTypeSN'] ?? '',
         ]), Response::MODEL_HEALTH_CERTIFICATE);
+    }
 }
