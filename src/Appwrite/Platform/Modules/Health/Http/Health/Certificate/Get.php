@@ -72,6 +72,12 @@ class Get extends Action
         $streamContextParams = stream_context_get_params($sslSocket);
         $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'];
         $certificatePayload = openssl_x509_parse($peerCertificate);
+        
+        fclose($sslSocket); // Close the socket to prevent resource leak
+        
+        if ($certificatePayload === false) {
+            throw new Exception(Exception::HEALTH_INVALID_HOST);
+        }
 
         $sslExpiration = $certificatePayload['validTo_time_t'];
         $status = $sslExpiration < time() ? 'fail' : 'pass';
@@ -81,12 +87,11 @@ class Get extends Action
         }
 
         $response->dynamic(new Document([
-            'name' => $certificatePayload['name'],
-            'subjectSN' => $certificatePayload['subject']['CN'],
-            'issuerOrganisation' => $certificatePayload['issuer']['O'],
+            'name' => $certificatePayload['name'] ?? '',
+            'subjectCN' => $certificatePayload['subject']['CN'] ?? '',
+            'issuerOrganisation' => $certificatePayload['issuer']['O'] ?? '',
             'validFrom' => $certificatePayload['validFrom_time_t'],
             'validTo' => $certificatePayload['validTo_time_t'],
-            'signatureTypeSN' => $certificatePayload['signatureTypeSN'],
+            'signatureTypeSN' => $certificatePayload['signatureTypeSN'] ?? '',
         ]), Response::MODEL_HEALTH_CERTIFICATE);
-    }
 }
