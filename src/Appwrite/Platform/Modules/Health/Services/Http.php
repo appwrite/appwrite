@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Health\Http\Health\Certificate\Get as GetCertifica
 use Appwrite\Platform\Modules\Health\Http\Health\DB\Get as GetDB;
 use Appwrite\Platform\Modules\Health\Http\Health\Get as GetHealth;
 use Appwrite\Platform\Modules\Health\Http\Health\PubSub\Get as GetPubSub;
+use Appwrite\Platform\Modules\Health\Http\Health\Queue\Audits\Get as GetQueueAudits;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Builds\Get as GetQueueBuilds;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Certificates\Get as GetQueueCertificates;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Databases\Get as GetQueueDatabases;
@@ -45,6 +46,7 @@ class Http extends Service
         $this->addAction(GetStorage::getName(), new GetStorage());
         $this->addAction(GetAntivirus::getName(), new GetAntivirus());
 
+        $this->addAction(GetQueueAudits::getName(), new GetQueueAudits());
         $this->addAction(GetQueueWebhooks::getName(), new GetQueueWebhooks());
         $this->addAction(GetQueueLogs::getName(), new GetQueueLogs());
         $this->addAction(GetQueueCertificates::getName(), new GetQueueCertificates());

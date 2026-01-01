@@ -121,7 +121,7 @@ class Get extends Base
         };
         $failed = $queue->getSize(failed: true);
 
-        $this->assertFailedQueueThreshold($failed, $threshold);
+        $this->assertQueueThreshold($failed, $threshold, true);
 
         $response->dynamic(new Document(['size' => $failed]), Response::MODEL_HEALTH_QUEUE);
     }

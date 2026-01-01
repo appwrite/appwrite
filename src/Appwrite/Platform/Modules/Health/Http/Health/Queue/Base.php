@@ -10,17 +10,11 @@ abstract class Base extends Action
 {
     use HTTP;
 
-    protected function assertQueueThreshold(int $size, int $threshold): void
+    protected function assertQueueThreshold(int $size, int $threshold, bool $failed = false): void
     {
         if ($size >= $threshold) {
-            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
-        }
-    }
-
-    protected function assertFailedQueueThreshold(int $failed, int $threshold): void
-    {
-        if ($failed >= $threshold) {
-            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue failed jobs threshold hit. Current size is {$failed} and threshold is {$threshold}.");
+            $context = $failed ? 'failed jobs' : 'jobs';
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue {$context} threshold hit. Current value is {$size} and threshold is {$threshold}.");
         }
     }
 }
