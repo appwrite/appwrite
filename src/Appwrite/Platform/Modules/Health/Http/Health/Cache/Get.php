@@ -71,7 +71,7 @@ class Get extends Action
                         $output[] = new Document([
                             'name' => $key . " ($cache)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000),
                         ]);
                     } else {
                         $failures[] = $cache;

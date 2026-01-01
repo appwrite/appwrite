@@ -76,7 +76,7 @@ class Get extends Action
 
         $response->dynamic(new Document([
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000),
+            'ping' => \round((\microtime(true) - $checkStart) * 1000),
         ]), Response::MODEL_HEALTH_STATUS);
     }
 }
