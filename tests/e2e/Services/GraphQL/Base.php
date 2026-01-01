@@ -2426,15 +2426,21 @@ trait Base
             case self::GET_DB_HEALTH:
                 return 'query getDbHealth {
                     healthGetDB {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_CACHE_HEALTH:
                 return 'query getCacheHealth {
                     healthGetCache {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_TIME_HEALTH:

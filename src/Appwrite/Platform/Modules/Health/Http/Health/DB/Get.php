@@ -72,7 +72,7 @@ class Get extends Action
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) * 1000),
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $database;
@@ -84,12 +84,12 @@ class Get extends Action
         }
 
         if (!empty($failures)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . \implode(', ', $failures));
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
 
         $response->dynamic(new Document([
             'statuses' => $output,
-            'total' => \count($output),
+            'total' => count($output),
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     }
 }
