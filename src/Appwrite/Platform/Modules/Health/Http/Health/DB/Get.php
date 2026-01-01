@@ -41,7 +41,7 @@ class Get extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_HEALTH_STATUS,
+                        model: Response::MODEL_HEALTH_STATUS_LIST,
                     )
                 ],
                 contentType: ContentType::JSON
