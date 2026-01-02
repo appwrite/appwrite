@@ -172,7 +172,8 @@ class Create extends Base
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        // TODO: backwards-compatibility dual-read, remove eventually.
+        $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', $function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT))];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
