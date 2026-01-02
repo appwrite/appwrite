@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@astrojs/node": "^9.5.1",
-    "express": "^5.1.0"
+    "express": "^5.2.1"
   },
   "devDependencies": {
-    "astro": "^5.15.9"
+    "astro": "^5.16.6"
   }
 }
