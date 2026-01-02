@@ -249,7 +249,7 @@ class Update extends Base
             // TODO: backwards-compatibility dual-read, remove eventually.
             if ($function->getAttribute('runtimeSpecification', $function->getAttribute('specification')) !== $runtimeSpecification) {
                 $specsChanged = true;
-            // TODO: backwards-compatibility dual-read, remove eventually.
+                // TODO: backwards-compatibility dual-read, remove eventually.
             } elseif ($function->getAttribute('buildSpecification', $function->getAttribute('specification')) !== $buildSpecification) {
                 $specsChanged = true;
             }
