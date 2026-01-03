@@ -374,7 +374,7 @@ class Builds extends Action
                     Console::log('Template cloned');
                 }
             } elseif ($isVcsEnabled) {
-                // VCS and VCS+Temaplte
+                // VCS and VCS+Template
                 $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
                 $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \rtrim($rootDirectory, '/');
@@ -492,7 +492,7 @@ class Builds extends Action
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
                 $localDevice = new Local();
 
-                if (substr($tmpDirectory, -1) !== '/') {
+                if (!str_ends_with($tmpDirectory, '/')) {
                     $tmpDirectory .= '/';
                 }
 
@@ -605,7 +605,6 @@ class Builds extends Action
             $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
             $memory =  max($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT, $minMemory);
             $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
-
 
             $jwtExpiry = (int)System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
             $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
@@ -1472,12 +1471,47 @@ class Builds extends Action
             $commands[] = $deployment->getAttribute('buildCommands', '');
             $commands[] = $bundleCommand;
 
+            // only when the framework is `Flutter Web`.
+            $commands = $this->injectFlutterEnvVars($framework, $commands);
+
             $commands = array_filter($commands, fn ($command) => !empty($command));
 
             return implode(' && ', $commands);
         }
 
         return '';
+    }
+
+    /**
+     * Injects `--dart-define-from-file` into Flutter web build commands.
+     *
+     * Flutter doesn't inherit shell/docker env vars, so we pass them
+     * explicitly using `--dart-define-from-file`. This method ensures
+     * the flag is added only when building for web and not already defined.
+     */
+    protected function injectFlutterEnvVars(array $framework, array $commands): array
+    {
+        // short circuit, fast path return!
+        if (($framework['key'] ?? '') !== 'flutter') {
+            return $commands;
+        }
+
+        /* avoids conflict with user `.env` files. */
+        $envFile = '.open-runtimes';
+        $pattern = '/\bflutter\s+build\s+web\b/';
+        $injectedCommand = "flutter build web --dart-define-from-file=$envFile";
+
+        foreach ($commands as $i => $cmd) {
+            $isWebBuild = preg_match($pattern, $cmd);
+            $hasDartDefine = str_contains($cmd, '--dart-define');
+
+            if ($isWebBuild && !$hasDartDefine) {
+                $commands[$i] = preg_replace($pattern, $injectedCommand, $cmd, 1);
+                break;
+            }
+        }
+
+        return $commands;
     }
 
     /**
