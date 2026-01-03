@@ -8,6 +8,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -60,6 +63,42 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $this->addBucketStorageSize($dbForProject, $bucket);
+
         $response->dynamic($bucket, Response::MODEL_BUCKET);
+    }
+
+    private function addBucketStorageSize(Database $dbForProject, Document $bucket): void
+    {
+        $metric = str_replace(
+            '{bucketInternalId}',
+            $bucket->getSequence(),
+            METRIC_BUCKET_ID_FILES_STORAGE
+        );
+
+        /**
+         * StatsUsage does this create an ID -
+         *
+         * `$time = null;`\
+         * `$id = md5("{$time}_{$period}_{$key}");`
+         *
+         * but when $time is null it just makes the $id as md5('_inf_' . $key);
+         *
+         * Why do this though?\
+         * Using `getDocument()` below to leverage cache!
+         */
+        $statsDocId = md5('_inf_' . $metric);
+
+        $storageStats = Authorization::skip(
+            fn () => $dbForProject->getDocument(
+                'stats',
+                $statsDocId,
+                [Query::select(['value'])]
+            )
+        );
+
+        $totalSize = $storageStats->isEmpty() ? 0 : $storageStats->getAttribute('value', 0);
+
+        $bucket->setAttribute('totalSize', $totalSize);
     }
 }
