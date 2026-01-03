@@ -97,6 +97,9 @@ class Get extends Action
             )
         );
 
+        /**
+         * The value can be 0 if stats were not aggregated when this request was made!
+         */
         $totalSize = $storageStats->isEmpty() ? 0 : $storageStats->getAttribute('value', 0);
 
         $bucket->setAttribute('totalSize', $totalSize);

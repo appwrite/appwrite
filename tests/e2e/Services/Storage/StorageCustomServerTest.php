@@ -186,6 +186,7 @@ class StorageCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals('Test Bucket', $response['body']['name']);
+        $this->assertArrayHasKey('totalSize', $response['body']);
 
         /**
          * Test for FAILURE
