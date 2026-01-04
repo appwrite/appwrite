@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;

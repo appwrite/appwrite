@@ -200,7 +200,8 @@ class Migrations extends Action
             default => throw new \Exception('Invalid source type'),
         };
 
-        $this->sourceReport = $migrationSource->report();
+        $resources = $migration->getAttribute('resources', []);
+        $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
     }
@@ -362,10 +363,10 @@ class Migrations extends Action
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
                 );
-            }
 
-            $destination->shutdown();
-            $source->shutdown();
+                $destination->shutdown();
+                $source->shutdown();
+            }
 
             $sourceErrors = $source->getErrors();
             $destinationErrors = $destination->getErrors();

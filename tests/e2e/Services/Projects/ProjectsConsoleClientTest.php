@@ -1851,6 +1851,8 @@ class ProjectsConsoleClientTest extends Scope
         $sessionCookie = $response['headers']['set-cookie'];
         $sessionId2 = $response['body']['$id'];
 
+        sleep(5); // fixes flaky tests.
+
         /**
          * List sessions
          */

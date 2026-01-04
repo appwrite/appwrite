@@ -37,7 +37,7 @@ use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
 use Utopia\Abuse\Abuse;
 use Utopia\App;
-use Utopia\Audit\Audit as EventAudit;
+use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -3033,7 +3033,8 @@ App::get('/v1/account/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->inject('audit')
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Audit $audit) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -3041,9 +3042,10 @@ App::get('/v1/account/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new EventAudit($dbForProject);
-
-        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+        $logs = $audit->getLogsByUser($user->getSequence(), offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -3072,7 +3074,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
