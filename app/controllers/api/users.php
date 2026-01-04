@@ -1175,6 +1175,16 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
+        if ($status === false) {
+            $sessions = $user->getAttribute('sessions', []);
+
+            foreach ($sessions as $session) {
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+        }
+
         $queueForEvents
             ->setParam('userId', $user->getId());
 
