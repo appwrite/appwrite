@@ -68,7 +68,14 @@ class Mails extends Action
             throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
+        $recipients = $payload['recipients'] ?? [];
+        $isBatchMode = !empty($recipients);
+
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
+        $log->addTag('batch_mode', $isBatchMode ? 'true' : 'false');
+        if ($isBatchMode) {
+            $log->addTag('recipient_count', (string)count($recipients));
+        }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
@@ -93,7 +100,7 @@ class Mails extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            // TODO: hotfix for redirect param
+          
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         foreach ($this->richTextParams as $key => $value) {
@@ -140,36 +147,73 @@ class Mails extends Action
         $mail->clearAttachments();
         $mail->clearBCCs();
         $mail->clearCCs();
-        $mail->addAddress($recipient, $name);
-        $mail->Subject = $subject;
-        $mail->Body = $body;
-
-        $mail->AltBody = $body;
-        $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
-        $mail->AltBody = \strip_tags($mail->AltBody);
-        $mail->AltBody = \trim($mail->AltBody);
 
         $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        $customMailOptions = $payload['customMailOptions'] ?? [];
+        $senderEmail = $payload['senderEmail'] ?? '';
+        $senderName = $payload['senderName'] ?? '';
 
         // fallback hierarchy: Custom options > SMTP config > Defaults.
-        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
-            $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
-            $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
+        if (!empty($senderEmail) || !empty($senderName)) {
+            $fromEmail = $senderEmail ?: $mail->From;
+            $fromName = $senderName ?: $mail->FromName;
             $mail->setFrom($fromEmail, $fromName);
         }
 
-        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
-            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
-            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
-        } elseif (!empty($smtp)) {
+        if (!empty($smtp)) {
             $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
             $replyToName = $smtp['senderName'] ?? $replyToName;
         }
 
         $mail->addReplyTo($replyTo, $replyToName);
+        if ($isBatchMode && count($recipients) > 1000) {
+        throw new Exception('Batch recipient count (' . count($recipients) . ') exceeds maximum allowed (1000). Please split into multiple batches.');
+        }
+        if ($isBatchMode && empty($smtp)) {
+            $this->sendBatch($mail, $recipients, $subject, $body, $attachment, $log);
+        } elseif ($isBatchMode && !empty($smtp)) {
+            foreach ($recipients as $email => $recipientName) {
+                if (is_numeric($email)) {
+                    $email = $recipientName;
+                    $recipientName = '';
+                }
+                $this->sendSingle($mail, $email, $recipientName, $subject, $body, $attachment);
+            }
+        } else {
+            $this->sendSingle($mail, $recipient, $name, $subject, $body, $attachment);
+        }
+    }
+
+    /**
+     * Send email to a single recipient
+     *
+     * @param PHPMailer $mail
+     * @param string $recipient
+     * @param string $name
+     * @param string $subject
+     * @param string $body
+     * @param array $attachment
+     * @throws Exception
+     * @return void
+     */
+    private function sendSingle(
+        PHPMailer $mail,
+        string $recipient,
+        string $name,
+        string $subject,
+        string $body,
+        array $attachment
+    ): void {
+        $mail->clearAddresses();
+        $mail->clearAllRecipients();
+        $mail->clearAttachments();
+        
+        $mail->addAddress($recipient, $name);
+        $mail->Subject = $subject;
+        $mail->Body = $body;
+        $mail->AltBody = $this->prepareAltBody($body);
+
         if (!empty($attachment['content'] ?? '')) {
             $mail->AddStringAttachment(
                 base64_decode($attachment['content']),
@@ -182,8 +226,93 @@ class Mails extends Action
         try {
             $mail->send();
         } catch (\Throwable $error) {
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+            throw new Exception('Error sending mail to ' . $recipient . ': ' . $error->getMessage(), 500);
         }
+    }
+
+    /**
+     * Send email to multiple recipients using BCC for privacy and efficiency
+     * 
+     * This method addresses Issue #11023 by batching recipients into a single
+     * API call instead of making individual calls that trigger rate limits.
+     * 
+     * Uses BCC to maintain privacy - recipients don't see each other's addresses.
+     * Primary recipient is set to sender to ensure proper SMTP envelope.
+     * 
+     * Note: Most email APIs support 1000+ recipients per call (Mailgun supports 1000).
+     * SMTP servers may have lower limits (often 50-100 depending on provider).
+     *
+     * @param PHPMailer $mail
+     * @param array $recipients Array of email => name pairs or simple email array
+     * @param string $subject
+     * @param string $body
+     * @param array $attachment
+     * @param Log $log
+     * @throws Exception
+     * @return void
+     */
+    private function sendBatch(
+        PHPMailer $mail,
+        array $recipients,
+        string $subject,
+        string $body,
+        array $attachment,
+        Log $log
+    ): void {
+        $mail->clearAddresses();
+        $mail->clearAllRecipients();
+        $mail->clearBCCs();
+        $mail->clearAttachments();
+        $mail->addAddress(System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Batch Mail');
+
+        $recipientCount = 0;
+        foreach ($recipients as $email => $recipientName) {
+            if (is_numeric($email)) {
+                $email = $recipientName;
+                $recipientName = '';
+            }
+            $mail->addBCC($email, $recipientName);
+            $recipientCount++;
+        }
+
+        $mail->Subject = $subject;
+        $mail->Body = $body;
+        $mail->AltBody = $this->prepareAltBody($body);
+
+        if (!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                base64_decode($attachment['content']),
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
+        }
+
+        $log->addTag('batch_size', (string)$recipientCount);
+
+        try {
+            $mail->send();
+            $log->addTag('batch_status', 'success');
+        } catch (\Throwable $error) {
+            $log->addTag('batch_status', 'failed');
+            throw new Exception('Error sending batch mail to ' . $recipientCount . ' recipients: ' . $error->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Prepare plain text alternative body from HTML
+     * Removes style tags and strips HTML formatting
+     *
+     * @param string $body
+     * @return string
+     */
+    private function prepareAltBody(string $body): string
+    {
+        $altBody = $body;
+        $altBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $altBody);
+        $altBody = \strip_tags($altBody);
+        $altBody = \trim($altBody);
+        return $altBody;
     }
 
     /**
