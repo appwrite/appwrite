@@ -19,7 +19,7 @@ class StorageAPKMimeTypeTest extends Scope
 
     /**
      * Test that APK files are stored and served with correct MIME type
-     * This testaddresses GitHub issue #9418 where APK files were incorrectly
+     * This test addresses GitHub issue #9418 where APK files were incorrectly
      * detected as application/zip instead of application/vnd.android.package-archive
      *
      * @return array
@@ -178,7 +178,7 @@ class StorageAPKMimeTypeTest extends Scope
     }
 
     /**
-     * Test that XAPK files (Android Package Bundle) also get correct MIME  type
+     * Test that XAPK files (third-party APK bundle format) also get correct MIME type
      *
      * @return void
      */
@@ -212,6 +212,9 @@ class StorageAPKMimeTypeTest extends Scope
         chdir($tmpDir);
         exec('zip -r ' . escapeshellarg($xapkFile) . ' . 2>&1', $output, $returnCode);
         chdir($currentDir);
+
+        $this->assertEquals(0, $returnCode, 'Failed to create XAPK file: ' . implode("\n", $output));
+        $this->assertFileExists($xapkFile, 'XAPK file was not created');
 
         try {
             $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
@@ -278,6 +281,9 @@ class StorageAPKMimeTypeTest extends Scope
         exec('zip -r ' . escapeshellarg($zipFile) . ' . 2>&1', $output, $returnCode);
         chdir($currentDir);
 
+        $this->assertEquals(0, $returnCode, 'Failed to create ZIP file: ' . implode("\n", $output));
+        $this->assertFileExists($zipFile, 'ZIP file was not created');
+
         try {
             $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
                 'content-type' => 'multipart/form-data',
@@ -342,6 +348,9 @@ class StorageAPKMimeTypeTest extends Scope
         chdir($tmpDir);
         exec('zip -r ' . escapeshellarg($apkFile) . ' . 2>&1', $output, $returnCode);
         chdir($currentDir);
+
+        $this->assertEquals(0, $returnCode, 'Failed to create APK file: ' . implode("\n", $output));
+        $this->assertFileExists($apkFile, 'APK file was not created');
 
         try {
             $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
