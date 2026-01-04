@@ -199,6 +199,12 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with',
+                    'in' => 'header',
+                ],
             ],
         ];
     }
