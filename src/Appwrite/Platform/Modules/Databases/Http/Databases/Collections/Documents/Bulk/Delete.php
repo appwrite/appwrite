@@ -203,7 +203,8 @@ class Delete extends Action
             $queueForEvents,
             $queueForRealtime,
             $queueForFunctions,
-            $queueForWebhooks
+            $queueForWebhooks,
+            $dbForProject
         );
     }
 }

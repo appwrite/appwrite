@@ -336,4 +336,29 @@ class Base extends Action
 
         return $deployment;
     }
+
+    /**
+     * Purge function events cache for a project
+     * @param Document $project
+     * @param Database $dbForProject
+     * @return void
+     */
+    protected function purgeFunctionEventsCache(Document $project, Database $dbForProject): void
+    {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return;
+        }
+
+        $hostname = $dbForProject->getAdapter()->getHostname();
+        $cacheKey = \sprintf(
+            '%s-cache-%s:%s:%s:project:%s:functionEvents',
+            $dbForProject->getCacheName(),
+            $hostname ?? '',
+            $dbForProject->getNamespace(),
+            $dbForProject->getTenant(),
+            $project->getId()
+        );
+
+        $dbForProject->getCache()->purge($cacheKey);
+    }
 }

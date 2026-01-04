@@ -209,7 +209,8 @@ class Upsert extends Action
             $queueForEvents,
             $queueForRealtime,
             $queueForFunctions,
-            $queueForWebhooks
+            $queueForWebhooks,
+            $dbForProject
         );
     }
 }

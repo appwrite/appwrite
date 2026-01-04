@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends DatabasesAction
@@ -348,6 +349,7 @@ abstract class Action extends DatabasesAction
      * @param Event $queueForRealtime
      * @param Event $queueForFunctions
      * @param Event $queueForWebhooks
+     * @param Database $dbForProject
      * @return void
      */
     protected function triggerBulk(
@@ -358,7 +360,8 @@ abstract class Action extends DatabasesAction
         Event $queueForEvents,
         Event $queueForRealtime,
         Event $queueForFunctions,
-        Event $queueForWebhooks
+        Event $queueForWebhooks,
+        Database $dbForProject
     ): void {
         $queueForEvents
             ->setEvent($event)
@@ -367,6 +370,11 @@ abstract class Action extends DatabasesAction
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        // Get project and function events (cached)
+        $project = $queueForEvents->getProject();
+        $functionEvents = $this->getFunctionEvents($project, $dbForProject);
+        $webhookEvents = $this->getWebhookEvents($project);
 
         foreach ($documents as $document) {
             $queueForEvents
@@ -378,20 +386,20 @@ abstract class Action extends DatabasesAction
                 ->from($queueForEvents)
                 ->trigger();
 
-            $project = $queueForEvents->getProject();
+            // Generate events for this document operation
             $generatedEvents = Event::generateEvents(
                 $queueForEvents->getEvent(),
                 $queueForEvents->getParams()
             );
 
-            $functionEvents = $project?->getAttribute('functionEvents', []);
+            // Only trigger functions if there are matching function events
             if (!empty($functionEvents) && !empty(array_intersect($functionEvents, $generatedEvents))) {
                 $queueForFunctions
                     ->from($queueForEvents)
                     ->trigger();
             }
 
-            $webhookEvents = $project?->getAttribute('webhookEvents', []);
+            // Only trigger webhooks if there are matching webhook events
             if (!empty($webhookEvents) && !empty(array_intersect($webhookEvents, $generatedEvents))) {
                 $queueForWebhooks
                     ->from($queueForEvents)
@@ -403,5 +411,89 @@ abstract class Action extends DatabasesAction
         $queueForRealtime->reset();
         $queueForFunctions->reset();
         $queueForWebhooks->reset();
+    }
+
+    /**
+     * Get function events for a project, using Redis cache
+     * @param Document|null $project
+     * @param Database $dbForProject
+     * @return array
+     */
+    protected function getFunctionEvents(?Document $project, Database $dbForProject): array
+    {
+        if ($project === null || $project->isEmpty() || $project->getId() === 'console') {
+            return [];
+        }
+
+        $hostname = $dbForProject->getAdapter()->getHostname();
+        $cacheKey = \sprintf(
+            '%s-cache-%s:%s:%s:project:%s:functionEvents',
+            $dbForProject->getCacheName(),
+            $hostname ?? '',
+            $dbForProject->getNamespace(),
+            $dbForProject->getTenant(),
+            $project->getId()
+        );
+
+        $ttl = 3600; // 1 hour cache TTL
+        $cachedFunctionEvents = $dbForProject->getCache()->load($cacheKey, $ttl);
+
+        if ($cachedFunctionEvents !== false) {
+            return \json_decode($cachedFunctionEvents, true) ?? [];
+        }
+
+        try {
+            $functions = $dbForProject->skipValidation(fn () => $dbForProject->find('functions', [
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+
+            $events = [];
+            foreach ($functions as $function) {
+                $functionEvents = $function->getAttribute('events', []);
+                if (!empty($functionEvents)) {
+                    $events = array_merge($events, $functionEvents);
+                }
+            }
+
+            $uniqueEvents = array_unique($events);
+
+            // Save to cache
+            $dbForProject->getCache()->save($cacheKey, \json_encode($uniqueEvents), $ttl);
+
+            return $uniqueEvents;
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get webhook events for a project from the project's webhooks attribute
+     * @param Document|null $project
+     * @return array
+     */
+    protected function getWebhookEvents(?Document $project): array
+    {
+        if ($project === null || $project->isEmpty() || $project->getId() === 'console') {
+            return [];
+        }
+
+        $webhooks = $project->getAttribute('webhooks', []);
+        if (empty($webhooks)) {
+            return [];
+        }
+
+        $events = [];
+        foreach ($webhooks as $webhook) {
+            if ($webhook->getAttribute('enabled', false) !== true) {
+                continue;
+            }
+
+            $webhookEvents = $webhook->getAttribute('events', []);
+            if (!empty($webhookEvents)) {
+                $events = array_merge($events, $webhookEvents);
+            }
+        }
+
+        return array_unique($events);
     }
 }
