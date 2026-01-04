@@ -5438,16 +5438,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.6",
+            "version": "1.8.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b6cc29d3bd247e193f3c06b4168dc69d884645f0"
+                "reference": "5fc210f7403f9ecfa068cd2a74210ec6e2a3cec1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b6cc29d3bd247e193f3c06b4168dc69d884645f0",
-                "reference": "b6cc29d3bd247e193f3c06b4168dc69d884645f0",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5fc210f7403f9ecfa068cd2a74210ec6e2a3cec1",
+                "reference": "5fc210f7403f9ecfa068cd2a74210ec6e2a3cec1",
                 "shasum": ""
             },
             "require": {
@@ -5483,9 +5483,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.9"
             },
-            "time": "2025-12-31T10:22:17+00:00"
+            "time": "2026-01-02T12:09:51+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8562,16 +8562,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v8.0.0",
+            "version": "v8.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "a0a750500c4ce900d69ba4e9faf16f82c10ee149"
+                "reference": "0cbbd88ec836f8757641c651bb995335846abb78"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/a0a750500c4ce900d69ba4e9faf16f82c10ee149",
-                "reference": "a0a750500c4ce900d69ba4e9faf16f82c10ee149",
+                "url": "https://api.github.com/repos/symfony/process/zipball/0cbbd88ec836f8757641c651bb995335846abb78",
+                "reference": "0cbbd88ec836f8757641c651bb995335846abb78",
                 "shasum": ""
             },
             "require": {
@@ -8603,7 +8603,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v8.0.0"
+                "source": "https://github.com/symfony/process/tree/v8.0.3"
             },
             "funding": [
                 {
@@ -8623,7 +8623,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-10-16T16:25:44+00:00"
+            "time": "2025-12-19T10:01:18+00:00"
         },
         {
             "name": "symfony/string",
@@ -8971,5 +8971,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.2.0"
 }

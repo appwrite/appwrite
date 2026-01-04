@@ -12,7 +12,8 @@ x-logging: &x-logging
 
 services:
   traefik:
-    image: traefik:2.11
+    #image: traefik:2.11 not working with docker api version 1.52
+    image: traefik:3.6
     <<: *x-logging
     container_name: appwrite-traefik
     command:

@@ -392,6 +392,7 @@ abstract class Action extends DatabasesAction
                 $queueForEvents->getParams()
             );
 
+
             // Only trigger functions if there are matching function events
             if (!empty($functionEvents) && !empty(array_intersect($functionEvents, $generatedEvents))) {
                 $queueForFunctions
