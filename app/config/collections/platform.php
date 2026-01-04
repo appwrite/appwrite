@@ -1462,13 +1462,6 @@ $platformCollections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_region'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['region'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_piid_diid_drt'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId', 'deploymentInternalId', 'deploymentResourceType'],
