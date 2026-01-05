@@ -3057,7 +3057,6 @@ class SitesCustomServerTest extends Scope
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
-            \var_dump($deployment['body']['buildLogs']);
             $this->assertStringContainsString('2048:2', $deployment['body']['buildLogs']);
         }, 10000, 500);
 

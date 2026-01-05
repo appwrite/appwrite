@@ -90,7 +90,7 @@ class Create extends Base
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function SSR executions.', true, ['plan'])
+            ), 'Runtime specification for the SSR executions.', true, ['plan'])
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('response')
             ->inject('dbForProject')

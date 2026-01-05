@@ -253,6 +253,11 @@ App::post('/v1/mock/time-travels')
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
+        $resource = $dbForProject->getDocument($collection, $resourceId);
+        if ($resource->isEmpty()) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Resource not found');
+        }
+
         $update = new Document([
             '$createdAt' => $createdAt,
         ]);
