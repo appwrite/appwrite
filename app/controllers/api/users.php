@@ -1173,17 +1173,24 @@ App::patch('/v1/users/:userId/status')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+        $user = $dbForProject->withTransaction(function () use ($user, $status, $dbForProject) {
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
-        if ($status === false) {
-            $sessions = $user->getAttribute('sessions', []);
+            /**
+             * If the user is blocked (status is false), we unconditionally delete all their sessions.
+             */
+            if ($status === false) {
+                $sessions = $user->getAttribute('sessions', []);
 
-            foreach ($sessions as $session) {
-                $dbForProject->deleteDocument('sessions', $session->getId());
+                foreach ($sessions as $session) {
+                    $dbForProject->deleteDocument('sessions', $session->getId());
+                }
+
+                $dbForProject->purgeCachedDocument('users', $user->getId());
             }
 
-            $dbForProject->purgeCachedDocument('users', $user->getId());
-        }
+            return $user;
+        });
 
         $queueForEvents
             ->setParam('userId', $user->getId());
