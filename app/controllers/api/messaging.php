@@ -1102,7 +1102,7 @@ App::get('/v1/messaging/providers')
             }
 
             $providerId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $authorization->skip(fn() => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -1170,7 +1170,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
+    
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
@@ -2507,7 +2507,7 @@ App::get('/v1/messaging/topics')
             }
 
             $topicId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $authorization->skip(fn() => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2576,7 +2576,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
+    
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
@@ -2782,7 +2782,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn() => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2791,13 +2791,13 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $authorization->skip(fn() => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2830,7 +2830,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $authorization->skip(fn() => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2888,7 +2888,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn() => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2911,7 +2911,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             }
 
             $subscriberId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $authorization->skip(fn() => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2927,8 +2927,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
 
         $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
             return function () use ($subscriber, $dbForProject, $authorization) {
-                $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+                $target = $authorization->skip(fn() => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $authorization->skip(fn() => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -2992,7 +2992,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
+    
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
@@ -3060,7 +3060,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('authorization')
     ->inject('response')
     ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Authorization $authorization, Response $response) {
-        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn() => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3072,8 +3072,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $authorization->skip(fn() => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $authorization->skip(fn() => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -3112,7 +3112,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('authorization')
     ->inject('response')
     ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
-        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn() => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3135,7 +3135,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $authorization->skip(fn() => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -3183,7 +3183,7 @@ App::post('/v1/messaging/messages/email')
     ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true, precision: Datetime::PRECISION_MINUTES, offset: 60)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -3357,7 +3357,7 @@ App::post('/v1/messaging/messages/sms')
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
-    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true, precision: Datetime::PRECISION_MINUTES, offset: 60)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -3489,7 +3489,7 @@ App::post('/v1/messaging/messages/push')
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', -1, new Integer(), 'Badge for push notification. Available only for iOS Platform.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
-    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true, precision: Datetime::PRECISION_MINUTES, offset: 60)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
     ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
     ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true)
@@ -3722,7 +3722,7 @@ App::get('/v1/messaging/messages')
             }
 
             $messageId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $authorization->skip(fn() => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
@@ -3791,7 +3791,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
+    
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
@@ -3980,7 +3980,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
     ->param('cc', null, new Nullable(new ArrayList(new UID())), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', null, new Nullable(new ArrayList(new UID())), 'Array of target IDs to be added as BCC.', true)
-    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true, precision: Datetime::PRECISION_MINUTES, offset: 60)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -4203,7 +4203,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('targets', null, new Nullable(new ArrayList(new UID())), 'List of Targets IDs.', true)
     ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
     ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
-    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true, precision: Datetime::PRECISION_MINUTES, offset: 60)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -4374,7 +4374,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('tag', null, new Nullable(new Text(256)), 'Tag for push notification. Available only for Android platforms.', true)
     ->param('badge', null, new Nullable(new Integer()), 'Badge for push notification. Available only for iOS platforms.', true)
     ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
-    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true, precision: Datetime::PRECISION_MINUTES, offset: 60)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future with precision in minutes.', true)
     ->param('contentAvailable', null, new Nullable(new Boolean()), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
     ->param('critical', null, new Nullable(new Boolean()), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
     ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
