@@ -148,7 +148,7 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_AUDIT:
                 if (!$project->isEmpty()) {
-                    $this->deleteAuditLogs($project, $auditRetention, $getAudit);
+                    $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 }
                 break;
             case DELETE_TYPE_REALTIME:
@@ -783,14 +783,13 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
-     * @param callable $getProjectDB
-     * @param string $auditRetention
+     * @param Document $project
      * @param callable $getAudit
+     * @param string $auditRetention
      * @return void
      * @throws Exception
      */
-    private function deleteAuditLogs(Document $project, string $auditRetention, callable $getAudit): void
+    private function deleteAuditLogs(Document $project, callable $getAudit, string $auditRetention): void
     {
         $projectId = $project->getId();
         /** @var Audit $audit */

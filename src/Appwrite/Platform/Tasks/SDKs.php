@@ -49,7 +49,6 @@ class SDKs extends Action
             ->param('sdk', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
             ->param('version', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
-            ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
             ->param('release', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we create releases?', optional: true)
             ->param('commit', null, new Nullable(new WhiteList(['yes', 'no'])), 'Actually create releases (yes) or dry-run (no)?', optional: true)
@@ -57,7 +56,7 @@ class SDKs extends Action
             ->callback($this->action(...));
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
+    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
         if (!$sdks) {
             $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
@@ -77,7 +76,6 @@ class SDKs extends Action
             $prUrls = [];
 
             if ($git) {
-                $production = ($production === 'yes');
                 $message ??= Console::confirm('Please enter your commit message:');
             }
         }
@@ -417,10 +415,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $gitUrl = $language['gitUrl'];
                 $gitBranch = $language['gitBranch'];
 
-                if (!$production) {
-                    $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
-                }
-
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
                     \exec('rm -rf ' . $target . ' && \
@@ -440,7 +434,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git rm -rf --cached . && \
                         git clean -fdx -e .git -e .github && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
-                        (test -d /tmp/.github-backup-$$ && cp -r /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
+                        (test -d /tmp/.github-backup-$$ && cp -rn /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
                         git add -A && \
                         git commit -m "' . $message . '" && \
                         git push -u origin ' . $gitBranch . '
@@ -450,13 +444,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     if ($git) {
                         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
                         $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
-
-                        $repoName = $language['gitRepoName'];
-                        if (!$production) {
-                            $repoName = 'aw-tests/' . $language['gitRepoName'];
-                        } else {
-                            $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
-                        }
+                        $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
 
                         Console::info("Creating pull request for {$language['name']} SDK...");
 
