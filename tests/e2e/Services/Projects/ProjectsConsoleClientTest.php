@@ -5450,7 +5450,7 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['nonvip'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(1, $projects['body']['total']);
         $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
 
@@ -5462,7 +5462,7 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['vip'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(0, $projects['body']['total']);
 
         $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
@@ -5473,7 +5473,7 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['imagine'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(1, $projects['body']['total']);
         $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
 
@@ -5485,7 +5485,7 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['nonvip', 'imagine'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(1, $projects['body']['total']);
         $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
 
@@ -5526,7 +5526,7 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['imagine'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(2, $projects['body']['total']);
         $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
         $this->assertEquals($projectId2, $projects['body']['projects'][1]['$id']);
@@ -5540,7 +5540,7 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['vip'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(1, $projects['body']['total']);
         $this->assertEquals($projectId2, $projects['body']['projects'][0]['$id']);
 
@@ -5554,7 +5554,7 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['imagine'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(1, $projects['body']['total']);
         $this->assertEquals($projectId2, $projects['body']['projects'][0]['$id']);
 
@@ -5567,13 +5567,20 @@ class ProjectsConsoleClientTest extends Scope
                 Query::contains('labels', ['vip', 'imagine'])->toString(),
             ]
         ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals(200, $projects['headers']['status-code']);
         $this->assertEquals(2, $projects['body']['total']);
         $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
         $this->assertEquals($projectId2, $projects['body']['projects'][1]['$id']);
 
         // Cleanup
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId2, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
