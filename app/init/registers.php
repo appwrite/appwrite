@@ -360,6 +360,8 @@ $register->set('smtp', function () {
     $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
+    $mail->Timeout = 10; /* Connection timeout */
+    $mail->getSMTPInstance()->Timelimit = 30; /* Timeout for each individual SMTP command (e.g. HELO, EHLO, etc.) */
 
     $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
     $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
