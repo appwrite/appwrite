@@ -6,7 +6,8 @@ class Projects extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
-        'teamId'
+        'teamId',
+        'labels',
     ];
 
     /**
