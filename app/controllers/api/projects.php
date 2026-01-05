@@ -1552,13 +1552,8 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForPlatform->find('keys', [
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ]),
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1599,13 +1594,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ])
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1649,13 +1639,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ])
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1706,13 +1691,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ])
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
