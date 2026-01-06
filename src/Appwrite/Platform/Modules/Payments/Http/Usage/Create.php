@@ -41,7 +41,9 @@ class Create extends Base
                 namespace: 'payments',
                 group: 'usage',
                 name: 'report',
-                description: 'Report usage for subscription',
+                description: <<<EOT
+                Report usage for a metered feature on a subscription.
+                EOT,
                 auth: [AuthType::KEY],
                 responses: [
                     new SDKResponse(

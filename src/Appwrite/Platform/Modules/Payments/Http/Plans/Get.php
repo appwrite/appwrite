@@ -35,7 +35,9 @@ class Get extends Base
                 namespace: 'payments',
                 group: 'plans',
                 name: 'get',
-                description: 'Get a payment plan',
+                description: <<<EOT
+                Get a payment plan by its unique ID.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

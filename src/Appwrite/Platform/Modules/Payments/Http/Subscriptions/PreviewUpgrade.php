@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Payments\Provider\ProviderSubscriptionRef;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Payments\Provider\StripeAdapter;
-use Appwrite\Payments\Provider\ProviderSubscriptionRef;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -40,7 +40,9 @@ class PreviewUpgrade extends Base
                 namespace: 'payments',
                 group: 'subscriptions',
                 name: 'previewUpgrade',
-                description: 'Preview a subscription upgrade with proration details',
+                description: <<<EOT
+                Preview the cost of upgrading or downgrading a subscription to a different plan.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: [
                     new SDKResponse(

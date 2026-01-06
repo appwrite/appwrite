@@ -45,7 +45,9 @@ class Update extends Base
                 namespace: 'payments',
                 group: 'subscriptions',
                 name: 'update',
-                description: 'Update a subscription',
+                description: <<<EOT
+                Update a subscription to change the associated plan. This may trigger prorated charges or credits depending on the provider configuration.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: [
                     new SDKResponse(

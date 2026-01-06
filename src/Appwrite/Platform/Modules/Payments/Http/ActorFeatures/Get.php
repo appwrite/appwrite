@@ -41,7 +41,9 @@ class Get extends Base
                 namespace: 'payments',
                 group: 'actorFeatures',
                 name: 'get',
-                description: 'Get features available to an actor (user/team) based on their subscription plan',
+                description: <<<EOT
+                Get the features available to a specific actor (user or team) based on their active subscription.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: [
                     new SDKResponse(

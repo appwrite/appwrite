@@ -371,6 +371,12 @@ class Response extends SwooleResponse
     public const MODEL_PAYMENT_SUBSCRIPTION_LIST = 'paymentSubscriptionList';
     public const MODEL_PAYMENT_PLAN_LIST = 'paymentPlanList';
     public const MODEL_PAYMENT_FEATURE_LIST = 'paymentFeatureList';
+    public const MODEL_PAYMENT_PLAN_FEATURE = 'paymentPlanFeature';
+    public const MODEL_PAYMENT_PLAN_FEATURE_LIST = 'paymentPlanFeatureList';
+    public const MODEL_PAYMENT_INVOICE = 'paymentInvoice';
+    public const MODEL_PAYMENT_INVOICE_LIST = 'paymentInvoiceList';
+    public const MODEL_PAYMENT_USAGE_EVENT = 'paymentUsageEvent';
+    public const MODEL_PAYMENT_USAGE_EVENT_LIST = 'paymentUsageEventList';
     public const MODEL_PAYMENT_PROVIDER_CONFIG = 'paymentProviderConfig';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
@@ -572,9 +578,15 @@ class Response extends SwooleResponse
             ->setModel(new \Appwrite\Utopia\Response\Model\PaymentFeature())
             ->setModel(new \Appwrite\Utopia\Response\Model\PaymentSubscription())
             ->setModel(new \Appwrite\Utopia\Response\Model\PaymentProviderConfig())
+            ->setModel(new \Appwrite\Utopia\Response\Model\PaymentPlanFeature())
+            ->setModel(new \Appwrite\Utopia\Response\Model\PaymentInvoice())
+            ->setModel(new \Appwrite\Utopia\Response\Model\PaymentUsageEvent())
             ->setModel(new BaseList('Payment Subscription List', self::MODEL_PAYMENT_SUBSCRIPTION_LIST, 'subscriptions', self::MODEL_PAYMENT_SUBSCRIPTION, true, false))
             ->setModel(new BaseList('Payment Plan List', self::MODEL_PAYMENT_PLAN_LIST, 'plans', self::MODEL_PAYMENT_PLAN, true, false))
             ->setModel(new BaseList('Payment Feature List', self::MODEL_PAYMENT_FEATURE_LIST, 'features', self::MODEL_PAYMENT_FEATURE, true, false))
+            ->setModel(new BaseList('Payment Plan Feature List', self::MODEL_PAYMENT_PLAN_FEATURE_LIST, 'features', self::MODEL_PAYMENT_PLAN_FEATURE, true, false))
+            ->setModel(new BaseList('Payment Invoice List', self::MODEL_PAYMENT_INVOICE_LIST, 'invoices', self::MODEL_PAYMENT_INVOICE, true, false))
+            ->setModel(new BaseList('Payment Usage Event List', self::MODEL_PAYMENT_USAGE_EVENT_LIST, 'events', self::MODEL_PAYMENT_USAGE_EVENT, true, false))
             ->setModel(new Installation())
             ->setModel(new ProviderRepository())
             ->setModel(new ProviderRepositoryFramework())

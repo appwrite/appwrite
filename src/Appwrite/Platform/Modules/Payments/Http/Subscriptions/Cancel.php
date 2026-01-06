@@ -44,7 +44,9 @@ class Cancel extends Base
                 namespace: 'payments',
                 group: 'subscriptions',
                 name: 'cancel',
-                description: 'Cancel a subscription',
+                description: <<<EOT
+                Cancel a subscription. By default, cancellation takes effect at the end of the current billing period.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: []
             ))

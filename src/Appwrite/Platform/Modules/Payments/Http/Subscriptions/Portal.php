@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
-use Appwrite\Event\Event;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Payments\Provider\StripeAdapter;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -39,7 +38,9 @@ class Portal extends Base
                 namespace: 'payments',
                 group: 'subscriptions',
                 name: 'createPortal',
-                description: 'Create a billing portal session',
+                description: <<<EOT
+                Get a URL to the payment provider's customer portal where users can manage their subscription and payment methods.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: [
                     new SDKResponse(

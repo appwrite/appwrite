@@ -43,7 +43,9 @@ class Update extends Base
                 namespace: 'payments',
                 group: 'providers',
                 name: 'update',
-                description: 'Configure payments providers',
+                description: <<<EOT
+                Configure payment providers for the project. Currently supports Stripe.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

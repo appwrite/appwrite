@@ -10,7 +10,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Queue\Publisher;
 use Utopia\System\System;
 
 class SchedulePaymentsUsage extends Action

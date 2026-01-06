@@ -38,7 +38,9 @@ class Create extends Base
                 namespace: 'payments',
                 group: 'usage',
                 name: 'reconcile',
-                description: 'Trigger usage reconciliation',
+                description: <<<EOT
+                Reconcile usage events with the payment provider.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: []
             ))

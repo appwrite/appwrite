@@ -35,7 +35,9 @@ class Get extends Base
                 namespace: 'payments',
                 group: 'features',
                 name: 'get',
-                description: 'Get a payment feature',
+                description: <<<EOT
+                Get a feature by its unique ID.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

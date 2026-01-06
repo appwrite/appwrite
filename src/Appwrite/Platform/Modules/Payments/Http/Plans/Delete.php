@@ -39,7 +39,9 @@ class Delete extends Base
                 namespace: 'payments',
                 group: 'plans',
                 name: 'delete',
-                description: 'Delete a payment plan',
+                description: <<<EOT
+                Delete a payment plan by its unique ID. This action cannot be undone.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: []
             ))

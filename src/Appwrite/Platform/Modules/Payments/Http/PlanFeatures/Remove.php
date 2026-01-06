@@ -42,7 +42,9 @@ class Remove extends Base
                 namespace: 'payments',
                 group: 'planFeatures',
                 name: 'remove',
-                description: 'Remove feature from plan',
+                description: <<<EOT
+                Remove a feature from a plan.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: []
             ))

@@ -34,7 +34,9 @@ class Get extends Base
                 namespace: 'payments',
                 group: 'providers',
                 name: 'get',
-                description: 'Get payments providers configuration',
+                description: <<<EOT
+                Get the current payment provider configuration for the project.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

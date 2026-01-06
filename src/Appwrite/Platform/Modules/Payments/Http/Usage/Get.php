@@ -38,7 +38,9 @@ class Get extends Base
                 namespace: 'payments',
                 group: 'usage',
                 name: 'get',
-                description: 'Get usage summary for subscription',
+                description: <<<EOT
+                Get usage summary for a subscription.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

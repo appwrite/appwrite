@@ -41,7 +41,9 @@ class Get extends Base
                 namespace: 'payments',
                 group: 'subscriptions',
                 name: 'get',
-                description: 'Get a subscription',
+                description: <<<EOT
+                Get a subscription by its unique ID.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: [
                     new SDKResponse(

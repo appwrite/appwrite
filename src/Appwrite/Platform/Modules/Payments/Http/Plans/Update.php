@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Payments\Http\Plans;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Payments\Validator\PricingEntry;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -14,8 +15,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON as JSONValidator;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -43,7 +44,9 @@ class Update extends Base
                 namespace: 'payments',
                 group: 'plans',
                 name: 'update',
-                description: 'Update a payment plan',
+                description: <<<EOT
+                Update a payment plan by its unique ID. You can update the plan name, description, and pricing configuration.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -57,7 +60,7 @@ class Update extends Base
             ->param('description', '', new Text(8192, 0), 'Plan description.', true)
             ->param('isDefault', false, new Boolean(), 'Set as default plan for new users.', true)
             ->param('isFree', false, new Boolean(), 'Is the plan free.', true)
-            ->param('pricing', [], new JSONValidator(), 'Pricing configuration array [{priceId,amount,currency,interval}]', true)
+            ->param('pricing', [], new ArrayList(new PricingEntry(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Pricing configuration array [{priceId,amount,currency,interval}]', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -101,23 +104,15 @@ class Update extends Base
         $plan->setAttribute('isDefault', $isDefault);
         $plan->setAttribute('isFree', $isFree);
         if (!empty($pricing)) {
-            $normalizedPricing = [];
+            // Check for duplicate priceIds
             $seenPriceIds = [];
             foreach ($pricing as $entry) {
-                if (!is_array($entry)) {
-                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Invalid pricing entry format');
-                }
                 $priceId = (string) ($entry['priceId'] ?? '');
-                if ($priceId === '') {
-                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Each pricing entry must include a priceId');
-                }
                 if (isset($seenPriceIds[$priceId])) {
                     throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Duplicate priceId detected: ' . $priceId);
                 }
                 $seenPriceIds[$priceId] = true;
-                $normalizedPricing[] = $entry;
             }
-            $pricing = $normalizedPricing;
             $plan->setAttribute('pricing', $pricing);
         }
         $plan = $dbForProject->updateDocument('payments_plans', $plan->getId(), $plan);

@@ -43,7 +43,9 @@ class Create extends Base
                 namespace: 'payments',
                 group: 'subscriptions',
                 name: 'create',
-                description: 'Create a subscription',
+                description: <<<EOT
+                Create a new subscription for a user or team. This initiates a checkout session with the configured payment provider and returns a checkout URL for payment completion.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: [
                     new SDKResponse(

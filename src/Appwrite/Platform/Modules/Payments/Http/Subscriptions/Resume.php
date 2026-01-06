@@ -43,7 +43,9 @@ class Resume extends Base
                 namespace: 'payments',
                 group: 'subscriptions',
                 name: 'resume',
-                description: 'Resume a subscription',
+                description: <<<EOT
+                Resume a previously canceled subscription if it hasn't expired yet.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: []
             ))

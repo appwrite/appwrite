@@ -39,7 +39,9 @@ class Delete extends Base
                 namespace: 'payments',
                 group: 'features',
                 name: 'delete',
-                description: 'Delete a feature definition',
+                description: <<<EOT
+                Delete a feature by its unique ID.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: []
             ))

@@ -41,7 +41,9 @@ class Create extends Base
                 namespace: 'payments',
                 group: 'features',
                 name: 'create',
-                description: 'Create a feature definition',
+                description: <<<EOT
+                Create a new feature that can be assigned to plans. Features can be boolean (on/off) or metered (usage-based).
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

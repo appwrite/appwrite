@@ -35,7 +35,9 @@ class Create extends Base
                 namespace: 'payments',
                 group: 'providers',
                 name: 'test',
-                description: 'Test payments provider credentials',
+                description: <<<EOT
+                Test the connection to a configured payment provider.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

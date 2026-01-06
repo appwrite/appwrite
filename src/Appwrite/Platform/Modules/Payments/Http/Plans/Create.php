@@ -8,19 +8,19 @@ use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Payments\Validator\PricingEntry;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
-use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON as JSONValidator;
 use Utopia\Validator\Text;
 
 class Create extends Base
@@ -48,7 +48,9 @@ class Create extends Base
                 namespace: 'payments',
                 group: 'plans',
                 name: 'create',
-                description: 'Create a payment plan',
+                description: <<<EOT
+                Create a new payment plan for your project. Plans define pricing tiers and can be associated with features for subscription management.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -62,7 +64,7 @@ class Create extends Base
             ->param('description', '', new Text(8192, 0), 'Plan description.', true)
             ->param('isDefault', false, new Boolean(), 'Set as default plan for new users.', true)
             ->param('isFree', false, new Boolean(), 'Is the plan free.', true)
-            ->param('pricing', [], new JSONValidator(), 'Pricing configuration array [{priceId,amount,currency,interval}]', true)
+            ->param('pricing', [], new ArrayList(new PricingEntry(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Pricing configuration array [{priceId,amount,currency,interval}]', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('dbForProject')
@@ -86,31 +88,21 @@ class Create extends Base
         Event $queueForEvents,
         Document $project
     ) {
-        // Normalize and validate pricing definitions (ensure user-provided priceIds)
-        $normalizedPricing = [];
+        // Check for duplicate priceIds
         $seenPriceIds = [];
         foreach ($pricing as $entry) {
-            if (!is_array($entry)) {
-                throw new AppwriteException(ExtendException::GENERAL_BAD_REQUEST, 'Invalid pricing entry format');
-            }
             $priceId = (string) ($entry['priceId'] ?? '');
-            if ($priceId === '') {
-                throw new AppwriteException(ExtendException::GENERAL_BAD_REQUEST, 'Each pricing entry must include a priceId');
-            }
             if (isset($seenPriceIds[$priceId])) {
                 throw new AppwriteException(ExtendException::GENERAL_BAD_REQUEST, 'Duplicate priceId detected: ' . $priceId);
             }
             $seenPriceIds[$priceId] = true;
-            $normalizedPricing[] = $entry;
         }
-
-        $pricing = $normalizedPricing;
 
         $document = new Document([
             'planId' => $planId,
             'name' => $name,
             'description' => $description,
-            'pricing' => $normalizedPricing,
+            'pricing' => $pricing,
             'isDefault' => $isDefault,
             'isFree' => $isFree,
             'status' => 'active',

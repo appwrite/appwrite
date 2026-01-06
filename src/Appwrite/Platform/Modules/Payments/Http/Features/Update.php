@@ -39,7 +39,9 @@ class Update extends Base
                 namespace: 'payments',
                 group: 'features',
                 name: 'update',
-                description: 'Update a feature definition',
+                description: <<<EOT
+                Update a feature by its unique ID.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(

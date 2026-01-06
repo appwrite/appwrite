@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Payments\Validator\FeatureTier;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -17,7 +18,6 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 
@@ -46,7 +46,9 @@ class Assign extends Base
                 namespace: 'payments',
                 group: 'planFeatures',
                 name: 'assign',
-                description: 'Assign feature to plan',
+                description: <<<EOT
+                Assign a feature to a plan with optional usage limits and pricing tiers for metered features.
+                EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -61,7 +63,7 @@ class Assign extends Base
             ->param('interval', '', new Text(16, 0), 'Billing interval', true)
             ->param('includedUnits', 0, new Integer(), 'Included units', true)
             ->param('tiersMode', null, new Text(32, 0), 'Tiers mode (graduated or volume)', true)
-            ->param('tiers', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Pricing tiers', true)
+            ->param('tiers', [], new ArrayList(new FeatureTier(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Pricing tiers', true)
             ->param('usageCap', null, new Integer(), 'Usage cap', true)
             ->inject('response')
             ->inject('dbForPlatform')

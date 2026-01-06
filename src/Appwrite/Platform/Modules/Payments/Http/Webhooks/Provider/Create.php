@@ -36,7 +36,9 @@ class Create extends Base
                 namespace: 'payments',
                 group: 'providers',
                 name: 'webhook',
-                description: 'Handle provider webhook',
+                description: <<<EOT
+                Handle incoming webhooks from payment providers. This endpoint is called by the provider to notify of subscription and payment events.
+                EOT,
                 auth: [],
                 responses: []
             ))
