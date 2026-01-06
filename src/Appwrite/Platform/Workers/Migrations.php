@@ -111,7 +111,7 @@ class Migrations extends Action
         $migration = new Document($payload['migration'] ?? []);
 
         if ($migration->isEmpty()) {
-            throw new Exception('Missing migration');
+            throw new \Exception('Migration not found');
         }
 
         if ($project->getId() === 'console') {
@@ -119,7 +119,7 @@ class Migrations extends Action
         }
 
         if ($project->isEmpty()) {
-            throw new Exception('Missing project');
+            throw new \Exception('Project not found');
         }
 
         $this->dbForProject = $dbForProject;
@@ -321,10 +321,6 @@ class Migrations extends Action
         array $platform,
     ): void {
         $project = $this->project;
-
-        if ($project->isEmpty()) {
-            throw new \Exception("Project not found");
-        }
 
         $tempAPIKey = $this->generateAPIKey($project);
 
