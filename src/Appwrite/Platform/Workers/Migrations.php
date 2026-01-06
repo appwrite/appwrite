@@ -395,24 +395,15 @@ class Migrations extends Action
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
-            if (! $migration->isEmpty()) {
-                $migration->setAttribute('status', 'failed');
-                $migration->setAttribute('stage', 'finished');
+            $migration->setAttribute('status', 'failed');
+            $migration->setAttribute('stage', 'finished');
 
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source') ?? '',
-                    'destination' => $migration->getAttribute('destination') ?? '',
-                ]);
+            call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                'migrationId' => $migration->getId(),
+                'source' => $migration->getAttribute('source') ?? '',
+                'destination' => $migration->getAttribute('destination') ?? '',
+            ]);
 
-                return;
-            }
-
-            if ($transfer) {
-                $sourceErrors = $source->getErrors();
-                $destinationErrors = $destination->getErrors();
-                $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
-            }
         } finally {
             try {
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
