@@ -523,8 +523,7 @@ class Messaging extends Action
         Document $provider,
         Device $deviceForFiles,
         Document $project,
-         string $subject,
-         string $body,
+         
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
