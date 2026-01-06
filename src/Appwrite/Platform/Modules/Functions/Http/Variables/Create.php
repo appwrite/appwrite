@@ -49,7 +49,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -65,7 +65,6 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('project')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -77,8 +76,7 @@ class Create extends Base
         Response $response,
         Database $dbForProject,
         Database $dbForPlatform,
-        Document $project,
-        Authorization $authorization
+        Document $project
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -121,7 +119,7 @@ class Create extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

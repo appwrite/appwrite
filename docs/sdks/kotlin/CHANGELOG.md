@@ -1,5 +1,9 @@
 # Change Log
 
+## 13.1.0
+
+* Added ability to create columns and indexes synchronously while creating a table
+
 ## 13.0.0
 
 * Rename `VCSDeploymentType` enum to `VCSReferenceType`

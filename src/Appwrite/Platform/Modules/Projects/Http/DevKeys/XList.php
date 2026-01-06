@@ -32,7 +32,7 @@ class XList extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys')
             ->desc('List dev keys')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.read')
+            ->label('scope', 'devKeys.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',

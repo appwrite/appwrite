@@ -50,7 +50,7 @@ App::get('/v1/health')
         group: 'health',
         name: 'get',
         description: '/docs/references/health/get.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -89,7 +89,7 @@ App::get('/v1/health/db')
         group: 'health',
         name: 'getDB',
         description: '/docs/references/health/get-db.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -120,7 +120,7 @@ App::get('/v1/health/db')
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
                         $failures[] = $database;
@@ -131,8 +131,6 @@ App::get('/v1/health/db')
             }
         }
 
-        // Only throw error if ALL databases failed (no successful pings)
-        // This allows partial failures in environments where not all DBs are ready
         if (!empty($failures)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
@@ -152,7 +150,7 @@ App::get('/v1/health/cache')
         group: 'health',
         name: 'getCache',
         description: '/docs/references/health/get-cache.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -182,7 +180,7 @@ App::get('/v1/health/cache')
                         $output[] = new Document([
                             'name' => $key . " ($cache)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
                         $failures[] = $cache;
@@ -212,7 +210,7 @@ App::get('/v1/health/pubsub')
         group: 'health',
         name: 'getPubSub',
         description: '/docs/references/health/get-pubsub.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -242,7 +240,7 @@ App::get('/v1/health/pubsub')
                         $output[] = new Document([
                             'name' => $key . " ($pubsub)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
                         $failures[] = $pubsub;
@@ -272,7 +270,7 @@ App::get('/v1/health/time')
         group: 'health',
         name: 'getTime',
         description: '/docs/references/health/get-time.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -336,7 +334,7 @@ App::get('/v1/health/queue/webhooks')
         group: 'queue',
         name: 'getQueueWebhooks',
         description: '/docs/references/health/get-queue-webhooks.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -369,7 +367,7 @@ App::get('/v1/health/queue/logs')
         group: 'queue',
         name: 'getQueueLogs',
         description: '/docs/references/health/get-queue-logs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -402,7 +400,7 @@ App::get('/v1/health/certificate')
         group: 'health',
         name: 'getCertificate',
         description: '/docs/references/health/get-certificate.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -459,7 +457,7 @@ App::get('/v1/health/queue/certificates')
         group: 'queue',
         name: 'getQueueCertificates',
         description: '/docs/references/health/get-queue-certificates.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -492,7 +490,7 @@ App::get('/v1/health/queue/builds')
         group: 'queue',
         name: 'getQueueBuilds',
         description: '/docs/references/health/get-queue-builds.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -525,7 +523,7 @@ App::get('/v1/health/queue/databases')
         group: 'queue',
         name: 'getQueueDatabases',
         description: '/docs/references/health/get-queue-databases.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -558,7 +556,7 @@ App::get('/v1/health/queue/deletes')
         group: 'queue',
         name: 'getQueueDeletes',
         description: '/docs/references/health/get-queue-deletes.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -591,7 +589,7 @@ App::get('/v1/health/queue/mails')
         group: 'queue',
         name: 'getQueueMails',
         description: '/docs/references/health/get-queue-mails.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -624,7 +622,7 @@ App::get('/v1/health/queue/messaging')
         group: 'queue',
         name: 'getQueueMessaging',
         description: '/docs/references/health/get-queue-messaging.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -657,7 +655,7 @@ App::get('/v1/health/queue/migrations')
         group: 'queue',
         name: 'getQueueMigrations',
         description: '/docs/references/health/get-queue-migrations.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -690,7 +688,7 @@ App::get('/v1/health/queue/functions')
         group: 'queue',
         name: 'getQueueFunctions',
         description: '/docs/references/health/get-queue-functions.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -723,7 +721,7 @@ App::get('/v1/health/queue/stats-resources')
         group: 'queue',
         name: 'getQueueStatsResources',
         description: '/docs/references/health/get-queue-stats-resources.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -756,7 +754,7 @@ App::get('/v1/health/queue/stats-usage')
         group: 'queue',
         name: 'getQueueUsage',
         description: '/docs/references/health/get-queue-stats-usage.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -789,7 +787,7 @@ App::get('/v1/health/storage/local')
         group: 'storage',
         name: 'getStorageLocal',
         description: '/docs/references/health/get-storage-local.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -824,7 +822,7 @@ App::get('/v1/health/storage/local')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) * 1000)
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -839,7 +837,7 @@ App::get('/v1/health/storage')
         group: 'storage',
         name: 'getStorage',
         description: '/docs/references/health/get-storage.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -876,7 +874,7 @@ App::get('/v1/health/storage')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) * 1000)
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -891,7 +889,7 @@ App::get('/v1/health/anti-virus')
         group: 'health',
         name: 'getAntivirus',
         description: '/docs/references/health/get-storage-anti-virus.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -937,7 +935,7 @@ App::get('/v1/health/queue/failed/:name')
         group: 'queue',
         name: 'getFailedJobs',
         description: '/docs/references/health/get-failed-queue-jobs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -947,18 +945,18 @@ App::get('/v1/health/queue/failed/:name')
         contentType: ContentType::JSON
     ))
     ->param('name', '', new WhiteList([
-        Event::DATABASE_QUEUE_NAME,
-        Event::DELETE_QUEUE_NAME,
-        Event::AUDITS_QUEUE_NAME,
-        Event::MAILS_QUEUE_NAME,
-        Event::FUNCTIONS_QUEUE_NAME,
-        Event::STATS_RESOURCES_QUEUE_NAME,
-        Event::STATS_USAGE_QUEUE_NAME,
-        Event::WEBHOOK_QUEUE_NAME,
-        Event::CERTIFICATES_QUEUE_NAME,
-        Event::BUILDS_QUEUE_NAME,
-        Event::MESSAGING_QUEUE_NAME,
-        Event::MIGRATIONS_QUEUE_NAME
+        System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME),
+        System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME),
+        System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME),
+        System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME),
+        System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME),
+        System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME),
+        System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME),
+        System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME),
+        System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME),
+        System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME),
+        System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
+        System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME)
     ]), 'The name of the queue')
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('response')
@@ -995,18 +993,18 @@ App::get('/v1/health/queue/failed/:name')
 
         /** @var Event $queue */
         $queue = match ($name) {
-            Event::DATABASE_QUEUE_NAME => $queueForDatabase,
-            Event::DELETE_QUEUE_NAME => $queueForDeletes,
-            Event::AUDITS_QUEUE_NAME => $queueForAudits,
-            Event::MAILS_QUEUE_NAME => $queueForMails,
-            Event::FUNCTIONS_QUEUE_NAME => $queueForFunctions,
-            Event::STATS_RESOURCES_QUEUE_NAME => $queueForStatsResources,
-            Event::STATS_USAGE_QUEUE_NAME => $queueForStatsUsage,
-            Event::WEBHOOK_QUEUE_NAME => $queueForWebhooks,
-            Event::CERTIFICATES_QUEUE_NAME => $queueForCertificates,
-            Event::BUILDS_QUEUE_NAME => $queueForBuilds,
-            Event::MESSAGING_QUEUE_NAME => $queueForMessaging,
-            Event::MIGRATIONS_QUEUE_NAME => $queueForMigrations,
+            System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
+            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $queueForDeletes,
+            System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $queueForAudits,
+            System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $queueForMails,
+            System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
+            System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $queueForStatsResources,
+            System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $queueForStatsUsage,
+            System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
+            System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $queueForCertificates,
+            System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,
+            System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $queueForMessaging,
+            System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $queueForMigrations,
         };
         $failed = $queue->getSize(failed: true);
 

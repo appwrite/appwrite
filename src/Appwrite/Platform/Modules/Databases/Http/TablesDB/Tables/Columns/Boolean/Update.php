@@ -43,7 +43,7 @@ class Update extends BooleanUpdate
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/update-boolean-column.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -61,7 +61,6 @@ class Update extends BooleanUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

@@ -15,7 +15,8 @@ Config::load('auth', __DIR__ . '/../config/auth.php', $configAdapter);
 Config::load('apis', __DIR__ . '/../config/apis.php', $configAdapter);  // List of APIs
 Config::load('errors', __DIR__ . '/../config/errors.php', $configAdapter);
 Config::load('oAuthProviders', __DIR__ . '/../config/oAuthProviders.php', $configAdapter);
-Config::load('platforms', __DIR__ . '/../config/platforms.php', $configAdapter);
+Config::load('sdks', __DIR__ . '/../config/sdks.php', $configAdapter);
+Config::load('platform', __DIR__ . '/../config/platform.php', $configAdapter);
 Config::load('console', __DIR__ . '/../config/console.php', $configAdapter);
 Config::load('collections', __DIR__ . '/../config/collections.php', $configAdapter);
 Config::load('frameworks', __DIR__ . '/../config/frameworks.php', $configAdapter);

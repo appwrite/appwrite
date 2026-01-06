@@ -42,7 +42,7 @@ class Create extends Action
                 group: 'transactions',
                 name: 'createTransaction',
                 description: '/docs/references/databases/create-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,
@@ -55,11 +55,10 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user, Authorization $authorization): void
+    public function action(int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user): void
     {
         $permissions = [];
         if (!empty($user->getId())) {
@@ -74,7 +73,7 @@ class Create extends Action
             }
         }
 
-        $transaction = $authorization->skip(fn () => $dbForProject->createDocument('transactions', new Document([
+        $transaction = Authorization::skip(fn () => $dbForProject->createDocument('transactions', new Document([
             '$id' => ID::unique(),
             '$permissions' => $permissions,
             'status' => 'pending',

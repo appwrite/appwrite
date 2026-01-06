@@ -238,7 +238,7 @@ App::post('/v1/users')
         group: 'users',
         name: 'create',
         description: '/docs/references/users/create-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -275,7 +275,7 @@ App::post('/v1/users/bcrypt')
         group: 'users',
         name: 'createBcryptUser',
         description: '/docs/references/users/create-bcrypt-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -313,7 +313,7 @@ App::post('/v1/users/md5')
         group: 'users',
         name: 'createMD5User',
         description: '/docs/references/users/create-md5-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -350,7 +350,7 @@ App::post('/v1/users/argon2')
         group: 'users',
         name: 'createArgon2User',
         description: '/docs/references/users/create-argon2-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -387,7 +387,7 @@ App::post('/v1/users/sha')
         group: 'users',
         name: 'createSHAUser',
         description: '/docs/references/users/create-sha-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -428,7 +428,7 @@ App::post('/v1/users/phpass')
         group: 'users',
         name: 'createPHPassUser',
         description: '/docs/references/users/create-phpass-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -465,7 +465,7 @@ App::post('/v1/users/scrypt')
         group: 'users',
         name: 'createScryptUser',
         description: '/docs/references/users/create-scrypt-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -513,7 +513,7 @@ App::post('/v1/users/scrypt-modified')
         group: 'users',
         name: 'createScryptModifiedUser',
         description: '/docs/references/users/create-scrypt-modified-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -650,7 +650,7 @@ App::get('/v1/users')
         group: 'users',
         name: 'list',
         description: '/docs/references/users/list-users.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -729,7 +729,7 @@ App::get('/v1/users/:userId')
         group: 'users',
         name: 'get',
         description: '/docs/references/users/get-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -760,7 +760,7 @@ App::get('/v1/users/:userId/prefs')
         group: 'users',
         name: 'getPrefs',
         description: '/docs/references/users/get-user-prefs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -831,7 +831,7 @@ App::get('/v1/users/:userId/sessions')
         group: 'sessions',
         name: 'listSessions',
         description: '/docs/references/users/list-user-sessions.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -875,7 +875,7 @@ App::get('/v1/users/:userId/memberships')
         group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/users/list-user-memberships.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -930,7 +930,7 @@ App::get('/v1/users/:userId/logs')
         group: 'logs',
         name: 'listLogs',
         description: '/docs/references/users/list-user-logs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -945,7 +945,8 @@ App::get('/v1/users/:userId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -957,13 +958,12 @@ App::get('/v1/users/:userId/logs')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
-        $audit = new Audit($dbForProject);
-        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
+
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
+        $logs = $audit->getLogsByUser($user->getSequence(), limit: $limit, offset: $offset);
         $output = [];
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
@@ -1003,7 +1003,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1082,7 +1082,7 @@ App::get('/v1/users/identities')
         group: 'identities',
         name: 'listIdentities',
         description: '/docs/references/users/list-identities.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1152,7 +1152,7 @@ App::patch('/v1/users/:userId/status')
         group: 'users',
         name: 'updateStatus',
         description: '/docs/references/users/update-user-status.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1193,7 +1193,7 @@ App::put('/v1/users/:userId/labels')
         group: 'users',
         name: 'updateLabels',
         description: '/docs/references/users/update-user-labels.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1236,7 +1236,7 @@ App::patch('/v1/users/:userId/verification/phone')
         group: 'users',
         name: 'updatePhoneVerification',
         description: '/docs/references/users/update-user-phone-verification.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1278,7 +1278,7 @@ App::patch('/v1/users/:userId/name')
         group: 'users',
         name: 'updateName',
         description: '/docs/references/users/update-user-name.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1321,7 +1321,7 @@ App::patch('/v1/users/:userId/password')
         group: 'users',
         name: 'updatePassword',
         description: '/docs/references/users/update-user-password.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1420,7 +1420,7 @@ App::patch('/v1/users/:userId/email')
         group: 'users',
         name: 'updateEmail',
         description: '/docs/references/users/update-user-email.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1531,7 +1531,7 @@ App::patch('/v1/users/:userId/phone')
         group: 'users',
         name: 'updatePhone',
         description: '/docs/references/users/update-user-phone.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1621,7 +1621,7 @@ App::patch('/v1/users/:userId/verification')
         group: 'users',
         name: 'updateEmailVerification',
         description: '/docs/references/users/update-user-email-verification.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1659,7 +1659,7 @@ App::patch('/v1/users/:userId/prefs')
         group: 'users',
         name: 'updatePrefs',
         description: '/docs/references/users/update-user-prefs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1806,7 +1806,7 @@ App::patch('/v1/users/:userId/mfa')
             group: 'users',
             name: 'updateMfa',
             description: '/docs/references/users/update-user-mfa.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1817,13 +1817,14 @@ App::patch('/v1/users/:userId/mfa')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFA',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'users',
             name: 'updateMFA',
             description: '/docs/references/users/update-user-mfa.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1865,7 +1866,7 @@ App::get('/v1/users/:userId/mfa/factors')
             group: 'mfa',
             name: 'listMfaFactors',
             description: '/docs/references/users/list-mfa-factors.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1876,13 +1877,14 @@ App::get('/v1/users/:userId/mfa/factors')
                 since: '1.8.0',
                 replaceWith: 'users.listMFAFactors',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'listMFAFactors',
             description: '/docs/references/users/list-mfa-factors.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1923,7 +1925,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
             group: 'mfa',
             name: 'getMfaRecoveryCodes',
             description: '/docs/references/users/get-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1934,13 +1936,14 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.getMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'getMFARecoveryCodes',
             description: '/docs/references/users/get-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1987,7 +1990,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
             group: 'mfa',
             name: 'createMfaRecoveryCodes',
             description: '/docs/references/users/create-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
@@ -1998,13 +2001,14 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.createMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'createMFARecoveryCodes',
             description: '/docs/references/users/create-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
@@ -2058,7 +2062,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
             group: 'mfa',
             name: 'updateMfaRecoveryCodes',
             description: '/docs/references/users/update-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -2069,19 +2073,21 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'updateMFARecoveryCodes',
             description: '/docs/references/users/update-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_MFA_RECOVERY_CODES,
                 )
-            ]
+            ],
+            public: false,
         )
     ])
     ->param('userId', '', new UID(), 'User ID.')
@@ -2128,7 +2134,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
             group: 'mfa',
             name: 'deleteMfaAuthenticator',
             description: '/docs/references/users/delete-mfa-authenticator.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_NOCONTENT,
@@ -2140,13 +2146,14 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
                 since: '1.8.0',
                 replaceWith: 'users.deleteMFAAuthenticator',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'deleteMFAAuthenticator',
             description: '/docs/references/users/delete-mfa-authenticator.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_NOCONTENT,
@@ -2195,7 +2202,7 @@ App::post('/v1/users/:userId/sessions')
         group: 'sessions',
         name: 'createSession',
         description: '/docs/references/users/create-session.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2287,7 +2294,7 @@ App::post('/v1/users/:userId/tokens')
         group: 'sessions',
         name: 'createToken',
         description: '/docs/references/users/create-token.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2352,7 +2359,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         group: 'sessions',
         name: 'deleteSession',
         description: '/docs/references/users/delete-user-session.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2403,7 +2410,7 @@ App::delete('/v1/users/:userId/sessions')
         group: 'sessions',
         name: 'deleteSessions',
         description: '/docs/references/users/delete-user-sessions.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2453,7 +2460,7 @@ App::delete('/v1/users/:userId')
         group: 'users',
         name: 'delete',
         description: '/docs/references/users/delete.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2563,7 +2570,7 @@ App::delete('/v1/users/identities/:identityId')
         group: 'identities',
         name: 'deleteIdentity',
         description: '/docs/references/users/delete-identity.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2603,7 +2610,7 @@ App::post('/v1/users/:userId/jwts')
         group: 'sessions',
         name: 'createJWT',
         description: '/docs/references/users/create-user-jwt.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2671,8 +2678,8 @@ App::get('/v1/users/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('authorization')
-    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->inject('register')
+    ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -2682,7 +2689,7 @@ App::get('/v1/users/usage')
             METRIC_SESSIONS,
         ];
 
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $count => $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

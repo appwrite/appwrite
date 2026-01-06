@@ -15,6 +15,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -86,6 +87,7 @@ class Functions extends Action
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
         $function = new Document($payload['function'] ?? []);
         $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
@@ -120,14 +122,16 @@ class Functions extends Action
         $log->addTag('type', $type);
 
         if (!empty($events)) {
-            $limit = 30;
-            $sum = 30;
+            $limit = 100;
+            $sum = 100;
             $offset = 0;
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
+                    Query::select(['$id', 'events']), // Skip variables subqueries
+                    Query::contains('events', $events),
                     Query::limit($limit),
                     Query::offset($offset),
-                    Query::orderAsc('name'),
+                    Query::orderAsc('$sequence'),
                 ]);
 
                 $sum = \count($functions);
@@ -144,6 +148,11 @@ class Functions extends Action
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
+
+                    /**
+                     * get variables subqueries cached
+                     */
+                    $function = $dbForProject->getDocument('functions', $function->getId());
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
@@ -165,6 +174,7 @@ class Functions extends Action
                             'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
                             'content-type' => 'application/json'
                         ],
+                        platform: $platform,
                         data: null,
                         user: $user,
                         jwt: null,
@@ -205,6 +215,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -230,6 +241,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -325,6 +337,7 @@ class Functions extends Action
      * @param string|null $eventData
      * @param string|null $executionId
      * @return void
+     * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Conflict
@@ -344,6 +357,7 @@ class Functions extends Action
         string $path,
         string $method,
         array $headers,
+        array $platform,
         string $data = null,
         ?Document $user = null,
         string $jwt = null,
@@ -485,8 +499,7 @@ class Functions extends Action
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [

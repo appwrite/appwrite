@@ -20,12 +20,10 @@ use Utopia\Database\Validator\Authorization;
 class TransactionState
 {
     private Database $dbForProject;
-    private Authorization $authorization;
-    /** @var Authorization $authorization */
-    public function __construct(Database $dbForProject, Authorization $authorization)
+
+    public function __construct(Database $dbForProject)
     {
         $this->dbForProject = $dbForProject;
-        $this->authorization = $authorization;
     }
 
 
@@ -344,12 +342,12 @@ class TransactionState
      */
     private function getTransactionState(string $transactionId): array
     {
-        $transaction = $this->authorization->skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId));
+        $transaction = Authorization::skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId));
         if ($transaction->isEmpty() || $transaction->getAttribute('status') !== 'pending') {
             return [];
         }
 
-        $operations = $this->authorization->skip(fn () => $this->dbForProject->find('transactionLogs', [
+        $operations = Authorization::skip(fn () => $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
             Query::orderAsc(),
             Query::limit(PHP_INT_MAX)

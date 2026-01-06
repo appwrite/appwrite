@@ -90,6 +90,7 @@ abstract class Migration
         '1.7.3' => 'V22',
         '1.7.4' => 'V22',
         '1.8.0' => 'V23',
+        '1.8.1' => 'V23',
     ];
 
     /**
@@ -99,6 +100,8 @@ abstract class Migration
 
     public function __construct()
     {
+        Authorization::disable();
+        Authorization::setDefaultStatus(false);
 
         $this->collections = Config::getParam('collections', []);
 
@@ -126,16 +129,12 @@ abstract class Migration
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
-        Authorization $authorization,
         ?callable $getProjectDB = null
     ): self {
         $this->project = $project;
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->getProjectDB = $getProjectDB;
-
-        $authorization->disable();
-        $authorization->setDefaultStatus(false);
 
         return $this;
     }

@@ -28,12 +28,11 @@ use Utopia\Validator\Text;
 App::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->inject('authorization')
-    ->action(function (Document $project, Authorization $authorization) {
+    ->action(function (Document $project) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
+            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -47,7 +46,7 @@ App::get('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'get',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         hide: true,
         description: '/docs/references/graphql/get.md',
         responses: [
@@ -94,7 +93,7 @@ App::post('/v1/graphql/mutation')
         namespace: 'graphql',
         group: 'graphql',
         name: 'mutation',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(
@@ -145,7 +144,7 @@ App::post('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'query',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(

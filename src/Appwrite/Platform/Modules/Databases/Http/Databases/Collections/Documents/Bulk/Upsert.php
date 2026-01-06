@@ -90,12 +90,12 @@ class Upsert extends Action
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $hasRelationships = \array_filter(
@@ -180,7 +180,7 @@ class Upsert extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: ['multiple']);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {

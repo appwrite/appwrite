@@ -61,7 +61,7 @@ class Update extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -77,7 +77,7 @@ class Update extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documentId', '', new UID(), 'Document ID.')
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
+            ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
@@ -87,11 +87,10 @@ class Update extends Action
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -99,19 +98,19 @@ class Update extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         if ($transactionId === null) {
@@ -126,11 +125,11 @@ class Update extends Action
             // Use transaction-aware document retrieval to see changes from same transaction
             $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
-            $document = $authorization->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            $document = Authorization::skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
-            throw new Exception($this->getNotFoundException());
+            throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -141,7 +140,7 @@ class Update extends Action
         ]);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = $authorization->getRoles();
+        $roles = Authorization::getRoles();
         if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -154,7 +153,7 @@ class Update extends Action
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!$authorization->hasRole($role)) {
+                    if (!Authorization::isRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -172,7 +171,7 @@ class Update extends Action
 
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations, $authorization) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations) {
             $operations++;
 
             $relationships = \array_filter(
@@ -196,7 +195,7 @@ class Update extends Action
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = $authorization->skip(
+                $relatedCollection = Authorization::skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
@@ -213,7 +212,7 @@ class Update extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $oldDocument = $authorization->skip(fn () => $dbForProject->getDocument(
+                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
@@ -250,10 +249,10 @@ class Update extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
-                ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -327,7 +326,7 @@ class Update extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
@@ -341,7 +340,6 @@ class Update extends Action
             document: $document,
             dbForProject: $dbForProject,
             collectionsCache: $collectionsCache,
-            authorization: $authorization,
         );
 
         $response->dynamic($document, $this->getResponseModel());

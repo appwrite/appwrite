@@ -9,6 +9,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
@@ -60,7 +61,7 @@ class Create extends Action
                     group: 'mfa',
                     name: 'createMfaChallenge',
                     description: '/docs/references/account/create-mfa-challenge.md',
-                    auth: [],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,
@@ -72,13 +73,14 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'account.createMFAChallenge',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
                     name: 'createMFAChallenge',
                     description: '/docs/references/account/create-mfa-challenge.md',
-                    auth: [],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_CREATED,
@@ -96,6 +98,7 @@ class Create extends Action
             ->inject('user')
             ->inject('locale')
             ->inject('project')
+            ->inject('platform')
             ->inject('request')
             ->inject('queueForEvents')
             ->inject('queueForMessaging')
@@ -115,6 +118,7 @@ class Create extends Action
         Document $user,
         Locale $locale,
         Document $project,
+        array $platform,
         Request $request,
         Event $queueForEvents,
         Messaging $queueForMessaging,
@@ -144,6 +148,11 @@ class Create extends Action
 
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
+        $projectName = $project->getAttribute('name');
+        if ($project->getId() === 'console') {
+            $projectName = $platform['platformName'];
+        }
+
         // 9 levels up to project root
         $templatesPath = \dirname(__DIR__, 9) . '/app/config/locale/templates';
 
@@ -168,7 +177,7 @@ class Create extends Action
 
                 $messageContent = Template::fromString($locale->getText("sms.verification.body"));
                 $messageContent
-                    ->setParam('{{project}}', $project->getAttribute('name'))
+                    ->setParam('{{project}}', $projectName)
                     ->setParam('{{secret}}', $code);
                 $messageContent = \strip_tags($messageContent->render());
                 $message = $message->setParam('{{token}}', $messageContent);
@@ -298,7 +307,7 @@ class Create extends Action
                     'heading' => $heading,
                     'direction' => $locale->getText('settings.direction'),
                     'user' => $user->getAttribute('name'),
-                    'project' => $project->getAttribute('name'),
+                    'project' => $projectName,
                     'otp' => $code,
                     'agentDevice' => $agentDevice['deviceBrand'] ?? 'UNKNOWN',
                     'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
@@ -307,13 +316,14 @@ class Create extends Action
 
                 if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
                     $emailVariables = array_merge($emailVariables, [
-                        'accentColor' => APP_EMAIL_ACCENT_COLOR,
-                        'logoUrl' => APP_EMAIL_LOGO_URL,
-                        'twitterUrl' => APP_SOCIAL_TWITTER,
-                        'discordUrl' => APP_SOCIAL_DISCORD,
-                        'githubUrl' => APP_SOCIAL_GITHUB_APPWRITE,
-                        'termsUrl' => APP_EMAIL_TERMS_URL,
-                        'privacyUrl' => APP_EMAIL_PRIVACY_URL,
+                        'accentColor' => $platform['accentColor'],
+                        'logoUrl' => $platform['logoUrl'],
+                        'twitter' => $platform['twitterUrl'],
+                        'discord' => $platform['discordUrl'],
+                        'github' => $platform['githubUrl'],
+                        'terms' => $platform['termsUrl'],
+                        'privacy' => $platform['privacyUrl'],
+                        'platform' => $platform['platformName'],
                     ]);
                 }
 
@@ -323,8 +333,14 @@ class Create extends Action
                     ->setBody($body)
                     ->setBodyTemplate($bodyTemplate)
                     ->setVariables($emailVariables)
-                    ->setRecipient($user->getAttribute('email'))
-                    ->trigger();
+                    ->setRecipient($user->getAttribute('email'));
+
+                // since this is console project, set email sender name!
+                if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
+                    $queueForMails->setSenderName($platform['emailSenderName']);
+                }
+
+                $queueForMails->trigger();
                 break;
         }
 
@@ -332,6 +348,8 @@ class Create extends Action
             ->setParam('userId', $user->getId())
             ->setParam('challengeId', $challenge->getId());
 
-        $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
     }
 }

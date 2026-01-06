@@ -50,7 +50,7 @@ class Create extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-relationship-attribute.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -83,30 +83,30 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
     {
         $key ??= $relatedCollectionId;
+        $twoWayKeyWasProvided = $twoWayKey !== null;
         $twoWayKey ??= $collectionId;
 
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId);
         $relatedCollection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollectionDocument->getSequence());
         if ($relatedCollection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$relatedCollectionId]);
         }
 
         $attributes = $collection->getAttribute('attributes', []);
@@ -116,14 +116,17 @@ class Create extends Action
             }
 
             if (\strtolower($attribute->getId()) === \strtolower($key)) {
-                throw new Exception($this->getDuplicateException());
+                throw new Exception($this->getDuplicateException(), params: [$key]);
             }
 
             if (
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                throw new Exception($this->getDuplicateException(), 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
+                // If user explicitly provided twoWayKey, report that.
+                // Otherwise report the key that they're trying to create.
+                $conflictingKey = $twoWayKeyWasProvided ? $twoWayKey : $key;
+                throw new Exception($this->getDuplicateException(), params: [$conflictingKey]);
             }
 
             if (
@@ -151,7 +154,7 @@ class Create extends Action
                 'twoWayKey' => $twoWayKey,
                 'onDelete' => $onDelete,
             ]
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
         foreach ($attribute->getAttribute('options', []) as $k => $option) {
             $attribute->setAttribute($k, $option);

@@ -12,7 +12,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -49,7 +48,7 @@ class Create extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-url-attribute.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -71,7 +70,6 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -85,8 +83,7 @@ class Create extends Action
         UtopiaResponse $response,
         Database       $dbForProject,
         EventDatabase  $queueForDatabase,
-        Event          $queueForEvents,
-        Authorization $authorization
+        Event          $queueForEvents
     ): void {
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -96,7 +93,7 @@ class Create extends Action
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

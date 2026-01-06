@@ -68,7 +68,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new function. You can pass a list of [permissions](https://appwrite.io/docs/permissions) to allow different project users or team with access to execute the function using the client API.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -115,7 +115,6 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -153,8 +152,7 @@ class Create extends Base
         Func $queueForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github,
-        Authorization $authorization
+        GitHub $github
     ) {
 
         // Temporary abuse check
@@ -239,7 +237,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
         }
 
-        $schedule = $authorization->skip(
+        $schedule = Authorization::skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
@@ -317,7 +315,6 @@ class Create extends Base
                     template: $template,
                     github: $github,
                     activate: true,
-                    authorization: $authorization,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
@@ -365,10 +362,11 @@ class Create extends Base
             if (!empty($functionsDomain)) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";
-                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                $rule = $authorization->skip(
+                $rule = Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

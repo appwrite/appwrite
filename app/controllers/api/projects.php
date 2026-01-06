@@ -21,6 +21,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -203,6 +204,7 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
+                'labels' => [],
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
@@ -247,13 +249,15 @@ App::post('/v1/projects')
             }
 
             if ($create || $projectTables) {
-                $audit = new Audit($dbForProject);
+                $adapter = new AdapterDatabase($dbForProject);
+                $audit = new Audit($adapter);
                 $audit->setup();
             }
 
             if (!$create && $sharedTablesV1) {
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), Audit::ATTRIBUTES);
-                $indexes = \array_map(fn (array $index) => new Document($index), Audit::INDEXES);
+                $adapter = new AdapterDatabase($dbForProject);
+                $attributes = $adapter->getAttributeDocuments();
+                $indexes = $adapter->getIndexDocuments();
                 $dbForProject->createDocument(Database::METADATA, new Document([
                     '$id' => ID::custom('audit'),
                     '$permissions' => [Permission::create(Role::any())],
@@ -294,7 +298,7 @@ App::post('/v1/projects')
 
         // Hook allowing instant project mirroring during migration
         // Outside of migration, hook is not registered and has no effect
-        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
+        $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -563,6 +567,7 @@ App::patch('/v1/projects/:projectId/api')
                 since: '1.8.0',
                 replaceWith: 'projects.updateAPIStatus',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -620,6 +625,7 @@ App::patch('/v1/projects/:projectId/api/all')
                 since: '1.8.0',
                 replaceWith: 'projects.updateAPIStatusAll',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -1497,6 +1503,9 @@ App::post('/v1/projects/:projectId/keys')
             ],
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
+            'resourceInternalId' => $project->getSequence(),
+            'resourceId' => $project->getId(),
+            'resourceType' => 'projects',
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
@@ -1544,7 +1553,13 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForPlatform->find('keys', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ]),
             Query::limit(5000),
         ]);
 
@@ -1585,7 +1600,13 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ])
         ]);
 
         if ($key->isEmpty()) {
@@ -1629,7 +1650,13 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ])
         ]);
 
         if ($key->isEmpty()) {
@@ -1680,7 +1707,13 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::or([
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::and([
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ])
+            ])
         ]);
 
         if ($key->isEmpty()) {
@@ -2024,6 +2057,7 @@ App::patch('/v1/projects/:projectId/smtp')
                 since: '1.8.0',
                 replaceWith: 'projects.updateSMTP',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2076,6 +2110,7 @@ App::patch('/v1/projects/:projectId/smtp')
         if ($enabled) {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
+            $mail->SMTPAuth = (!empty($username) && !empty($password));
             $mail->Username = $username;
             $mail->Password = $password;
             $mail->Host = $host;
@@ -2091,7 +2126,7 @@ App::patch('/v1/projects/:projectId/smtp')
                     throw new Exception('Connection is not valid.');
                 }
             } catch (Throwable $error) {
-                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
+                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
             }
         }
 
@@ -2140,6 +2175,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
                 since: '1.8.0',
                 replaceWith: 'projects.createSMTPTest',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2234,6 +2270,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
                 since: '1.8.0',
                 replaceWith: 'projects.getSMSTemplate',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2400,6 +2437,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
                 since: '1.8.0',
                 replaceWith: 'projects.updateSMSTemplate',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2524,6 +2562,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
                 since: '1.8.0',
                 replaceWith: 'projects.deleteSMSTemplate',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'projects',
@@ -2658,7 +2697,7 @@ App::patch('/v1/projects/:projectId/auth/session-invalidation')
         $auths = $project->getAttribute('auths', []);
         $auths['invalidateSessions'] = $enabled;
         $dbForPlatform->updateDocument('projects', $project->getId(), $project
-        ->setAttribute('auths', $auths));
+            ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

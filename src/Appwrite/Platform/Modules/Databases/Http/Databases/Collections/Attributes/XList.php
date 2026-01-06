@@ -46,7 +46,7 @@ class XList extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/list-attributes.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -64,20 +64,19 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
     {
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         try {
