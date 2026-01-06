@@ -50,6 +50,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\Logger\Logger;
 
 App::init()
     ->groups(['projects'])
