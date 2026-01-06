@@ -681,6 +681,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
+      mariadb:
+        condition: service_healthy
       redis:
         condition: service_healthy
     environment:
