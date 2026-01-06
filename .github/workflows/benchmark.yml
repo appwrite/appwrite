@@ -57,7 +57,6 @@ jobs:
           sed -i 's/traefik/localhost/g' .env
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d --wait
-          sleep 10
       - name: Install Oha
         run: |
           echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
@@ -77,7 +76,6 @@ jobs:
           curl https://appwrite.io/install/env -o .env
           sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
           docker compose up -d --wait
-          sleep 10
       - name: Benchmark Latest
         run: oha -z 180s http://localhost/v1/health/version --output-format json > benchmark-latest.json
       - name: Prepare comment
