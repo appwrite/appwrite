@@ -72,7 +72,7 @@ class XList extends Action
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID to read uncommitted changes within the transaction.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->param('cache', false, new Boolean(true), 'Opt-in to cached responses for select queries. Disabled by default.', true)
-            ->param('ttl', 30, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
+            ->param('ttl', 30, new Range(min: 1, max: 86400), 'TTL (seconds) for cached responses when caching is enabled for select queries. Must be between 1 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
