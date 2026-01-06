@@ -98,13 +98,23 @@ App::post('/v1/projects')
     ->inject('cache')
     ->inject('pools')
     ->inject('hooks')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks) {
+    ->inject('logger')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description,
+     string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, 
+     string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, 
+     Group $pools, Hooks $hooks, Logger $logger) {
 
 
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
         // Force default region if called from migration
-        if (isset($_SERVER['HTTP_X_MIGRATION']) && $_SERVER['HTTP_X_MIGRATION'] === 'true') {
+        $migrationHeader = $request->getHeader('X-Migration');
+
+        if ($migrationHeader === 'true') {
+            $logger->info('Migration request detected. Forcing project region to default.', [
+                'originalRegion' => $region,
+            ]);
+
             $region = 'default';
         }
 
