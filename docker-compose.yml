@@ -36,7 +36,8 @@ services:
       - appwrite-config:/storage/config:ro
       - appwrite-certificates:/storage/certificates:ro
     depends_on:
-      - appwrite
+      appwrite:
+        condition: service_started
     networks:
       appwrite:
         aliases:
@@ -99,10 +100,12 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
     depends_on:
-      - mariadb
-      - redis
-      - coredns
-      # - clamav
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+      coredns:
+        condition: service_started
     entrypoint:
       - php
       - -e
@@ -277,8 +280,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
-      - redis
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -310,8 +315,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -339,10 +346,14 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
-      - request-catcher-sms
-      - request-catcher-webhook
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+      request-catcher-sms:
+        condition: service_started
+      request-catcher-webhook:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -369,8 +380,10 @@ services:
     networks:
       - appwrite
     depends_on:
-      - redis
-      - mariadb
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -435,8 +448,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -470,8 +485,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
     environment:
       - _APP_BROWSER_HOST
       - _APP_ENV
@@ -537,8 +554,10 @@ services:
     networks:
       - appwrite
     depends_on:
-      - redis
-      - mariadb
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -579,9 +598,12 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
-      - openruntimes-executor
+      redis:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+      openruntimes-executor:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -622,9 +644,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - maildev
-      # - smtp
+      redis:
+        condition: service_healthy
+      maildev:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -658,7 +681,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -715,7 +739,8 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -753,7 +778,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -796,8 +822,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -827,8 +855,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -858,8 +888,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - mariadb
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -889,8 +921,10 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1066,6 +1100,12 @@ services:
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   redis:
     image: redis:7.2.4-alpine
@@ -1082,6 +1122,12 @@ services:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   coredns: # DNS server for testing purposes (Proxy APIs)
     image: coredns/coredns:1.12.4
