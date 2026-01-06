@@ -384,7 +384,7 @@ trait AccountBase
 
         $this->assertEquals($account['headers']['status-code'], 201);
 
-        // 20 successful requests wont get blocked
+        // 20 successful requests won't get blocked
         for ($i = 0; $i < 20; $i++) {
             $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
                 'origin' => 'http://localhost',
@@ -412,7 +412,7 @@ trait AccountBase
             $this->assertEquals($session['headers']['status-code'], 401);
         }
 
-        // 11th request get limited
+        // 11th request gets limited
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
