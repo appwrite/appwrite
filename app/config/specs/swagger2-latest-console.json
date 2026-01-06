@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.8.0",
+        "version": "1.8.1",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -5993,7 +5993,7 @@
                 "x-appwrite": {
                     "method": "chat",
                     "group": "console",
-                    "weight": 495,
+                    "weight": 496,
                     "cookies": false,
                     "type": "",
                     "demo": "assistant\/chat.md",
@@ -6057,7 +6057,7 @@
                 "x-appwrite": {
                     "method": "getResource",
                     "group": null,
-                    "weight": 496,
+                    "weight": 497,
                     "cookies": false,
                     "type": "",
                     "demo": "console\/get-resource.md",
@@ -6128,7 +6128,7 @@
                 "x-appwrite": {
                     "method": "variables",
                     "group": "console",
-                    "weight": 494,
+                    "weight": 495,
                     "cookies": false,
                     "type": "",
                     "demo": "console\/variables.md",
@@ -13275,7 +13275,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 438,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list.md",
@@ -13357,7 +13357,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 435,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create.md",
@@ -13593,7 +13593,10 @@
                                             "vcs.write",
                                             "assistant.read",
                                             "tokens.read",
-                                            "tokens.write"
+                                            "tokens.write",
+                                            "payments.read",
+                                            "payments.write",
+                                            "payments.subscribe"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -13670,7 +13673,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 440,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-runtimes.md",
@@ -13720,7 +13723,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 441,
+                    "weight": 442,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-specifications.md",
@@ -13770,7 +13773,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 464,
+                    "weight": 465,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-templates.md",
@@ -13954,7 +13957,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 463,
+                    "weight": 464,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-template.md",
@@ -14012,7 +14015,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 457,
+                    "weight": 458,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-usage.md",
@@ -14082,7 +14085,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 436,
+                    "weight": 437,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get.md",
@@ -14142,7 +14145,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 437,
+                    "weight": 438,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update.md",
@@ -14380,7 +14383,10 @@
                                             "vcs.write",
                                             "assistant.read",
                                             "tokens.read",
-                                            "tokens.write"
+                                            "tokens.write",
+                                            "payments.read",
+                                            "payments.write",
+                                            "payments.subscribe"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -14451,7 +14457,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 439,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete.md",
@@ -14513,7 +14519,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 444,
+                    "weight": 445,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-function-deployment.md",
@@ -14591,7 +14597,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 445,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-deployments.md",
@@ -14681,7 +14687,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 442,
+                    "weight": 443,
                     "cookies": false,
                     "type": "upload",
                     "demo": "functions\/create-deployment.md",
@@ -14774,7 +14780,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 450,
+                    "weight": 451,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-duplicate-deployment.md",
@@ -14860,7 +14866,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 447,
+                    "weight": 448,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
@@ -14981,7 +14987,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 448,
+                    "weight": 449,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-vcs-deployment.md",
@@ -15078,7 +15084,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 443,
+                    "weight": 444,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-deployment.md",
@@ -15141,7 +15147,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 446,
+                    "weight": 447,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-deployment.md",
@@ -15209,7 +15215,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 449,
+                    "weight": 450,
                     "cookies": false,
                     "type": "location",
                     "demo": "functions\/get-deployment-download.md",
@@ -15295,7 +15301,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 451,
+                    "weight": 452,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-deployment-status.md",
@@ -15363,7 +15369,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 454,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -15446,7 +15452,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 452,
+                    "weight": 453,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -15565,7 +15571,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 453,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -15630,7 +15636,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 455,
+                    "weight": 456,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-execution.md",
@@ -15698,7 +15704,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 456,
+                    "weight": 457,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-usage.md",
@@ -15776,7 +15782,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 460,
+                    "weight": 461,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-variables.md",
@@ -15836,7 +15842,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 458,
+                    "weight": 459,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-variable.md",
@@ -15927,7 +15933,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 459,
+                    "weight": 460,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-variable.md",
@@ -15995,7 +16001,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 461,
+                    "weight": 462,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-variable.md",
@@ -16090,7 +16096,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 462,
+                    "weight": 463,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-variable.md",
@@ -24971,6 +24977,2236 @@
                 ]
             }
         },
+        "\/payments\/actors\/{actorType}\/{actorId}\/features": {
+            "get": {
+                "summary": "Get features for an actor",
+                "operationId": "paymentsGetActorFeatures",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get the features available to a specific actor (user or team) based on their active subscription.",
+                "responses": {
+                    "200": {
+                        "description": "Any",
+                        "schema": {
+                            "$ref": "#\/definitions\/any"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getActorFeatures",
+                    "group": "actorFeatures",
+                    "weight": 565,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/get-actor-features.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "actorType",
+                        "description": "Actor type: user or team",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ACTOR_TYPE>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "actorId",
+                        "description": "Actor ID. Use \"me\" or \"current\" for the logged-in user.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ACTOR_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/features": {
+            "get": {
+                "summary": "List payment features",
+                "operationId": "paymentsListFeatures",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a list of all features configured for the project.",
+                "responses": {
+                    "200": {
+                        "description": "Payment Feature List",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentFeatureList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listFeatures",
+                    "group": "features",
+                    "weight": 542,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/list-features.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: featureId, name, type, status",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SEARCH>",
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create payment feature",
+                "operationId": "paymentsCreateFeature",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Create a new feature that can be assigned to plans. Features can be boolean (on\/off) or metered (usage-based).",
+                "responses": {
+                    "201": {
+                        "description": "PaymentFeature",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentFeature"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createFeature",
+                    "group": "features",
+                    "weight": 540,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/create-feature.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "featureId": {
+                                    "type": "string",
+                                    "description": "Feature ID",
+                                    "default": null,
+                                    "x-example": "<FEATURE_ID>"
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "description": "Feature name",
+                                    "default": null,
+                                    "x-example": "<NAME>"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "description": "Feature type",
+                                    "default": null,
+                                    "x-example": "<TYPE>"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Description",
+                                    "default": "",
+                                    "x-example": "<DESCRIPTION>"
+                                }
+                            },
+                            "required": [
+                                "featureId",
+                                "name",
+                                "type"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/features\/{featureId}": {
+            "get": {
+                "summary": "Get payment feature",
+                "operationId": "paymentsGetFeature",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a feature by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentFeature",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentFeature"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getFeature",
+                    "group": "features",
+                    "weight": 541,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/get-feature.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "featureId",
+                        "description": "Feature ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FEATURE_ID>",
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update payment feature",
+                "operationId": "paymentsUpdateFeature",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Update a feature by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentFeature",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentFeature"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateFeature",
+                    "group": "features",
+                    "weight": 543,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/update-feature.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "featureId",
+                        "description": "Feature ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FEATURE_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Feature name",
+                                    "default": "",
+                                    "x-example": "<NAME>"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "description": "Feature type",
+                                    "default": "boolean",
+                                    "x-example": "<TYPE>"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Description",
+                                    "default": "",
+                                    "x-example": "<DESCRIPTION>"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete payment feature",
+                "operationId": "paymentsDeleteFeature",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Delete a feature by its unique ID.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteFeature",
+                    "group": "features",
+                    "weight": 544,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/delete-feature.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "featureId",
+                        "description": "Feature ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FEATURE_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/plans": {
+            "get": {
+                "summary": "List payment plans",
+                "operationId": "paymentsListPlans",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a list of all payment plans configured for the project. You can use the query params to filter your results.",
+                "responses": {
+                    "200": {
+                        "description": "Payment Plan List",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentPlanList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listPlans",
+                    "group": "plans",
+                    "weight": 537,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/list-plans.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: planId, name, status, isDefault, isFree",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SEARCH>",
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create payment plan",
+                "operationId": "paymentsCreatePlan",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Create a new payment plan for your project. Plans define pricing tiers and can be associated with features for subscription management.",
+                "responses": {
+                    "201": {
+                        "description": "PaymentPlan",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentPlan"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createPlan",
+                    "group": "plans",
+                    "weight": 535,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/create-plan.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "planId": {
+                                    "type": "string",
+                                    "description": "Plan ID. Choose a custom ID or generate a random ID with `ID.unique()`.",
+                                    "default": null,
+                                    "x-example": "<PLAN_ID>"
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "description": "Plan name.",
+                                    "default": null,
+                                    "x-example": "<NAME>"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Plan description.",
+                                    "default": "",
+                                    "x-example": "<DESCRIPTION>"
+                                },
+                                "isDefault": {
+                                    "type": "boolean",
+                                    "description": "Set as default plan for new users.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "isFree": {
+                                    "type": "boolean",
+                                    "description": "Is the plan free.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "pricing": {
+                                    "type": "array",
+                                    "description": "Pricing configuration array [{priceId,amount,currency,interval}]",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "planId",
+                                "name"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/plans\/{planId}": {
+            "get": {
+                "summary": "Get payment plan",
+                "operationId": "paymentsGetPlan",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a payment plan by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentPlan",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentPlan"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getPlan",
+                    "group": "plans",
+                    "weight": 536,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/get-plan.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "planId",
+                        "description": "Plan ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PLAN_ID>",
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update payment plan",
+                "operationId": "paymentsUpdatePlan",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Update a payment plan by its unique ID. You can update the plan name, description, and pricing configuration.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentPlan",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentPlan"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updatePlan",
+                    "group": "plans",
+                    "weight": 538,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/update-plan.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "planId",
+                        "description": "Plan ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PLAN_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Plan name.",
+                                    "default": "",
+                                    "x-example": "<NAME>"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Plan description.",
+                                    "default": "",
+                                    "x-example": "<DESCRIPTION>"
+                                },
+                                "isDefault": {
+                                    "type": "boolean",
+                                    "description": "Set as default plan for new users.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "isFree": {
+                                    "type": "boolean",
+                                    "description": "Is the plan free.",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "pricing": {
+                                    "type": "array",
+                                    "description": "Pricing configuration array [{priceId,amount,currency,interval}]",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete payment plan",
+                "operationId": "paymentsDeletePlan",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Delete a payment plan by its unique ID. This action cannot be undone.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deletePlan",
+                    "group": "plans",
+                    "weight": 539,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/delete-plan.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "planId",
+                        "description": "Plan ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PLAN_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/plans\/{planId}\/features": {
+            "get": {
+                "summary": "List plan features",
+                "operationId": "paymentsListPlanFeatures",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a list of all features assigned to a specific plan.",
+                "responses": {
+                    "200": {
+                        "description": "Payment Plan Feature List",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentPlanFeatureList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listPlanFeatures",
+                    "group": "planFeatures",
+                    "weight": 546,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/list-plan-features.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "planId",
+                        "description": "Plan ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PLAN_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: planId, featureId, enabled, type",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SEARCH>",
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Assign feature to plan",
+                "operationId": "paymentsAssignPlanFeature",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Assign a feature to a plan with optional usage limits and pricing tiers for metered features.",
+                "responses": {
+                    "201": {
+                        "description": "Any",
+                        "schema": {
+                            "$ref": "#\/definitions\/any"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "assignPlanFeature",
+                    "group": "planFeatures",
+                    "weight": 545,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/assign-plan-feature.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "planId",
+                        "description": "Plan ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PLAN_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "featureId": {
+                                    "type": "string",
+                                    "description": "Feature ID",
+                                    "default": null,
+                                    "x-example": "<FEATURE_ID>"
+                                },
+                                "currency": {
+                                    "type": "string",
+                                    "description": "Currency code",
+                                    "default": "",
+                                    "x-example": "<CURRENCY>"
+                                },
+                                "interval": {
+                                    "type": "string",
+                                    "description": "Billing interval",
+                                    "default": "",
+                                    "x-example": "<INTERVAL>"
+                                },
+                                "includedUnits": {
+                                    "type": "integer",
+                                    "description": "Included units",
+                                    "default": 0,
+                                    "x-example": null
+                                },
+                                "tiersMode": {
+                                    "type": "string",
+                                    "description": "Tiers mode (graduated or volume)",
+                                    "default": null,
+                                    "x-example": "<TIERS_MODE>"
+                                },
+                                "tiers": {
+                                    "type": "array",
+                                    "description": "Pricing tiers",
+                                    "default": [],
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                },
+                                "usageCap": {
+                                    "type": "integer",
+                                    "description": "Usage cap",
+                                    "default": null,
+                                    "x-example": null
+                                }
+                            },
+                            "required": [
+                                "featureId"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/plans\/{planId}\/features\/{featureId}": {
+            "delete": {
+                "summary": "Remove feature from plan",
+                "operationId": "paymentsRemovePlanFeature",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Remove a feature from a plan.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "removePlanFeature",
+                    "group": "planFeatures",
+                    "weight": 547,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/remove-plan-feature.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "planId",
+                        "description": "Plan ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PLAN_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "featureId",
+                        "description": "Feature ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<FEATURE_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/providers": {
+            "get": {
+                "summary": "Get payments providers config",
+                "operationId": "paymentsGetProvider",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get the current payment provider configuration for the project.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentProviderConfig",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentProviderConfig"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getProvider",
+                    "group": "providers",
+                    "weight": 561,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/get-provider.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Configure payments providers",
+                "operationId": "paymentsUpdateProvider",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Configure payment providers for the project. Currently supports Stripe.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentProviderConfig",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentProviderConfig"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateProvider",
+                    "group": "providers",
+                    "weight": 562,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/update-provider.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "config": {
+                                    "type": "object",
+                                    "description": "Payments configuration JSON",
+                                    "default": {},
+                                    "x-example": "{}"
+                                }
+                            },
+                            "required": [
+                                "config"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/providers\/{providerId}\/actions\/test": {
+            "post": {
+                "summary": "Test payments provider credentials",
+                "operationId": "paymentsTest",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Test the connection to a configured payment provider.",
+                "responses": {
+                    "200": {
+                        "description": "Any",
+                        "schema": {
+                            "$ref": "#\/definitions\/any"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "test",
+                    "group": "providers",
+                    "weight": 563,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/test.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "providerId",
+                        "description": "Provider ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PROVIDER_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions": {
+            "post": {
+                "summary": "Create subscription",
+                "operationId": "paymentsCreateSubscription",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Create a new subscription for a user or team. This initiates a checkout session with the configured payment provider and returns a checkout URL for payment completion.",
+                "responses": {
+                    "201": {
+                        "description": "PaymentSubscription",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentSubscription"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createSubscription",
+                    "group": "subscriptions",
+                    "weight": 548,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/create-subscription.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.subscribe",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "actorType": {
+                                    "type": "string",
+                                    "description": "Actor type: user or team",
+                                    "default": null,
+                                    "x-example": "<ACTOR_TYPE>"
+                                },
+                                "actorId": {
+                                    "type": "string",
+                                    "description": "Actor ID",
+                                    "default": null,
+                                    "x-example": "<ACTOR_ID>"
+                                },
+                                "planId": {
+                                    "type": "string",
+                                    "description": "Plan ID",
+                                    "default": null,
+                                    "x-example": "<PLAN_ID>"
+                                },
+                                "priceId": {
+                                    "type": "string",
+                                    "description": "Price ID",
+                                    "default": "",
+                                    "x-example": "<PRICE_ID>"
+                                },
+                                "payerUserId": {
+                                    "type": "string",
+                                    "description": "Payer user ID (for team subscriptions)",
+                                    "default": "",
+                                    "x-example": "<PAYER_USER_ID>"
+                                },
+                                "successUrl": {
+                                    "type": "string",
+                                    "description": "Success redirect URL",
+                                    "default": null,
+                                    "x-example": "<SUCCESS_URL>"
+                                },
+                                "cancelUrl": {
+                                    "type": "string",
+                                    "description": "Cancel redirect URL",
+                                    "default": null,
+                                    "x-example": "<CANCEL_URL>"
+                                }
+                            },
+                            "required": [
+                                "actorType",
+                                "actorId",
+                                "planId",
+                                "successUrl",
+                                "cancelUrl"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/search": {
+            "get": {
+                "summary": "List subscriptions",
+                "operationId": "paymentsListSubscriptions",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a list of all the project's subscriptions. You can use the query params to filter your results.",
+                "responses": {
+                    "200": {
+                        "description": "Payment Subscription List",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentSubscriptionList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listSubscriptions",
+                    "group": "subscriptions",
+                    "weight": 549,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/list-subscriptions.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: subscriptionId, actorType, actorId, planId, status, cancelAtPeriodEnd",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SEARCH>",
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{actorType}\/{actorId}": {
+            "get": {
+                "summary": "Get subscription",
+                "operationId": "paymentsGetSubscription",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a subscription by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentSubscription",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentSubscription"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getSubscription",
+                    "group": "subscriptions",
+                    "weight": 550,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/get-subscription.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "actorType",
+                        "description": "Actor type: user or team",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ACTOR_TYPE>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "actorId",
+                        "description": "Actor ID. Use \"me\" or \"current\" for the logged-in user.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<ACTOR_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{subscriptionId}": {
+            "patch": {
+                "summary": "Update subscription",
+                "operationId": "paymentsUpdateSubscription",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Update a subscription to change the associated plan. This may trigger prorated charges or credits depending on the provider configuration.",
+                "responses": {
+                    "200": {
+                        "description": "PaymentSubscription",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentSubscription"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateSubscription",
+                    "group": "subscriptions",
+                    "weight": 551,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/update-subscription.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.subscribe",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "planId": {
+                                    "type": "string",
+                                    "description": "New plan ID",
+                                    "default": "",
+                                    "x-example": "<PLAN_ID>"
+                                },
+                                "priceId": {
+                                    "type": "string",
+                                    "description": "New price ID",
+                                    "default": "",
+                                    "x-example": "<PRICE_ID>"
+                                },
+                                "cancelAtPeriodEnd": {
+                                    "type": "boolean",
+                                    "description": "Cancel at period end",
+                                    "default": false,
+                                    "x-example": false
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{subscriptionId}\/cancel": {
+            "post": {
+                "summary": "Cancel subscription",
+                "operationId": "paymentsCancel",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Cancel a subscription. By default, cancellation takes effect at the end of the current billing period.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "cancel",
+                    "group": "subscriptions",
+                    "weight": 552,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/cancel.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.subscribe",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "endAtPeriodEnd": {
+                                    "type": "boolean",
+                                    "description": "End at period end",
+                                    "default": true,
+                                    "x-example": false
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{subscriptionId}\/invoices": {
+            "get": {
+                "summary": "List subscription invoices",
+                "operationId": "paymentsListInvoices",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a list of invoices for a subscription from the payment provider.",
+                "responses": {
+                    "200": {
+                        "description": "Payment Invoice List",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentInvoiceList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listInvoices",
+                    "group": "subscriptions",
+                    "weight": 556,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/list-invoices.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "limit",
+                        "description": "Maximum number of invoices to return. Max 100.",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 25,
+                        "in": "query"
+                    },
+                    {
+                        "name": "offset",
+                        "description": "Offset for pagination.",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0,
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{subscriptionId}\/portal": {
+            "post": {
+                "summary": "Create billing portal session",
+                "operationId": "paymentsCreatePortal",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a URL to the payment provider's customer portal where users can manage their subscription and payment methods.",
+                "responses": {
+                    "200": {
+                        "description": "Any",
+                        "schema": {
+                            "$ref": "#\/definitions\/any"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createPortal",
+                    "group": "subscriptions",
+                    "weight": 554,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/create-portal.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.subscribe",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "returnUrl": {
+                                    "type": "string",
+                                    "description": "Return URL after portal session",
+                                    "default": "",
+                                    "x-example": "<RETURN_URL>"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{subscriptionId}\/preview": {
+            "post": {
+                "summary": "Preview subscription upgrade proration",
+                "operationId": "paymentsPreviewUpgrade",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Preview the cost of upgrading or downgrading a subscription to a different plan.",
+                "responses": {
+                    "200": {
+                        "description": "Any",
+                        "schema": {
+                            "$ref": "#\/definitions\/any"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "previewUpgrade",
+                    "group": "subscriptions",
+                    "weight": 555,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/preview-upgrade.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "newPlanId": {
+                                    "type": "string",
+                                    "description": "New plan ID to switch to",
+                                    "default": null,
+                                    "x-example": "<NEW_PLAN_ID>"
+                                }
+                            },
+                            "required": [
+                                "newPlanId"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{subscriptionId}\/resume": {
+            "post": {
+                "summary": "Resume subscription",
+                "operationId": "paymentsResume",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Resume a previously canceled subscription if it hasn't expired yet.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "resume",
+                    "group": "subscriptions",
+                    "weight": 553,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/resume.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.subscribe",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/subscriptions\/{subscriptionId}\/usage": {
+            "get": {
+                "summary": "Get usage for subscription",
+                "operationId": "paymentsGetUsage",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get usage summary for a subscription.",
+                "responses": {
+                    "200": {
+                        "description": "Any",
+                        "schema": {
+                            "$ref": "#\/definitions\/any"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getUsage",
+                    "group": "usage",
+                    "weight": 557,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/get-usage.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription ID",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/payments\/usage\/events": {
+            "get": {
+                "summary": "List usage events",
+                "operationId": "paymentsListEvents",
+                "consumes": [],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Get a list of usage events for a subscription.",
+                "responses": {
+                    "200": {
+                        "description": "Payment Usage Event List",
+                        "schema": {
+                            "$ref": "#\/definitions\/paymentUsageEventList"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listEvents",
+                    "group": "usage",
+                    "weight": 559,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/list-events.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.read",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "subscriptionId",
+                        "description": "Filter by subscription ID.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SUBSCRIPTION_ID>",
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "featureId",
+                        "description": "Filter by feature ID.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<FEATURE_ID>",
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: subscriptionId, featureId, quantity",
+                        "required": false,
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "items": {
+                            "type": "string"
+                        },
+                        "default": [],
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "type": "string",
+                        "x-example": "<SEARCH>",
+                        "default": "",
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "type": "boolean",
+                        "x-example": false,
+                        "default": true,
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/payments\/usage\/reconcile": {
+            "post": {
+                "summary": "Trigger usage reconciliation",
+                "operationId": "paymentsReconcile",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [],
+                "tags": [
+                    "payments"
+                ],
+                "description": "Reconcile usage events with the payment provider.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "reconcile",
+                    "group": "usage",
+                    "weight": 560,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "payments\/reconcile.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "payments.write",
+                    "platforms": [
+                        "server",
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ]
+            }
+        },
         "\/project\/usage": {
             "get": {
                 "summary": "Get project usage stats",
@@ -25438,7 +27674,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, teamId",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, teamId, labels",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -27559,7 +29795,10 @@
                                             "vcs.write",
                                             "assistant.read",
                                             "tokens.read",
-                                            "tokens.write"
+                                            "tokens.write",
+                                            "payments.read",
+                                            "payments.write",
+                                            "payments.subscribe"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -27779,7 +30018,10 @@
                                             "vcs.write",
                                             "assistant.read",
                                             "tokens.read",
-                                            "tokens.write"
+                                            "tokens.write",
+                                            "payments.read",
+                                            "payments.write",
+                                            "payments.subscribe"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -28008,7 +30250,10 @@
                                             "vcs.write",
                                             "assistant.read",
                                             "tokens.read",
-                                            "tokens.write"
+                                            "tokens.write",
+                                            "payments.read",
+                                            "payments.write",
+                                            "payments.subscribe"
                                         ],
                                         "x-enum-name": null,
                                         "x-enum-keys": []
@@ -28089,6 +30334,87 @@
                         "type": "string",
                         "x-example": "<KEY_ID>",
                         "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/projects\/{projectId}\/labels": {
+            "put": {
+                "summary": "Update project labels",
+                "operationId": "projectsUpdateLabels",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "projects"
+                ],
+                "description": "Update the project labels by its unique ID. Labels can be used to easily filter projects in an organization.",
+                "responses": {
+                    "200": {
+                        "description": "Project",
+                        "schema": {
+                            "$ref": "#\/definitions\/project"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateLabels",
+                    "group": "projects",
+                    "weight": 435,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "projects\/update-labels.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PROJECT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "labels": {
+                                    "type": "array",
+                                    "description": "Array of project labels. Replaces the previous labels. Maximum of 1000 labels are allowed, each up to 36 alphanumeric characters long.",
+                                    "default": null,
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "labels"
+                            ]
+                        }
                     }
                 ]
             }
@@ -28740,6 +31066,7 @@
                                         "users",
                                         "sites",
                                         "functions",
+                                        "payments",
                                         "graphql",
                                         "messaging"
                                     ],
@@ -31455,7 +33782,7 @@
                 "x-appwrite": {
                     "method": "listRules",
                     "group": null,
-                    "weight": 510,
+                    "weight": 511,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/list-rules.md",
@@ -31537,7 +33864,7 @@
                 "x-appwrite": {
                     "method": "createAPIRule",
                     "group": null,
-                    "weight": 505,
+                    "weight": 506,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-api-rule.md",
@@ -31607,7 +33934,7 @@
                 "x-appwrite": {
                     "method": "createFunctionRule",
                     "group": null,
-                    "weight": 507,
+                    "weight": 508,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-function-rule.md",
@@ -31690,7 +34017,7 @@
                 "x-appwrite": {
                     "method": "createRedirectRule",
                     "group": null,
-                    "weight": 508,
+                    "weight": 509,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-redirect-rule.md",
@@ -31810,7 +34137,7 @@
                 "x-appwrite": {
                     "method": "createSiteRule",
                     "group": null,
-                    "weight": 506,
+                    "weight": 507,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-site-rule.md",
@@ -31891,7 +34218,7 @@
                 "x-appwrite": {
                     "method": "getRule",
                     "group": null,
-                    "weight": 509,
+                    "weight": 510,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/get-rule.md",
@@ -31944,7 +34271,7 @@
                 "x-appwrite": {
                     "method": "deleteRule",
                     "group": null,
-                    "weight": 511,
+                    "weight": 512,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/delete-rule.md",
@@ -32004,7 +34331,7 @@
                 "x-appwrite": {
                     "method": "updateRuleVerification",
                     "group": null,
-                    "weight": 512,
+                    "weight": 513,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/update-rule-verification.md",
@@ -32062,7 +34389,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 467,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list.md",
@@ -32144,7 +34471,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 465,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create.md",
@@ -32415,7 +34742,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 470,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-frameworks.md",
@@ -32465,7 +34792,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 493,
+                    "weight": 494,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -32515,7 +34842,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 489,
+                    "weight": 490,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-templates.md",
@@ -32638,7 +34965,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 490,
+                    "weight": 491,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-template.md",
@@ -32696,7 +35023,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 491,
+                    "weight": 492,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-usage.md",
@@ -32766,7 +35093,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 466,
+                    "weight": 467,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get.md",
@@ -32826,7 +35153,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 468,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update.md",
@@ -33092,7 +35419,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 469,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete.md",
@@ -33154,7 +35481,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 476,
+                    "weight": 477,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-site-deployment.md",
@@ -33232,7 +35559,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 475,
+                    "weight": 476,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-deployments.md",
@@ -33322,7 +35649,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 471,
+                    "weight": 472,
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
@@ -33423,7 +35750,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 479,
+                    "weight": 480,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-duplicate-deployment.md",
@@ -33503,7 +35830,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 472,
+                    "weight": 473,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
@@ -33624,7 +35951,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 473,
+                    "weight": 474,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-vcs-deployment.md",
@@ -33722,7 +36049,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 474,
+                    "weight": 475,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-deployment.md",
@@ -33785,7 +36112,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 477,
+                    "weight": 478,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-deployment.md",
@@ -33853,7 +36180,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 478,
+                    "weight": 479,
                     "cookies": false,
                     "type": "location",
                     "demo": "sites\/get-deployment-download.md",
@@ -33939,7 +36266,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 480,
+                    "weight": 481,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-deployment-status.md",
@@ -34007,7 +36334,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 482,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -34088,7 +36415,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 481,
+                    "weight": 482,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -34153,7 +36480,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 483,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -34221,7 +36548,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 492,
+                    "weight": 493,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-usage.md",
@@ -34299,7 +36626,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 486,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -34359,7 +36686,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 484,
+                    "weight": 485,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -34450,7 +36777,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 485,
+                    "weight": 486,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -34518,7 +36845,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 487,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -34613,7 +36940,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 488,
+                    "weight": 489,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -34681,7 +37008,7 @@
                 "x-appwrite": {
                     "method": "listBuckets",
                     "group": "buckets",
-                    "weight": 520,
+                    "weight": 521,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-buckets.md",
@@ -34764,7 +37091,7 @@
                 "x-appwrite": {
                     "method": "createBucket",
                     "group": "buckets",
-                    "weight": 518,
+                    "weight": 519,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/create-bucket.md",
@@ -34910,7 +37237,7 @@
                 "x-appwrite": {
                     "method": "getBucket",
                     "group": "buckets",
-                    "weight": 519,
+                    "weight": 520,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket.md",
@@ -34971,7 +37298,7 @@
                 "x-appwrite": {
                     "method": "updateBucket",
                     "group": "buckets",
-                    "weight": 521,
+                    "weight": 522,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-bucket.md",
@@ -35113,7 +37440,7 @@
                 "x-appwrite": {
                     "method": "deleteBucket",
                     "group": "buckets",
-                    "weight": 522,
+                    "weight": 523,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-bucket.md",
@@ -35174,7 +37501,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 525,
+                    "weight": 526,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -35267,7 +37594,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 523,
+                    "weight": 524,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -35358,7 +37685,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 524,
+                    "weight": 525,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -35429,7 +37756,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 526,
+                    "weight": 527,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -35520,7 +37847,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 527,
+                    "weight": 528,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -35591,7 +37918,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 529,
+                    "weight": 530,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -35671,7 +37998,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 528,
+                    "weight": 529,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -35879,7 +38206,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 530,
+                    "weight": 531,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -35959,7 +38286,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 532,
+                    "weight": 533,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-usage.md",
@@ -36030,7 +38357,7 @@
                 "x-appwrite": {
                     "method": "getBucketUsage",
                     "group": null,
-                    "weight": 533,
+                    "weight": 534,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket-usage.md",
@@ -44019,7 +46346,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 515,
+                    "weight": 516,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -44108,7 +46435,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 513,
+                    "weight": 514,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -44192,7 +46519,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 514,
+                    "weight": 515,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -44252,7 +46579,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 516,
+                    "weight": 517,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -44323,7 +46650,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 517,
+                    "weight": 518,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",
@@ -57338,6 +59665,16 @@
                     "description": "Last ping datetime in ISO 8601 format.",
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
+                "labels": {
+                    "type": "array",
+                    "description": "Labels for the project.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "vip"
+                    ]
+                },
                 "authEmailPassword": {
                     "type": "boolean",
                     "description": "Email\/Password auth method status",
@@ -57428,6 +59765,11 @@
                     "description": "Functions service status",
                     "x-example": true
                 },
+                "serviceStatusForPayments": {
+                    "type": "boolean",
+                    "description": "Payments service status",
+                    "x-example": true
+                },
                 "serviceStatusForGraphql": {
                     "type": "boolean",
                     "description": "GraphQL service status",
@@ -57482,6 +59824,7 @@
                 "smtpSecure",
                 "pingCount",
                 "pingedAt",
+                "labels",
                 "authEmailPassword",
                 "authUsersAuthMagicURL",
                 "authEmailOtp",
@@ -57500,6 +59843,7 @@
                 "serviceStatusForUsers",
                 "serviceStatusForSites",
                 "serviceStatusForFunctions",
+                "serviceStatusForPayments",
                 "serviceStatusForGraphql",
                 "serviceStatusForMessaging"
             ],
@@ -57550,6 +59894,9 @@
                 "smtpSecure": "tls",
                 "pingCount": 1,
                 "pingedAt": "2020-10-15T06:38:00.000+00:00",
+                "labels": [
+                    "vip"
+                ],
                 "authEmailPassword": true,
                 "authUsersAuthMagicURL": true,
                 "authEmailOtp": true,
@@ -57568,6 +59915,7 @@
                 "serviceStatusForUsers": true,
                 "serviceStatusForSites": true,
                 "serviceStatusForFunctions": true,
+                "serviceStatusForPayments": true,
                 "serviceStatusForGraphql": true,
                 "serviceStatusForMessaging": true
             }
@@ -59551,171 +61899,6 @@
                     "description": "Time range of the usage stats.",
                     "x-example": "30d"
                 },
-                "deploymentsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of functions deployments.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "deploymentsStorageTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions deployment storage.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of functions build.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsStorageTotal": {
-                    "type": "integer",
-                    "description": "total aggregated sum of functions build storage.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsTimeTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions build compute time.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsMbSecondsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions build mbSeconds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "executionsTotal": {
-                    "type": "integer",
-                    "description": "Total  aggregated number of functions execution.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "executionsTimeTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions  execution compute time.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "executionsMbSecondsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions execution mbSeconds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "deployments": {
-                    "type": "array",
-                    "description": "Aggregated number of functions deployment per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "deploymentsStorage": {
-                    "type": "array",
-                    "description": "Aggregated number of  functions deployment storage per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsSuccessTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of successful function builds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsFailedTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of failed function builds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "builds": {
-                    "type": "array",
-                    "description": "Aggregated number of functions build per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsStorage": {
-                    "type": "array",
-                    "description": "Aggregated sum of functions build storage per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsTime": {
-                    "type": "array",
-                    "description": "Aggregated sum of  functions build compute time per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsMbSeconds": {
-                    "type": "array",
-                    "description": "Aggregated sum of functions build mbSeconds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "executions": {
-                    "type": "array",
-                    "description": "Aggregated number of  functions execution per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "executionsTime": {
-                    "type": "array",
-                    "description": "Aggregated number of functions execution compute time per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "executionsMbSeconds": {
-                    "type": "array",
-                    "description": "Aggregated number of functions mbSeconds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsSuccess": {
-                    "type": "array",
-                    "description": "Aggregated number of successful function builds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsFailed": {
-                    "type": "array",
-                    "description": "Aggregated number of failed function builds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
                 "sitesTotal": {
                     "type": "integer",
                     "description": "Total aggregated number of sites.",
@@ -59730,6 +61913,60 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "deploymentsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of sites deployments.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deploymentsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites deployment storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of sites build.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsStorageTotal": {
+                    "type": "integer",
+                    "description": "total aggregated sum of sites build storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites build compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites build mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTotal": {
+                    "type": "integer",
+                    "description": "Total  aggregated number of sites execution.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites  execution compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites execution mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
                 },
                 "requestsTotal": {
                     "type": "integer",
@@ -59775,10 +62012,123 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "deployments": {
+                    "type": "array",
+                    "description": "Aggregated number of sites deployment per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "deploymentsStorage": {
+                    "type": "array",
+                    "description": "Aggregated number of  sites deployment storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccessTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of successful site builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsFailedTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of failed site builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "builds": {
+                    "type": "array",
+                    "description": "Aggregated number of sites build per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsStorage": {
+                    "type": "array",
+                    "description": "Aggregated sum of sites build storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsTime": {
+                    "type": "array",
+                    "description": "Aggregated sum of  sites build compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated sum of sites build mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executions": {
+                    "type": "array",
+                    "description": "Aggregated number of  sites execution per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsTime": {
+                    "type": "array",
+                    "description": "Aggregated number of sites execution compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated number of sites mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccess": {
+                    "type": "array",
+                    "description": "Aggregated number of successful site builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsFailed": {
+                    "type": "array",
+                    "description": "Aggregated number of failed site builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
                 "range",
+                "sitesTotal",
+                "sites",
                 "deploymentsTotal",
                 "deploymentsStorageTotal",
                 "buildsTotal",
@@ -59788,6 +62138,12 @@
                 "executionsTotal",
                 "executionsTimeTotal",
                 "executionsMbSecondsTotal",
+                "requestsTotal",
+                "requests",
+                "inboundTotal",
+                "inbound",
+                "outboundTotal",
+                "outbound",
                 "deployments",
                 "deploymentsStorage",
                 "buildsSuccessTotal",
@@ -59800,18 +62156,12 @@
                 "executionsTime",
                 "executionsMbSeconds",
                 "buildsSuccess",
-                "buildsFailed",
-                "sitesTotal",
-                "sites",
-                "requestsTotal",
-                "requests",
-                "inboundTotal",
-                "inbound",
-                "outboundTotal",
-                "outbound"
+                "buildsFailed"
             ],
             "example": {
                 "range": "30d",
+                "sitesTotal": 0,
+                "sites": [],
                 "deploymentsTotal": 0,
                 "deploymentsStorageTotal": 0,
                 "buildsTotal": 0,
@@ -59821,6 +62171,12 @@
                 "executionsTotal": 0,
                 "executionsTimeTotal": 0,
                 "executionsMbSecondsTotal": 0,
+                "requestsTotal": 0,
+                "requests": [],
+                "inboundTotal": 0,
+                "inbound": [],
+                "outboundTotal": 0,
+                "outbound": [],
                 "deployments": [],
                 "deploymentsStorage": [],
                 "buildsSuccessTotal": 0,
@@ -59833,15 +62189,7 @@
                 "executionsTime": [],
                 "executionsMbSeconds": [],
                 "buildsSuccess": [],
-                "buildsFailed": [],
-                "sitesTotal": 0,
-                "sites": [],
-                "requestsTotal": 0,
-                "requests": [],
-                "inboundTotal": 0,
-                "inbound": [],
-                "outboundTotal": 0,
-                "outbound": []
+                "buildsFailed": []
             }
         },
         "usageSite": {
@@ -61679,6 +64027,707 @@
                 "function": 20,
                 "size": 30000,
                 "version": "1.4.0"
+            }
+        },
+        "paymentPlan": {
+            "description": "PaymentPlan",
+            "type": "object",
+            "properties": {
+                "planId": {
+                    "type": "string",
+                    "description": "Plan ID",
+                    "x-example": "pro"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Plan name",
+                    "x-example": "Pro"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Plan description",
+                    "x-example": "Pro plan"
+                },
+                "pricing": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Pricing options",
+                    "x-example": []
+                },
+                "isDefault": {
+                    "type": "boolean",
+                    "description": "Default plan",
+                    "x-example": true
+                },
+                "isFree": {
+                    "type": "boolean",
+                    "description": "Is plan free",
+                    "x-example": false
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Plan status",
+                    "x-example": "active"
+                },
+                "features": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Features summary",
+                    "x-example": []
+                }
+            },
+            "required": [
+                "planId",
+                "name",
+                "description",
+                "pricing",
+                "isDefault",
+                "isFree",
+                "status",
+                "features"
+            ],
+            "example": {
+                "planId": "pro",
+                "name": "Pro",
+                "description": "Pro plan",
+                "pricing": [],
+                "isDefault": true,
+                "isFree": false,
+                "status": "active",
+                "features": []
+            }
+        },
+        "paymentFeature": {
+            "description": "PaymentFeature",
+            "type": "object",
+            "properties": {
+                "featureId": {
+                    "type": "string",
+                    "description": "Feature ID.",
+                    "x-example": "seats"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Feature name.",
+                    "x-example": "Seats"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "Feature type (boolean, metered).",
+                    "x-example": "metered"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Feature description.",
+                    "x-example": "Number of seat licenses"
+                }
+            },
+            "required": [
+                "featureId",
+                "name",
+                "type",
+                "description"
+            ],
+            "example": {
+                "featureId": "seats",
+                "name": "Seats",
+                "type": "metered",
+                "description": "Number of seat licenses"
+            }
+        },
+        "paymentSubscription": {
+            "description": "PaymentSubscription",
+            "type": "object",
+            "properties": {
+                "subscriptionId": {
+                    "type": "string",
+                    "description": "Subscription ID.",
+                    "x-example": "sub_123"
+                },
+                "actorType": {
+                    "type": "string",
+                    "description": "Actor type.",
+                    "x-example": "team"
+                },
+                "actorId": {
+                    "type": "string",
+                    "description": "Actor ID.",
+                    "x-example": "team_abc"
+                },
+                "planId": {
+                    "type": "string",
+                    "description": "Plan ID.",
+                    "x-example": "pro"
+                },
+                "priceId": {
+                    "type": "string",
+                    "description": "Selected price ID.",
+                    "x-example": "pro-monthly"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Subscription status.",
+                    "x-example": "active"
+                },
+                "trialEndsAt": {
+                    "type": "string",
+                    "description": "Trial end date.",
+                    "x-example": "2023-12-31T23:59:59.000Z"
+                },
+                "currentPeriodStart": {
+                    "type": "string",
+                    "description": "Current billing period start date.",
+                    "x-example": "2023-12-01T00:00:00.000Z"
+                },
+                "currentPeriodEnd": {
+                    "type": "string",
+                    "description": "Current billing period end date.",
+                    "x-example": "2023-12-31T23:59:59.000Z"
+                },
+                "cancelAtPeriodEnd": {
+                    "type": "boolean",
+                    "description": "Whether subscription will cancel at period end.",
+                    "x-example": false
+                },
+                "canceledAt": {
+                    "type": "string",
+                    "description": "Cancellation date.",
+                    "x-example": "2023-12-31T23:59:59.000Z"
+                },
+                "checkoutUrl": {
+                    "type": "string",
+                    "description": "Checkout URL for completing subscription payment (only returned on creation).",
+                    "x-example": "https:\/\/checkout.stripe.com\/c\/pay\/cs_test_..."
+                },
+                "plan": {
+                    "type": "object",
+                    "description": "Embedded plan model.",
+                    "x-example": [],
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentPlan"
+                    }
+                },
+                "features": {
+                    "type": "array",
+                    "description": "Feature quotas for the subscribed plan.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentFeature"
+                    },
+                    "x-example": []
+                }
+            },
+            "required": [
+                "subscriptionId",
+                "actorType",
+                "actorId",
+                "planId",
+                "priceId",
+                "status",
+                "trialEndsAt",
+                "currentPeriodStart",
+                "currentPeriodEnd",
+                "cancelAtPeriodEnd",
+                "canceledAt",
+                "checkoutUrl",
+                "plan",
+                "features"
+            ],
+            "example": {
+                "subscriptionId": "sub_123",
+                "actorType": "team",
+                "actorId": "team_abc",
+                "planId": "pro",
+                "priceId": "pro-monthly",
+                "status": "active",
+                "trialEndsAt": "2023-12-31T23:59:59.000Z",
+                "currentPeriodStart": "2023-12-01T00:00:00.000Z",
+                "currentPeriodEnd": "2023-12-31T23:59:59.000Z",
+                "cancelAtPeriodEnd": false,
+                "canceledAt": "2023-12-31T23:59:59.000Z",
+                "checkoutUrl": "https:\/\/checkout.stripe.com\/c\/pay\/cs_test_...",
+                "plan": [],
+                "features": []
+            }
+        },
+        "paymentProviderConfig": {
+            "description": "PaymentProviderConfig",
+            "type": "object",
+            "properties": {
+                "providers": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Payment providers configuration",
+                    "x-example": {
+                        "stripe": {
+                            "enabled": true
+                        }
+                    }
+                },
+                "defaults": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Default payment settings",
+                    "x-example": []
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Whether payments feature is enabled",
+                    "x-example": true
+                }
+            },
+            "required": [
+                "providers",
+                "defaults",
+                "enabled"
+            ],
+            "example": {
+                "providers": {
+                    "stripe": {
+                        "enabled": true
+                    }
+                },
+                "defaults": [],
+                "enabled": true
+            }
+        },
+        "paymentPlanFeature": {
+            "description": "PaymentPlanFeature",
+            "type": "object",
+            "properties": {
+                "planId": {
+                    "type": "string",
+                    "description": "Plan ID.",
+                    "x-example": "pro"
+                },
+                "featureId": {
+                    "type": "string",
+                    "description": "Feature ID.",
+                    "x-example": "seats"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "Feature type (boolean, metered).",
+                    "x-example": "metered"
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Whether the feature is enabled for this plan.",
+                    "x-example": true
+                },
+                "currency": {
+                    "type": "string",
+                    "description": "Currency code for metered features.",
+                    "x-example": "usd"
+                },
+                "interval": {
+                    "type": "string",
+                    "description": "Billing interval for metered features.",
+                    "x-example": "month"
+                },
+                "includedUnits": {
+                    "type": "integer",
+                    "description": "Number of units included in the plan.",
+                    "x-example": 100,
+                    "format": "int32"
+                },
+                "tiersMode": {
+                    "type": "string",
+                    "description": "Pricing tiers mode (graduated or volume).",
+                    "x-example": "graduated"
+                },
+                "tiers": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Pricing tiers configuration.",
+                    "x-example": []
+                },
+                "usageCap": {
+                    "type": "integer",
+                    "description": "Maximum usage cap.",
+                    "x-example": 1000,
+                    "format": "int32"
+                },
+                "overagePrice": {
+                    "type": "integer",
+                    "description": "Price per unit for overage usage.",
+                    "x-example": 100,
+                    "format": "int32"
+                },
+                "providers": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Provider-specific metadata.",
+                    "x-example": []
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Additional metadata.",
+                    "x-example": []
+                }
+            },
+            "required": [
+                "planId",
+                "featureId",
+                "type",
+                "enabled",
+                "currency",
+                "interval",
+                "includedUnits",
+                "tiersMode",
+                "tiers",
+                "usageCap",
+                "overagePrice",
+                "providers",
+                "metadata"
+            ],
+            "example": {
+                "planId": "pro",
+                "featureId": "seats",
+                "type": "metered",
+                "enabled": true,
+                "currency": "usd",
+                "interval": "month",
+                "includedUnits": 100,
+                "tiersMode": "graduated",
+                "tiers": [],
+                "usageCap": 1000,
+                "overagePrice": 100,
+                "providers": [],
+                "metadata": []
+            }
+        },
+        "paymentInvoice": {
+            "description": "PaymentInvoice",
+            "type": "object",
+            "properties": {
+                "invoiceId": {
+                    "type": "string",
+                    "description": "Invoice ID.",
+                    "x-example": "inv_1234567890"
+                },
+                "subscriptionId": {
+                    "type": "string",
+                    "description": "Subscription ID.",
+                    "x-example": "sub_1234567890"
+                },
+                "amount": {
+                    "type": "integer",
+                    "description": "Invoice amount in cents.",
+                    "x-example": 2999,
+                    "format": "int32"
+                },
+                "currency": {
+                    "type": "string",
+                    "description": "Currency code.",
+                    "x-example": "usd"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Invoice status.",
+                    "x-example": "paid"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "description": "Invoice creation date.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "paidAt": {
+                    "type": "string",
+                    "description": "Invoice payment date.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "invoiceUrl": {
+                    "type": "string",
+                    "description": "URL to view the invoice.",
+                    "x-example": "https:\/\/invoice.stripe.com\/i\/acct_123\/inv_456"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Additional metadata.",
+                    "x-example": []
+                }
+            },
+            "required": [
+                "invoiceId",
+                "subscriptionId",
+                "amount",
+                "currency",
+                "status",
+                "createdAt",
+                "paidAt",
+                "invoiceUrl",
+                "metadata"
+            ],
+            "example": {
+                "invoiceId": "inv_1234567890",
+                "subscriptionId": "sub_1234567890",
+                "amount": 2999,
+                "currency": "usd",
+                "status": "paid",
+                "createdAt": "2020-10-15T06:38:00.000+00:00",
+                "paidAt": "2020-10-15T06:38:00.000+00:00",
+                "invoiceUrl": "https:\/\/invoice.stripe.com\/i\/acct_123\/inv_456",
+                "metadata": []
+            }
+        },
+        "paymentUsageEvent": {
+            "description": "PaymentUsageEvent",
+            "type": "object",
+            "properties": {
+                "subscriptionId": {
+                    "type": "string",
+                    "description": "Subscription ID.",
+                    "x-example": "sub_abc123"
+                },
+                "actorType": {
+                    "type": "string",
+                    "description": "Actor type (user or team).",
+                    "x-example": "user"
+                },
+                "actorId": {
+                    "type": "string",
+                    "description": "Actor ID.",
+                    "x-example": "user_123"
+                },
+                "planId": {
+                    "type": "string",
+                    "description": "Plan ID.",
+                    "x-example": "pro"
+                },
+                "featureId": {
+                    "type": "string",
+                    "description": "Feature ID.",
+                    "x-example": "api_calls"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "description": "Usage quantity.",
+                    "x-example": 100,
+                    "format": "int32"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "description": "Event timestamp.",
+                    "x-example": "2020-10-15T06:38:00.000+00:00"
+                },
+                "providerSyncState": {
+                    "type": "string",
+                    "description": "Provider sync state.",
+                    "x-example": "synced"
+                },
+                "providerEventId": {
+                    "type": "string",
+                    "description": "Provider event ID.",
+                    "x-example": "evt_123"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Additional metadata.",
+                    "x-example": []
+                }
+            },
+            "required": [
+                "subscriptionId",
+                "actorType",
+                "actorId",
+                "planId",
+                "featureId",
+                "quantity",
+                "timestamp",
+                "providerSyncState",
+                "providerEventId",
+                "metadata"
+            ],
+            "example": {
+                "subscriptionId": "sub_abc123",
+                "actorType": "user",
+                "actorId": "user_123",
+                "planId": "pro",
+                "featureId": "api_calls",
+                "quantity": 100,
+                "timestamp": "2020-10-15T06:38:00.000+00:00",
+                "providerSyncState": "synced",
+                "providerEventId": "evt_123",
+                "metadata": []
+            }
+        },
+        "paymentSubscriptionList": {
+            "description": "Payment Subscription List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of subscriptions that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "subscriptions": {
+                    "type": "array",
+                    "description": "List of subscriptions.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentSubscription"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "subscriptions"
+            ],
+            "example": {
+                "total": 5,
+                "subscriptions": ""
+            }
+        },
+        "paymentPlanList": {
+            "description": "Payment Plan List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of plans that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "plans": {
+                    "type": "array",
+                    "description": "List of plans.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentPlan"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "plans"
+            ],
+            "example": {
+                "total": 5,
+                "plans": ""
+            }
+        },
+        "paymentFeatureList": {
+            "description": "Payment Feature List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of features that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "features": {
+                    "type": "array",
+                    "description": "List of features.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentFeature"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "features"
+            ],
+            "example": {
+                "total": 5,
+                "features": ""
+            }
+        },
+        "paymentPlanFeatureList": {
+            "description": "Payment Plan Feature List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of features that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "features": {
+                    "type": "array",
+                    "description": "List of features.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentPlanFeature"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "features"
+            ],
+            "example": {
+                "total": 5,
+                "features": ""
+            }
+        },
+        "paymentInvoiceList": {
+            "description": "Payment Invoice List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of invoices that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "invoices": {
+                    "type": "array",
+                    "description": "List of invoices.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentInvoice"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "invoices"
+            ],
+            "example": {
+                "total": 5,
+                "invoices": ""
+            }
+        },
+        "paymentUsageEventList": {
+            "description": "Payment Usage Event List",
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of events that matched your query.",
+                    "x-example": 5,
+                    "format": "int32"
+                },
+                "events": {
+                    "type": "array",
+                    "description": "List of events.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/paymentUsageEvent"
+                    },
+                    "x-example": ""
+                }
+            },
+            "required": [
+                "total",
+                "events"
+            ],
+            "example": {
+                "total": 5,
+                "events": ""
             }
         }
     },

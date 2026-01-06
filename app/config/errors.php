@@ -1329,4 +1329,46 @@ return [
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
     ],
+
+    /** Payments */
+    Exception::PAYMENT_PLAN_NOT_FOUND => [
+        'name' => Exception::PAYMENT_PLAN_NOT_FOUND,
+        'description' => 'Payment plan with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PAYMENT_PLAN_ALREADY_EXISTS => [
+        'name' => Exception::PAYMENT_PLAN_ALREADY_EXISTS,
+        'description' => 'Payment plan with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::PAYMENT_SUBSCRIPTION_NOT_FOUND => [
+        'name' => Exception::PAYMENT_SUBSCRIPTION_NOT_FOUND,
+        'description' => 'Payment subscription with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PAYMENT_SUBSCRIPTION_ALREADY_EXISTS => [
+        'name' => Exception::PAYMENT_SUBSCRIPTION_ALREADY_EXISTS,
+        'description' => 'Payment subscription already exists for this actor.',
+        'code' => 409,
+    ],
+    Exception::PAYMENT_PROVIDER_NOT_CONFIGURED => [
+        'name' => Exception::PAYMENT_PROVIDER_NOT_CONFIGURED,
+        'description' => 'No payment provider has been configured for this project.',
+        'code' => 400,
+    ],
+    Exception::PAYMENT_PROVIDER_ALREADY_CONFIGURED => [
+        'name' => Exception::PAYMENT_PROVIDER_ALREADY_CONFIGURED,
+        'description' => 'Payment provider is already configured. Disconnect the existing provider before configuring a new one.',
+        'code' => 409,
+    ],
+    Exception::PAYMENT_WEBHOOK_FAILED => [
+        'name' => Exception::PAYMENT_WEBHOOK_FAILED,
+        'description' => 'Failed to create payment provider webhook.',
+        'code' => 500,
+    ],
+    Exception::PAYMENT_FEATURE_NOT_FOUND => [
+        'name' => Exception::PAYMENT_FEATURE_NOT_FOUND,
+        'description' => 'Payment feature with the requested ID could not be found.',
+        'code' => 404,
+    ],
 ];

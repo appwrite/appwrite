@@ -62,6 +62,7 @@ class Exception extends \Exception
     public const string GENERAL_INVALID_PHONE = 'general_invalid_phone';
     public const string GENERAL_REGION_ACCESS_DENIED = 'general_region_access_denied';
     public const string GENERAL_BAD_REQUEST = 'general_bad_request';
+    public const string GENERAL_NOT_FOUND = 'general_not_found';
 
     /** Users */
     public const string USER_COUNT_EXCEEDED = 'user_count_exceeded';
@@ -377,6 +378,16 @@ class Exception extends \Exception
     public const string TOKEN_NOT_FOUND = 'token_not_found';
     public const string TOKEN_EXPIRED = 'token_expired';
     public const string TOKEN_RESOURCE_TYPE_INVALID = 'token_resource_type_invalid';
+
+    /** Payments */
+    public const string PAYMENT_PLAN_NOT_FOUND = 'payment_plan_not_found';
+    public const string PAYMENT_PLAN_ALREADY_EXISTS = 'payment_plan_already_exists';
+    public const string PAYMENT_SUBSCRIPTION_NOT_FOUND = 'payment_subscription_not_found';
+    public const string PAYMENT_SUBSCRIPTION_ALREADY_EXISTS = 'payment_subscription_already_exists';
+    public const string PAYMENT_PROVIDER_NOT_CONFIGURED = 'payment_provider_not_configured';
+    public const string PAYMENT_PROVIDER_ALREADY_CONFIGURED = 'payment_provider_already_configured';
+    public const string PAYMENT_WEBHOOK_FAILED = 'payment_webhook_failed';
+    public const string PAYMENT_FEATURE_NOT_FOUND = 'payment_feature_not_found';
 
     protected string $type = '';
     protected array $errors = [];

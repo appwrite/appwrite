@@ -82,6 +82,9 @@ App::setResource('hooks', function ($register) {
 }, ['register']);
 
 App::setResource('register', fn () => $register);
+App::setResource('registryPayments', function ($register) {
+    return $register->get('registryPayments');
+}, ['register']);
 App::setResource('locale', function () {
     $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
     $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));

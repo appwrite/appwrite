@@ -225,6 +225,19 @@ return [
         'icon' => '/images/services/functions.png',
         'platforms' => ['client', 'server', 'console'],
     ],
+    'payments' => [
+        'key' => 'payments',
+        'name' => 'Payments',
+        'subtitle' => 'Create and manage plans, subscriptions, usage and billing providers.',
+        'description' => '/docs/services/payments.md',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => true,
+        'icon' => '/images/services/databases.png',
+    ],
     'proxy' => [
         'key' => 'proxy',
         'name' => 'Proxy',

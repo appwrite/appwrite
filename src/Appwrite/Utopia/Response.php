@@ -225,6 +225,20 @@ class Response extends SwooleResponse
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
+    // Payments
+    public const MODEL_PAYMENT_PLAN = 'paymentPlan';
+    public const MODEL_PAYMENT_FEATURE = 'paymentFeature';
+    public const MODEL_PAYMENT_SUBSCRIPTION = 'paymentSubscription';
+    public const MODEL_PAYMENT_SUBSCRIPTION_LIST = 'paymentSubscriptionList';
+    public const MODEL_PAYMENT_PLAN_LIST = 'paymentPlanList';
+    public const MODEL_PAYMENT_FEATURE_LIST = 'paymentFeatureList';
+    public const MODEL_PAYMENT_PLAN_FEATURE = 'paymentPlanFeature';
+    public const MODEL_PAYMENT_PLAN_FEATURE_LIST = 'paymentPlanFeatureList';
+    public const MODEL_PAYMENT_INVOICE = 'paymentInvoice';
+    public const MODEL_PAYMENT_INVOICE_LIST = 'paymentInvoiceList';
+    public const MODEL_PAYMENT_USAGE_EVENT = 'paymentUsageEvent';
+    public const MODEL_PAYMENT_USAGE_EVENT_LIST = 'paymentUsageEventList';
+    public const MODEL_PAYMENT_PROVIDER_CONFIG = 'paymentProviderConfig';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';

@@ -94,6 +94,13 @@ use Appwrite\Utopia\Response\Model\MigrationReport;
 use Appwrite\Utopia\Response\Model\Mock;
 use Appwrite\Utopia\Response\Model\MockNumber;
 use Appwrite\Utopia\Response\Model\None;
+use Appwrite\Utopia\Response\Model\PaymentFeature;
+use Appwrite\Utopia\Response\Model\PaymentInvoice;
+use Appwrite\Utopia\Response\Model\PaymentPlan;
+use Appwrite\Utopia\Response\Model\PaymentPlanFeature;
+use Appwrite\Utopia\Response\Model\PaymentProviderConfig;
+use Appwrite\Utopia\Response\Model\PaymentSubscription;
+use Appwrite\Utopia\Response\Model\PaymentUsageEvent;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Preferences;
@@ -339,6 +346,21 @@ Response::setModel(new Target());
 Response::setModel(new Migration());
 Response::setModel(new MigrationReport());
 Response::setModel(new MigrationFirebaseProject());
+
+// Payments
+Response::setModel(new PaymentPlan());
+Response::setModel(new PaymentFeature());
+Response::setModel(new PaymentSubscription());
+Response::setModel(new PaymentProviderConfig());
+Response::setModel(new PaymentPlanFeature());
+Response::setModel(new PaymentInvoice());
+Response::setModel(new PaymentUsageEvent());
+Response::setModel(new BaseList('Payment Subscription List', Response::MODEL_PAYMENT_SUBSCRIPTION_LIST, 'subscriptions', Response::MODEL_PAYMENT_SUBSCRIPTION, true, true));
+Response::setModel(new BaseList('Payment Plan List', Response::MODEL_PAYMENT_PLAN_LIST, 'plans', Response::MODEL_PAYMENT_PLAN, true, true));
+Response::setModel(new BaseList('Payment Feature List', Response::MODEL_PAYMENT_FEATURE_LIST, 'features', Response::MODEL_PAYMENT_FEATURE, true, true));
+Response::setModel(new BaseList('Payment Plan Feature List', Response::MODEL_PAYMENT_PLAN_FEATURE_LIST, 'features', Response::MODEL_PAYMENT_PLAN_FEATURE, true, true));
+Response::setModel(new BaseList('Payment Invoice List', Response::MODEL_PAYMENT_INVOICE_LIST, 'invoices', Response::MODEL_PAYMENT_INVOICE, true, true));
+Response::setModel(new BaseList('Payment Usage Event List', Response::MODEL_PAYMENT_USAGE_EVENT_LIST, 'events', Response::MODEL_PAYMENT_USAGE_EVENT, true, true));
 
 // Tests (keep last)
 Response::setModel(new Mock());

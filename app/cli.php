@@ -5,6 +5,7 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\PaymentsUsage;
 use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
@@ -227,6 +228,9 @@ CLI::setResource('queueForDeletes', function (Publisher $publisher) {
 }, ['publisher']);
 CLI::setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);
+}, ['publisher']);
+CLI::setResource('queueForPaymentsUsage', function (Publisher $publisher) {
+    return new PaymentsUsage($publisher);
 }, ['publisher']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
