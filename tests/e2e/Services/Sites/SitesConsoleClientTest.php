@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 
 class SitesConsoleClientTest extends Scope
@@ -138,6 +139,60 @@ class SitesConsoleClientTest extends Scope
         $screenshotId = $deployment['body']['screenshotDark'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testSiteDeploymentRetentionWithMaintenance(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test retention site',
+            'framework' => 'other',
+            'deploymentRetention' => 180,
+            'buildRuntime' => 'node-22',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deploymentIdInactive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactive);
+
+        $deploymentIdInactiveOld = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdInactiveOld);
+
+        $deploymentIdActive = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => true
+        ]);
+        $this->assertNotEmpty($deploymentIdActive);
+
+        $response = $this->client->call(Client::METHOD_POST, '/mock/time-travels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $this->getProject()['$id'],
+            'resourceType' => 'deployment',
+            'resourceId' => $deploymentIdInactiveOld,
+            'createdAt' => '2020-01-01T00:00:00Z' // More than 180 days ago
+        ]);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute("docker exec appwrite-task-maintenance maintenance --type=trigger", '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        $this->assertEventually(function () use ($siteId) {
+            $response = $this->listDeployments($siteId);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame(2, $response['body']['total']);
+        });
 
         $this->cleanupSite($siteId);
     }

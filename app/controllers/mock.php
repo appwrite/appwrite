@@ -12,6 +12,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
@@ -221,6 +222,53 @@ App::post('/v1/mock/api-key-unprefixed')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($key, Response::MODEL_KEY);
+    });
+
+App::post('/v1/mock/time-travels')
+    ->desc('Create a time-travel to change $createdAt')
+    ->groups(['mock', 'api'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->param('resourceType', '', new WhiteList(['deployment']), 'Type of resource.')
+    ->param('resourceId', '', new UID(), 'ID of resource.')
+    ->param('createdAt', '', new DatetimeValidator(), 'New value for $createdAt')
+    ->inject('response')
+    ->inject('getProjectDB')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $resourceType, string $resourceId, string $createdAt, Response $response, callable $getProjectDB, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $collection = match($resourceType) {
+            'deployment' => 'deployments',
+            default => throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED)
+        };
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $resource = $dbForProject->getDocument($collection, $resourceId);
+        if ($resource->isEmpty()) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Resource not found');
+        }
+
+        $update = new Document([
+            '$createdAt' => $createdAt,
+        ]);
+
+        $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
+
+        $response->noContent();
     });
 
 App::get('/v1/mock/github/callback')
