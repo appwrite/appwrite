@@ -60,6 +60,7 @@ class XList extends DocumentXList
             ->param('ttl', 30, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('authorization')
