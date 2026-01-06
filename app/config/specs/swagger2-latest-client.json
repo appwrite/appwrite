@@ -8117,17 +8117,17 @@
                 "tags": [
                     "payments"
                 ],
-                "description": "Handle provider webhook",
+                "description": "Handle incoming webhooks from payment providers. This endpoint is called by the provider to notify of subscription and payment events.",
                 "responses": [],
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "webhook",
                     "group": "providers",
-                    "weight": 551,
+                    "weight": 555,
                     "cookies": false,
                     "type": "",
                     "demo": "payments\/webhook.md",
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterHandle provider webhook",
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/masterHandle incoming webhooks from payment providers. This endpoint is called by the provider to notify of subscription and payment events.",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
