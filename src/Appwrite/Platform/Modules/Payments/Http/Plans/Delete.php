@@ -38,7 +38,7 @@ class Delete extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'plans',
-                name: 'delete',
+                name: 'deletePlan',
                 description: <<<EOT
                 Delete a payment plan by its unique ID. This action cannot be undone.
                 EOT,

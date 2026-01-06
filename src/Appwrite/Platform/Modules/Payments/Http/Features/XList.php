@@ -41,7 +41,7 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'features',
-                name: 'list',
+                name: 'listFeatures',
                 description: <<<EOT
                 Get a list of all features configured for the project.
                 EOT,

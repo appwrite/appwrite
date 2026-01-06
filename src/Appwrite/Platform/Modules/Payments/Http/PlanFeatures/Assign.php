@@ -45,7 +45,7 @@ class Assign extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'planFeatures',
-                name: 'assign',
+                name: 'assignPlanFeature',
                 description: <<<EOT
                 Assign a feature to a plan with optional usage limits and pricing tiers for metered features.
                 EOT,

@@ -43,7 +43,7 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'plans',
-                name: 'update',
+                name: 'updatePlan',
                 description: <<<EOT
                 Update a payment plan by its unique ID. You can update the plan name, description, and pricing configuration.
                 EOT,

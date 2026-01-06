@@ -34,7 +34,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'features',
-                name: 'get',
+                name: 'getFeature',
                 description: <<<EOT
                 Get a feature by its unique ID.
                 EOT,

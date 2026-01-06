@@ -41,7 +41,7 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'subscriptions',
-                name: 'list',
+                name: 'listSubscriptions',
                 description: <<<EOT
                 Get a list of all the project's subscriptions. You can use the query params to filter your results.
                 EOT,

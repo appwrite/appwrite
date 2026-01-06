@@ -33,7 +33,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'providers',
-                name: 'get',
+                name: 'getProvider',
                 description: <<<EOT
                 Get the current payment provider configuration for the project.
                 EOT,

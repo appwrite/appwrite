@@ -42,7 +42,7 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'subscriptions',
-                name: 'create',
+                name: 'createSubscription',
                 description: <<<EOT
                 Create a new subscription for a user or team. This initiates a checkout session with the configured payment provider and returns a checkout URL for payment completion.
                 EOT,

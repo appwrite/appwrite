@@ -40,7 +40,7 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'features',
-                name: 'create',
+                name: 'createFeature',
                 description: <<<EOT
                 Create a new feature that can be assigned to plans. Features can be boolean (on/off) or metered (usage-based).
                 EOT,

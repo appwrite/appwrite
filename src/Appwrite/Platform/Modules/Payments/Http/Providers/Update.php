@@ -42,7 +42,7 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'providers',
-                name: 'update',
+                name: 'updateProvider',
                 description: <<<EOT
                 Configure payment providers for the project. Currently supports Stripe.
                 EOT,

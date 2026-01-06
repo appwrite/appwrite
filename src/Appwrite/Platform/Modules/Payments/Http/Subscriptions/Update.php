@@ -44,7 +44,7 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'subscriptions',
-                name: 'update',
+                name: 'updateSubscription',
                 description: <<<EOT
                 Update a subscription to change the associated plan. This may trigger prorated charges or credits depending on the provider configuration.
                 EOT,

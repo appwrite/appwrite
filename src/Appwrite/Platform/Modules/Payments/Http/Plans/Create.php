@@ -47,7 +47,7 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'plans',
-                name: 'create',
+                name: 'createPlan',
                 description: <<<EOT
                 Create a new payment plan for your project. Plans define pricing tiers and can be associated with features for subscription management.
                 EOT,

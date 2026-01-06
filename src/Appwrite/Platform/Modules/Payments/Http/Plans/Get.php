@@ -34,7 +34,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'plans',
-                name: 'get',
+                name: 'getPlan',
                 description: <<<EOT
                 Get a payment plan by its unique ID.
                 EOT,

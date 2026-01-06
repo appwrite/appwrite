@@ -37,7 +37,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'usage',
-                name: 'get',
+                name: 'getUsage',
                 description: <<<EOT
                 Get usage summary for a subscription.
                 EOT,

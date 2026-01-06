@@ -41,7 +41,7 @@ class Remove extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'planFeatures',
-                name: 'remove',
+                name: 'removePlanFeature',
                 description: <<<EOT
                 Remove a feature from a plan.
                 EOT,

@@ -41,7 +41,7 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'plans',
-                name: 'list',
+                name: 'listPlans',
                 description: <<<EOT
                 Get a list of all payment plans configured for the project. You can use the query params to filter your results.
                 EOT,

@@ -41,7 +41,7 @@ class XList extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'planFeatures',
-                name: 'list',
+                name: 'listPlanFeatures',
                 description: <<<EOT
                 Get a list of all features assigned to a specific plan.
                 EOT,

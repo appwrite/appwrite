@@ -38,7 +38,7 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'features',
-                name: 'update',
+                name: 'updateFeature',
                 description: <<<EOT
                 Update a feature by its unique ID.
                 EOT,

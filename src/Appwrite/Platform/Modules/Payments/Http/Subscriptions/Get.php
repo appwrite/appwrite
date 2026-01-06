@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -40,7 +40,7 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'subscriptions',
-                name: 'get',
+                name: 'getSubscription',
                 description: <<<EOT
                 Get a subscription by its unique ID.
                 EOT,
@@ -52,8 +52,8 @@ class Get extends Base
                     )
                 ]
             ))
-            ->param('actorType', 'user', new Text(16), 'Actor type: user or team', true)
-            ->param('actorId', '', new Text(128), 'Actor ID', true)
+            ->param('actorType', 'user', new Text(16), 'Actor type: user or team')
+            ->param('actorId', 'me', new Text(128), 'Actor ID. Use "me" or "current" for the logged-in user.')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -82,8 +82,8 @@ class Get extends Base
         }
 
         $roles = Authorization::getRoles();
-        $isAPIKey = Auth::isAppUser($roles);
-        $isPrivileged = Auth::isPrivilegedUser($roles);
+        $isAPIKey = User::isApp($roles);
+        $isPrivileged = User::isPrivileged($roles);
 
         if ($actorType === 'user') {
             if ($actorId === '' || $actorId === 'current' || $actorId === 'me') {

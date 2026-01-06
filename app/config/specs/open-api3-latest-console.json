@@ -24866,7 +24866,7 @@
         "\/payments\/actors\/{actorType}\/{actorId}\/features": {
             "get": {
                 "summary": "Get features for an actor",
-                "operationId": "paymentsGet",
+                "operationId": "paymentsGetActorFeatures",
                 "tags": [
                     "payments"
                 ],
@@ -24885,12 +24885,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "get",
+                    "method": "getActorFeatures",
                     "group": "actorFeatures",
                     "weight": 565,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/get.md",
+                    "demo": "payments\/get-actor-features.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -24917,22 +24917,20 @@
                     {
                         "name": "actorType",
                         "description": "Actor type: user or team",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "type": "string",
-                            "x-example": "<ACTOR_TYPE>",
-                            "default": "user"
+                            "x-example": "<ACTOR_TYPE>"
                         },
                         "in": "path"
                     },
                     {
                         "name": "actorId",
-                        "description": "Actor ID",
-                        "required": false,
+                        "description": "Actor ID. Use \"me\" or \"current\" for the logged-in user.",
+                        "required": true,
                         "schema": {
                             "type": "string",
-                            "x-example": "<ACTOR_ID>",
-                            "default": ""
+                            "x-example": "<ACTOR_ID>"
                         },
                         "in": "path"
                     }
@@ -24942,7 +24940,7 @@
         "\/payments\/features": {
             "get": {
                 "summary": "List payment features",
-                "operationId": "paymentsList",
+                "operationId": "paymentsListFeatures",
                 "tags": [
                     "payments"
                 ],
@@ -24961,12 +24959,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "list",
+                    "method": "listFeatures",
                     "group": "features",
                     "weight": 542,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/list.md",
+                    "demo": "payments\/list-features.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25027,7 +25025,7 @@
             },
             "post": {
                 "summary": "Create payment feature",
-                "operationId": "paymentsCreate",
+                "operationId": "paymentsCreateFeature",
                 "tags": [
                     "payments"
                 ],
@@ -25046,12 +25044,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "create",
+                    "method": "createFeature",
                     "group": "features",
                     "weight": 540,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/create.md",
+                    "demo": "payments\/create-feature.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25113,7 +25111,7 @@
         "\/payments\/features\/{featureId}": {
             "get": {
                 "summary": "Get payment feature",
-                "operationId": "paymentsGet",
+                "operationId": "paymentsGetFeature",
                 "tags": [
                     "payments"
                 ],
@@ -25132,12 +25130,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "get",
+                    "method": "getFeature",
                     "group": "features",
                     "weight": 541,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/get.md",
+                    "demo": "payments\/get-feature.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25173,7 +25171,7 @@
             },
             "put": {
                 "summary": "Update payment feature",
-                "operationId": "paymentsUpdate",
+                "operationId": "paymentsUpdateFeature",
                 "tags": [
                     "payments"
                 ],
@@ -25192,12 +25190,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "update",
+                    "method": "updateFeature",
                     "group": "features",
                     "weight": 543,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/update.md",
+                    "demo": "payments\/update-feature.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25259,7 +25257,7 @@
             },
             "delete": {
                 "summary": "Delete payment feature",
-                "operationId": "paymentsDelete",
+                "operationId": "paymentsDeleteFeature",
                 "tags": [
                     "payments"
                 ],
@@ -25267,12 +25265,12 @@
                 "responses": [],
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "delete",
+                    "method": "deleteFeature",
                     "group": "features",
                     "weight": 544,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/delete.md",
+                    "demo": "payments\/delete-feature.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25310,7 +25308,7 @@
         "\/payments\/plans": {
             "get": {
                 "summary": "List payment plans",
-                "operationId": "paymentsList",
+                "operationId": "paymentsListPlans",
                 "tags": [
                     "payments"
                 ],
@@ -25329,12 +25327,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "list",
+                    "method": "listPlans",
                     "group": "plans",
                     "weight": 537,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/list.md",
+                    "demo": "payments\/list-plans.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25395,7 +25393,7 @@
             },
             "post": {
                 "summary": "Create payment plan",
-                "operationId": "paymentsCreate",
+                "operationId": "paymentsCreatePlan",
                 "tags": [
                     "payments"
                 ],
@@ -25414,12 +25412,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "create",
+                    "method": "createPlan",
                     "group": "plans",
                     "weight": 535,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/create.md",
+                    "demo": "payments\/create-plan.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25493,7 +25491,7 @@
         "\/payments\/plans\/{planId}": {
             "get": {
                 "summary": "Get payment plan",
-                "operationId": "paymentsGet",
+                "operationId": "paymentsGetPlan",
                 "tags": [
                     "payments"
                 ],
@@ -25512,12 +25510,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "get",
+                    "method": "getPlan",
                     "group": "plans",
                     "weight": 536,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/get.md",
+                    "demo": "payments\/get-plan.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25553,7 +25551,7 @@
             },
             "put": {
                 "summary": "Update payment plan",
-                "operationId": "paymentsUpdate",
+                "operationId": "paymentsUpdatePlan",
                 "tags": [
                     "payments"
                 ],
@@ -25572,12 +25570,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "update",
+                    "method": "updatePlan",
                     "group": "plans",
                     "weight": 538,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/update.md",
+                    "demo": "payments\/update-plan.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25652,7 +25650,7 @@
             },
             "delete": {
                 "summary": "Delete payment plan",
-                "operationId": "paymentsDelete",
+                "operationId": "paymentsDeletePlan",
                 "tags": [
                     "payments"
                 ],
@@ -25660,12 +25658,12 @@
                 "responses": [],
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "delete",
+                    "method": "deletePlan",
                     "group": "plans",
                     "weight": 539,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/delete.md",
+                    "demo": "payments\/delete-plan.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25703,7 +25701,7 @@
         "\/payments\/plans\/{planId}\/features": {
             "get": {
                 "summary": "List plan features",
-                "operationId": "paymentsList",
+                "operationId": "paymentsListPlanFeatures",
                 "tags": [
                     "payments"
                 ],
@@ -25722,12 +25720,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "list",
+                    "method": "listPlanFeatures",
                     "group": "planFeatures",
                     "weight": 546,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/list.md",
+                    "demo": "payments\/list-plan-features.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25798,7 +25796,7 @@
             },
             "post": {
                 "summary": "Assign feature to plan",
-                "operationId": "paymentsAssign",
+                "operationId": "paymentsAssignPlanFeature",
                 "tags": [
                     "payments"
                 ],
@@ -25817,12 +25815,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "assign",
+                    "method": "assignPlanFeature",
                     "group": "planFeatures",
                     "weight": 545,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/assign.md",
+                    "demo": "payments\/assign-plan-feature.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25912,7 +25910,7 @@
         "\/payments\/plans\/{planId}\/features\/{featureId}": {
             "delete": {
                 "summary": "Remove feature from plan",
-                "operationId": "paymentsRemove",
+                "operationId": "paymentsRemovePlanFeature",
                 "tags": [
                     "payments"
                 ],
@@ -25920,12 +25918,12 @@
                 "responses": [],
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "remove",
+                    "method": "removePlanFeature",
                     "group": "planFeatures",
                     "weight": 547,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/remove.md",
+                    "demo": "payments\/remove-plan-feature.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -25973,7 +25971,7 @@
         "\/payments\/providers": {
             "get": {
                 "summary": "Get payments providers config",
-                "operationId": "paymentsGet",
+                "operationId": "paymentsGetProvider",
                 "tags": [
                     "payments"
                 ],
@@ -25992,12 +25990,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "get",
+                    "method": "getProvider",
                     "group": "providers",
                     "weight": 561,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/get.md",
+                    "demo": "payments\/get-provider.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -26021,7 +26019,7 @@
             },
             "put": {
                 "summary": "Configure payments providers",
-                "operationId": "paymentsUpdate",
+                "operationId": "paymentsUpdateProvider",
                 "tags": [
                     "payments"
                 ],
@@ -26040,12 +26038,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "update",
+                    "method": "updateProvider",
                     "group": "providers",
                     "weight": 562,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/update.md",
+                    "demo": "payments\/update-provider.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -26152,7 +26150,7 @@
         "\/payments\/subscriptions": {
             "post": {
                 "summary": "Create subscription",
-                "operationId": "paymentsCreate",
+                "operationId": "paymentsCreateSubscription",
                 "tags": [
                     "payments"
                 ],
@@ -26171,12 +26169,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "create",
+                    "method": "createSubscription",
                     "group": "subscriptions",
                     "weight": 548,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/create.md",
+                    "demo": "payments\/create-subscription.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -26257,7 +26255,7 @@
         "\/payments\/subscriptions\/search": {
             "get": {
                 "summary": "List subscriptions",
-                "operationId": "paymentsList",
+                "operationId": "paymentsListSubscriptions",
                 "tags": [
                     "payments"
                 ],
@@ -26276,12 +26274,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "list",
+                    "method": "listSubscriptions",
                     "group": "subscriptions",
                     "weight": 549,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/list.md",
+                    "demo": "payments\/list-subscriptions.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -26344,7 +26342,7 @@
         "\/payments\/subscriptions\/{actorType}\/{actorId}": {
             "get": {
                 "summary": "Get subscription",
-                "operationId": "paymentsGet",
+                "operationId": "paymentsGetSubscription",
                 "tags": [
                     "payments"
                 ],
@@ -26363,12 +26361,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "get",
+                    "method": "getSubscription",
                     "group": "subscriptions",
                     "weight": 550,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/get.md",
+                    "demo": "payments\/get-subscription.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -26395,22 +26393,20 @@
                     {
                         "name": "actorType",
                         "description": "Actor type: user or team",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "type": "string",
-                            "x-example": "<ACTOR_TYPE>",
-                            "default": "user"
+                            "x-example": "<ACTOR_TYPE>"
                         },
                         "in": "path"
                     },
                     {
                         "name": "actorId",
-                        "description": "Actor ID",
-                        "required": false,
+                        "description": "Actor ID. Use \"me\" or \"current\" for the logged-in user.",
+                        "required": true,
                         "schema": {
                             "type": "string",
-                            "x-example": "<ACTOR_ID>",
-                            "default": ""
+                            "x-example": "<ACTOR_ID>"
                         },
                         "in": "path"
                     }
@@ -26420,7 +26416,7 @@
         "\/payments\/subscriptions\/{subscriptionId}": {
             "patch": {
                 "summary": "Update subscription",
-                "operationId": "paymentsUpdate",
+                "operationId": "paymentsUpdateSubscription",
                 "tags": [
                     "payments"
                 ],
@@ -26439,12 +26435,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "update",
+                    "method": "updateSubscription",
                     "group": "subscriptions",
                     "weight": 551,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/update.md",
+                    "demo": "payments\/update-subscription.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",
@@ -26881,7 +26877,7 @@
         "\/payments\/subscriptions\/{subscriptionId}\/usage": {
             "get": {
                 "summary": "Get usage for subscription",
-                "operationId": "paymentsGet",
+                "operationId": "paymentsGetUsage",
                 "tags": [
                     "payments"
                 ],
@@ -26900,12 +26896,12 @@
                 },
                 "deprecated": false,
                 "x-appwrite": {
-                    "method": "get",
+                    "method": "getUsage",
                     "group": "usage",
                     "weight": 557,
                     "cookies": false,
                     "type": "",
-                    "demo": "payments\/get.md",
+                    "demo": "payments\/get-usage.md",
                     "rate-limit": 0,
                     "rate-time": 3600,
                     "rate-key": "url:{url},ip:{ip}",

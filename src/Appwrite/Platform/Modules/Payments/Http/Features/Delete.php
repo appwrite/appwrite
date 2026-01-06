@@ -38,7 +38,7 @@ class Delete extends Base
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'features',
-                name: 'delete',
+                name: 'deleteFeature',
                 description: <<<EOT
                 Delete a feature by its unique ID.
                 EOT,
