@@ -110,8 +110,16 @@ class Migrations extends Action
         $events = $payload['events'] ?? [];
         $migration = new Document($payload['migration'] ?? []);
 
+        if ($migration->isEmpty()) {
+            throw new \Exception("Migration not found");
+        }
+
         if ($project->getId() === 'console') {
             return;
+        }
+
+        if ($project->isEmpty()) {
+            throw new \Exception("Project not found");
         }
 
         $this->dbForProject = $dbForProject;
@@ -312,7 +320,12 @@ class Migrations extends Action
         Mail $queueForMails,
         array $platform,
     ): void {
-        $project = $this->dbForPlatform->getDocument('projects', $this->project->getId());
+        $project = $this->project;
+
+        if ($project->isEmpty()) {
+            throw new \Exception("Project not found");
+        }
+
         $tempAPIKey = $this->generateAPIKey($project);
 
         $transfer = $source = $destination = null;
@@ -438,6 +451,9 @@ class Migrations extends Action
                     $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
                 }
             }
+
+            $source?->cleanUp();
+            $destination?->cleanUp();
 
             $transfer = null;
             $source = null;
