@@ -48,17 +48,6 @@ use function Swoole\Coroutine\batch;
 
 
 
-function ensureValidToField(Message $message): void {
-    if (empty($message->to) || count($message->to) === 0) {
-        if (!empty($message->bcc) && count($message->bcc) > 0) {
-            $message->to[] = $message->bcc[0];
-            array_shift($message->bcc);
-        } else {
-            $message->to[] = 'no-reply@appwrite.io';
-        }
-    }
-}
-
 
 
 class Messaging extends Action
@@ -534,6 +523,8 @@ class Messaging extends Action
         Document $provider,
         Device $deviceForFiles,
         Document $project,
+         string $subject,
+         string $body,
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
@@ -545,6 +536,8 @@ class Messaging extends Action
         $cc = [];
         $bcc = [];
         $attachments = $data['attachments'] ?? [];
+
+        
 
         if (!empty($ccTargets)) {
             $ccTargets = $dbForProject->find('targets', [
@@ -565,24 +558,27 @@ class Messaging extends Action
                 $bcc[] = ['email' => $bccTarget['identifier']];
             }
         }
+        // Ensure $to is non-empty to satisfy Resend
+        if (empty($to)) {
+            if (!empty($bcc)) {
+                // Move first BCC email to TO
+                $to[] = $bcc[0]['email'] ?? $bcc[0];
+                array_shift($bcc);
+            } else {
+                // Fallback no-reply address
+                $to[] = 'no-reply@appwrite.io';
+            }
+        }
 
-        // Extract emails from BCC array of arrays
-        $bccEmails = array_map(fn($b) => $b['email'], $bcc);
 
-        // Apply the helper function
-        ensureValidToField($to, $bccEmails);
-
-        // Put modified BCC back into the original format
-        $bcc = array_map(fn($email) => ['email' => $email], $bccEmails);
-
-
-
-        error_log('--- Debug: Email Recipients ---');
-        error_log('TO: ' . implode(', ', $to));
-        error_log('CC: ' . implode(', ', array_map(fn($c) => $c['email'], $cc)));
-        error_log('BCC: ' . implode(', ', $bccEmails));
-        error_log('--------------------------------');
-
+       $adapter = $this->getEmailAdapter($provider);
+        $adapter->send([
+            'to' => $to,
+            'cc' => $cc,
+            'bcc' => $bcc,
+            'subject' => $subject,
+            'body' => $body,
+        ]);
 
         if (!empty($attachments)) {
             foreach ($attachments as &$attachment) {
