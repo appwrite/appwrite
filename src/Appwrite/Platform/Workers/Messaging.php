@@ -46,6 +46,21 @@ use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 
+
+
+function ensureValidToField(Message $message): void {
+    if (empty($message->to) || count($message->to) === 0) {
+        if (!empty($message->bcc) && count($message->bcc) > 0) {
+            $message->to[] = $message->bcc[0];
+            array_shift($message->bcc);
+        } else {
+            $message->to[] = 'no-reply@appwrite.io';
+        }
+    }
+}
+
+
+
 class Messaging extends Action
 {
     private ?Local $localDevice = null;
@@ -550,6 +565,24 @@ class Messaging extends Action
                 $bcc[] = ['email' => $bccTarget['identifier']];
             }
         }
+
+        // Extract emails from BCC array of arrays
+        $bccEmails = array_map(fn($b) => $b['email'], $bcc);
+
+        // Apply the helper function
+        ensureValidToField($to, $bccEmails);
+
+        // Put modified BCC back into the original format
+        $bcc = array_map(fn($email) => ['email' => $email], $bccEmails);
+
+
+
+        error_log('--- Debug: Email Recipients ---');
+        error_log('TO: ' . implode(', ', $to));
+        error_log('CC: ' . implode(', ', array_map(fn($c) => $c['email'], $cc)));
+        error_log('BCC: ' . implode(', ', $bccEmails));
+        error_log('--------------------------------');
+
 
         if (!empty($attachments)) {
             foreach ($attachments as &$attachment) {
