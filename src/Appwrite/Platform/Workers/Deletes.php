@@ -516,7 +516,12 @@ class Deletes extends Action
             $dsn = new DSN('mysql://' . $document->getAttribute('database', 'console'));
         }
 
+        /**
+         * @var $dbForProject Database
+         */
         $dbForProject = $getProjectDB($document);
+
+        $dbForProject->disableValidation();
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
