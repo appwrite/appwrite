@@ -370,6 +370,11 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
+                // Get project and function/webhook events (cached)
+                $project = $queueForEvents->getProject();
+                $functionsEvents = $this->getFunctionsEvents($project, $dbForProject);
+                $webhooksEvents = $this->getWebhooksEvents($project);
+
                 foreach ($documentsToTrigger as $doc) {
                     $payload = $doc->getArrayCopy();
                     $payload['$tableId'] = $collection->getId();
@@ -380,9 +385,33 @@ class Update extends Action
                         ->setParam('rowId', $doc->getId())
                         ->setPayload($payload);
 
+                    // Generate events for this document operation
+                    $generatedEvents = Event::generateEvents(
+                        $queueForEvents->getEvent(),
+                        $queueForEvents->getParams()
+                    );
+
                     $queueForRealtime->from($queueForEvents)->trigger();
-                    $queueForFunctions->from($queueForEvents)->trigger();
-                    $queueForWebhooks->from($queueForEvents)->trigger();
+
+                    // Only trigger functions if there are matching function events
+                    if (!empty($functionsEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($functionsEvents[$event])) {
+                                $queueForFunctions->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
+
+                    // Only trigger webhooks if there are matching webhook events
+                    if (!empty($webhooksEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($webhooksEvents[$event])) {
+                                $queueForWebhooks->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 $queueForEvents->reset();

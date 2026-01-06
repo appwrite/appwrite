@@ -13,7 +13,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -59,7 +58,6 @@ class Delete extends Base
             ->param('functionId', '', new UID(), 'Function ID.')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('project')
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -70,7 +68,6 @@ class Delete extends Base
         string $functionId,
         Response $response,
         Database $dbForProject,
-        Document $project,
         DeleteEvent $queueForDeletes,
         Event $queueForEvents,
         Database $dbForPlatform
@@ -97,9 +94,6 @@ class Delete extends Base
             ->setDocument($function);
 
         $queueForEvents->setParam('functionId', $function->getId());
-
-        // Purge function events cache when function is deleted
-        $this->purgeFunctionEventsCache($project, $dbForProject);
 
         $response->noContent();
     }

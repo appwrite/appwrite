@@ -286,8 +286,6 @@ class Update extends Base
 
         $queueForEvents->setParam('functionId', $function->getId());
 
-        // Purge function events cache when function is updated
-        $this->purgeFunctionEventsCache($project, $dbForProject);
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     }

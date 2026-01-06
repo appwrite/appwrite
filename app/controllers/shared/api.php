@@ -112,6 +112,33 @@ $eventDatabaseListener = function (Document $project, Document $document, Respon
     }
 };
 
+/**
+ * Purge function events cache when functions are created, updated or deleted.
+ */
+$functionsEventsCacheListener = function (string $event, Document $document, Document $project, Database $dbForProject) {
+
+
+    if ($document->getCollection() !== 'functions') {
+        return;
+    }
+
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return;
+    }
+
+    $hostname = $dbForProject->getAdapter()->getHostname();
+    $cacheKey = \sprintf(
+        '%s-cache-%s:%s:%s:project:%s:functions:events',
+        $dbForProject->getCacheName(),
+        $hostname ?? '',
+        $dbForProject->getNamespace(),
+        $dbForProject->getTenant(),
+        $project->getId()
+    );
+    var_dump(['purged' => $cacheKey]);
+    $dbForProject->getCache()->purge($cacheKey);
+};
+
 $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
     $value = 1;
 
@@ -509,7 +536,7 @@ App::init()
     ->inject('devKey')
     ->inject('telemetry')
     ->inject('platform')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Migration $queueForMigrations, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Migration $queueForMigrations, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform) use ($usageDatabaseListener, $eventDatabaseListener, $functionsEventsCacheListener) {
 
         $route = $utopia->getRoute();
 
@@ -650,7 +677,11 @@ App::init()
                 $queueForFunctions->from($queueForEvents),
                 $queueForWebhooks->from($queueForEvents),
                 $queueForRealtime->from($queueForEvents)
-            ));
+            ))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_UPDATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $dbForProject))
+        ;
 
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
