@@ -14,8 +14,8 @@ use GraphQL\Type\Definition\ScalarType;
 // https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
 class Json extends ScalarType
 {
-    public $name = 'Json';
-    public $description = 'The `JSON` scalar type represents JSON values as specified by
+    public string $name = 'Json';
+    public ?string $description = 'The `JSON` scalar type represents JSON values as specified by
         [ECMA-404](https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).';
 
     public function serialize($value)
