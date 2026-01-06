@@ -21,6 +21,8 @@ use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -449,6 +451,19 @@ Server::setResource('logError', function (Registry $register, Document $project)
 }, ['register', 'project']);
 
 Server::setResource('executor', fn () => new Executor());
+
+Server::setResource('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
+    return function (Document $project) use ($dbForPlatform, $getProjectDB) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            $adapter = new AdapterDatabase($dbForPlatform);
+            return new UtopiaAudit($adapter);
+        }
+
+        $dbForProject = $getProjectDB($project);
+        $adapter = new AdapterDatabase($dbForProject);
+        return new UtopiaAudit($adapter);
+    };
+}, ['dbForPlatform', 'getProjectDB']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

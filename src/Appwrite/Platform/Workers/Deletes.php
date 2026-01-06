@@ -9,6 +9,7 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
+use Utopia\Audit\Adapter\SQL;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -62,6 +63,7 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
+            ->inject('getAudit')
             ->callback($this->action(...));
     }
 
@@ -84,7 +86,8 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         string $auditRetention,
-        Log $log
+        Log $log,
+        callable $getAudit,
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -145,7 +148,7 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_AUDIT:
                 if (!$project->isEmpty()) {
-                    $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
+                    $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 }
                 break;
             case DELETE_TYPE_REALTIME:
@@ -517,7 +520,7 @@ class Deletes extends Action
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
-            Audit::COLLECTION,
+            SQL::COLLECTION,
             AbuseDatabase::COLLECTION,
         ];
 
@@ -565,7 +568,8 @@ class Deletes extends Action
 
         // Delete Keys
         $this->deleteByGroup('keys', [
-            Query::equal('projectInternalId', [$projectInternalId]),
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$projectInternalId]),
             Query::orderAsc()
         ], $dbForPlatform);
 
@@ -774,26 +778,22 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
-     * @param callable $getProjectDB
+     * @param Document $project
+     * @param callable $getAudit
      * @param string $auditRetention
      * @return void
      * @throws Exception
      */
-    private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
+    private function deleteAuditLogs(Document $project, callable $getAudit, string $auditRetention): void
     {
         $projectId = $project->getId();
-        $dbForProject = $getProjectDB($project);
+        /** @var Audit $audit */
+        $audit = $getAudit($project);
 
         try {
-            $this->deleteByGroup(Audit::COLLECTION, [
-                Query::select([...$this->selects, 'time']),
-                Query::lessThan('time', $auditRetention),
-                Query::orderDesc('time'),
-                Query::orderAsc(),
-            ], $dbForProject);
-        } catch (DatabaseException $e) {
-            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
+            $audit->cleanup(new \DateTime($auditRetention));
+        } catch (Throwable $th) {
+            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $th->getMessage());
         }
     }
 

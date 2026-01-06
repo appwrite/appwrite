@@ -4,7 +4,7 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
-use Appwrite\Event\Audit;
+use Appwrite\Event\Audit as AuditEvent;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
@@ -30,6 +30,8 @@ use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code;
@@ -146,7 +148,7 @@ App::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 App::setResource('queueForAudits', function (Publisher $publisher) {
-    return new Audit($publisher);
+    return new AuditEvent($publisher);
 }, ['publisher']);
 App::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
@@ -641,6 +643,11 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         return $database;
     };
 }, ['pools', 'cache']);
+
+App::setResource('audit', function ($dbForProject) {
+    $adapter = new AdapterDatabase($dbForProject);
+    return new Audit($adapter);
+}, ['dbForProject']);
 
 App::setResource('telemetry', fn () => new NoTelemetry());
 

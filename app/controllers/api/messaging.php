@@ -1145,7 +1145,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1158,9 +1159,12 @@ App::get('/v1/messaging/providers/:providerId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'provider/' . $providerId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
         $output = [];
 
         foreach ($logs as $i => &$log) {
@@ -1207,7 +1211,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2549,7 +2553,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2562,9 +2567,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'topic/' . $topicId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -2612,7 +2620,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2966,7 +2974,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2979,9 +2988,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'subscriber/' . $subscriberId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -3029,7 +3041,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3762,7 +3774,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3775,9 +3788,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'message/' . $messageId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -3825,7 +3841,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
