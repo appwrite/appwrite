@@ -30,6 +30,13 @@ interface Adapter
 
     public function createPortalSession(Document $actor, ProviderState $state, array $options = []): ProviderPortalSession;
 
+    /**
+     * @return ProviderInvoice[]
+     */
+    public function listInvoices(ProviderSubscriptionRef $subscription, ProviderState $state, int $limit = 25, int $offset = 0): array;
+
+    public function previewProration(ProviderSubscriptionRef $subscription, string $newPriceId, ProviderState $state): ProviderProrationPreview;
+
     public function reportUsage(ProviderSubscriptionRef $subscription, string $featureId, int $quantity, \DateTimeInterface $timestamp, ProviderState $state): void;
 
     public function syncUsage(ProviderSubscriptionRef $subscription, ProviderState $state): ProviderUsageReport;

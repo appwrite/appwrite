@@ -33,12 +33,6 @@ class PaymentFeature extends Model
                 'description' => 'Feature description.',
                 'default' => '',
                 'example' => 'Number of seat licenses',
-            ])
-            ->addRule('providers', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Provider-specific metadata.',
-                'default' => new \stdClass(),
-                'example' => new \stdClass(),
             ]);
     }
 

@@ -41,7 +41,7 @@ class Create extends Base
             ->desc('Create payment plan')
             ->label('scope', 'payments.write')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
-            ->label('event', 'plans.[planId].create')
+            ->label('event', 'payments.plan.[planId].create')
             ->label('audits.event', 'payments.plan.create')
             ->label('audits.resource', 'payments/plan/{request.planId}')
             ->label('sdk', new Method(
@@ -53,7 +53,7 @@ class Create extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_PLAN,
                     )
                 ]
             ))
@@ -91,20 +91,14 @@ class Create extends Base
         $seenPriceIds = [];
         foreach ($pricing as $entry) {
             if (!is_array($entry)) {
-                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                $response->json(['message' => 'Invalid pricing entry format']);
-                return;
+                throw new AppwriteException(ExtendException::GENERAL_BAD_REQUEST, 'Invalid pricing entry format');
             }
             $priceId = (string) ($entry['priceId'] ?? '');
             if ($priceId === '') {
-                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                $response->json(['message' => 'Each pricing entry must include a priceId']);
-                return;
+                throw new AppwriteException(ExtendException::GENERAL_BAD_REQUEST, 'Each pricing entry must include a priceId');
             }
             if (isset($seenPriceIds[$priceId])) {
-                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                $response->json(['message' => 'Duplicate priceId detected: ' . $priceId]);
-                return;
+                throw new AppwriteException(ExtendException::GENERAL_BAD_REQUEST, 'Duplicate priceId detected: ' . $priceId);
             }
             $seenPriceIds[$priceId] = true;
             $normalizedPricing[] = $entry;
@@ -129,9 +123,7 @@ class Create extends Base
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new AppwriteException(ExtendException::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         // Check if plan already exists
@@ -139,16 +131,13 @@ class Create extends Base
             Query::equal('planId', [$planId])
         ]);
         if ($existingPlan !== null && !$existingPlan->isEmpty()) {
-            // TODO: create a custom exception for this
-            return new AppwriteException(ExtendException::RESOURCE_ALREADY_EXISTS);
+            throw new AppwriteException(ExtendException::PAYMENT_PLAN_ALREADY_EXISTS);
         }
 
         $payments = (array) $project->getAttribute('payments', []);
         $providerConfigs = (array) ($payments['providers'] ?? []);
         if (empty($providerConfigs)) {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['message' => 'At least one payment provider must be configured before creating plans']);
-            return;
+            throw new AppwriteException(ExtendException::PAYMENT_PROVIDER_NOT_CONFIGURED, 'At least one payment provider must be configured before creating plans');
         }
 
         $created = $dbForProject->createDocument('payments_plans', $document);
@@ -180,6 +169,6 @@ class Create extends Base
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->json($created->getArrayCopy());
+        $response->dynamic($created, Response::MODEL_PAYMENT_PLAN);
     }
 }

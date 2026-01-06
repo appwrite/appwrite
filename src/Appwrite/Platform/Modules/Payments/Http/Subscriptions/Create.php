@@ -48,7 +48,7 @@ class Create extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_SUBSCRIPTION,
                     )
                 ]
             ))
@@ -87,32 +87,24 @@ class Create extends Base
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan === null || $plan->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['message' => 'Invalid planId']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_PLAN_NOT_FOUND);
         }
 
         // Resolve payer (user who owns payment method). For teams, use payerUserId; else actorId
         if ($actorType === 'team' && $payerUserId === '') {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['message' => 'payerUserId required for team subscriptions']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'payerUserId required for team subscriptions');
         }
         $payerId = $actorType === 'team' ? $payerUserId : $actorId;
         $payer = $dbForProject->getDocument('users', $payerId);
         if ($payer->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['message' => 'Payer user not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::USER_NOT_FOUND, 'Payer user not found');
         }
         if ($actorType === 'team') {
             // Ensure payer is a member with billing/owner role
@@ -121,15 +113,11 @@ class Create extends Base
                 Query::equal('userId', [$payerId])
             ]);
             if ($membership === null || $membership->isEmpty()) {
-                $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                $response->json(['message' => 'Payer is not a member of the team']);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::USER_UNAUTHORIZED, 'Payer is not a member of the team');
             }
             $roles = (array) $membership->getAttribute('roles', []);
             if (!in_array('owner', $roles, true) && !in_array('billing', $roles, true)) {
-                $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                $response->json(['message' => 'Payer must have owner or billing role']);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::USER_UNAUTHORIZED, 'Payer must have owner or billing role');
             }
         }
 
@@ -139,9 +127,8 @@ class Create extends Base
             : $dbForProject->getDocument('teams', $actorId);
 
         if ($actor->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['message' => 'Actor not found']);
-            return;
+            $exceptionType = $actorType === 'user' ? \Appwrite\Extend\Exception::USER_NOT_FOUND : \Appwrite\Extend\Exception::TEAM_NOT_FOUND;
+            throw new \Appwrite\AppwriteException($exceptionType);
         }
 
         // Check if actor already has an active subscription
@@ -155,12 +142,7 @@ class Create extends Base
         if (!empty($existingSubscriptions)) {
             $existingSubscription = $existingSubscriptions[0];
             if ($existingSubscription instanceof Document && !$existingSubscription->isEmpty()) {
-                $response->setStatusCode(Response::STATUS_CODE_CONFLICT);
-                $response->json([
-                    'message' => 'Actor already has an active subscription',
-                    'subscriptionId' => $existingSubscription->getAttribute('subscriptionId')
-                ]);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_SUBSCRIPTION_ALREADY_EXISTS, 'Actor already has an active subscription');
             }
         }
 
@@ -218,9 +200,7 @@ class Create extends Base
 
             if ($selectedPriceId !== null) {
                 if (!isset($providerPriceMap[$selectedPriceId])) {
-                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                    $response->json(['message' => 'Price ID not configured for provider: ' . $selectedPriceId]);
-                    return;
+                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Price ID not configured for provider: ' . $selectedPriceId);
                 }
                 $providerPlanPriceId = (string) $providerPriceMap[$selectedPriceId];
             } elseif (!empty($providerPriceMap)) {
@@ -242,9 +222,7 @@ class Create extends Base
             }
 
             if ($providerPlanPriceId === '') {
-                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                $response->json(['message' => 'Plan has no prices configured for provider: ' . $primary]);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Plan has no prices configured for provider: ' . $primary);
             }
 
             $providerKey = (string) $primary;
@@ -253,36 +231,48 @@ class Create extends Base
             $providerCheckoutId = null;
 
             if (!$adapter instanceof StripeAdapter) {
-                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                $response->json(['message' => 'Unsupported payment provider: ' . $providerKey]);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Unsupported payment provider: ' . $providerKey);
             }
 
             if ($successUrl === '' || $cancelUrl === '') {
-                $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                $response->json(['message' => 'successUrl and cancelUrl are required.']);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'successUrl and cancelUrl are required.');
+            }
+
+            // Fetch metered feature prices for this plan
+            $meteredPriceIds = [];
+            $planFeatures = $dbForProject->find('payments_plan_features', [
+                Query::equal('planId', [$planId]),
+                Query::equal('enabled', [true]),
+            ]);
+            foreach ($planFeatures as $planFeature) {
+                $featureType = (string) $planFeature->getAttribute('type', '');
+                if ($featureType !== 'metered') {
+                    continue;
+                }
+                $featureProviders = (array) $planFeature->getAttribute('providers', []);
+                $featureProviderData = (array) ($featureProviders[$primary] ?? []);
+                $featurePriceId = (string) ($featureProviderData['priceId'] ?? '');
+                if ($featurePriceId !== '') {
+                    $meteredPriceIds[] = $featurePriceId;
+                }
             }
 
             try {
                 $checkoutSession = $adapter->createCheckoutSession($payer, [
-                    'priceId' => $providerPlanPriceId
+                    'priceId' => $providerPlanPriceId,
+                    'meteredPriceIds' => $meteredPriceIds,
                 ], $state, [
                     'successUrl' => $successUrl,
                     'cancelUrl' => $cancelUrl
                 ]);
             } catch (\Throwable $e) {
-                $response->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR);
-                $response->json(['message' => 'Failed to create checkout session: ' . $e->getMessage()]);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_SERVER_ERROR, 'Failed to create checkout session: ' . $e->getMessage());
             }
 
             $checkoutUrl = $checkoutSession->url;
             $providerCheckoutId = (string) ($checkoutSession->metadata['id'] ?? '');
             if ($providerCheckoutId === '') {
-                $response->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR);
-                $response->json(['message' => 'Checkout session did not return an id']);
-                return;
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_SERVER_ERROR, 'Checkout session did not return an id');
             }
             $providerCustomerId = (string) ($checkoutSession->metadata['customerId'] ?? '');
             $providerEntryData = [
@@ -297,9 +287,7 @@ class Create extends Base
 
             $providerData[$providerKey] = $providerEntryData;
         } else {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['message' => 'No payment provider configured for this project']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_PROVIDER_NOT_CONFIGURED);
         }
 
         $resolvedPriceId = (string) ($selectedPriceId ?? '');
@@ -333,12 +321,12 @@ class Create extends Base
             ->setEvent('payments.subscription.[subscriptionId].create')
             ->setPayload($created->getArrayCopy());
 
-        $responseData = $created->getArrayCopy();
+        // Add checkoutUrl to the response document
         if ($checkoutUrl) {
-            $responseData['checkoutUrl'] = $checkoutUrl;
+            $created->setAttribute('checkoutUrl', $checkoutUrl);
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->json($responseData);
+        $response->dynamic($created, Response::MODEL_PAYMENT_SUBSCRIPTION);
     }
 }

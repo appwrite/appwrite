@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Payments\Services;
 
 use Appwrite\Platform\Modules\Payments\Http\Features\Create as FeaturesCreate;
 use Appwrite\Platform\Modules\Payments\Http\Features\Delete as FeaturesDelete;
+use Appwrite\Platform\Modules\Payments\Http\Features\Get as FeaturesGet;
 use Appwrite\Platform\Modules\Payments\Http\Features\Update as FeaturesUpdate;
 use Appwrite\Platform\Modules\Payments\Http\Features\XList as FeaturesList;
 use Appwrite\Platform\Modules\Payments\Http\PlanFeatures\Assign as PlanFeaturesAssign;
@@ -20,14 +21,18 @@ use Appwrite\Platform\Modules\Payments\Http\Providers\Update as ProvidersUpdate;
 use Appwrite\Platform\Modules\Payments\Http\Subscriptions\Cancel as SubscriptionsCancel;
 use Appwrite\Platform\Modules\Payments\Http\Subscriptions\Create as SubscriptionsCreate;
 use Appwrite\Platform\Modules\Payments\Http\Subscriptions\Get as SubscriptionsGet;
+use Appwrite\Platform\Modules\Payments\Http\Subscriptions\Portal as SubscriptionsPortal;
+use Appwrite\Platform\Modules\Payments\Http\Subscriptions\PreviewUpgrade as SubscriptionsPreviewUpgrade;
 use Appwrite\Platform\Modules\Payments\Http\Subscriptions\Resume as SubscriptionsResume;
 use Appwrite\Platform\Modules\Payments\Http\Subscriptions\Update as SubscriptionsUpdate;
 use Appwrite\Platform\Modules\Payments\Http\Subscriptions\XList as SubscriptionsList;
+use Appwrite\Platform\Modules\Payments\Http\Invoices\XList as InvoicesList;
 use Appwrite\Platform\Modules\Payments\Http\Usage\Create as UsageCreate;
 use Appwrite\Platform\Modules\Payments\Http\Usage\Events\XList as UsageEventsList;
 use Appwrite\Platform\Modules\Payments\Http\Usage\Get as UsageGet;
 use Appwrite\Platform\Modules\Payments\Http\Usage\Reconcile\Create as UsageReconcile;
 use Appwrite\Platform\Modules\Payments\Http\Webhooks\Provider\Create as WebhookProviderCreate;
+use Appwrite\Platform\Modules\Payments\Http\ActorFeatures\Get as ActorFeaturesGet;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -45,6 +50,7 @@ class Http extends Service
 
         // Features
         $this->addAction(FeaturesCreate::getName(), new FeaturesCreate());
+        $this->addAction(FeaturesGet::getName(), new FeaturesGet());
         $this->addAction(FeaturesList::getName(), new FeaturesList());
         $this->addAction(FeaturesUpdate::getName(), new FeaturesUpdate());
         $this->addAction(FeaturesDelete::getName(), new FeaturesDelete());
@@ -61,6 +67,11 @@ class Http extends Service
         $this->addAction(SubscriptionsUpdate::getName(), new SubscriptionsUpdate());
         $this->addAction(SubscriptionsCancel::getName(), new SubscriptionsCancel());
         $this->addAction(SubscriptionsResume::getName(), new SubscriptionsResume());
+        $this->addAction(SubscriptionsPortal::getName(), new SubscriptionsPortal());
+        $this->addAction(SubscriptionsPreviewUpgrade::getName(), new SubscriptionsPreviewUpgrade());
+
+        // Invoices
+        $this->addAction(InvoicesList::getName(), new InvoicesList());
 
         // Usage
         $this->addAction(UsageGet::getName(), new UsageGet());
@@ -75,5 +86,8 @@ class Http extends Service
 
         // Webhooks
         $this->addAction(WebhookProviderCreate::getName(), new WebhookProviderCreate());
+
+        // Actor Features
+        $this->addAction(ActorFeaturesGet::getName(), new ActorFeaturesGet());
     }
 }

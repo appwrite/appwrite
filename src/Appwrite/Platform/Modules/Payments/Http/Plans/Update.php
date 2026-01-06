@@ -48,7 +48,7 @@ class Update extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_PLAN,
                     )
                 ]
             ))
@@ -83,18 +83,14 @@ class Update extends Base
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan === null || $plan->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Plan not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_PLAN_NOT_FOUND);
         }
         if ($name !== '') {
             $plan->setAttribute('name', $name);
@@ -109,20 +105,14 @@ class Update extends Base
             $seenPriceIds = [];
             foreach ($pricing as $entry) {
                 if (!is_array($entry)) {
-                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                    $response->json(['message' => 'Invalid pricing entry format']);
-                    return;
+                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Invalid pricing entry format');
                 }
                 $priceId = (string) ($entry['priceId'] ?? '');
                 if ($priceId === '') {
-                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                    $response->json(['message' => 'Each pricing entry must include a priceId']);
-                    return;
+                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Each pricing entry must include a priceId');
                 }
                 if (isset($seenPriceIds[$priceId])) {
-                    $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                    $response->json(['message' => 'Duplicate priceId detected: ' . $priceId]);
-                    return;
+                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'Duplicate priceId detected: ' . $priceId);
                 }
                 $seenPriceIds[$priceId] = true;
                 $normalizedPricing[] = $entry;
@@ -158,6 +148,6 @@ class Update extends Base
             $plan->setAttribute('providers', $providersMeta);
             $plan = $dbForProject->updateDocument('payments_plans', $plan->getId(), $plan);
         }
-        $response->json($plan->getArrayCopy());
+        $response->dynamic($plan, Response::MODEL_PAYMENT_PLAN);
     }
 }

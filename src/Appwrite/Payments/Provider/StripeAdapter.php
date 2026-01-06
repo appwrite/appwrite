@@ -2,6 +2,7 @@
 
 namespace Appwrite\Payments\Provider;
 
+use Appwrite\Extend\Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -31,7 +32,7 @@ class StripeAdapter implements Adapter
         $rawDomain = (string) System::getEnv('_APP_DOMAIN', '');
         $domain = \trim($rawDomain);
         if ($domain === '' || \in_array(\strtolower($domain), ['localhost', '127.0.0.1', 'traefik'], true)) {
-            throw new \RuntimeException('Appwrite domain is not configured. Set _APP_DOMAIN to a publicly accessible hostname before configuring Stripe.');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Appwrite domain is not configured. Set _APP_DOMAIN to a publicly accessible hostname before configuring Stripe.');
         }
         $domain = (string) \preg_replace('/^\s*https?:\/\//i', '', $domain);
         $domain = \ltrim($domain, '/');
@@ -39,29 +40,41 @@ class StripeAdapter implements Adapter
         $forceHttps = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'enabled') !== 'disabled';
         $scheme = $forceHttps ? 'https' : 'http';
         $webhookUrl = $scheme . '://' . $domain . '/v1/payments/webhooks/stripe/' . $project->getId();
-        $endpointResponse = $this->request($apiKey, 'POST', '/webhook_endpoints', [
-            'url' => $webhookUrl,
-            'enabled_events' => [
-                'checkout.session.completed',
-                'customer.subscription.created',
-                'customer.subscription.updated',
-                'customer.subscription.deleted',
-                'invoice.payment_failed',
-                'invoice.payment_succeeded',
-                'product.updated',
-                'product.deleted',
-                'price.updated',
-                'price.deleted'
-            ],
-            'description' => 'Appwrite Payments Webhook for Project ' . $project->getId()
-        ]);
+
+        try {
+            $endpointResponse = $this->request($apiKey, 'POST', '/webhook_endpoints', [
+                'url' => $webhookUrl,
+                'enabled_events' => [
+                    'checkout.session.completed',
+                    'customer.subscription.created',
+                    'customer.subscription.updated',
+                    'customer.subscription.deleted',
+                    'invoice.payment_failed',
+                    'invoice.payment_succeeded',
+                    'product.updated',
+                    'product.deleted',
+                    'price.updated',
+                    'price.deleted'
+                ],
+                'description' => 'Appwrite Payments Webhook for Project ' . $project->getId()
+            ]);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::PAYMENT_WEBHOOK_FAILED, 'Failed to create Stripe webhook: ' . $e->getMessage());
+        }
 
         $endpointData = $this->decodeResponse($endpointResponse);
 
+        $webhookEndpointId = (string) ($endpointData['id'] ?? '');
+        $webhookSecret = (string) ($endpointData['secret'] ?? '');
+
+        if ($webhookEndpointId === '' || $webhookSecret === '') {
+            throw new Exception(Exception::PAYMENT_WEBHOOK_FAILED, 'Stripe webhook creation failed: missing endpoint ID or secret');
+        }
+
         $meta = [
             'currency' => $account['default_currency'] ?? 'usd',
-            'webhookEndpointId' => $endpointData['id'] ?? null,
-            'webhookSecret' => $endpointData['secret'] ?? null,
+            'webhookEndpointId' => $webhookEndpointId,
+            'webhookSecret' => $webhookSecret,
         ];
         return new ProviderState($this->getIdentifier(), $config, $meta);
     }
@@ -474,14 +487,28 @@ class StripeAdapter implements Adapter
         $successUrl = (string) ($options['successUrl'] ?? '');
         $cancelUrl = (string) ($options['cancelUrl'] ?? '');
         $priceId = (string) ($planContext['priceId'] ?? '');
+        $meteredPriceIds = (array) ($planContext['meteredPriceIds'] ?? []);
         $customerId = $this->ensureCustomer($apiKey, $actor);
+
+        // Build line items: base subscription price + metered feature prices
+        $lineItems = [
+            ['price' => $priceId, 'quantity' => 1]
+        ];
+
+        // Add metered prices (no quantity for metered/usage-based prices)
+        foreach ($meteredPriceIds as $meteredPriceId) {
+            if (!empty($meteredPriceId)) {
+                $lineItems[] = ['price' => (string) $meteredPriceId];
+            }
+        }
+
         $params = [
             'mode' => 'subscription',
-            'line_items' => [ [ 'price' => $priceId, 'quantity' => 1 ] ],
+            'line_items' => $lineItems,
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
             'client_reference_id' => $actor->getId(),
-            'metadata' => [ 'project_id' => $this->project->getId(), 'actor_id' => $actor->getId() ]
+            'metadata' => ['project_id' => $this->project->getId(), 'actor_id' => $actor->getId()]
         ];
         if ($customerId !== '') {
             $params['customer'] = $customerId;
@@ -509,9 +536,164 @@ class StripeAdapter implements Adapter
         return new ProviderPortalSession(url: (string) ($sessionData['url'] ?? ''));
     }
 
+    /**
+     * @return ProviderInvoice[]
+     */
+    public function listInvoices(ProviderSubscriptionRef $subscription, ProviderState $state, int $limit = 25, int $offset = 0): array
+    {
+        $apiKey = (string) ($state->config['secretKey'] ?? '');
+        $stripeSubId = (string) $subscription->externalSubscriptionId;
+
+        if ($stripeSubId === '') {
+            return [];
+        }
+
+        // Fetch invoices from Stripe
+        $params = [
+            'subscription' => $stripeSubId,
+            'limit' => min($limit, 100), // Stripe max is 100
+        ];
+
+        // Handle offset by using starting_after cursor
+        if ($offset > 0) {
+            try {
+                // First fetch to get the invoice to start after
+                $offsetResponse = $this->request($apiKey, 'GET', '/invoices', [
+                    'subscription' => $stripeSubId,
+                    'limit' => $offset,
+                ]);
+                $offsetData = $this->decodeResponse($offsetResponse);
+                if (isset($offsetData['data']) && is_array($offsetData['data']) && !empty($offsetData['data'])) {
+                    $lastInvoice = end($offsetData['data']);
+                    $params['starting_after'] = (string) ($lastInvoice['id'] ?? '');
+                }
+            } catch (\Throwable $_) {
+                // If offset fetch fails, ignore and proceed without offset
+            }
+        }
+
+        try {
+            $response = $this->request($apiKey, 'GET', '/invoices', $params);
+            $data = $this->decodeResponse($response);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Failed to fetch invoices: ' . $e->getMessage());
+        }
+
+        $invoices = [];
+        if (isset($data['data']) && is_array($data['data'])) {
+            foreach ($data['data'] as $invoice) {
+                if (!is_array($invoice)) {
+                    continue;
+                }
+
+                $invoices[] = new ProviderInvoice(
+                    invoiceId: (string) ($invoice['id'] ?? ''),
+                    subscriptionId: (string) ($invoice['subscription'] ?? ''),
+                    amount: (int) ($invoice['amount_due'] ?? 0),
+                    currency: (string) ($invoice['currency'] ?? ''),
+                    status: (string) ($invoice['status'] ?? ''),
+                    createdAt: isset($invoice['created']) ? (int) $invoice['created'] : null,
+                    paidAt: isset($invoice['status_transitions']['paid_at']) ? (int) $invoice['status_transitions']['paid_at'] : null,
+                    invoiceUrl: (string) ($invoice['hosted_invoice_url'] ?? ''),
+                    metadata: [
+                        'number' => (string) ($invoice['number'] ?? ''),
+                        'period_start' => isset($invoice['period_start']) ? (int) $invoice['period_start'] : null,
+                        'period_end' => isset($invoice['period_end']) ? (int) $invoice['period_end'] : null,
+                    ]
+                );
+            }
+        }
+
+        return $invoices;
+    }
+
+    public function previewProration(ProviderSubscriptionRef $subscription, string $newPriceId, ProviderState $state): ProviderProrationPreview
+    {
+        $apiKey = (string) ($state->config['secretKey'] ?? '');
+        $stripeSubId = (string) $subscription->externalSubscriptionId;
+
+        if ($stripeSubId === '') {
+            throw new \RuntimeException('Subscription has no provider subscription ID');
+        }
+
+        // First, get the current subscription to find the subscription item ID
+        try {
+            $subResponse = $this->request($apiKey, 'GET', '/subscriptions/' . $stripeSubId);
+            $subData = $this->decodeResponse($subResponse);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Failed to fetch subscription: ' . $e->getMessage());
+        }
+
+        $items = (array) ($subData['items']['data'] ?? []);
+        if (empty($items)) {
+            throw new \RuntimeException('Subscription has no items');
+        }
+
+        $itemId = (string) ($items[0]['id'] ?? '');
+        if ($itemId === '') {
+            throw new \RuntimeException('Subscription item has no ID');
+        }
+
+        // Use new POST /invoices/create_preview endpoint (replaces deprecated GET /invoices/upcoming)
+        try {
+            $params = [
+                'subscription' => $stripeSubId,
+                'subscription_details' => [
+                    'items' => [
+                        [
+                            'id' => $itemId,
+                            'price' => $newPriceId,
+                        ]
+                    ],
+                ],
+            ];
+
+            $response = $this->request($apiKey, 'POST', '/invoices/create_preview', $params);
+            $data = $this->decodeResponse($response);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Failed to preview proration: ' . $e->getMessage());
+        }
+
+        // Calculate proration amount from line items
+        $prorationAmount = 0;
+        $lines = (array) ($data['lines']['data'] ?? []);
+        foreach ($lines as $line) {
+            if (!is_array($line)) {
+                continue;
+            }
+            // Check for proration in parent.subscription_item_details.proration (new API)
+            $parent = (array) ($line['parent'] ?? []);
+            $subItemDetails = (array) ($parent['subscription_item_details'] ?? []);
+            $isProration = (bool) ($subItemDetails['proration'] ?? false);
+            // Fallback to legacy proration field
+            if (!$isProration && isset($line['proration'])) {
+                $isProration = (bool) $line['proration'];
+            }
+            if ($isProration) {
+                $prorationAmount += (int) ($line['amount'] ?? 0);
+            }
+        }
+
+        return new ProviderProrationPreview(
+            amountDue: (int) ($data['amount_due'] ?? 0),
+            prorationAmount: $prorationAmount,
+            currency: (string) ($data['currency'] ?? ''),
+            nextBillingDate: isset($data['period_end']) ? (int) $data['period_end'] : null,
+            metadata: [
+                'subtotal' => (int) ($data['subtotal'] ?? 0),
+                'total' => (int) ($data['total'] ?? 0),
+                'period_start' => isset($data['period_start']) ? (int) $data['period_start'] : null,
+                'period_end' => isset($data['period_end']) ? (int) $data['period_end'] : null,
+            ]
+        );
+    }
+
     public function reportUsage(ProviderSubscriptionRef $subscription, string $featureId, int $quantity, \DateTimeInterface $timestamp, ProviderState $state): void
     {
         $apiKey = (string) ($state->config['secretKey'] ?? '');
+        if ($apiKey === '') {
+            throw new \RuntimeException('Stripe API key is missing from provider config');
+        }
         $eventName = 'appwrite.payments.feature.usage.' . $this->project->getId() . '.' . ($state->metadata['planId'] ?? '') . '.' . $featureId;
         $stripeSubId = (string) $subscription->externalSubscriptionId;
         $customerId = '';
@@ -524,12 +706,15 @@ class StripeAdapter implements Adapter
                 $customerId = '';
             }
         }
+        if ($customerId === '') {
+            throw new \RuntimeException('Could not resolve Stripe customer ID for subscription ' . $stripeSubId);
+        }
         $params = [
             'event_name' => $eventName,
-            'payload' => array_filter([
+            'payload' => [
                 'value' => (string) $quantity,
                 'stripe_customer_id' => $customerId,
-            ]),
+            ],
             'timestamp' => (string) $timestamp->getTimestamp(),
         ];
         $this->request($apiKey, 'POST', '/billing/meter_events', $params);
@@ -537,15 +722,107 @@ class StripeAdapter implements Adapter
 
     public function syncUsage(ProviderSubscriptionRef $subscription, ProviderState $state): ProviderUsageReport
     {
-        // Not implemented in full due to Stripe API specifics; return empty aggregate
-        return new ProviderUsageReport(totals: []);
+        $apiKey = (string) ($state->config['secretKey'] ?? '');
+        $stripeSubId = (string) $subscription->externalSubscriptionId;
+
+        // Retrieve customer ID from subscription
+        $customerId = '';
+        if ($stripeSubId !== '') {
+            try {
+                $sub = $this->request($apiKey, 'GET', '/subscriptions/' . $stripeSubId);
+                $subData = $this->decodeResponse($sub);
+                $customerId = (string) ($subData['customer'] ?? '');
+            } catch (\Throwable $_) {
+                return new ProviderUsageReport(totals: []);
+            }
+        }
+
+        if ($customerId === '') {
+            return new ProviderUsageReport(totals: []);
+        }
+
+        // Fetch all billing meters to get usage summaries
+        $totals = [];
+        $details = [];
+
+        try {
+            $metersList = $this->request($apiKey, 'GET', '/billing/meters', ['limit' => 100]);
+            $metersData = $this->decodeResponse($metersList);
+
+            if (!isset($metersData['data']) || !is_array($metersData['data'])) {
+                return new ProviderUsageReport(totals: []);
+            }
+
+            // For each meter, fetch event summaries
+            foreach ($metersData['data'] as $meter) {
+                if (!is_array($meter)) {
+                    continue;
+                }
+
+                $meterId = (string) ($meter['id'] ?? '');
+                $eventName = (string) ($meter['event_name'] ?? '');
+
+                if ($meterId === '' || $eventName === '') {
+                    continue;
+                }
+
+                // Extract feature ID from event name (format: appwrite.payments.feature.usage.{projectId}.{planId}.{featureId})
+                $parts = explode('.', $eventName);
+                if (count($parts) < 7) {
+                    continue;
+                }
+                $featureId = $parts[6] ?? '';
+
+                if ($featureId === '') {
+                    continue;
+                }
+
+                // Fetch event summaries for this meter and customer
+                try {
+                    // Get current billing period
+                    $now = time();
+                    $startTime = strtotime('first day of this month 00:00:00');
+                    $endTime = $now;
+
+                    $summaryResponse = $this->request($apiKey, 'GET', '/billing/meters/' . $meterId . '/event_summaries', [
+                        'customer' => $customerId,
+                        'start_time' => (string) $startTime,
+                        'end_time' => (string) $endTime,
+                    ]);
+                    $summaryData = $this->decodeResponse($summaryResponse);
+
+                    if (isset($summaryData['data']) && is_array($summaryData['data']) && !empty($summaryData['data'])) {
+                        $summary = $summaryData['data'][0] ?? [];
+                        $aggregatedValue = (int) ($summary['aggregated_value'] ?? 0);
+
+                        $totals[$featureId] = ($totals[$featureId] ?? 0) + $aggregatedValue;
+
+                        $details[$featureId] = [
+                            'meterId' => $meterId,
+                            'eventName' => $eventName,
+                            'aggregatedValue' => $aggregatedValue,
+                            'startTime' => $startTime,
+                            'endTime' => $endTime,
+                        ];
+                    }
+                } catch (\Throwable $_) {
+                    // Skip this meter if we can't fetch summaries
+                    continue;
+                }
+            }
+        } catch (\Throwable $_) {
+            // Return empty report if we can't fetch meters
+            return new ProviderUsageReport(totals: []);
+        }
+
+        return new ProviderUsageReport(totals: $totals, details: $details);
     }
 
     public function handleWebhook(array $payload, ProviderState $state): ProviderWebhookResult
     {
         $signature = (string) ($payload['_signature'] ?? '');
         $raw = (string) ($payload['_raw'] ?? '');
-        $secret = (string) ($state->metadata['webhookSecret'] ?? '');
+        $secret = (string) ($state->config['webhookSecret'] ?? '');
         if ($secret !== '' && $signature !== '' && $raw !== '') {
             $parts = [];
             foreach (explode(',', $signature) as $part) {

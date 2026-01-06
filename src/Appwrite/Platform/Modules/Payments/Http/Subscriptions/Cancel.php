@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
+use Appwrite\AppwriteException;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -34,7 +37,7 @@ class Cancel extends Base
             ->desc('Cancel subscription')
             ->label('scope', 'payments.subscribe')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
-            ->label('event', 'payments.subscriptions.cancel')
+            ->label('event', 'payments.subscription.[subscriptionId].cancel')
             ->label('audits.event', 'payments.subscription.cancel')
             ->label('audits.resource', 'payments/subscription/{request.subscriptionId}')
             ->label('sdk', new Method(
@@ -53,6 +56,7 @@ class Cancel extends Base
             ->inject('user')
             ->inject('registryPayments')
             ->inject('project')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -64,24 +68,21 @@ class Cancel extends Base
         Database $dbForProject,
         Document $user,
         Registry $registryPayments,
-        Document $project
+        Document $project,
+        Event $queueForEvents
     ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new AppwriteException(ExtendException::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $sub = $dbForProject->findOne('payments_subscriptions', [
             Query::equal('subscriptionId', [$subscriptionId])
         ]);
         if ($sub === null || $sub->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Subscription not found']);
-            return;
+            throw new AppwriteException(ExtendException::PAYMENT_SUBSCRIPTION_NOT_FOUND);
         }
 
         // Authorization for JWT user: must be owner/billing on team or owner (self) on user
@@ -90,9 +91,7 @@ class Cancel extends Base
             $actorId = (string) $sub->getAttribute('actorId', '');
             if ($actorType === 'user') {
                 if ($user->getId() !== $actorId) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Not allowed to cancel this subscription']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Not allowed to cancel this subscription');
                 }
             } elseif ($actorType === 'team') {
                 $membership = $dbForProject->findOne('memberships', [
@@ -100,29 +99,25 @@ class Cancel extends Base
                     Query::equal('userId', [$user->getId()])
                 ]);
                 if ($membership === null || $membership->isEmpty()) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Not a member of the team']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Not a member of the team');
                 }
                 $roles = (array) $membership->getAttribute('roles', []);
                 if (!in_array('owner', $roles, true) && !in_array('billing', $roles, true)) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Requires owner or billing role']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Requires owner or billing role');
                 }
             }
         }
         // Provider cancel
-        $payments = (array) $project->getAttribute('payments', []);
-        $providers = (array) ($payments['providers'] ?? []);
+        $providers = (array) ($paymentsCfg['providers'] ?? []);
         $primary = array_key_first($providers);
         if ($primary) {
             $config = (array) ($providers[$primary] ?? []);
             $provMap = (array) $sub->getAttribute('providers', []);
-            $subscriptionRef = (string) ((array) ($provMap[(string) $primary] ?? []))['providerSubscriptionId'] ?? '';
+            $providerData = (array) ($provMap[(string) $primary] ?? []);
+            $subscriptionRef = (string) ($providerData['providerSubscriptionId'] ?? '');
             if ($subscriptionRef !== '') {
                 $state = new ProviderState((string) $primary, $config, (array) ($config['state'] ?? []));
-                $adapter = $registryPayments->get((string) $primary, $config, $project, $dbForPlatform, $dbForProject);
+                $adapter = $registryPayments->get((string) $primary, $config, $projDoc, $dbForPlatform, $dbForProject);
                 $adapter->cancelSubscription(new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef), $endAtPeriodEnd, $state);
             }
         }
@@ -135,6 +130,11 @@ class Cancel extends Base
             $sub->setAttribute('canceledAt', date('c'));
         }
         $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
+
+        $queueForEvents
+            ->setParam('subscriptionId', $subscriptionId)
+            ->setPayload($sub->getArrayCopy());
+
         $response->noContent();
     }
 }

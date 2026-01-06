@@ -31,9 +31,6 @@ class XList extends Base
             ->desc('List usage events')
             ->label('scope', 'payments.read')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
-            ->label('event', 'payments.usage.events.list')
-            ->label('audits.event', 'payments.usage.events.list')
-            ->label('audits.resource', 'payments/usage/events')
             ->label('sdk', new Method(
                 namespace: 'payments',
                 group: 'usage',

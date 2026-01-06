@@ -371,6 +371,7 @@ class Response extends SwooleResponse
     public const MODEL_PAYMENT_SUBSCRIPTION_LIST = 'paymentSubscriptionList';
     public const MODEL_PAYMENT_PLAN_LIST = 'paymentPlanList';
     public const MODEL_PAYMENT_FEATURE_LIST = 'paymentFeatureList';
+    public const MODEL_PAYMENT_PROVIDER_CONFIG = 'paymentProviderConfig';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
@@ -570,6 +571,7 @@ class Response extends SwooleResponse
             ->setModel(new \Appwrite\Utopia\Response\Model\PaymentPlan())
             ->setModel(new \Appwrite\Utopia\Response\Model\PaymentFeature())
             ->setModel(new \Appwrite\Utopia\Response\Model\PaymentSubscription())
+            ->setModel(new \Appwrite\Utopia\Response\Model\PaymentProviderConfig())
             ->setModel(new BaseList('Payment Subscription List', self::MODEL_PAYMENT_SUBSCRIPTION_LIST, 'subscriptions', self::MODEL_PAYMENT_SUBSCRIPTION, true, false))
             ->setModel(new BaseList('Payment Plan List', self::MODEL_PAYMENT_PLAN_LIST, 'plans', self::MODEL_PAYMENT_PLAN, true, false))
             ->setModel(new BaseList('Payment Feature List', self::MODEL_PAYMENT_FEATURE_LIST, 'features', self::MODEL_PAYMENT_FEATURE, true, false))

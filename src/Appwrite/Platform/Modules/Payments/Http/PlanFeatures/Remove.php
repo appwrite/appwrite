@@ -73,9 +73,7 @@ class Remove extends Base
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $assignment = $dbForProject->findOne('payments_plan_features', [
@@ -83,9 +81,7 @@ class Remove extends Base
             Query::equal('featureId', [$featureId])
         ]);
         if ($assignment === null || $assignment->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Assignment not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_NOT_FOUND, 'Assignment not found');
         }
         // Attempt deprovision: deactivate provider price if tracked
         $plan = $dbForProject->findOne('payments_plans', [

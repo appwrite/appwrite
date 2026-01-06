@@ -379,6 +379,16 @@ class Exception extends \Exception
     public const string TOKEN_EXPIRED = 'token_expired';
     public const string TOKEN_RESOURCE_TYPE_INVALID = 'token_resource_type_invalid';
 
+    /** Payments */
+    public const string PAYMENT_PLAN_NOT_FOUND = 'payment_plan_not_found';
+    public const string PAYMENT_PLAN_ALREADY_EXISTS = 'payment_plan_already_exists';
+    public const string PAYMENT_SUBSCRIPTION_NOT_FOUND = 'payment_subscription_not_found';
+    public const string PAYMENT_SUBSCRIPTION_ALREADY_EXISTS = 'payment_subscription_already_exists';
+    public const string PAYMENT_PROVIDER_NOT_CONFIGURED = 'payment_provider_not_configured';
+    public const string PAYMENT_PROVIDER_ALREADY_CONFIGURED = 'payment_provider_already_configured';
+    public const string PAYMENT_WEBHOOK_FAILED = 'payment_webhook_failed';
+    public const string PAYMENT_FEATURE_NOT_FOUND = 'payment_feature_not_found';
+
     protected string $type = '';
     protected array $errors = [];
     protected bool $publish;
@@ -387,9 +397,9 @@ class Exception extends \Exception
 
     public function __construct(
         string $type = Exception::GENERAL_UNKNOWN,
-        string $message = null,
-        int|string $code = null,
-        \Throwable $previous = null,
+        ?string $message = null,
+        int|string|null $code = null,
+        ?\Throwable $previous = null,
         ?string $view = null
     ) {
         $this->errors = Config::getParam('errors');

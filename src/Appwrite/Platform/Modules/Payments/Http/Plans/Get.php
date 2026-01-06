@@ -60,9 +60,7 @@ class Get extends Base
         ]);
 
         if ($plan === null || $plan->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Plan not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_PLAN_NOT_FOUND);
         }
 
         $response->dynamic($plan, Response::MODEL_PAYMENT_PLAN);

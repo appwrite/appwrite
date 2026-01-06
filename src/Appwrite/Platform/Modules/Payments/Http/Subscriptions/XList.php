@@ -70,9 +70,11 @@ class XList extends Base
         if ($status !== '') {
             $filters[] = Query::equal('status', [$status]);
         }
-        $list = $dbForProject->find('payments_subscriptions', $filters);
+        $subscriptions = $dbForProject->find('payments_subscriptions', $filters);
+
+        // Collect unique plan IDs and fetch plans
         $plansById = [];
-        foreach ($list as $sub) {
+        foreach ($subscriptions as $sub) {
             $planId = (string) $sub->getAttribute('planId', '');
             if ($planId !== '' && !isset($plansById[$planId])) {
                 $plan = $dbForProject->findOne('payments_plans', [
@@ -83,15 +85,18 @@ class XList extends Base
                 }
             }
         }
-        $subs = [];
-        foreach ($list as $sub) {
-            $arr = $sub->getArrayCopy();
-            $planId = (string) ($arr['planId'] ?? '');
+
+        // Enrich subscriptions with plan Documents
+        foreach ($subscriptions as $sub) {
+            $planId = (string) $sub->getAttribute('planId', '');
             if ($planId !== '' && isset($plansById[$planId])) {
-                $arr['plan'] = $plansById[$planId]->getArrayCopy();
+                $sub->setAttribute('plan', $plansById[$planId]);
             }
-            $subs[] = $arr;
         }
-        $response->dynamic(new Document(['total' => count($subs), 'subscriptions' => $subs]), Response::MODEL_PAYMENT_SUBSCRIPTION_LIST);
+
+        $response->dynamic(new Document([
+            'subscriptions' => $subscriptions,
+            'total' => count($subscriptions),
+        ]), Response::MODEL_PAYMENT_SUBSCRIPTION_LIST);
     }
 }

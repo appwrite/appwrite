@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Payments\Http\PlanFeatures;
+namespace Appwrite\Platform\Modules\Payments\Http\Features;
 
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -13,54 +13,56 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
-class XList extends Base
+class Get extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'listPaymentPlanFeatures';
+        return 'getPaymentFeature';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/payments/plans/:planId/features')
+            ->setHttpPath('/v1/payments/features/:featureId')
             ->groups(['api', 'payments'])
-            ->desc('List plan features')
+            ->desc('Get payment feature')
             ->label('scope', 'payments.read')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
             ->label('sdk', new Method(
                 namespace: 'payments',
-                group: 'planFeatures',
-                name: 'list',
-                description: 'List features assigned to a plan',
+                group: 'features',
+                name: 'get',
+                description: 'Get a payment feature',
                 auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_FEATURE,
                     )
                 ]
             ))
-            ->param('planId', '', new Text(128), 'Plan ID')
+            ->param('featureId', '', new Text(128), 'Feature ID')
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
     public function action(
-        string $planId,
+        string $featureId,
         Response $response,
         Database $dbForProject
     ) {
-        $items = $dbForProject->find('payments_plan_features', [
-            Query::equal('planId', [$planId])
+        $feature = $dbForProject->findOne('payments_features', [
+            Query::equal('featureId', [$featureId])
         ]);
-        $response->json([
-            'total' => count($items),
-            'features' => array_map(fn ($d) => $d->getArrayCopy(), $items)
-        ]);
+
+        if ($feature === null || $feature->isEmpty()) {
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_FEATURE_NOT_FOUND);
+        }
+
+        $response->dynamic($feature, Response::MODEL_PAYMENT_FEATURE);
     }
 }

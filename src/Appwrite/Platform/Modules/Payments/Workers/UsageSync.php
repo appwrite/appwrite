@@ -30,10 +30,31 @@ class UsageSync extends Action
 
     public function action(Database $dbForPlatform, Database $dbForProject, Document $project, ProviderRegistry $registryPayments): void
     {
+        // Query for both pending and retry_pending events
         $pending = $dbForProject->find('payments_usage_events', [
             Query::equal('providerSyncState', ['pending']),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]);
+
+        // Query for retry_pending events that are ready to be retried
+        $now = time();
+        $retryPending = $dbForProject->find('payments_usage_events', [
+            Query::equal('providerSyncState', ['retry_pending']),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+
+        // Filter retry_pending events to only include those whose nextRetryAt has passed
+        $retryReady = [];
+        foreach ($retryPending as $event) {
+            $meta = (array) $event->getAttribute('metadata', []);
+            $nextRetryAt = (int) ($meta['nextRetryAt'] ?? 0);
+            if ($nextRetryAt <= $now) {
+                $retryReady[] = $event;
+            }
+        }
+
+        // Merge pending and retry-ready events
+        $allEvents = array_merge($pending, $retryReady);
 
         $payments = (array) $project->getAttribute('payments', []);
         $providers = (array) ($payments['providers'] ?? []);
@@ -46,7 +67,7 @@ class UsageSync extends Action
 
         $adapter = $registryPayments->get((string) $primary, $config, $project, $dbForPlatform, $dbForProject);
 
-        foreach ($pending as $event) {
+        foreach ($allEvents as $event) {
             try {
                 $subscriptionId = (string) $event->getAttribute('subscriptionId', '');
                 $featureId = (string) $event->getAttribute('featureId', '');
@@ -58,21 +79,22 @@ class UsageSync extends Action
                     Query::equal('subscriptionId', [$subscriptionId])
                 ]);
                 if ($sub === null || $sub->isEmpty()) {
-                    // Mark failed with reason
+                    // Mark as failed_permanent for non-retryable errors
                     $meta = (array) $event->getAttribute('metadata', []);
                     $meta['error'] = 'Subscription not found';
                     $event->setAttribute('metadata', $meta);
-                    $event->setAttribute('providerSyncState', 'failed');
+                    $event->setAttribute('providerSyncState', 'failed_permanent');
                     $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
                     continue;
                 }
                 $provMap = (array) $sub->getAttribute('providers', []);
-                $providerSubId = (string) ((array) ($provMap[(string) $primary] ?? []))['subscriptionId'] ?? '';
+                $providerData = (array) ($provMap[(string) $primary] ?? []);
+                $providerSubId = (string) ($providerData['providerSubscriptionId'] ?? '');
                 if ($providerSubId === '') {
                     $meta = (array) $event->getAttribute('metadata', []);
                     $meta['error'] = 'Provider subscription missing';
                     $event->setAttribute('metadata', $meta);
-                    $event->setAttribute('providerSyncState', 'failed');
+                    $event->setAttribute('providerSyncState', 'failed_permanent');
                     $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
                     continue;
                 }
@@ -87,11 +109,28 @@ class UsageSync extends Action
                 $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
             } catch (\Throwable $e) {
                 $meta = (array) $event->getAttribute('metadata', []);
+                $retries = (int) ($meta['retries'] ?? 0);
+                $retries++;
+
                 $meta['error'] = $e->getMessage();
                 $meta['lastTriedAt'] = date('c');
-                $meta['retries'] = (int) ($meta['retries'] ?? 0) + 1;
+                $meta['retries'] = $retries;
+
+                // Implement exponential backoff: min(pow(2, retries) * 60, 3600) seconds
+                $backoffSeconds = min(pow(2, $retries) * 60, 3600);
+                $meta['nextRetryAt'] = $now + (int) $backoffSeconds;
+
                 $event->setAttribute('metadata', $meta);
-                $event->setAttribute('providerSyncState', 'failed');
+
+                // Check if max retries (5) exceeded
+                if ($retries >= 5) {
+                    // Mark as failed_permanent after max retries
+                    $event->setAttribute('providerSyncState', 'failed_permanent');
+                } else {
+                    // Mark as retry_pending for future retry
+                    $event->setAttribute('providerSyncState', 'retry_pending');
+                }
+
                 $dbForProject->updateDocument('payments_usage_events', $event->getId(), $event);
             }
         }

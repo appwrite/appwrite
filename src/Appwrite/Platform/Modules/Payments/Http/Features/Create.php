@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Features;
 
+use Appwrite\AppwriteException;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -43,7 +46,7 @@ class Create extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_FEATURE,
                     )
                 ]
             ))
@@ -55,6 +58,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('project')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -66,15 +70,14 @@ class Create extends Base
         Response $response,
         Database $dbForPlatform,
         Database $dbForProject,
-        Document $project
+        Document $project,
+        Event $queueForEvents
     ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new AppwriteException(ExtendException::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $doc = new Document([
@@ -85,7 +88,12 @@ class Create extends Base
             'providers' => []
         ]);
         $created = $dbForProject->createDocument('payments_features', $doc);
+
+        $queueForEvents
+            ->setParam('featureId', $featureId)
+            ->setPayload($created->getArrayCopy());
+
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->json($created->getArrayCopy());
+        $response->dynamic($created, Response::MODEL_PAYMENT_FEATURE);
     }
 }

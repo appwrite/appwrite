@@ -8,6 +8,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -40,7 +41,7 @@ class XList extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_FEATURE_LIST,
                     )
                 ]
             ))
@@ -60,9 +61,9 @@ class XList extends Base
             $filters[] = Query::search('name', $search);
         }
         $list = $dbForProject->find('payments_features', $filters);
-        $response->json([
+        $response->dynamic(new Document([
             'total' => count($list),
-            'features' => array_map(fn ($d) => $d->getArrayCopy(), $list)
-        ]);
+            'features' => $list
+        ]), Response::MODEL_PAYMENT_FEATURE_LIST);
     }
 }

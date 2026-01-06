@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
+namespace Appwrite\Platform\Modules\Payments\Http\ActorFeatures;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -22,31 +22,31 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getPaymentSubscription';
+        return 'getActorFeatures';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/payments/subscriptions/:actorType/:actorId')
-            ->httpAlias('/v1/payments/subscriptions')
-            ->httpAlias('/v1/payments/subscriptions/current')
-            ->httpAlias('/v1/payments/subscriptions/me')
+            ->setHttpPath('/v1/payments/actors/:actorType/:actorId/features')
+            ->httpAlias('/v1/payments/actors/features')
+            ->httpAlias('/v1/payments/actors/current/features')
+            ->httpAlias('/v1/payments/actors/me/features')
             ->groups(['api', 'payments'])
-            ->desc('Get subscription')
+            ->desc('Get features for an actor')
             ->label('scope', 'payments.read')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
             ->label('sdk', new Method(
                 namespace: 'payments',
-                group: 'subscriptions',
+                group: 'actorFeatures',
                 name: 'get',
-                description: 'Get a subscription',
+                description: 'Get features available to an actor (user/team) based on their subscription plan',
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PAYMENT_SUBSCRIPTION,
+                        model: Response::MODEL_ANY,
                     )
                 ]
             ))
@@ -83,6 +83,7 @@ class Get extends Base
         $isAPIKey = Auth::isAppUser($roles);
         $isPrivileged = Auth::isPrivilegedUser($roles);
 
+        // Authorization: Handle user actor type
         if ($actorType === 'user') {
             if ($actorId === '' || $actorId === 'current' || $actorId === 'me') {
                 if ($user->isEmpty()) {
@@ -94,15 +95,17 @@ class Get extends Base
                 }
                 $actorId = $user->getId();
             } elseif (!$isAPIKey && !$isPrivileged) {
+                // Non-privileged users can only access their own features
                 if ($user->isEmpty() || $user->getId() !== $actorId) {
-                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::USER_UNAUTHORIZED, 'Not allowed to access this subscription');
+                    throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::USER_UNAUTHORIZED, 'Not allowed to access this actor\'s features');
                 }
             }
         }
 
+        // Authorization: Handle team actor type
         if ($actorType === 'team') {
             if ($actorId === '') {
-                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'actorId required for team subscriptions');
+                throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_BAD_REQUEST, 'actorId required for team features');
             }
 
             if (!$isAPIKey && !$isPrivileged) {
@@ -110,6 +113,7 @@ class Get extends Base
                     throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::USER_UNAUTHORIZED, 'Login required');
                 }
 
+                // Verify user is a member of the team
                 $membership = $dbForProject->findOne('memberships', [
                     Query::equal('teamId', [$actorId]),
                     Query::equal('userId', [$user->getId()])
@@ -121,6 +125,7 @@ class Get extends Base
             }
         }
 
+        // Verify the actor exists
         if ($actorId !== '') {
             $collection = $actorType === 'team' ? 'teams' : 'users';
             $actor = $dbForProject->getDocument($collection, $actorId);
@@ -131,6 +136,7 @@ class Get extends Base
             }
         }
 
+        // Get the actor's subscription
         $queries = [
             Query::equal('actorType', [$actorType]),
             Query::equal('actorId', [$actorId]),
@@ -142,6 +148,7 @@ class Get extends Base
         $subscriptions = $dbForProject->find('payments_subscriptions', $queries);
         $subscription = $subscriptions[0] ?? null;
 
+        // Determine active subscription
         $activeSubscription = null;
         if ($subscription instanceof Document && !$subscription->isEmpty()) {
             $status = strtolower((string) $subscription->getAttribute('status', ''));
@@ -150,6 +157,7 @@ class Get extends Base
             }
         }
 
+        // Get the plan ID (default to 'free' if no active subscription)
         $planId = '';
         if ($activeSubscription instanceof Document) {
             $planId = (string) $activeSubscription->getAttribute('planId', '');
@@ -158,46 +166,66 @@ class Get extends Base
             $planId = 'free';
         }
 
-        $planData = null;
+        // Fetch plan features
         $features = [];
-
-        $plan = $dbForProject->findOne('payments_plans', [
-            Query::equal('planId', [$planId])
+        $planFeatures = $dbForProject->find('payments_plan_features', [
+            Query::equal('planId', [$planId]),
+            Query::equal('enabled', [true]),
         ]);
-        if ($plan && !$plan->isEmpty()) {
-            $planData = $plan->getArrayCopy();
 
-            $planFeatures = $dbForProject->find('payments_plan_features', [
-                Query::equal('planId', [$planId]),
-                Query::equal('enabled', [true]),
+        foreach ($planFeatures as $planFeatureDoc) {
+            if (!$planFeatureDoc instanceof Document) {
+                continue;
+            }
+
+            $featureId = (string) $planFeatureDoc->getAttribute('featureId', '');
+
+            // Get feature details from payments_features collection
+            $featureDetails = $dbForProject->findOne('payments_features', [
+                Query::equal('featureId', [$featureId])
             ]);
 
-            foreach ($planFeatures as $featureDoc) {
-                if (!$featureDoc instanceof Document) {
-                    continue;
-                }
-                $featureId = (string) $featureDoc->getAttribute('featureId', '');
-                $featureDetails = $dbForProject->findOne('payments_features', [
-                    Query::equal('featureId', [$featureId])
-                ]);
-
-                $features[] = [
-                    'featureId' => $featureId,
-                    'name' => $featureDetails?->getAttribute('name'),
-                    'description' => $featureDetails?->getAttribute('description'),
-                    'type' => $featureDoc->getAttribute('type'),
-                    'includedUnits' => $featureDoc->getAttribute('includedUnits'),
-                    'usageCap' => $featureDoc->getAttribute('usageCap'),
-                    'tiersMode' => $featureDoc->getAttribute('tiersMode'),
-                    'tiers' => $featureDoc->getAttribute('tiers'),
-                    'currency' => $featureDoc->getAttribute('currency'),
-                    'interval' => $featureDoc->getAttribute('interval'),
-                ];
+            if (!$featureDetails || $featureDetails->isEmpty()) {
+                continue;
             }
+
+            // Build comprehensive feature information
+            $feature = [
+                'featureId' => $featureId,
+                'name' => $featureDetails->getAttribute('name', ''),
+                'description' => $featureDetails->getAttribute('description', ''),
+                'type' => $planFeatureDoc->getAttribute('type', 'boolean'),
+                'enabled' => true,
+            ];
+
+            // Add metered feature details if applicable
+            if ($planFeatureDoc->getAttribute('type') === 'metered') {
+                $feature['includedUnits'] = $planFeatureDoc->getAttribute('includedUnits', 0);
+                $feature['usageCap'] = $planFeatureDoc->getAttribute('usageCap', null);
+                $feature['tiersMode'] = $planFeatureDoc->getAttribute('tiersMode', '');
+                $feature['tiers'] = $planFeatureDoc->getAttribute('tiers', []);
+                $feature['currency'] = $planFeatureDoc->getAttribute('currency', '');
+                $feature['interval'] = $planFeatureDoc->getAttribute('interval', '');
+            }
+
+            $features[] = $feature;
         }
 
-        $subscriptionDoc = $activeSubscription instanceof Document ? $activeSubscription : new Document([]);
+        // Sanitize features to ensure proper JSON encoding
+        $featuresSanitized = [];
+        foreach ($features as $feature) {
+            $sanitized = json_decode(json_encode($feature), false);
+            $featuresSanitized[] = $sanitized ?? new \stdClass();
+        }
 
-        $response->dynamic($subscriptionDoc, Response::MODEL_PAYMENT_SUBSCRIPTION);
+        $payload = [
+            'actorType' => $actorType,
+            'actorId' => $actorId,
+            'planId' => $planId,
+            'total' => count($featuresSanitized),
+            'features' => $featuresSanitized,
+        ];
+
+        $response->json($payload);
     }
 }

@@ -46,29 +46,54 @@ class PaymentSubscription extends Model
                 'default' => 'active',
                 'example' => 'active',
             ])
-            ->addRule('providers', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Provider refs.',
-                'default' => new \stdClass(),
-                'example' => new \stdClass(),
+            ->addRule('trialEndsAt', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Trial end date.',
+                'default' => '',
+                'example' => '2023-12-31T23:59:59.000Z',
+            ])
+            ->addRule('currentPeriodStart', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Current billing period start date.',
+                'default' => '',
+                'example' => '2023-12-01T00:00:00.000Z',
+            ])
+            ->addRule('currentPeriodEnd', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Current billing period end date.',
+                'default' => '',
+                'example' => '2023-12-31T23:59:59.000Z',
+            ])
+            ->addRule('cancelAtPeriodEnd', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether subscription will cancel at period end.',
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('canceledAt', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Cancellation date.',
+                'default' => '',
+                'example' => '2023-12-31T23:59:59.000Z',
+            ])
+            ->addRule('checkoutUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Checkout URL for completing subscription payment (only returned on creation).',
+                'default' => '',
+                'example' => 'https://checkout.stripe.com/c/pay/cs_test_...',
             ])
             ->addRule('plan', [
-                'type' => self::TYPE_JSON,
+                'type' => Response::MODEL_PAYMENT_PLAN,
                 'description' => 'Embedded plan model.',
-                'default' => new \stdClass(),
-                'example' => new \stdClass(),
+                'default' => null,
+                'example' => [],
             ])
             ->addRule('features', [
-                'type' => self::TYPE_JSON,
+                'type' => Response::MODEL_PAYMENT_FEATURE,
                 'description' => 'Feature quotas for the subscribed plan.',
                 'default' => [],
                 'example' => [],
-            ])
-            ->addRule('subscription', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Raw subscription document data.',
-                'default' => new \stdClass(),
-                'example' => new \stdClass(),
+                'array' => true,
             ]);
     }
 

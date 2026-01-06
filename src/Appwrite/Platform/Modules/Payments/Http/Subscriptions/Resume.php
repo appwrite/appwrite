@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
+use Appwrite\AppwriteException;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -33,7 +36,7 @@ class Resume extends Base
             ->desc('Resume subscription')
             ->label('scope', 'payments.subscribe')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
-            ->label('event', 'payments.subscriptions.resume')
+            ->label('event', 'payments.subscription.[subscriptionId].resume')
             ->label('audits.event', 'payments.subscription.resume')
             ->label('audits.resource', 'payments/subscription/{request.subscriptionId}')
             ->label('sdk', new Method(
@@ -51,6 +54,7 @@ class Resume extends Base
             ->inject('user')
             ->inject('registryPayments')
             ->inject('project')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -61,24 +65,21 @@ class Resume extends Base
         Database $dbForProject,
         Document $user,
         Registry $registryPayments,
-        Document $project
+        Document $project,
+        Event $queueForEvents
     ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new AppwriteException(ExtendException::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $sub = $dbForProject->findOne('payments_subscriptions', [
             Query::equal('subscriptionId', [$subscriptionId])
         ]);
         if ($sub === null || $sub->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Subscription not found']);
-            return;
+            throw new AppwriteException(ExtendException::PAYMENT_SUBSCRIPTION_NOT_FOUND);
         }
 
         if (!$user->isEmpty()) {
@@ -86,9 +87,7 @@ class Resume extends Base
             $actorId = (string) $sub->getAttribute('actorId', '');
             if ($actorType === 'user') {
                 if ($user->getId() !== $actorId) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Not allowed to resume this subscription']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Not allowed to resume this subscription');
                 }
             } elseif ($actorType === 'team') {
                 $membership = $dbForProject->findOne('memberships', [
@@ -96,15 +95,11 @@ class Resume extends Base
                     Query::equal('userId', [$user->getId()])
                 ]);
                 if ($membership === null || $membership->isEmpty()) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Not a member of the team']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Not a member of the team');
                 }
                 $roles = (array) $membership->getAttribute('roles', []);
                 if (!in_array('owner', $roles, true) && !in_array('billing', $roles, true)) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Requires owner or billing role']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Requires owner or billing role');
                 }
             }
         }
@@ -126,6 +121,11 @@ class Resume extends Base
         $sub->setAttribute('canceledAt', null);
         $sub->setAttribute('cancelAtPeriodEnd', false);
         $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
+
+        $queueForEvents
+            ->setParam('subscriptionId', $subscriptionId)
+            ->setPayload($sub->getArrayCopy());
+
         $response->noContent();
     }
 }

@@ -94,18 +94,14 @@ class Assign extends Base
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $plan = $dbForProject->findOne('payments_plans', [
             Query::equal('planId', [$planId])
         ]);
         if ($plan === null || $plan->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Plan not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_PLAN_NOT_FOUND);
         }
 
         // Infer feature type from existing feature document
@@ -113,9 +109,7 @@ class Assign extends Base
             Query::equal('featureId', [$featureId])
         ]);
         if ($feature === null || $feature->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Feature not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_FEATURE_NOT_FOUND);
         }
         $type = (string) strtolower((string) $feature->getAttribute('type', 'boolean'));
 

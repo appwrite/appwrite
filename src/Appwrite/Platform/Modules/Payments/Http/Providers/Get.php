@@ -39,7 +39,7 @@ class Get extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_PROVIDER_CONFIG,
                     )
                 ]
             ))
@@ -63,6 +63,6 @@ class Get extends Base
             }
         }
         $payments['providers'] = $providers;
-        $response->json(['payments' => $payments]);
+        $response->dynamic(new Document($payments), Response::MODEL_PAYMENT_PROVIDER_CONFIG);
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Subscriptions;
 
+use Appwrite\AppwriteException;
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception as ExtendException;
 use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -35,7 +38,7 @@ class Update extends Base
             ->desc('Update subscription')
             ->label('scope', 'payments.subscribe')
             ->label('resourceType', RESOURCE_TYPE_PAYMENTS)
-            ->label('event', 'payments.subscriptions.update')
+            ->label('event', 'payments.subscription.[subscriptionId].update')
             ->label('audits.event', 'payments.subscription.update')
             ->label('audits.resource', 'payments/subscription/{request.subscriptionId}')
             ->label('sdk', new Method(
@@ -47,7 +50,7 @@ class Update extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_SUBSCRIPTION,
                     )
                 ]
             ))
@@ -61,6 +64,7 @@ class Update extends Base
             ->inject('user')
             ->inject('registryPayments')
             ->inject('project')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -74,24 +78,21 @@ class Update extends Base
         Database $dbForProject,
         Document $user,
         Registry $registryPayments,
-        Document $project
+        Document $project,
+        Event $queueForEvents
     ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new AppwriteException(ExtendException::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $sub = $dbForProject->findOne('payments_subscriptions', [
             Query::equal('subscriptionId', [$subscriptionId])
         ]);
         if ($sub === null || $sub->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Subscription not found']);
-            return;
+            throw new AppwriteException(ExtendException::PAYMENT_SUBSCRIPTION_NOT_FOUND);
         }
 
         // Authorization: if acting as user (JWT), enforce actor ownership or team membership roles
@@ -100,9 +101,7 @@ class Update extends Base
             $actorId = (string) $sub->getAttribute('actorId', '');
             if ($actorType === 'user') {
                 if ($user->getId() !== $actorId) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Not allowed to modify this subscription']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Not allowed to modify this subscription');
                 }
             } elseif ($actorType === 'team') {
                 $membership = $dbForProject->findOne('memberships', [
@@ -110,15 +109,11 @@ class Update extends Base
                     Query::equal('userId', [$user->getId()])
                 ]);
                 if ($membership === null || $membership->isEmpty()) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Not a member of the team']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Not a member of the team');
                 }
                 $roles = (array) $membership->getAttribute('roles', []);
                 if (!in_array('owner', $roles, true) && !in_array('billing', $roles, true)) {
-                    $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-                    $response->json(['message' => 'Requires owner or billing role']);
-                    return;
+                    throw new AppwriteException(ExtendException::USER_UNAUTHORIZED, 'Requires owner or billing role');
                 }
             }
         }
@@ -129,7 +124,8 @@ class Update extends Base
         if ($primary) {
             $config = (array) ($providers[$primary] ?? []);
             $provMap = (array) $sub->getAttribute('providers', []);
-            $subscriptionRef = (string) ((array) ($provMap[(string) $primary] ?? []))['subscriptionId'] ?? '';
+            $providerData = (array) ($provMap[(string) $primary] ?? []);
+            $subscriptionRef = (string) ($providerData['providerSubscriptionId'] ?? '');
             if ($subscriptionRef !== '') {
                 $state = new ProviderState((string) $primary, $config, (array) ($config['state'] ?? []));
                 $adapter = $registryPayments->get((string) $primary, $config, $project, $dbForPlatform, $dbForProject);
@@ -140,9 +136,7 @@ class Update extends Base
                         Query::equal('planId', [$targetPlanId])
                     ]);
                     if ($plan === null || $plan->isEmpty()) {
-                        $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                        $response->json(['message' => 'Target plan not found']);
-                        return;
+                        throw new AppwriteException(ExtendException::PAYMENT_PLAN_NOT_FOUND);
                     }
                     $planProviders = (array) $plan->getAttribute('providers', []);
                     $planPricing = array_values((array) ($plan->getAttribute('pricing') ?? []));
@@ -185,9 +179,7 @@ class Update extends Base
                     }
 
                     if ($selectedPriceId === '' || !isset($providerPriceMap[$selectedPriceId])) {
-                        $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-                        $response->json(['message' => 'Price ID not configured for provider']);
-                        return;
+                        throw new AppwriteException(ExtendException::GENERAL_BAD_REQUEST, 'Price ID not configured for provider');
                     }
 
                     $providerPriceId = (string) $providerPriceMap[$selectedPriceId];
@@ -207,10 +199,19 @@ class Update extends Base
                 if ($cancelAtPeriodEnd) {
                     $adapter->cancelSubscription(new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef), true, $state);
                     $sub->setAttribute('cancelAtPeriodEnd', true);
+                } elseif (!$cancelAtPeriodEnd && $sub->getAttribute('cancelAtPeriodEnd', false) === true) {
+                    // Resume if explicitly setting to false while subscription is scheduled to cancel
+                    $adapter->resumeSubscription(new \Appwrite\Payments\Provider\ProviderSubscriptionRef($subscriptionRef), $state);
+                    $sub->setAttribute('cancelAtPeriodEnd', false);
                 }
             }
         }
         $sub = $dbForProject->updateDocument('payments_subscriptions', $sub->getId(), $sub);
-        $response->json($sub->getArrayCopy());
+
+        $queueForEvents
+            ->setParam('subscriptionId', $subscriptionId)
+            ->setPayload($sub->getArrayCopy());
+
+        $response->dynamic($sub, Response::MODEL_PAYMENT_SUBSCRIPTION);
     }
 }

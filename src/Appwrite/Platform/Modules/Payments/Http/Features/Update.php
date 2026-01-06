@@ -44,7 +44,7 @@ class Update extends Base
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_ANY,
+                        model: Response::MODEL_PAYMENT_FEATURE,
                     )
                 ]
             ))
@@ -73,18 +73,14 @@ class Update extends Base
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $feature = $dbForProject->findOne('payments_features', [
             Query::equal('featureId', [$featureId])
         ]);
         if ($feature === null || $feature->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Feature not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_FEATURE_NOT_FOUND);
         }
         if ($name !== '') {
             $feature->setAttribute('name', $name);
@@ -96,6 +92,6 @@ class Update extends Base
             $feature->setAttribute('description', $description);
         }
         $feature = $dbForProject->updateDocument('payments_features', $feature->getId(), $feature);
-        $response->json($feature->getArrayCopy());
+        $response->dynamic($feature, Response::MODEL_PAYMENT_FEATURE);
     }
 }

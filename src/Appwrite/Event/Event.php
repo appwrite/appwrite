@@ -45,6 +45,9 @@ class Event
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
     public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
 
+    public const PAYMENTS_USAGE_QUEUE_NAME = 'v1-payments-usage-sync';
+    public const PAYMENTS_USAGE_CLASS_NAME = 'PaymentsUsageSyncV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';

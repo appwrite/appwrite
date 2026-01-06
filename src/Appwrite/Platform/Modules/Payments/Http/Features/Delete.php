@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Payments\Http\Features;
 
+use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -47,6 +48,7 @@ class Delete extends Base
             ->inject('dbForPlatform')
             ->inject('dbForProject')
             ->inject('project')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -55,26 +57,29 @@ class Delete extends Base
         Response $response,
         Database $dbForPlatform,
         Database $dbForProject,
-        Document $project
+        Document $project,
+        Event $queueForEvents
     ) {
         // Feature flag: block if payments disabled for project
         $projDoc = $dbForPlatform->getDocument('projects', $project->getId());
         $paymentsCfg = (array) $projDoc->getAttribute('payments', []);
         if (isset($paymentsCfg['enabled']) && $paymentsCfg['enabled'] === false) {
-            $response->setStatusCode(Response::STATUS_CODE_FORBIDDEN);
-            $response->json(['message' => 'Payments feature is disabled for this project']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::GENERAL_ACCESS_FORBIDDEN, 'Payments feature is disabled for this project');
         }
 
         $feature = $dbForProject->findOne('payments_features', [
             Query::equal('featureId', [$featureId])
         ]);
         if ($feature === null || $feature->isEmpty()) {
-            $response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-            $response->json(['message' => 'Feature not found']);
-            return;
+            throw new \Appwrite\AppwriteException(\Appwrite\Extend\Exception::PAYMENT_FEATURE_NOT_FOUND);
         }
         $dbForProject->deleteDocument('payments_features', $feature->getId());
+
+        $queueForEvents
+            ->setEvent('payments.[featureId].delete')
+            ->setParam('featureId', $featureId)
+            ->setPayload(['featureId' => $featureId]);
+
         $response->noContent();
     }
 }
