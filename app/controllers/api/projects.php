@@ -1500,8 +1500,6 @@ App::post('/v1/projects/:projectId/keys')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
             'resourceInternalId' => $project->getSequence(),
             'resourceId' => $project->getId(),
             'resourceType' => 'projects',
