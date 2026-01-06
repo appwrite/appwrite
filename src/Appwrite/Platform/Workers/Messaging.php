@@ -558,19 +558,7 @@ class Messaging extends Action
             }
         }
 
-        $to = $message['to'] ?? [];
-        // Ensure $to is non-empty to satisfy Resend
-        if (empty($to)) {
-            if (!empty($bcc)) {
-                // Move first BCC email to TO
-                $to[] = $bcc[0]['email'] ?? $bcc[0];
-                array_shift($bcc);
-            } else {
-                // Fallback no-reply address
-                $to[] = 'no-reply@appwrite.io';
-            }
-        }
-
+       
 
 
 
@@ -618,6 +606,21 @@ class Messaging extends Action
         $subject = $data['subject'];
         $content = $data['content'];
         $html = $data['html'] ?? false;
+
+
+         $to = $message['to'] ?? [];
+        // Ensure $to is non-empty to satisfy Resend
+        if (empty($to)) {
+            if (!empty($bcc)) {
+                // Move first BCC email to TO
+                $to[] = $bcc[0]['email'] ?? $bcc[0];
+                array_shift($bcc);
+            } else {
+                // Fallback no-reply address
+                $to[] = 'no-reply@appwrite.io';
+            }
+        }
+
 
         // For SMTP, move all recipients to BCC and use default recipient in TO field
         if ($provider->getAttribute('provider') === 'smtp') {
