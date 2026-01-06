@@ -2,6 +2,8 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\MockNumber;
+use Appwrite\Auth\Authorization;
+use Appwrite\Auth\User;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
@@ -100,24 +102,41 @@ App::post('/v1/projects')
     ->inject('pools')
     ->inject('hooks')
     ->inject('logger')
+    ->inject('authorization')
+
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description,
      string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, 
      string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, 
-     Group $pools, Hooks $hooks, Logger $logger) {
-
+     Group $pools, Hooks $hooks, Authorization $authorization) {
 
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
         // Force default region if called from migration
-        $migrationHeader = $request->getHeader('X-Migration');
+        // $migrationHeader = $request->getHeader('X-Migration');
 
-        if ($migrationHeader === 'true') {
-            $logger->info('Migration request detected. Forcing project region to default.', [
+        // if ($migrationHeader === 'true') {
+        //     $logger->info('Migration request detected. Forcing project region to default.', [
+        //         'originalRegion' => $region,
+        //     ]);
+
+        //     $region = 'default';
+        // }
+        $migrationHeader = $request->getHeader('X-Migration');
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles()) 
+            || User::isApp($authorization->getRoles());
+
+        if ($migrationHeader === 'true' && $isPrivilegedUser) {
+            $this->logger->info('Migration override detected. Forcing project region to default.', [
                 'originalRegion' => $region,
+                'route' => 'POST /v1/projects',
             ]);
 
             $region = 'default';
         }
+
+
+        
+
 
 
         if ($team->isEmpty()) {
