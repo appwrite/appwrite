@@ -75,13 +75,14 @@ class XList extends Action
             ->param('ttl', 30, new Range(min: 1, max: 86400), 'TTL (seconds) for cached respnses when caching is enabled. Must be between 1 and 86400 (24 hours).', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('user')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, bool $cache, int $ttl, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, bool $cache, int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
     {
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -146,13 +147,15 @@ class XList extends Action
                     }
 
                     $hostname = $dbForProject->getAdapter()->getHostname();
+                    $userId = $user->getId() ?? '';
                     $cacheKeyBase = \sprintf(
-                        '%s-cache-%s:%s:%s:collection:%s:%s',
+                        '%s-cache-%s:%s:%s:collection:%s:user:%s:%s',
                         $dbForProject->getCacheName(),
                         $hostname ?? '',
                         $dbForProject->getNamespace(),
                         $dbForProject->getTenant(),
                         $collectionId,
+                        $userId,
                         \md5(\json_encode($serializedQueries))
                     );
 
