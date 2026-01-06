@@ -72,37 +72,45 @@ class TokensConsoleClientTest extends Scope
         $this->assertEquals(400, $token['headers']['status-code']);
         $this->assertStringContainsString('Value must be valid date in the future', $token['body']['message']);
 
-        // Success case: No expire date
-        $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'expire' => null,
-        ]);
+        // Success cases: With & without expiry
+        $expireList = [null, date('Y-m-d', strtotime("tomorrow"))];
+        foreach ($expireList as $expire) {
+            $token = $this->client->call(Client::METHOD_POST, '/tokens/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ], $this->getHeaders()), [
+                'expire' => $expire,
+            ]);
 
-        $this->assertEquals(201, $token['headers']['status-code']);
-        $this->assertEquals('files', $token['body']['resourceType']);
-        $this->assertNotEmpty($token['body']['$id']);
-        $this->assertNotEmpty($token['body']['secret']);
+            $this->assertEquals(201, $token['headers']['status-code']);
+            $this->assertEquals('files', $token['body']['resourceType']);
+            $this->assertNotEmpty($token['body']['$id']);
+            $this->assertNotEmpty($token['body']['secret']);
 
-        // Verify the generated token JWT contains correct resource information
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
-        try {
-            $payload = $jwt->decode($token['body']['secret']);
-            $this->assertIsArray($payload, 'JWT payload should decode to an array');
-            $this->assertArrayHasKey('tokenId', $payload, 'JWT payload should contain tokenId');
-            $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
-            $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');
-            $this->assertArrayHasKey('resourceInternalId', $payload, 'JWT payload should contain resourceInternalId');
+            // Verify the generated token JWT contains correct resource information
+            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400 * 365 * 10, 10); // 10 years maxAge
+            try {
+                $payload = $jwt->decode($token['body']['secret']);
+                $this->assertIsArray($payload, 'JWT payload should decode to an array');
+                $this->assertArrayHasKey('tokenId', $payload, 'JWT payload should contain tokenId');
+                $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
+                $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');
+                $this->assertArrayHasKey('resourceInternalId', $payload, 'JWT payload should contain resourceInternalId');
+                $this->assertArrayHasKey('iat', $payload, 'JWT payload should contain iat');
 
-            $this->assertEquals($token['body']['$id'], $payload['tokenId'], 'JWT tokenId should match token ID');
-            $this->assertEquals($bucketId . ':' . $fileId, $payload['resourceId'], 'JWT resourceId should match bucketId:fileId format');
-            $this->assertEquals('files', $payload['resourceType'], 'JWT resourceType should be files');
+                if (!empty($expire)) {
+                    $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp');
+                } else {
+                    $this->assertArrayNotHasKey('exp', $payload, 'JWT payload should not contain exp field for tokens without expiry');
+                }
 
-            // For newly created tokens without expiry, should not have exp field
-            $this->assertArrayNotHasKey('exp', $payload, 'JWT payload should not contain exp field for tokens without expiry');
-        } catch (JWTException $e) {
-            $this->fail('Failed to decode JWT: ' . $e->getMessage());
+                $this->assertEquals($token['body']['$id'], $payload['tokenId'], 'JWT tokenId should match token ID');
+                $this->assertEquals($bucketId . ':' . $fileId, $payload['resourceId'], 'JWT resourceId should match bucketId:fileId format');
+                $this->assertEquals('files', $payload['resourceType'], 'JWT resourceType should be files');
+
+            } catch (JWTException $e) {
+                $this->fail('Failed to decode JWT: ' . $e->getMessage());
+            }
         }
 
         return [
@@ -218,6 +226,11 @@ class TokensConsoleClientTest extends Scope
                 $this->assertArrayHasKey('resourceId', $payload, 'JWT payload should contain resourceId');
                 $this->assertArrayHasKey('resourceType', $payload, 'JWT payload should contain resourceType');
                 $this->assertArrayHasKey('resourceInternalId', $payload, 'JWT payload should contain resourceInternalId');
+                $this->assertArrayHasKey('iat', $payload, 'JWT payload should contain iat');
+
+                if (!empty($token['expire'])) {
+                    $this->assertArrayHasKey('exp', $payload, 'JWT payload should contain exp');
+                }
 
                 $this->assertEquals($token['$id'], $payload['tokenId'], 'JWT tokenId should match token ID');
                 $this->assertEquals($data['bucketId'] . ':' . $data['fileId'], $payload['resourceId'], 'JWT resourceId should match bucketId:fileId format');

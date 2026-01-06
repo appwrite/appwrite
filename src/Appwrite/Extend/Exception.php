@@ -397,10 +397,11 @@ class Exception extends \Exception
 
     public function __construct(
         string $type = Exception::GENERAL_UNKNOWN,
-        ?string $message = null,
-        int|string|null $code = null,
-        ?\Throwable $previous = null,
-        ?string $view = null
+        string $message = null,
+        int|string $code = null,
+        \Throwable $previous = null,
+        ?string $view = null,
+        array $params = []
     ) {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
@@ -416,7 +417,13 @@ class Exception extends \Exception
             }
         }
 
-        $this->message = $message ?? $this->errors[$type]['description'];
+        // Format message with params if provided
+        if (!empty($params) && $message === null) {
+            $description = $this->errors[$type]['description'] ?? '';
+            $this->message = !empty($description) ? sprintf($description, ...$params) : '';
+        } else {
+            $this->message = $message ?? $this->errors[$type]['description'];
+        }
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 

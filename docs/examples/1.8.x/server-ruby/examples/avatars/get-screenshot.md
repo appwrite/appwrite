@@ -12,23 +12,26 @@ avatars = Avatars.new(client)
 
 result = avatars.get_screenshot(
     url: 'https://example.com',
-    headers: {}, # optional
-    viewport_width: 1, # optional
-    viewport_height: 1, # optional
-    scale: 0.1, # optional
+    headers: {
+        "Authorization" => "Bearer token123",
+        "X-Custom-Header" => "value"
+    }, # optional
+    viewport_width: 1920, # optional
+    viewport_height: 1080, # optional
+    scale: 2, # optional
     theme: Theme::LIGHT, # optional
-    user_agent: '<USER_AGENT>', # optional
-    fullpage: false, # optional
-    locale: '<LOCALE>', # optional
+    user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15', # optional
+    fullpage: true, # optional
+    locale: 'en-US', # optional
     timezone: Timezone::AFRICA_ABIDJAN, # optional
-    latitude: -90, # optional
-    longitude: -180, # optional
-    accuracy: 0, # optional
-    touch: false, # optional
-    permissions: [], # optional
-    sleep: 0, # optional
-    width: 0, # optional
-    height: 0, # optional
-    quality: -1, # optional
+    latitude: 37.7749, # optional
+    longitude: -122.4194, # optional
+    accuracy: 100, # optional
+    touch: true, # optional
+    permissions: ["geolocation","notifications"], # optional
+    sleep: 3, # optional
+    width: 800, # optional
+    height: 600, # optional
+    quality: 85, # optional
     output: Output::JPG # optional
 )

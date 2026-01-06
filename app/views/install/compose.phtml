@@ -11,6 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
+$enableAssistant = $this->getParam('enableAssistant', false);
 ?>services:
   traefik:
     image: traefik:2.11
@@ -179,7 +180,7 @@ $image = $this->getParam('image', '');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.4.7
+    image: <?php echo $organization; ?>/console:7.5.7
     restart: unless-stopped
     networks:
       - appwrite
@@ -848,8 +849,9 @@ $image = $this->getParam('image', '');
       - _APP_DB_USER
       - _APP_DB_PASS
 
+<?php if ($enableAssistant): ?>
   appwrite-assistant:
-    image: appwrite/assistant:0.8.3
+    image: appwrite/assistant:0.8.4
     container_name: appwrite-assistant
     <<: *x-logging
     restart: unless-stopped
@@ -857,9 +859,10 @@ $image = $this->getParam('image', '');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-      
+<?php endif; ?>
+
   appwrite-browser:
-    image: appwrite/browser:0.3.1
+    image: appwrite/browser:0.3.2
     container_name: appwrite-browser
     <<: *x-logging
     restart: unless-stopped

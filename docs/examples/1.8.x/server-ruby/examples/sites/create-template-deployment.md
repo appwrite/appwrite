@@ -15,7 +15,7 @@ result = sites.create_template_deployment(
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     root_directory: '<ROOT_DIRECTORY>',
-    type: ::BRANCH,
+    type: TemplateReferenceType::BRANCH,
     reference: '<REFERENCE>',
     activate: false # optional
 )

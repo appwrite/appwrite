@@ -187,7 +187,7 @@
                         <img
                             height="26px"
                             src="{{logoUrl}}"
-                            alt="Appwrite logo"
+                            alt="{{platform}} logo"
                         />
                     </td>
                 </tr>
@@ -225,7 +225,7 @@
                 <tr>
                     <td style="padding-left: 4px; padding-right: 4px">
                         <a
-                            href="{{twitterUrl}}"
+                            href="{{twitter}}"
                             class="social-icon"
                             title="Twitter"
                         >
@@ -234,7 +234,7 @@
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
                         <a
-                            href="{{discordUrl}}"
+                            href="{{discord}}"
                             class="social-icon"
                         >
                             <img src="https://cloud.appwrite.io/images/mails/discord.png" height="24" width="24" />
@@ -242,7 +242,7 @@
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
                         <a
-                            href="{{githubUrl}}"
+                            href="{{github}}"
                             class="social-icon"
                         >
                             <img src="https://cloud.appwrite.io/images/mails/github.png" height="24" width="24" />
@@ -252,15 +252,15 @@
             </table>
             <table style="width: auto; margin: 0 auto; margin-top: 60px">
                 <tr>
-                    <td><a href="{{termsUrl}}">Terms</a></td>
+                    <td><a href="{{terms}}">Terms</a></td>
                     <td style="color: #e8e9f0">
                         <div style="margin: 0 8px">|</div>
                     </td>
-                    <td><a href="{{privacyUrl}}">Privacy</a></td>
+                    <td><a href="{{privacy}}">Privacy</a></td>
                 </tr>
             </table>
             <p style="text-align: center" align="center">
-                &copy; {{year}} Appwrite | 251 Little Falls Drive, Wilmington 19808,
+                &copy; {{year}} {{platform}} | 251 Little Falls Drive, Wilmington 19808,
                 Delaware, United States
             </p>
         </div>

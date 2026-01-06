@@ -1,5 +1,6 @@
 <?php
 
+use Utopia\Config\Config;
 use Utopia\System\System;
 
 /**
@@ -7,12 +8,8 @@ use Utopia\System\System;
  */
 
 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-$hostname = System::getEnv('_APP_DOMAIN', '');
-
-// Temporary fix until we can set _APP_DOMAIN to "localhost" instead of "traefik"
-if (System::getEnv('_APP_ENV', 'development') === 'development') {
-    $hostname = 'localhost';
-}
+$platform = Config::getParam('platform', []);
+$hostname = $platform['consoleHostname'] ?? '';
 
 $url = $protocol . '://' . $hostname;
 
@@ -25,6 +22,8 @@ class UseCases
     public const DOCUMENTATION = 'documentation';
     public const BLOG = 'blog';
     public const AI = 'artificial intelligence';
+    public const FORMS = 'forms';
+    public const DASHBOARD = 'dashboard';
 }
 
 const TEMPLATE_FRAMEWORKS = [
@@ -1472,4 +1471,135 @@ return [
             ],
         ]
     ],
+    [
+        'key' => 'crm-dashboard-react-admin',
+        'name' => 'CRM dashboard with React Admin',
+        'tagline' => 'A React-based admin dashboard template with CRM features.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::DASHBOARD],
+        'screenshotDark' => $url . '/images/sites/templates/crm-dashboard-react-admin-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/crm-dashboard-react-admin-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/react-admin',
+                'installCommand' => 'pnpm install',
+                'buildCommand' => 'pnpm build && pnpm db-seed',
+                'outputDirectory' => './dist',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.7.*',
+        'variables' => [
+            [
+                'name' => 'VITE_APPWRITE_ENDPOINT',
+                'description' => 'Endpoint of Appwrite server',
+                'value' => '{apiEndpoint}',
+                'placeholder' => '{apiEndpoint}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_PROJECT_ID',
+                'description' => 'Your Appwrite project ID',
+                'value' => '{projectId}',
+                'placeholder' => '{projectId}',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_API_KEY',
+                'description' => 'Your Appwrite API key (for seeding only)',
+                'value' => '',
+                'placeholder' => 'a0b1...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_DATABASE_ID',
+                'description' => 'Database ID (default: admin)',
+                'value' => 'admin',
+                'placeholder' => 'admin',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_REVIEWS',
+                'description' => 'Table ID for reviews table',
+                'value' => 'reviews',
+                'placeholder' => 'reviews',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_INVOICES',
+                'description' => 'Table ID for invoices table',
+                'value' => 'invoices',
+                'placeholder' => 'invoices',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_ORDERS',
+                'description' => 'Table ID for orders table',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_PRODUCTS',
+                'description' => 'Table ID for products table',
+                'value' => 'products',
+                'placeholder' => 'products',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_CATEGORIES',
+                'description' => 'Table ID for categories table',
+                'value' => 'categories',
+                'placeholder' => 'categories',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'VITE_APPWRITE_TABLE_CUSTOMERS',
+                'description' => 'Table ID for customers table',
+                'value' => 'customers',
+                'placeholder' => 'customers',
+                'required' => false,
+                'type' => 'text'
+            ],
+        ]
+    ],
+    [
+        'key' => 'job-applications-formspree',
+        'name' => 'Job applications form with Formspree',
+        'tagline' => 'A simple form submission template using Formspree.',
+        'score' => 4, // 0 to 10 based on looks of screenshot (avoid 1,2,3,8,9,10 if possible)
+        'useCases' => [UseCases::FORMS],
+        'screenshotDark' => $url . '/images/sites/templates/job-applications-formspree-dark.png',
+        'screenshotLight' => $url . '/images/sites/templates/job-applications-formspree-light.png',
+        'frameworks' => [
+            getFramework('REACT', [
+                'providerRootDirectory' => './react/formspree',
+            ]),
+        ],
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates-for-sites',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '0.7.*',
+        'variables' => [
+            [
+                'name' => 'VITE_FORMSPREE_FORM_ID',
+                'description' => 'Your Formspree form ID',
+                'value' => '',
+                'placeholder' => 'xrgkpqld',
+                'required' => true,
+                'type' => 'text'
+            ],
+        ]
+    ]
 ];

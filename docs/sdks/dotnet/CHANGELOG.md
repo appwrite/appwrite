@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.24.0
+
+* Added ability to create columns and indexes synchronously while creating a table
+
+## 0.23.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `CreateTemplateDeployment` method signature: replace `Version` parameter with `Type` (TemplateReferenceType) and `Reference` parameters
+* Add `GetScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
 ## 0.22.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance

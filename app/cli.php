@@ -10,6 +10,7 @@ use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
+use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Swoole\Timer;
@@ -77,6 +78,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache) {
                 ->setNamespace('_console')
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', 'console');
+            $dbForPlatform->setDocumentType('users', User::class);
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
@@ -258,6 +260,14 @@ CLI::setResource('logError', function (Registry $register) {
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
+
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
+                }
+                $log->addExtra('previousFile', $error->getPrevious()->getFile());
+                $log->addExtra('previousLine', $error->getPrevious()->getLine());
+            }
 
             $log->setAction($action);
 

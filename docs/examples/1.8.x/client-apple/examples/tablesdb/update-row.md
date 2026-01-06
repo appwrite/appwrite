@@ -10,7 +10,13 @@ let row = try await tablesDB.updateRow(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     rowId: "<ROW_ID>",
-    data: [:], // optional
+    data: [
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": false
+    ], // optional
     permissions: [Permission.read(Role.any())], // optional
     transactionId: "<TRANSACTION_ID>" // optional
 )

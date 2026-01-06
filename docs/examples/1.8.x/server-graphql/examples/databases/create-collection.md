@@ -5,7 +5,9 @@ mutation {
         name: "<NAME>",
         permissions: ["read("any")"],
         documentSecurity: false,
-        enabled: false
+        enabled: false,
+        attributes: [],
+        indexes: []
     ) {
         _id
         _createdAt

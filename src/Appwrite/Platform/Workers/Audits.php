@@ -2,10 +2,8 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Exception;
 use Throwable;
-use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -43,8 +41,8 @@ class Audits extends Action
         $this
             ->desc('Audits worker')
             ->inject('message')
-            ->inject('getProjectDB')
             ->inject('project')
+            ->inject('getAudit')
             ->callback($this->action(...));
 
         $this->lastTriggeredTime = time();
@@ -55,13 +53,14 @@ class Audits extends Action
      * @param Message $message
      * @param callable $getProjectDB
      * @param Document $project
+     * @param callable $getAudit
      * @return Commit|NoCommit
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Structure
      */
-    public function action(Message $message, callable $getProjectDB, Document $project): Commit|NoCommit
+    public function action(Message $message, Document $project, callable $getAudit): Commit|NoCommit
     {
         $payload = $message->getPayload() ?? [];
 
@@ -85,7 +84,7 @@ class Audits extends Action
 
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
-        $userType = $user->getAttribute('type', Auth::ACTIVITY_TYPE_USER);
+        $userType = $user->getAttribute('type', ACTIVITY_TYPE_USER);
 
         // Create event data
         $eventData = [
@@ -103,7 +102,7 @@ class Audits extends Action
                 'mode' => $mode,
                 'data' => $auditPayload,
             ],
-            'timestamp' => date("Y-m-d H:i:s", $message->getTimestamp()),
+            'time' => date("Y-m-d H:i:s", $message->getTimestamp()),
         ];
 
         if (isset($this->logs[$project->getSequence()])) {
@@ -136,8 +135,7 @@ class Audits extends Action
                 Console::log('Processing Project "' . $sequence . '" batch with ' . count($projectLogs['logs']) . ' events');
 
                 $projectDocument = $projectLogs['project'];
-                $dbForProject = $getProjectDB($projectDocument);
-                $audit = new Audit($dbForProject);
+                $audit = $getAudit($projectDocument);
                 $audit->logBatch($projectLogs['logs']);
 
                 Console::success('Audit logs processed successfully');

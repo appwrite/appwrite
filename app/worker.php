@@ -17,9 +17,12 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -55,7 +58,7 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register)
     $adapter = new DatabasePool($pools->get('console'));
     $dbForPlatform = new Database($adapter, $cache);
     $dbForPlatform->setNamespace('_console');
-
+    $dbForPlatform->setDocumentType('users', User::class);
     return $dbForPlatform;
 }, ['cache', 'register']);
 
@@ -86,6 +89,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
     $database = new Database($adapter, $cache);
+    $database->setDocumentType('users', User::class);
 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -181,7 +185,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
@@ -413,6 +417,13 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
 
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
+                }
+                $log->addExtra('previousFile', $error->getPrevious()->getFile());
+                $log->addExtra('previousLine', $error->getPrevious()->getLine());
+            }
 
             foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
@@ -433,10 +444,30 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
         Console::warning("Failed: {$error->getMessage()}");
         Console::warning($error->getTraceAsString());
+
+        if ($error->getPrevious() !== null) {
+            if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                Console::warning("Previous Failed: {$error->getPrevious()->getMessage()}");
+            }
+            Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
+        }
     };
 }, ['register', 'project']);
 
 Server::setResource('executor', fn () => new Executor());
+
+Server::setResource('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
+    return function (Document $project) use ($dbForPlatform, $getProjectDB) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            $adapter = new AdapterDatabase($dbForPlatform);
+            return new UtopiaAudit($adapter);
+        }
+
+        $dbForProject = $getProjectDB($project);
+        $adapter = new AdapterDatabase($dbForProject);
+        return new UtopiaAudit($adapter);
+    };
+}, ['dbForPlatform', 'getProjectDB']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
