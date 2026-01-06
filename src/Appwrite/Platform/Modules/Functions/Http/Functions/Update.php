@@ -286,7 +286,6 @@ class Update extends Base
 
         $queueForEvents->setParam('functionId', $function->getId());
 
-
         $response->dynamic($function, Response::MODEL_FUNCTION);
     }
 }
