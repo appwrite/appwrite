@@ -204,6 +204,7 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
+                'labels' => [],
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
