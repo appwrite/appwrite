@@ -424,7 +424,7 @@ trait AccountBase
 
         $this->assertEquals($session['headers']['status-code'], 429);
 
-        // Even correct password is now blocked, correctness doesnt matter
+        // Even correct password is now blocked, correctness doesn't matter
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
