@@ -5,7 +5,9 @@ namespace Appwrite\Platform\Modules\Payments\Http\Webhooks\Provider;
 use Appwrite\Event\Event;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
@@ -40,7 +42,13 @@ class Create extends Base
                 Handle incoming webhooks from payment providers. This endpoint is called by the provider to notify of subscription and payment events.
                 EOT,
                 auth: [],
-                responses: []
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
             ))
             ->label('event', 'payments.providers.[providerId].webhook')
             ->label('audits.event', 'payments.webhook')

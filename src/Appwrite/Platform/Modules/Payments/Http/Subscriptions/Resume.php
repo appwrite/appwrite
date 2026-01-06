@@ -9,7 +9,9 @@ use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -47,7 +49,13 @@ class Resume extends Base
                 Resume a previously canceled subscription if it hasn't expired yet.
                 EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN, AuthType::JWT],
-                responses: []
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
             ))
             ->param('subscriptionId', '', new Text(128), 'Subscription ID')
             ->inject('response')

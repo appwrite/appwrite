@@ -22626,7 +22626,11 @@
                     "payments"
                 ],
                 "description": "Delete a feature by its unique ID.",
-                "responses": [],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "deleteFeature",
@@ -23024,7 +23028,11 @@
                     "payments"
                 ],
                 "description": "Delete a payment plan by its unique ID. This action cannot be undone.",
-                "responses": [],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "deletePlan",
@@ -23287,7 +23295,11 @@
                     "payments"
                 ],
                 "description": "Remove a feature from a plan.",
-                "responses": [],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "removePlanFeature",
@@ -23891,7 +23903,11 @@
                     "payments"
                 ],
                 "description": "Cancel a subscription. By default, cancellation takes effect at the end of the current billing period.",
-                "responses": [],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "cancel",
@@ -24213,7 +24229,11 @@
                     "payments"
                 ],
                 "description": "Resume a previously canceled subscription if it hasn't expired yet.",
-                "responses": [],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "resume",
@@ -24525,7 +24545,11 @@
                     "payments"
                 ],
                 "description": "Reconcile usage events with the payment provider.",
-                "responses": [],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
                 "deprecated": false,
                 "x-appwrite": {
                     "method": "reconcile",

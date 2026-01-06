@@ -5,7 +5,9 @@ namespace Appwrite\Platform\Modules\Payments\Http\Features;
 use Appwrite\Event\Event;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -43,7 +45,13 @@ class Delete extends Base
                 Delete a feature by its unique ID.
                 EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
-                responses: []
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
             ))
             ->param('featureId', '', new Text(128), 'Feature ID')
             ->inject('response')

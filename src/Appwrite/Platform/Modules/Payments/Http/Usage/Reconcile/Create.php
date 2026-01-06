@@ -5,7 +5,9 @@ namespace Appwrite\Platform\Modules\Payments\Http\Usage\Reconcile;
 use Appwrite\Payments\Provider\Registry as ProviderRegistry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -42,7 +44,13 @@ class Create extends Base
                 Reconcile usage events with the payment provider.
                 EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
-                responses: []
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
             ))
             ->inject('response')
             ->inject('dbForPlatform')

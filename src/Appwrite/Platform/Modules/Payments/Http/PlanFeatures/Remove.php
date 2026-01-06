@@ -8,7 +8,9 @@ use Appwrite\Payments\Provider\ProviderState;
 use Appwrite\Payments\Provider\Registry;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -46,7 +48,13 @@ class Remove extends Base
                 Remove a feature from a plan.
                 EOT,
                 auth: [AuthType::KEY, AuthType::ADMIN],
-                responses: []
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
             ))
             ->param('planId', '', new Text(128), 'Plan ID')
             ->param('featureId', '', new Text(128), 'Feature ID')
