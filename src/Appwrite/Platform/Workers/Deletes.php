@@ -516,7 +516,12 @@ class Deletes extends Action
             $dsn = new DSN('mysql://' . $document->getAttribute('database', 'console'));
         }
 
+        /**
+         * @var $dbForProject Database
+         */
         $dbForProject = $getProjectDB($document);
+
+        $dbForProject->disableValidation();
 
         $projectCollectionIds = [
             ...\array_keys(Config::getParam('collections', [])['projects']),
@@ -531,9 +536,6 @@ class Deletes extends Action
         $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
         $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
 
-        /**
-         * @var $dbForProject Database
-         */
         $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
             try {
                 if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
@@ -635,6 +637,8 @@ class Deletes extends Action
         $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
         $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
         $deviceForCache->delete($deviceForCache->getRoot(), true);
+
+        $dbForProject->enableValidation();
     }
 
     /**
