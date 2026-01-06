@@ -355,12 +355,12 @@ Response::setModel(new PaymentProviderConfig());
 Response::setModel(new PaymentPlanFeature());
 Response::setModel(new PaymentInvoice());
 Response::setModel(new PaymentUsageEvent());
-Response::setModel(new BaseList('Payment Subscription List', Response::MODEL_PAYMENT_SUBSCRIPTION_LIST, 'subscriptions', Response::MODEL_PAYMENT_SUBSCRIPTION, true, false));
-Response::setModel(new BaseList('Payment Plan List', Response::MODEL_PAYMENT_PLAN_LIST, 'plans', Response::MODEL_PAYMENT_PLAN, true, false));
-Response::setModel(new BaseList('Payment Feature List', Response::MODEL_PAYMENT_FEATURE_LIST, 'features', Response::MODEL_PAYMENT_FEATURE, true, false));
-Response::setModel(new BaseList('Payment Plan Feature List', Response::MODEL_PAYMENT_PLAN_FEATURE_LIST, 'features', Response::MODEL_PAYMENT_PLAN_FEATURE, true, false));
-Response::setModel(new BaseList('Payment Invoice List', Response::MODEL_PAYMENT_INVOICE_LIST, 'invoices', Response::MODEL_PAYMENT_INVOICE, true, false));
-Response::setModel(new BaseList('Payment Usage Event List', Response::MODEL_PAYMENT_USAGE_EVENT_LIST, 'events', Response::MODEL_PAYMENT_USAGE_EVENT, true, false));
+Response::setModel(new BaseList('Payment Subscription List', Response::MODEL_PAYMENT_SUBSCRIPTION_LIST, 'subscriptions', Response::MODEL_PAYMENT_SUBSCRIPTION, true, true));
+Response::setModel(new BaseList('Payment Plan List', Response::MODEL_PAYMENT_PLAN_LIST, 'plans', Response::MODEL_PAYMENT_PLAN, true, true));
+Response::setModel(new BaseList('Payment Feature List', Response::MODEL_PAYMENT_FEATURE_LIST, 'features', Response::MODEL_PAYMENT_FEATURE, true, true));
+Response::setModel(new BaseList('Payment Plan Feature List', Response::MODEL_PAYMENT_PLAN_FEATURE_LIST, 'features', Response::MODEL_PAYMENT_PLAN_FEATURE, true, true));
+Response::setModel(new BaseList('Payment Invoice List', Response::MODEL_PAYMENT_INVOICE_LIST, 'invoices', Response::MODEL_PAYMENT_INVOICE, true, true));
+Response::setModel(new BaseList('Payment Usage Event List', Response::MODEL_PAYMENT_USAGE_EVENT_LIST, 'events', Response::MODEL_PAYMENT_USAGE_EVENT, true, true));
 
 // Tests (keep last)
 Response::setModel(new Mock());
