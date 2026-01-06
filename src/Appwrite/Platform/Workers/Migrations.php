@@ -414,46 +414,48 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
             }
         } finally {
-            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            try {
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-            if ($migration->getAttribute('status', '') === 'failed') {
-                Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
+                if ($migration->getAttribute('status', '') === 'failed') {
+                    Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
-                $sourceErrors = $source?->getErrors() ?? [];
-                $destinationErrors = $destination?->getErrors() ?? [];
+                    $sourceErrors = $source?->getErrors() ?? [];
+                    $destinationErrors = $destination?->getErrors() ?? [];
 
-                foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    /** @var MigrationException $error */
-                    if ($error->getCode() === 0 || $error->getCode() >= 500) {
-                        ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                            'migrationId' => $migration->getId(),
-                            'source' => $migration->getAttribute('source') ?? '',
-                            'destination' => $migration->getAttribute('destination') ?? '',
-                            'resourceName' => $error->getResourceName(),
-                            'resourceGroup' => $error->getResourceGroup(),
-                        ]);
+                    foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
+                        /** @var MigrationException $error */
+                        if ($error->getCode() === 0 || $error->getCode() >= 500) {
+                            ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                                'migrationId' => $migration->getId(),
+                                'source' => $migration->getAttribute('source') ?? '',
+                                'destination' => $migration->getAttribute('destination') ?? '',
+                                'resourceName' => $error->getResourceName(),
+                                'resourceGroup' => $error->getResourceGroup(),
+                            ]);
+                        }
+                    }
+
+                    $source?->error();
+                    $destination?->error();
+                }
+
+                if ($migration->getAttribute('status', '') === 'completed') {
+                    $destination?->success();
+                    $source?->success();
+
+                    if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
+                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
                     }
                 }
+            } finally {
+                $source?->cleanUp();
+                $destination?->cleanUp();
 
-                $source?->error();
-                $destination?->error();
+                $transfer = null;
+                $source = null;
+                $destination = null;
             }
-
-            if ($migration->getAttribute('status', '') === 'completed') {
-                $destination?->success();
-                $source?->success();
-
-                if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
-                }
-            }
-
-            $source?->cleanUp();
-            $destination?->cleanUp();
-
-            $transfer = null;
-            $source = null;
-            $destination = null;
         }
     }
 
