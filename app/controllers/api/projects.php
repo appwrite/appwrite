@@ -52,7 +52,9 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Utopia\Logger\Logger;
+use Utopia\Logger\Logger;  
+use Psr\Log\LoggerInterface;
+
 
 App::init()
     ->groups(['projects'])
@@ -107,7 +109,7 @@ App::post('/v1/projects')
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description,
      string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, 
      string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, 
-     Group $pools, Hooks $hooks, Authorization $authorization) {
+     Group $pools, Hooks $hooks, Authorization $authorization,   LoggerInterface $logger) {
 
         $team = $dbForPlatform->getDocument('teams', $teamId);
 
@@ -126,7 +128,7 @@ App::post('/v1/projects')
             || User::isApp($authorization->getRoles());
 
         if ($migrationHeader === 'true' && $isPrivilegedUser) {
-            $this->logger->info('Migration override detected. Forcing project region to default.', [
+            $logger->info('Migration override detected. Forcing project region to default.', [
                 'originalRegion' => $region,
                 'route' => 'POST /v1/projects',
             ]);
