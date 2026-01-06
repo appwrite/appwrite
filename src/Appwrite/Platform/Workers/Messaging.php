@@ -558,6 +558,8 @@ class Messaging extends Action
                 $bcc[] = ['email' => $bccTarget['identifier']];
             }
         }
+
+        $to = $message['to'] ?? [];
         // Ensure $to is non-empty to satisfy Resend
         if (empty($to)) {
             if (!empty($bcc)) {
@@ -571,14 +573,7 @@ class Messaging extends Action
         }
 
 
-       $adapter = $this->getEmailAdapter($provider);
-        $adapter->send([
-            'to' => $to,
-            'cc' => $cc,
-            'bcc' => $bcc,
-            'subject' => $subject,
-            'body' => $body,
-        ]);
+
 
         if (!empty($attachments)) {
             foreach ($attachments as &$attachment) {
