@@ -521,6 +521,9 @@ class Deletes extends Action
          */
         $dbForProject = $getProjectDB($document);
 
+        /**
+         * Disable validation because of Cursor validation on $id underscores
+         */
         $dbForProject->disableValidation();
 
         $projectCollectionIds = [
