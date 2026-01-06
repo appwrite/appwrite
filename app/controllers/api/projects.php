@@ -1501,6 +1501,7 @@ App::post('/v1/projects/:projectId/keys')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
+            // TODO: @hmacr Remove `projectInternalId` and `projectId` column writes before deleting the column.
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'resourceInternalId' => $project->getSequence(),
