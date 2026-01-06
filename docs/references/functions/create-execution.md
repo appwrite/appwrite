@@ -1,1 +1,3 @@
 Trigger a function execution. The returned object will return you the current execution status. You can ping the `Get Execution` endpoint to get updates on the current execution status. Once this endpoint is called, your function execution process will start asynchronously.
+
+**Note**: To use `Get Execution` for polling async function status, you must be authenticated (have an active session). Guest users should use [Realtime subscriptions](https://appwrite.io/docs/realtime) or have the function write results to a database document instead.
