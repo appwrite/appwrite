@@ -94,5 +94,4 @@ class Action extends AppwriteAction
 
         return $data;
     }
-
 }
