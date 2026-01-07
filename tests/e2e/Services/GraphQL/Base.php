@@ -2334,7 +2334,8 @@ trait Base
                         buckets {
                             _id
                             name
-                            enabled
+                            enabled,
+                            totalSize
                         }
                     }
                 }';
