@@ -116,57 +116,46 @@ class XList extends Action
         }
 
         if (!empty($buckets)) {
+            $bucketByStatsId = [];
             $dbForLogs = call_user_func($getLogsDB, $project);
-            $this->addBucketStorageSizes($dbForLogs, $buckets);
+
+            foreach ($buckets as $bucket) {
+                $metric = str_replace(
+                    '{bucketInternalId}',
+                    $bucket->getSequence(),
+                    METRIC_BUCKET_ID_FILES_STORAGE
+                );
+
+                $statId = md5('_inf_' . $metric);
+
+                $bucketByStatsId[$statId] = $bucket;
+
+                // set a default
+                $bucket->setAttribute('totalSize', 0);
+            }
+
+            /* @type Document[] $stats */
+            $stats = Authorization::skip(function () use ($dbForLogs, $bucketByStatsId) {
+                $statsIds = array_keys($bucketByStatsId);
+
+                return $dbForLogs->find('stats', [
+                    Query::equal('$id', $statsIds),
+                    Query::select(['value']),
+                ]);
+            });
+
+            foreach ($stats as $stat) {
+                $bucket = $bucketByStatsId[$stat->getId()];
+
+                if ($bucket) {
+                    $bucket->setAttribute('totalSize', $stat->getAttribute('value', 0));
+                }
+            }
         }
 
         $response->dynamic(new Document([
             'buckets' => $buckets,
             'total' => $total,
         ]), Response::MODEL_BUCKET_LIST);
-    }
-
-    /**
-     * Adds the latest aggregated bucket storage sizes from logs DB stats.
-     */
-    private function addBucketStorageSizes(Database $dbForLogs, array $buckets): void
-    {
-        $bucketByStatsId = [];
-
-        foreach ($buckets as $bucket) {
-            $metric = str_replace(
-                '{bucketInternalId}',
-                $bucket->getSequence(),
-                METRIC_BUCKET_ID_FILES_STORAGE
-            );
-
-            $statId = md5('_inf_' . $metric);
-
-            $bucketByStatsId[$statId] = $bucket;
-
-            // set a default
-            $bucket->setAttribute('totalSize', 0);
-        }
-
-        /* @type Document[] $stats */
-        $stats = Authorization::skip(function () use ($dbForLogs, $bucketByStatsId) {
-            $statsIds = array_keys($bucketByStatsId);
-
-            return $dbForLogs->find('stats', [
-                Query::equal('$id', $statsIds),
-                Query::select(['value']),
-            ]);
-        });
-
-        foreach ($stats as $stat) {
-            $bucket = $bucketByStatsId[$stat->getId()];
-
-            if ($bucket) {
-                $bucket->setAttribute(
-                    'totalSize',
-                    $stat->getAttribute('value', 0)
-                );
-            }
-        }
     }
 }
