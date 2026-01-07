@@ -816,7 +816,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     return false;
 }
 
-function addQueriesToErrorReporting(Request $request, Log $log): void {
+function addQueriesToErrorReporting(Request $request, Log $log): void
+{
     try {
         $queries = $request->getParam('queries', []);
         if (empty($queries) || !is_array($queries)) {
