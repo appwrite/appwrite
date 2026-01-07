@@ -67,7 +67,7 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $dbForLogs = $getLogsDB($project);
+        $dbForLogs = call_user_func($getLogsDB, $project);
         $this->addBucketStorageSize($dbForLogs, $bucket);
 
         $response->dynamic($bucket, Response::MODEL_BUCKET);
