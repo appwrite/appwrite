@@ -103,8 +103,8 @@ class Get extends Action
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__ . "/../../../../../../assets/fonts/inter-v8-latin-regular.woff2");
-        $image->setFont(__DIR__ . "/../../../../../../assets/fonts/inter-v8-latin-regular.woff2");
+        $draw->setFont($this->getAppRoot() . '/app/assets/fonts/inter-v8-latin-regular.woff2');
+        $image->setFont($this->getAppRoot() . '/app/assets/fonts/inter-v8-latin-regular.woff2');
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);

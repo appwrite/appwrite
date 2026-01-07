@@ -139,15 +139,15 @@ class Get extends Action
         $isPlatinum = $isGolden ? false : $isPlatinum;
         $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
 
-        $baseImage = new Imagick(__DIR__ . "/../../../../../../../../public/images/cards/cloud/og-background{$bgVariation}.png");
+        $baseImage = new Imagick($this->getAppRoot() . "/public/images/cards/cloud/og-background{$bgVariation}.png");
 
         $cardType = $isGolden ? '-golden' : ($isPlatinum ? '-platinum' : '');
 
-        $image = new Imagick(__DIR__ . "/../../../../../../../../public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
+        $image = new Imagick($this->getAppRoot() . "/public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
         $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008 / 2 - $image->getImageWidth() / 2, 1008 / 2 - $image->getImageHeight() / 2);
 
-        $imageLogo = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/og-background-logo.png');
-        $imageShadow = new Imagick(__DIR__ . "/../../../../../../../../public/images/cards/cloud/og-shadow{$cardType}.png");
+        $imageLogo = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/og-background-logo.png');
+        $imageShadow = new Imagick($this->getAppRoot() . "/public/images/cards/cloud/og-shadow{$cardType}.png");
         if ($cardVariation === '1') {
             $baseImage->compositeImage($imageLogo, Imagick::COMPOSITE_OVER, 32, 1008 - $imageLogo->getImageHeight() - 32);
             $baseImage->compositeImage($imageShadow, Imagick::COMPOSITE_OVER, -450, 700);
@@ -161,19 +161,19 @@ class Get extends Action
 
         if ($isEmployee) {
             $file = $cardVariation === '3' ? 'employee-skew.png' : 'employee.png';
-            $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/' . $file);
+            $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/' . $file);
             $image->setGravity(Imagick::GRAVITY_CENTER);
 
             $hashtag = new ImagickDraw();
             $hashtag->setTextAlignment(Imagick::ALIGN_LEFT);
-            $hashtag->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Bold.ttf');
+            $hashtag->setFont($this->getAppRoot() . '/public/fonts/Inter-Bold.ttf');
             $hashtag->setFillColor(new ImagickPixel('#FFFADF'));
             $hashtag->setFontSize(20);
             $hashtag->setFontWeight(700);
 
             $text = new ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_LEFT);
-            $text->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Bold.ttf');
+            $text->setFont($this->getAppRoot() . '/public/fonts/Inter-Bold.ttf');
             $text->setFillColor(new ImagickPixel('#FFFADF'));
             $text->setFontSize(\strlen($employeeNumber) <= 1 ? 36 : 28);
             $text->setFontWeight(700);
@@ -247,7 +247,7 @@ class Get extends Action
 
         if ($isContributor) {
             $file = $cardVariation === '3' ? 'contributor-skew.png' : 'contributor.png';
-            $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/' . $file);
+            $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/' . $file);
             $image->setGravity(Imagick::GRAVITY_CENTER);
 
             if ($cardVariation === '1') {
@@ -265,7 +265,7 @@ class Get extends Action
 
         if ($isHero) {
             $file = $cardVariation === '3' ? 'hero-skew.png' : 'hero.png';
-            $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/' . $file);
+            $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/' . $file);
             $image->setGravity(Imagick::GRAVITY_CENTER);
 
             if ($cardVariation === '1') {
@@ -288,7 +288,7 @@ class Get extends Action
 
         $textName = new ImagickDraw();
         $textName->setTextAlignment(Imagick::ALIGN_CENTER);
-        $textName->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Bold.ttf');
+        $textName->setFont($this->getAppRoot() . '/public/fonts/Inter-Bold.ttf');
         $textName->setFillColor(new ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -325,7 +325,7 @@ class Get extends Action
 
         $textMember = new ImagickDraw();
         $textMember->setTextAlignment(Imagick::ALIGN_CENTER);
-        $textMember->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Medium.ttf');
+        $textMember->setFont($this->getAppRoot() . '/public/fonts/Inter-Medium.ttf');
         $textMember->setFillColor(new ImagickPixel($isGolden || $isPlatinum ? '#FFFFFF' : '#FFB9CC'));
         $textMember->setFontWeight(500);
         $textMember->setTextKerning(1.12);
@@ -358,7 +358,7 @@ class Get extends Action
         if (!empty($githubName)) {
             $text = new ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_LEFT);
-            $text->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Regular.ttf');
+            $text->setFont($this->getAppRoot() . '/public/fonts/Inter-Regular.ttf');
             $text->setFillColor(new ImagickPixel('#FFFFFF'));
             $text->setFontSize($scalingDown ? 16 : 20);
             $text->setFontWeight(400);
@@ -369,7 +369,7 @@ class Get extends Action
                 $group = new Imagick();
                 $groupWidth = $metrics['textWidth'] + 32 + 4;
                 $group->newImage($groupWidth, $metrics['textHeight'] + 10, '#00000000');
-                $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/github.png');
+                $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/github.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $image->resizeImage(32, 32, Imagick::FILTER_LANCZOS, 1);
                 $precisionFix = -1;
@@ -387,7 +387,7 @@ class Get extends Action
                 $group = new Imagick();
                 $groupWidth = $metrics['textWidth'] + 32 + 4;
                 $group->newImage($groupWidth, $metrics['textHeight'] + 10, '#00000000');
-                $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/github.png');
+                $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/github.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $image->resizeImage(32, 32, Imagick::FILTER_LANCZOS, 1);
                 $precisionFix = -1;
@@ -407,7 +407,7 @@ class Get extends Action
                 $text->annotation(320 + 15 + 2, 640, $githubName);
                 $metrics = $baseImage->queryFontMetrics($text, $githubName);
 
-                $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/github-skew.png');
+                $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/github-skew.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2), 518 + \strlen($githubName) * 1.3);
 

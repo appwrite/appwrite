@@ -90,14 +90,14 @@ class Get extends Action
 
         $imagePath = $isGolden ? 'back-golden.png' : ($isPlatinum ? 'back-platinum.png' : 'back.png');
 
-        $baseImage = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/' . $imagePath);
+        $baseImage = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/' . $imagePath);
 
         setlocale(LC_ALL, "en_US.utf8");
         // $userId = \iconv("utf-8", "ascii//TRANSLIT", $userId);
 
         $text = new ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__ . '/../../../../../../../../public/fonts/SourceCodePro-Regular.ttf');
+        $text->setFont($this->getAppRoot() . '/public/fonts/SourceCodePro-Regular.ttf');
         $text->setFillColor(new ImagickPixel($isGolden ? '#664A1E' : ($isPlatinum ? '#555555' : '#E8E9F0')));
         $text->setFontSize(28);
         $text->setFontWeight(400);

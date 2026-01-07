@@ -131,16 +131,16 @@ class Get extends Action
 
         $imagePath = $isGolden ? 'front-golden.png' : ($isPlatinum ? 'front-platinum.png' : 'front.png');
 
-        $baseImage = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/' . $imagePath);
+        $baseImage = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/' . $imagePath);
 
         if ($isEmployee) {
-            $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/employee.png');
+            $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/employee.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 793, 35);
 
             $text = new ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_CENTER);
-            $text->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Bold.ttf');
+            $text->setFont($this->getAppRoot() . '/public/fonts/Inter-Bold.ttf');
             $text->setFillColor(new ImagickPixel('#FFFADF'));
             $text->setFontSize(\strlen($employeeNumber) <= 2 ? 54 : 48);
             $text->setFontWeight(700);
@@ -148,7 +148,7 @@ class Get extends Action
 
             $hashtag = new ImagickDraw();
             $hashtag->setTextAlignment(Imagick::ALIGN_CENTER);
-            $hashtag->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Bold.ttf');
+            $hashtag->setFont($this->getAppRoot() . '/public/fonts/Inter-Bold.ttf');
             $hashtag->setFillColor(new ImagickPixel('#FFFADF'));
             $hashtag->setFontSize(28);
             $hashtag->setFontWeight(700);
@@ -171,13 +171,13 @@ class Get extends Action
         }
 
         if ($isContributor) {
-            $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/contributor.png');
+            $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/contributor.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 793, 34);
         }
 
         if ($isHero) {
-            $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/hero.png');
+            $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/hero.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 793, 34);
         }
@@ -189,7 +189,7 @@ class Get extends Action
 
         $text = new ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Bold.ttf');
+        $text->setFont($this->getAppRoot() . '/public/fonts/Inter-Bold.ttf');
         $text->setFillColor(new ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -208,7 +208,7 @@ class Get extends Action
 
         $text = new ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-SemiBold.ttf');
+        $text->setFont($this->getAppRoot() . '/public/fonts/Inter-SemiBold.ttf');
         $text->setFillColor(new ImagickPixel($isGolden || $isPlatinum ? '#FFFFFF' : '#FFB9CC'));
         $text->setFontSize(27);
         $text->setFontWeight(600);
@@ -218,7 +218,7 @@ class Get extends Action
         if (!empty($githubName)) {
             $text = new ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_CENTER);
-            $text->setFont(__DIR__ . '/../../../../../../../../public/fonts/Inter-Regular.ttf');
+            $text->setFont($this->getAppRoot() . '/public/fonts/Inter-Regular.ttf');
             $text->setFillColor(new ImagickPixel('#FFFFFF'));
             $text->setFontSize($scalingDown ? 28 : 32);
             $text->setFontWeight(400);
@@ -226,7 +226,7 @@ class Get extends Action
 
             $baseImage->annotateImage($text, 512 + 20 + 4, 373 + ($scalingDown ? 2 : 0), 0, $githubName);
 
-            $image = new Imagick(__DIR__ . '/../../../../../../../../public/images/cards/cloud/github.png');
+            $image = new Imagick($this->getAppRoot() . '/public/images/cards/cloud/github.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $precisionFix = 5;
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2) - 20 - 4, 373 - ($metrics['textHeight'] - $precisionFix));

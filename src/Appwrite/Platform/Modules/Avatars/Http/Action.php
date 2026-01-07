@@ -16,6 +16,11 @@ use Utopia\Logger\Logger;
 
 class Action extends PlatformAction
 {
+    protected function getAppRoot(): string
+    {
+        return \dirname(__DIR__, 7);
+    }
+
     protected function avatarCallback(string $type, string $code, int $width, int $height, int $quality, Response $response): void
     {
         $code = \strtolower($code);
