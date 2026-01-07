@@ -49,26 +49,34 @@ class Get extends Action
             ->param('bucketId', '', new UID(), 'Bucket unique ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
+            ->inject('getLogsDB')
             ->callback($this->action(...));
     }
 
     public function action(
         string $bucketId,
         Response $response,
-        Database $dbForProject
-    ) {
+        Database $dbForProject,
+        Document $project,
+        callable $getLogsDB
+    ): void {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $this->addBucketStorageSize($dbForProject, $bucket);
+        $dbForLogs = $getLogsDB($project);
+        $this->addBucketStorageSize($dbForLogs, $bucket);
 
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     }
 
-    private function addBucketStorageSize(Database $dbForProject, Document $bucket): void
+    /**
+     * Adds the latest aggregated bucket storage size from logs DB stats.
+     */
+    private function addBucketStorageSize(Database $dbForLogs, Document $bucket): void
     {
         $metric = str_replace(
             '{bucketInternalId}',
@@ -76,21 +84,9 @@ class Get extends Action
             METRIC_BUCKET_ID_FILES_STORAGE
         );
 
-        /**
-         * StatsUsage does this create an ID -
-         *
-         * `$time = null;`\
-         * `$id = md5("{$time}_{$period}_{$key}");`
-         *
-         * but when $time is null it just makes the $id as md5('_inf_' . $key);
-         *
-         * Why do this though?\
-         * Using `getDocument()` below to leverage cache!
-         */
         $statsDocId = md5('_inf_' . $metric);
-
         $storageStats = Authorization::skip(
-            fn () => $dbForProject->getDocument(
+            fn () => $dbForLogs->getDocument(
                 'stats',
                 $statsDocId,
                 [Query::select(['value'])]
