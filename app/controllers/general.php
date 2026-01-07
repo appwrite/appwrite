@@ -816,6 +816,93 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     return false;
 }
 
+function addQueriesToErrorReporting(Request $request, Log $log): void {
+    try {
+        $queries = $request->getParam('queries', []);
+        if (empty($queries) || !is_array($queries)) {
+            return;
+        }
+
+        // format query by removing sensitive values
+        $formatQuery = function (array $queryArray) use (&$formatQuery): ?array {
+            $method = $queryArray['method'] ?? '';
+            $values = $queryArray['values'] ?? [];
+            $attribute = $queryArray['attribute'] ?? '';
+
+            if (!is_string($method) || $method === '') {
+                return null;
+            }
+
+            // logical queries - recursively format nested queries
+            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+                $nested = [];
+                foreach ($values as $nestedArray) {
+                    if (is_array($nestedArray)) {
+                        $formatted = $formatQuery($nestedArray);
+                        if ($formatted !== null) {
+                            $nested[] = $formatted;
+                        }
+                    }
+                }
+                return empty($nested) ? null : [$method => $nested];
+            }
+
+            // select - show selected attributes
+            if ($method === Query::TYPE_SELECT) {
+                $attributes = array_values(array_filter($values, 'is_string'));
+                return [$method => $attributes];
+            }
+
+            // pagination
+            if (in_array($method, [
+                Query::TYPE_LIMIT,
+                Query::TYPE_OFFSET,
+                Query::TYPE_CURSOR_AFTER,
+                Query::TYPE_CURSOR_BEFORE
+            ], true)) {
+                return [$method => []];
+            }
+
+            // orders
+            if (in_array($method, [
+                Query::TYPE_ORDER_DESC,
+                Query::TYPE_ORDER_ASC,
+                Query::TYPE_ORDER_RANDOM
+            ], true)) {
+                return [$method => !empty($attribute) ? [$attribute] : []];
+            }
+
+            // filter
+            if (!empty($attribute)) {
+                return [$method => [$attribute]];
+            }
+
+            // fallback
+            return [$method => []];
+        };
+
+        try {
+            $parsedQueries = Query::parseQueries($queries);
+        } catch (Throwable $_) {
+            return;
+        }
+
+        $formattedQueries = [];
+        foreach ($parsedQueries as $query) {
+            $formatted = $formatQuery($query->toArray());
+            if ($formatted !== null) {
+                $formattedQueries[] = $formatted;
+            }
+        }
+
+        if (!empty($formattedQueries)) {
+            $log->addExtra('queries', $formattedQueries);
+        }
+    } catch (Throwable $_) {
+        // don't fail the error handler
+    }
+}
+
 App::init()
     ->groups(['api'])
     ->inject('project')
@@ -1327,6 +1414,9 @@ App::error()
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('roles', Authorization::getRoles());
+
+            /* add queries to log */
+            addQueriesToErrorReporting(request: $request, log: $log);
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
