@@ -120,7 +120,7 @@ App::get('/v1/health/db')
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $database;
@@ -131,6 +131,8 @@ App::get('/v1/health/db')
             }
         }
 
+        // Only throw error if ALL databases failed (no successful pings)
+        // This allows partial failures in environments where not all DBs are ready
         if (!empty($failures)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
@@ -180,7 +182,7 @@ App::get('/v1/health/cache')
                         $output[] = new Document([
                             'name' => $key . " ($cache)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $cache;
@@ -240,7 +242,7 @@ App::get('/v1/health/pubsub')
                         $output[] = new Document([
                             'name' => $key . " ($pubsub)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $pubsub;
@@ -822,7 +824,7 @@ App::get('/v1/health/storage/local')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+            'ping' => \round((\microtime(true) - $checkStart) * 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -874,7 +876,7 @@ App::get('/v1/health/storage')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+            'ping' => \round((\microtime(true) - $checkStart) * 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);

@@ -59,7 +59,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey)
+function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey)
 {
     $host = $request->getHostname() ?? '';
     if (!empty($previewHostname)) {
@@ -67,16 +67,16 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 
     // TODO: (@Meldiron) Remove after 1.7.x migration
-    $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-    $rule = Authorization::skip(function () use ($dbForPlatform, $host, $isMd5) {
-        if ($isMd5) {
-            return $dbForPlatform->getDocument('rules', md5($host));
-        }
-
-        return $dbForPlatform->findOne('rules', [
-            Query::equal('domain', [$host]),
-        ]) ?? new Document();
-    });
+    if (System::getEnv('_APP_RULES_FORMAT') === 'md5') {
+        $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($host)));
+    } else {
+        $rule = $authorization->skip(
+            fn () => $dbForPlatform->find('rules', [
+                Query::equal('domain', [$host]),
+                Query::limit(1)
+            ])
+        )[0] ?? new Document();
+    }
 
     $errorView = __DIR__ . '/../views/general/error.phtml';
     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
@@ -111,7 +111,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 
     $projectId = $rule->getAttribute('projectId');
-    $project = Authorization::skip(
+    $project = $authorization->skip(
         fn () => $dbForPlatform->getDocument('projects', $projectId)
     );
 
@@ -119,7 +119,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $project->setAttribute('accessedAt', DateTime::now());
-            Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
         }
 
         /**
@@ -158,7 +158,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
         /** @var Document $deployment */
         if (!empty($rule->getAttribute('deploymentId', ''))) {
-            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
+            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $rule->getAttribute('deploymentId')));
         } else {
             // 1.6.x DB schema compatibility
             // TODO: Make sure deploymentId is never empty, and remove this code
@@ -172,15 +172,15 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
 
             // Document of site or function
             $resource = $resourceType === 'function' ?
-                Authorization::skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
-                Authorization::skip(fn () => $dbForProject->getDocument('sites', $resourceId));
+                $authorization->skip(fn () => $dbForProject->getDocument('functions', $resourceId)) :
+                $authorization->skip(fn () => $dbForProject->getDocument('sites', $resourceId));
 
             // ID of active deployments
             // Attempts to use attribute from both schemas (1.6 and 1.7)
             $activeDeploymentId = $resource->getAttribute('deploymentId', $resource->getAttribute('deployment', ''));
 
             // Get deployment document, as intended originally
-            $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
+            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $activeDeploymentId));
         }
 
         if ($deployment->getAttribute('resourceType', '') === 'functions') {
@@ -199,8 +199,8 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         }
 
         $resource = $type === 'function' ?
-            Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
-            Authorization::skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
+            $authorization->skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
+            $authorization->skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
         $isPreview = $type === 'function' ? false : ($rule->getAttribute('trigger', '') !== 'manual');
 
@@ -242,7 +242,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
-                    $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                    $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
                     if (!$user->isEmpty() && $user->getAttribute('status', false)) {
                         $userExists = true;
                     }
@@ -255,7 +255,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
                 }
 
                 $membershipExists = false;
-                $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && isset($user)) {
                     $teamId = $project->getAttribute('teamId', '');
                     $membership = $user->find('teamId', $teamId, 'memberships');
@@ -862,15 +862,16 @@ App::init()
     ->inject('devKey')
     ->inject('apiKey')
     ->inject('cors')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Func $queueForFunctions, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors) {
+    ->inject('authorization')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Func $queueForFunctions, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization) {
         /*
         * Appwrite Router
         */
         $hostname = $request->getHostname() ?? '';
         $platformHostnames = $platform['hostnames'] ?? [];
         // Only run Router when external domain
-        if (!in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $apiKey)) {
+        if (!\in_array($hostname, $platformHostnames) || !empty($previewHostname)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1141,7 +1142,8 @@ App::options()
     ->inject('devKey')
     ->inject('apiKey')
     ->inject('cors')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors) {
+    ->inject('authorization')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization) {
         /*
         * Appwrite Router
         */
@@ -1182,7 +1184,8 @@ App::error()
     ->inject('log')
     ->inject('queueForStatsUsage')
     ->inject('devKey')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage) {
+    ->inject('authorization')
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage, Document $devKey, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -1264,7 +1267,7 @@ App::error()
          * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
-            if (!DBUser::isPrivileged(Authorization::getRoles())) {
+            if (!DBUser::isPrivileged($authorization->getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
@@ -1326,7 +1329,7 @@ App::error()
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', $authorization->getRoles());
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
@@ -1450,13 +1453,14 @@ App::get('/robots.txt')
     ->inject('platform')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey) {
+    ->inject('authorization')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization) {
         $platformHostnames = $platform['hostnames'] ?? [];
         if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1482,13 +1486,14 @@ App::get('/humans.txt')
     ->inject('platform')
     ->inject('previewHostname')
     ->inject('apiKey')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey) {
+    ->inject('authorization')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization) {
         $platformHostnames = $platform['hostnames'] ?? [];
         if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
             $response->text($template->render(false));
         } else {
-            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $apiKey)) {
+            if (router($utopia, $dbForPlatform, $getProjectDB, $swooleRequest, $request, $response, $log, $queueForEvents, $queueForStatsUsage, $queueForFunctions, $executor, $geodb, $isResourceBlocked, $platform, $previewHostname, $authorization, $apiKey)) {
                 $utopia->getRoute()?->label('router', true);
             }
         }
@@ -1572,7 +1577,8 @@ App::get('/v1/ping')
     ->inject('project')
     ->inject('dbForPlatform')
     ->inject('queueForEvents')
-    ->action(function (Response $response, Document $project, Database $dbForPlatform, Event $queueForEvents) {
+    ->inject('authorization')
+    ->action(function (Response $response, Document $project, Database $dbForPlatform, Event $queueForEvents, Authorization $authorization) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
         }
@@ -1584,7 +1590,7 @@ App::get('/v1/ping')
             ->setAttribute('pingCount', $pingCount)
             ->setAttribute('pingedAt', $pingedAt);
 
-        Authorization::skip(function () use ($dbForPlatform, $project) {
+        $authorization->skip(function () use ($dbForPlatform, $project) {
             $dbForPlatform->updateDocument('projects', $project->getId(), $project);
         });
 
