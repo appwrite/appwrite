@@ -105,6 +105,16 @@ class StorageServerTest extends Scope
         $buckets = $buckets['body']['data']['storageListBuckets'];
         $this->assertIsArray($buckets);
 
+        if (!empty($buckets['buckets'])) {
+            foreach ($buckets['buckets'] as $bucket) {
+                $this->assertArrayHasKey('totalSize', $bucket);
+                $this->assertIsInt($bucket['totalSize']);
+
+                /* always 0 because the stats worker runs hourly! */
+                $this->assertGreaterThanOrEqual(0, $bucket['totalSize']);
+            }
+        }
+
         return $buckets;
     }
 
