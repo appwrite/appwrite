@@ -64,6 +64,7 @@ class Delete extends Action
             ->inject('queueForEvents')
             ->inject('deviceForFiles')
             ->inject('queueForDeletes')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -75,11 +76,12 @@ class Delete extends Action
         Event $queueForEvents,
         Device $deviceForFiles,
         DeleteEvent $queueForDeletes,
+        Authorization $authorization
     ) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -93,7 +95,7 @@ class Delete extends Action
         }
 
         // Read permission should not be required for delete
-        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -125,7 +127,7 @@ class Delete extends Action
                 if ($fileSecurity && !$valid) {
                     $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId);
                 } else {
-                    $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
+                    $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
                 }
             } catch (NotFoundException) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);

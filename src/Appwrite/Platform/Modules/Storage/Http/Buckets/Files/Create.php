@@ -90,6 +90,7 @@ class Create extends Action
             ->inject('mode')
             ->inject('deviceForFiles')
             ->inject('deviceForLocal')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -105,12 +106,13 @@ class Create extends Action
         Event $queueForEvents,
         string $mode,
         Device $deviceForFiles,
-        Device $deviceForLocal
+        Device $deviceForLocal,
+        Authorization $authorization
     ) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -141,7 +143,7 @@ class Create extends Action
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
+        $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser) {
             foreach (\Utopia\Database\Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -154,7 +156,7 @@ class Create extends Action
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
+                    if (!$authorization->isRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -383,7 +385,7 @@ class Create extends Action
                 if (!$validator->isValid($bucket->getCreate())) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
         } else {
             if ($file->isEmpty()) {
@@ -430,7 +432,7 @@ class Create extends Action
                 }
 
                 try {
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                    $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
                 } catch (NotFoundException) {
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }

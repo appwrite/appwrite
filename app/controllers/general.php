@@ -1034,7 +1034,8 @@ App::init()
    ->inject('dbForPlatform')
    ->inject('queueForCertificates')
    ->inject('platform')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform) {
+    ->inject('authorization')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization) {
        $hostname = $request->getHostname();
        $cache = Config::getParam('hostnames', []);
        $platformHostnames = $platform['hostnames'] ?? [];
@@ -1062,64 +1063,64 @@ App::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       Authorization::disable();
-       try {
-           // TODO: (@Meldiron) Remove after 1.7.x migration
-           $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-           $document = $isMd5
-               ? $dbForPlatform->getDocument('rules', md5($domain->get()))
-               : $dbForPlatform->findOne('rules', [
-                   Query::equal('domain', [$domain->get()]),
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, &$cache) {
+           try {
+               // TODO: (@Meldiron) Remove after 1.7.x migration
+               $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+               $document = $isMd5
+                   ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+                   : $dbForPlatform->findOne('rules', [
+                       Query::equal('domain', [$domain->get()]),
+                   ]);
+
+               if (!$document->isEmpty()) {
+                   return;
+               }
+
+               // 5. Create new rule
+               $owner = '';
+               $fallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
+               $funcDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+               $siteDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+
+               if (!empty($fallback) && \str_ends_with($domain->get(), $fallback)) {
+                   $funcDomain = $fallback;
+               }
+
+               if (
+                   (!empty($funcDomain) && \str_ends_with($domain->get(), $funcDomain)) ||
+                   (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))
+               ) {
+                   $owner = 'Appwrite';
+               }
+
+               $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+               $document = new Document([
+                   '$id' => $ruleId,
+                   'domain' => $domain->get(),
+                   'type' => 'api',
+                   'status' => 'verifying',
+                   'projectId' => $console->getId(),
+                   'projectInternalId' => $console->getSequence(),
+                   'search' => implode(' ', [$ruleId, $domain->get()]),
+                   'owner' => $owner,
+                   'region' => $console->getAttribute('region')
                ]);
 
-           if (!$document->isEmpty()) {
-               return;
+               $dbForPlatform->createDocument('rules', $document);
+
+               Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+               $queueForCertificates
+                   ->setDomain($document)
+                   ->setSkipRenewCheck(true)
+                   ->trigger();
+           } catch (Duplicate $e) {
+               Console::info('Certificate already exists');
+           } finally {
+               $cache[$domain->get()] = true;
+               Config::setParam('hostnames', $cache);
            }
-
-           // 5. Create new rule
-           $owner = '';
-           $fallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
-           $funcDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-           $siteDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-
-           if (!empty($fallback) && \str_ends_with($domain->get(), $fallback)) {
-               $funcDomain = $fallback;
-           }
-
-           if (
-               (!empty($funcDomain) && \str_ends_with($domain->get(), $funcDomain)) ||
-               (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))
-           ) {
-               $owner = 'Appwrite';
-           }
-
-           $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
-           $document = new Document([
-               '$id' => $ruleId,
-               'domain' => $domain->get(),
-               'type' => 'api',
-               'status' => 'verifying',
-               'projectId' => $console->getId(),
-               'projectInternalId' => $console->getSequence(),
-               'search' => implode(' ', [$ruleId, $domain->get()]),
-               'owner' => $owner,
-               'region' => $console->getAttribute('region')
-           ]);
-
-           $dbForPlatform->createDocument('rules', $document);
-
-           Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-           $queueForCertificates
-               ->setDomain($document)
-               ->setSkipRenewCheck(true)
-               ->trigger();
-       } catch (Duplicate $e) {
-           Console::info('Certificate already exists');
-       } finally {
-           $cache[$domain->get()] = true;
-           Config::setParam('hostnames', $cache);
-           Authorization::reset();
-       }
+       });
    });
 
 App::options()

@@ -69,6 +69,7 @@ class Get extends Action
             ->inject('mode')
             ->inject('resourceToken')
             ->inject('deviceForFiles')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -81,13 +82,14 @@ class Get extends Action
         Database $dbForProject,
         string $mode,
         Document $resourceToken,
-        Device $deviceForFiles
+        Device $deviceForFiles,
+        Authorization $authorization
     ) {
         /* @type Document $bucket */
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -105,7 +107,7 @@ class Get extends Action
             $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
         } else {
             /* @type Document $file */
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+            $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
         }
 
         if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
