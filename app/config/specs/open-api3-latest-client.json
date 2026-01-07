@@ -7318,7 +7318,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 454,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -7405,7 +7405,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 452,
+                    "weight": 453,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -7523,7 +7523,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 453,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -8298,7 +8298,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 525,
+                    "weight": 526,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -8397,7 +8397,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 523,
+                    "weight": 524,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -8498,7 +8498,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 524,
+                    "weight": 525,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -8572,7 +8572,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 526,
+                    "weight": 527,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -8664,7 +8664,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 527,
+                    "weight": 528,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -8733,7 +8733,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 529,
+                    "weight": 530,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -8813,7 +8813,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 528,
+                    "weight": 529,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -9043,7 +9043,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 530,
+                    "weight": 531,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
