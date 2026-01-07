@@ -2344,6 +2344,7 @@ trait Base
                         _id
                         name
                         enabled
+                        totalSize
                     }
                 }';
             case self::UPDATE_BUCKET:

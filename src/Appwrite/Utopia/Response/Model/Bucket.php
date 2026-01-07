@@ -92,6 +92,12 @@ class Bucket extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('totalSize', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total size of this bucket in bytes.',
+                'default' => 0,
+                'example' => 128,
+            ])
         ;
     }
 
