@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filters\ListSelection;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -120,7 +121,8 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $this->applySelectQueries($request, $response, Response::MODEL_PROJECT);
+        $response->addFilter(new ListSelection($selectQueries, 'projects'));
+
         $response->dynamic(new Document([
             'projects' => $projects,
             'total' => $total,

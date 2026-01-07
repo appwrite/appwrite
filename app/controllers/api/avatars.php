@@ -697,7 +697,7 @@ App::get('/v1/avatars/screenshots')
         }
 
         $client = new Client();
-        $client->setTimeout(30);
+        $client->setTimeout(30 * 1000); // 30 seconds
         $client->addHeader('content-type', Client::CONTENT_TYPE_APPLICATION_JSON);
 
         // Convert indexed array to empty array (should not happen due to Assoc validator)
