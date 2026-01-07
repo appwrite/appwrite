@@ -67,17 +67,6 @@ class Get extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $dbForLogs = call_user_func($getLogsDB, $project);
-        $this->addBucketStorageSize($dbForLogs, $bucket);
-
-        $response->dynamic($bucket, Response::MODEL_BUCKET);
-    }
-
-    /**
-     * Adds the latest aggregated bucket storage size from logs DB stats.
-     */
-    private function addBucketStorageSize(Database $dbForLogs, Document $bucket): void
-    {
         $metric = str_replace(
             '{bucketInternalId}',
             $bucket->getSequence(),
@@ -85,6 +74,8 @@ class Get extends Action
         );
 
         $statsDocId = md5('_inf_' . $metric);
+
+        $dbForLogs = call_user_func($getLogsDB, $project);
         $storageStats = Authorization::skip(
             fn () => $dbForLogs->getDocument(
                 'stats',
@@ -99,5 +90,7 @@ class Get extends Action
         $totalSize = $storageStats->isEmpty() ? 0 : $storageStats->getAttribute('value', 0);
 
         $bucket->setAttribute('totalSize', $totalSize);
+
+        $response->dynamic($bucket, Response::MODEL_BUCKET);
     }
 }
