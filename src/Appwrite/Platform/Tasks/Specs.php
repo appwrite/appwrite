@@ -205,6 +205,12 @@ class Specs extends Action
                     'description' => 'The user cookie to authenticate with',
                     'in' => 'header',
                 ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
             ],
         ];
     }
