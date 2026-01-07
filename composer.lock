@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b873febd2b03c32ec61a57b690cc44a2",
+    "content-hash": "45ea9ab7f1a1dd90bc6c0b4496af9a4b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "15.1.0",
+            "version": "19.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b"
+                "reference": "8738e812062f899c85b2598eef43d6a247f08a56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/c438b3885071ac7c0329199dce5e6f6a24dd215b",
-                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/8738e812062f899c85b2598eef43d6a247f08a56",
+                "reference": "8738e812062f899c85b2598eef43d6a247f08a56",
                 "shasum": ""
             },
             "require": {
@@ -87,7 +87,7 @@
                 "php": ">=7.1.0"
             },
             "require-dev": {
-                "mockery/mockery": "^1.6.6",
+                "mockery/mockery": "^1.6.12",
                 "phpunit/phpunit": "^10"
             },
             "type": "library",
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/15.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/19.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2025-08-01T04:50:51+00:00"
+            "time": "2025-12-18T08:07:43+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4515,20 +4515,20 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.9",
+            "version": "1.3.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "c55ec67c74663190cda10fd79297422147be7e85"
+                "reference": "798f0976a1c14234c4b283b858b08c9afbcc1662"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c55ec67c74663190cda10fd79297422147be7e85",
-                "reference": "c55ec67c74663190cda10fd79297422147be7e85",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/798f0976a1c14234c4b283b858b08c9afbcc1662",
+                "reference": "798f0976a1c14234c4b283b858b08c9afbcc1662",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "15.*",
+                "appwrite/appwrite": "19.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
@@ -4550,7 +4550,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4563,10 +4581,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.3.9"
+                "source": "https://github.com/utopia-php/migration/tree/1.3.11",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2025-12-08T08:45:09+00:00"
+            "time": "2026-01-06T12:07:07+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8971,5 +8989,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
