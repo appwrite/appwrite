@@ -110,7 +110,9 @@ class StorageServerTest extends Scope
 
     /**
      * @depends testCreateBucket
+     * @depends testCreateFile
      * @param $bucket
+     * @param $file
      * @return array
      * @throws \Exception
      */
@@ -134,6 +136,7 @@ class StorageServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $bucket['body']);
         $bucket = $bucket['body']['data']['storageGetBucket'];
         $this->assertEquals('Actors', $bucket['name']);
+        $this->assertArrayHasKey('totalSize', $bucket);
 
         return $bucket;
     }

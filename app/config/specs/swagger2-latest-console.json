@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "1.8.0",
+        "version": "1.8.1",
         "title": "Appwrite",
         "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https:\/\/appwrite.io\/docs](https:\/\/appwrite.io\/docs)",
         "termsOfService": "https:\/\/appwrite.io\/policy\/terms",
@@ -54918,6 +54918,12 @@
                     "type": "boolean",
                     "description": "Image transformations are enabled.",
                     "x-example": false
+                },
+                "totalSize": {
+                    "type": "integer",
+                    "description": "Total size of this bucket in bytes.",
+                    "x-example": 128,
+                    "format": "int32"
                 }
             },
             "required": [
@@ -54933,7 +54939,8 @@
                 "compression",
                 "encryption",
                 "antivirus",
-                "transformations"
+                "transformations",
+                "totalSize"
             ],
             "example": {
                 "$id": "5e5ea5c16897e",
@@ -54953,7 +54960,8 @@
                 "compression": "gzip",
                 "encryption": false,
                 "antivirus": false,
-                "transformations": false
+                "transformations": false,
+                "totalSize": 128
             }
         },
         "resourceToken": {
