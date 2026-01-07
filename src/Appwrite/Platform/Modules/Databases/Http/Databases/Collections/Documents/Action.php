@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -349,6 +350,7 @@ abstract class Action extends DatabasesAction
      * @param Event $queueForFunctions
      * @param Event $queueForWebhooks
      * @param Database $dbForProject
+     * @param EventProcessor $eventProcessor
      * @return void
      */
     protected function triggerBulk(
@@ -360,7 +362,8 @@ abstract class Action extends DatabasesAction
         Event $queueForRealtime,
         Event $queueForFunctions,
         Event $queueForWebhooks,
-        Database $dbForProject
+        Database $dbForProject,
+        EventProcessor $eventProcessor
     ): void {
         $queueForEvents
             ->setEvent($event)
@@ -372,8 +375,8 @@ abstract class Action extends DatabasesAction
 
         // Get project and function events (cached)
         $project = $queueForEvents->getProject();
-        $functionsEvents = $this->getFunctionsEvents($project, $dbForProject);
-        $webhooksEvents = $this->getWebhooksEvents($project);
+        $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+        $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
         foreach ($documents as $document) {
             $queueForEvents
@@ -390,6 +393,7 @@ abstract class Action extends DatabasesAction
                 $queueForEvents->getEvent(),
                 $queueForEvents->getParams()
             );
+
 
             if (!empty($functionsEvents)) {
                 foreach ($generatedEvents as $event) {
