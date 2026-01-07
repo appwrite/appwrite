@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9bac4d8946e35357efa46fd087c9484e",
+    "content-hash": "375a062e8675e7e6938c1d8cc7b61ecf",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4516,16 +4516,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.10",
+            "version": "1.3.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "cb357c42a5a5614605b546effbea1204ed64c6b0"
+                "reference": "1b8d5519c50630e4c0b6a79be615b70d5f23d2e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/cb357c42a5a5614605b546effbea1204ed64c6b0",
-                "reference": "cb357c42a5a5614605b546effbea1204ed64c6b0",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/1b8d5519c50630e4c0b6a79be615b70d5f23d2e4",
+                "reference": "1b8d5519c50630e4c0b6a79be615b70d5f23d2e4",
                 "shasum": ""
             },
             "require": {
@@ -4551,7 +4551,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4564,10 +4582,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.3.10"
+                "source": "https://github.com/utopia-php/migration/tree/1.3.12",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-01-06T10:47:11+00:00"
+            "time": "2026-01-07T06:07:33+00:00"
         },
         {
             "name": "utopia-php/mongo",
