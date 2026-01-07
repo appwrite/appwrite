@@ -18,7 +18,7 @@ class Action extends PlatformAction
 {
     protected function getAppRoot(): string
     {
-        return \dirname(__DIR__, 7);
+        return \dirname(__DIR__, 6);
     }
 
     protected function avatarCallback(string $type, string $code, int $width, int $height, int $quality, Response $response): void
