@@ -12308,7 +12308,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 438,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list.md",
@@ -12391,7 +12391,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 435,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create.md",
@@ -12705,7 +12705,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 440,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-runtimes.md",
@@ -12756,7 +12756,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 441,
+                    "weight": 442,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-specifications.md",
@@ -12807,7 +12807,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 436,
+                    "weight": 437,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get.md",
@@ -12868,7 +12868,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 437,
+                    "weight": 438,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update.md",
@@ -13178,7 +13178,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 439,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete.md",
@@ -13241,7 +13241,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 444,
+                    "weight": 445,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-function-deployment.md",
@@ -13320,7 +13320,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 445,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-deployments.md",
@@ -13411,7 +13411,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 442,
+                    "weight": 443,
                     "cookies": false,
                     "type": "upload",
                     "demo": "functions\/create-deployment.md",
@@ -13505,7 +13505,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 450,
+                    "weight": 451,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-duplicate-deployment.md",
@@ -13592,7 +13592,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 447,
+                    "weight": 448,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
@@ -13714,7 +13714,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 448,
+                    "weight": 449,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-vcs-deployment.md",
@@ -13812,7 +13812,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 443,
+                    "weight": 444,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-deployment.md",
@@ -13876,7 +13876,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 446,
+                    "weight": 447,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-deployment.md",
@@ -13945,7 +13945,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 449,
+                    "weight": 450,
                     "cookies": false,
                     "type": "location",
                     "demo": "functions\/get-deployment-download.md",
@@ -14032,7 +14032,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 451,
+                    "weight": 452,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-deployment-status.md",
@@ -14101,7 +14101,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 454,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -14186,7 +14186,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 452,
+                    "weight": 453,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -14307,7 +14307,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 453,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -14374,7 +14374,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 455,
+                    "weight": 456,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-execution.md",
@@ -14443,7 +14443,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 460,
+                    "weight": 461,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-variables.md",
@@ -14504,7 +14504,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 458,
+                    "weight": 459,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-variable.md",
@@ -14596,7 +14596,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 459,
+                    "weight": 460,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-variable.md",
@@ -14665,7 +14665,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 461,
+                    "weight": 462,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-variable.md",
@@ -14761,7 +14761,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 462,
+                    "weight": 463,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-variable.md",
@@ -22376,7 +22376,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 467,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list.md",
@@ -22459,7 +22459,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 465,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create.md",
@@ -22731,7 +22731,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 470,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-frameworks.md",
@@ -22782,7 +22782,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 493,
+                    "weight": 494,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -22833,7 +22833,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 466,
+                    "weight": 467,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get.md",
@@ -22894,7 +22894,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 468,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update.md",
@@ -23161,7 +23161,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 469,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete.md",
@@ -23224,7 +23224,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 476,
+                    "weight": 477,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-site-deployment.md",
@@ -23303,7 +23303,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 475,
+                    "weight": 476,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-deployments.md",
@@ -23394,7 +23394,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 471,
+                    "weight": 472,
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
@@ -23496,7 +23496,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 479,
+                    "weight": 480,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-duplicate-deployment.md",
@@ -23577,7 +23577,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 472,
+                    "weight": 473,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
@@ -23699,7 +23699,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 473,
+                    "weight": 474,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-vcs-deployment.md",
@@ -23798,7 +23798,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 474,
+                    "weight": 475,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-deployment.md",
@@ -23862,7 +23862,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 477,
+                    "weight": 478,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-deployment.md",
@@ -23931,7 +23931,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 478,
+                    "weight": 479,
                     "cookies": false,
                     "type": "location",
                     "demo": "sites\/get-deployment-download.md",
@@ -24018,7 +24018,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 480,
+                    "weight": 481,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-deployment-status.md",
@@ -24087,7 +24087,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 482,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -24169,7 +24169,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 481,
+                    "weight": 482,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -24235,7 +24235,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 483,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -24304,7 +24304,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 486,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -24365,7 +24365,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 484,
+                    "weight": 485,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -24457,7 +24457,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 485,
+                    "weight": 486,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -24526,7 +24526,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 487,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -24622,7 +24622,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 488,
+                    "weight": 489,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -24691,7 +24691,7 @@
                 "x-appwrite": {
                     "method": "listBuckets",
                     "group": "buckets",
-                    "weight": 520,
+                    "weight": 521,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-buckets.md",
@@ -24775,7 +24775,7 @@
                 "x-appwrite": {
                     "method": "createBucket",
                     "group": "buckets",
-                    "weight": 518,
+                    "weight": 519,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/create-bucket.md",
@@ -24859,7 +24859,7 @@
                                 },
                                 "compression": {
                                     "type": "string",
-                                    "description": "Compression algorithm choosen for compression. Can be one of none,  [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
+                                    "description": "Compression algorithm chosen for compression. Can be one of none,  [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
                                     "default": "none",
                                     "x-example": "none",
                                     "enum": [
@@ -24922,7 +24922,7 @@
                 "x-appwrite": {
                     "method": "getBucket",
                     "group": "buckets",
-                    "weight": 519,
+                    "weight": 520,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket.md",
@@ -24984,7 +24984,7 @@
                 "x-appwrite": {
                     "method": "updateBucket",
                     "group": "buckets",
-                    "weight": 521,
+                    "weight": 522,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-bucket.md",
@@ -25070,7 +25070,7 @@
                                 },
                                 "compression": {
                                     "type": "string",
-                                    "description": "Compression algorithm choosen for compression. Can be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
+                                    "description": "Compression algorithm chosen for compression. Can be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
                                     "default": "none",
                                     "x-example": "none",
                                     "enum": [
@@ -25127,7 +25127,7 @@
                 "x-appwrite": {
                     "method": "deleteBucket",
                     "group": "buckets",
-                    "weight": 522,
+                    "weight": 523,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-bucket.md",
@@ -25189,7 +25189,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 525,
+                    "weight": 526,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -25284,7 +25284,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 523,
+                    "weight": 524,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -25377,7 +25377,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 524,
+                    "weight": 525,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -25450,7 +25450,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 526,
+                    "weight": 527,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -25543,7 +25543,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 527,
+                    "weight": 528,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -25616,7 +25616,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 529,
+                    "weight": 530,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -25698,7 +25698,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 528,
+                    "weight": 529,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -25908,7 +25908,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 530,
+                    "weight": 531,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -33457,7 +33457,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 515,
+                    "weight": 516,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -33547,7 +33547,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 513,
+                    "weight": 514,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -33632,7 +33632,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 514,
+                    "weight": 515,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -33693,7 +33693,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 516,
+                    "weight": 517,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -33765,7 +33765,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 517,
+                    "weight": 518,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",
@@ -43148,7 +43148,7 @@
                 },
                 "compression": {
                     "type": "string",
-                    "description": "Compression algorithm choosen for compression. Will be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd).",
+                    "description": "Compression algorithm chosen for compression. Will be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd).",
                     "x-example": "gzip"
                 },
                 "encryption": {

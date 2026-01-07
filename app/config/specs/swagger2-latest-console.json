@@ -5993,7 +5993,7 @@
                 "x-appwrite": {
                     "method": "chat",
                     "group": "console",
-                    "weight": 495,
+                    "weight": 496,
                     "cookies": false,
                     "type": "",
                     "demo": "assistant\/chat.md",
@@ -6057,7 +6057,7 @@
                 "x-appwrite": {
                     "method": "getResource",
                     "group": null,
-                    "weight": 496,
+                    "weight": 497,
                     "cookies": false,
                     "type": "",
                     "demo": "console\/get-resource.md",
@@ -6128,7 +6128,7 @@
                 "x-appwrite": {
                     "method": "variables",
                     "group": "console",
-                    "weight": 494,
+                    "weight": 495,
                     "cookies": false,
                     "type": "",
                     "demo": "console\/variables.md",
@@ -13275,7 +13275,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 438,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list.md",
@@ -13357,7 +13357,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 435,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create.md",
@@ -13670,7 +13670,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 440,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-runtimes.md",
@@ -13720,7 +13720,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 441,
+                    "weight": 442,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-specifications.md",
@@ -13770,7 +13770,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 464,
+                    "weight": 465,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-templates.md",
@@ -13954,7 +13954,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 463,
+                    "weight": 464,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-template.md",
@@ -14012,7 +14012,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 457,
+                    "weight": 458,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-usage.md",
@@ -14082,7 +14082,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 436,
+                    "weight": 437,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get.md",
@@ -14142,7 +14142,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 437,
+                    "weight": 438,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update.md",
@@ -14451,7 +14451,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 439,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete.md",
@@ -14513,7 +14513,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 444,
+                    "weight": 445,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-function-deployment.md",
@@ -14591,7 +14591,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 445,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-deployments.md",
@@ -14681,7 +14681,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 442,
+                    "weight": 443,
                     "cookies": false,
                     "type": "upload",
                     "demo": "functions\/create-deployment.md",
@@ -14774,7 +14774,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 450,
+                    "weight": 451,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-duplicate-deployment.md",
@@ -14860,7 +14860,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 447,
+                    "weight": 448,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
@@ -14981,7 +14981,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 448,
+                    "weight": 449,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-vcs-deployment.md",
@@ -15078,7 +15078,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 443,
+                    "weight": 444,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-deployment.md",
@@ -15141,7 +15141,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 446,
+                    "weight": 447,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-deployment.md",
@@ -15209,7 +15209,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 449,
+                    "weight": 450,
                     "cookies": false,
                     "type": "location",
                     "demo": "functions\/get-deployment-download.md",
@@ -15295,7 +15295,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 451,
+                    "weight": 452,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-deployment-status.md",
@@ -15363,7 +15363,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 454,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -15446,7 +15446,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 452,
+                    "weight": 453,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -15565,7 +15565,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 453,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -15630,7 +15630,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 455,
+                    "weight": 456,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-execution.md",
@@ -15698,7 +15698,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 456,
+                    "weight": 457,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-usage.md",
@@ -15776,7 +15776,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 460,
+                    "weight": 461,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-variables.md",
@@ -15836,7 +15836,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 458,
+                    "weight": 459,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-variable.md",
@@ -15927,7 +15927,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 459,
+                    "weight": 460,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-variable.md",
@@ -15995,7 +15995,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 461,
+                    "weight": 462,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-variable.md",
@@ -16090,7 +16090,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 462,
+                    "weight": 463,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-variable.md",
@@ -25438,7 +25438,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, teamId",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, teamId, labels",
                         "required": false,
                         "type": "array",
                         "collectionFormat": "multi",
@@ -28089,6 +28089,87 @@
                         "type": "string",
                         "x-example": "<KEY_ID>",
                         "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/projects\/{projectId}\/labels": {
+            "put": {
+                "summary": "Update project labels",
+                "operationId": "projectsUpdateLabels",
+                "consumes": [
+                    "application\/json"
+                ],
+                "produces": [
+                    "application\/json"
+                ],
+                "tags": [
+                    "projects"
+                ],
+                "description": "Update the project labels by its unique ID. Labels can be used to easily filter projects in an organization.",
+                "responses": {
+                    "200": {
+                        "description": "Project",
+                        "schema": {
+                            "$ref": "#\/definitions\/project"
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateLabels",
+                    "group": "projects",
+                    "weight": 435,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "projects\/update-labels.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "projects.write",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "description": "Project unique ID.",
+                        "required": true,
+                        "type": "string",
+                        "x-example": "<PROJECT_ID>",
+                        "in": "path"
+                    },
+                    {
+                        "name": "payload",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "labels": {
+                                    "type": "array",
+                                    "description": "Array of project labels. Replaces the previous labels. Maximum of 1000 labels are allowed, each up to 36 alphanumeric characters long.",
+                                    "default": null,
+                                    "x-example": null,
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "labels"
+                            ]
+                        }
                     }
                 ]
             }
@@ -31455,7 +31536,7 @@
                 "x-appwrite": {
                     "method": "listRules",
                     "group": null,
-                    "weight": 510,
+                    "weight": 511,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/list-rules.md",
@@ -31537,7 +31618,7 @@
                 "x-appwrite": {
                     "method": "createAPIRule",
                     "group": null,
-                    "weight": 505,
+                    "weight": 506,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-api-rule.md",
@@ -31607,7 +31688,7 @@
                 "x-appwrite": {
                     "method": "createFunctionRule",
                     "group": null,
-                    "weight": 507,
+                    "weight": 508,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-function-rule.md",
@@ -31690,7 +31771,7 @@
                 "x-appwrite": {
                     "method": "createRedirectRule",
                     "group": null,
-                    "weight": 508,
+                    "weight": 509,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-redirect-rule.md",
@@ -31810,7 +31891,7 @@
                 "x-appwrite": {
                     "method": "createSiteRule",
                     "group": null,
-                    "weight": 506,
+                    "weight": 507,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-site-rule.md",
@@ -31891,7 +31972,7 @@
                 "x-appwrite": {
                     "method": "getRule",
                     "group": null,
-                    "weight": 509,
+                    "weight": 510,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/get-rule.md",
@@ -31944,7 +32025,7 @@
                 "x-appwrite": {
                     "method": "deleteRule",
                     "group": null,
-                    "weight": 511,
+                    "weight": 512,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/delete-rule.md",
@@ -32004,7 +32085,7 @@
                 "x-appwrite": {
                     "method": "updateRuleVerification",
                     "group": null,
-                    "weight": 512,
+                    "weight": 513,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/update-rule-verification.md",
@@ -32062,7 +32143,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 467,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list.md",
@@ -32144,7 +32225,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 465,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create.md",
@@ -32415,7 +32496,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 470,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-frameworks.md",
@@ -32465,7 +32546,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 493,
+                    "weight": 494,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -32515,7 +32596,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 489,
+                    "weight": 490,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-templates.md",
@@ -32638,7 +32719,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 490,
+                    "weight": 491,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-template.md",
@@ -32696,7 +32777,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 491,
+                    "weight": 492,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-usage.md",
@@ -32766,7 +32847,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 466,
+                    "weight": 467,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get.md",
@@ -32826,7 +32907,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 468,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update.md",
@@ -33092,7 +33173,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 469,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete.md",
@@ -33154,7 +33235,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 476,
+                    "weight": 477,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-site-deployment.md",
@@ -33232,7 +33313,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 475,
+                    "weight": 476,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-deployments.md",
@@ -33322,7 +33403,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 471,
+                    "weight": 472,
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
@@ -33423,7 +33504,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 479,
+                    "weight": 480,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-duplicate-deployment.md",
@@ -33503,7 +33584,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 472,
+                    "weight": 473,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
@@ -33624,7 +33705,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 473,
+                    "weight": 474,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-vcs-deployment.md",
@@ -33722,7 +33803,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 474,
+                    "weight": 475,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-deployment.md",
@@ -33785,7 +33866,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 477,
+                    "weight": 478,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-deployment.md",
@@ -33853,7 +33934,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 478,
+                    "weight": 479,
                     "cookies": false,
                     "type": "location",
                     "demo": "sites\/get-deployment-download.md",
@@ -33939,7 +34020,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 480,
+                    "weight": 481,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-deployment-status.md",
@@ -34007,7 +34088,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 482,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -34088,7 +34169,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 481,
+                    "weight": 482,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -34153,7 +34234,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 483,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -34221,7 +34302,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 492,
+                    "weight": 493,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-usage.md",
@@ -34299,7 +34380,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 486,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -34359,7 +34440,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 484,
+                    "weight": 485,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -34450,7 +34531,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 485,
+                    "weight": 486,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -34518,7 +34599,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 487,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -34613,7 +34694,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 488,
+                    "weight": 489,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -34681,7 +34762,7 @@
                 "x-appwrite": {
                     "method": "listBuckets",
                     "group": "buckets",
-                    "weight": 520,
+                    "weight": 521,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-buckets.md",
@@ -34764,7 +34845,7 @@
                 "x-appwrite": {
                     "method": "createBucket",
                     "group": "buckets",
-                    "weight": 518,
+                    "weight": 519,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/create-bucket.md",
@@ -34847,7 +34928,7 @@
                                 },
                                 "compression": {
                                     "type": "string",
-                                    "description": "Compression algorithm choosen for compression. Can be one of none,  [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
+                                    "description": "Compression algorithm chosen for compression. Can be one of none,  [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
                                     "default": "none",
                                     "x-example": "none",
                                     "enum": [
@@ -34910,7 +34991,7 @@
                 "x-appwrite": {
                     "method": "getBucket",
                     "group": "buckets",
-                    "weight": 519,
+                    "weight": 520,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket.md",
@@ -34971,7 +35052,7 @@
                 "x-appwrite": {
                     "method": "updateBucket",
                     "group": "buckets",
-                    "weight": 521,
+                    "weight": 522,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-bucket.md",
@@ -35056,7 +35137,7 @@
                                 },
                                 "compression": {
                                     "type": "string",
-                                    "description": "Compression algorithm choosen for compression. Can be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
+                                    "description": "Compression algorithm chosen for compression. Can be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd), For file size above 20MB compression is skipped even if it's enabled",
                                     "default": "none",
                                     "x-example": "none",
                                     "enum": [
@@ -35113,7 +35194,7 @@
                 "x-appwrite": {
                     "method": "deleteBucket",
                     "group": "buckets",
-                    "weight": 522,
+                    "weight": 523,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-bucket.md",
@@ -35174,7 +35255,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 525,
+                    "weight": 526,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -35267,7 +35348,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 523,
+                    "weight": 524,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -35358,7 +35439,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 524,
+                    "weight": 525,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -35429,7 +35510,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 526,
+                    "weight": 527,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -35520,7 +35601,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 527,
+                    "weight": 528,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -35591,7 +35672,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 529,
+                    "weight": 530,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -35671,7 +35752,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 528,
+                    "weight": 529,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -35879,7 +35960,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 530,
+                    "weight": 531,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -35959,7 +36040,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 532,
+                    "weight": 533,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-usage.md",
@@ -36030,7 +36111,7 @@
                 "x-appwrite": {
                     "method": "getBucketUsage",
                     "group": null,
-                    "weight": 533,
+                    "weight": 534,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket-usage.md",
@@ -44019,7 +44100,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 515,
+                    "weight": 516,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -44108,7 +44189,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 513,
+                    "weight": 514,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -44192,7 +44273,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 514,
+                    "weight": 515,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -44252,7 +44333,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 516,
+                    "weight": 517,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -44323,7 +44404,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 517,
+                    "weight": 518,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",
@@ -54901,7 +54982,7 @@
                 },
                 "compression": {
                     "type": "string",
-                    "description": "Compression algorithm choosen for compression. Will be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd).",
+                    "description": "Compression algorithm chosen for compression. Will be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd).",
                     "x-example": "gzip"
                 },
                 "encryption": {
@@ -57346,6 +57427,16 @@
                     "description": "Last ping datetime in ISO 8601 format.",
                     "x-example": "2020-10-15T06:38:00.000+00:00"
                 },
+                "labels": {
+                    "type": "array",
+                    "description": "Labels for the project.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-example": [
+                        "vip"
+                    ]
+                },
                 "authEmailPassword": {
                     "type": "boolean",
                     "description": "Email\/Password auth method status",
@@ -57490,6 +57581,7 @@
                 "smtpSecure",
                 "pingCount",
                 "pingedAt",
+                "labels",
                 "authEmailPassword",
                 "authUsersAuthMagicURL",
                 "authEmailOtp",
@@ -57558,6 +57650,9 @@
                 "smtpSecure": "tls",
                 "pingCount": 1,
                 "pingedAt": "2020-10-15T06:38:00.000+00:00",
+                "labels": [
+                    "vip"
+                ],
                 "authEmailPassword": true,
                 "authUsersAuthMagicURL": true,
                 "authEmailOtp": true,
@@ -59559,171 +59654,6 @@
                     "description": "Time range of the usage stats.",
                     "x-example": "30d"
                 },
-                "deploymentsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of functions deployments.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "deploymentsStorageTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions deployment storage.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of functions build.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsStorageTotal": {
-                    "type": "integer",
-                    "description": "total aggregated sum of functions build storage.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsTimeTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions build compute time.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsMbSecondsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions build mbSeconds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "executionsTotal": {
-                    "type": "integer",
-                    "description": "Total  aggregated number of functions execution.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "executionsTimeTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions  execution compute time.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "executionsMbSecondsTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated sum of functions execution mbSeconds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "deployments": {
-                    "type": "array",
-                    "description": "Aggregated number of functions deployment per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "deploymentsStorage": {
-                    "type": "array",
-                    "description": "Aggregated number of  functions deployment storage per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsSuccessTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of successful function builds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "buildsFailedTotal": {
-                    "type": "integer",
-                    "description": "Total aggregated number of failed function builds.",
-                    "x-example": 0,
-                    "format": "int32"
-                },
-                "builds": {
-                    "type": "array",
-                    "description": "Aggregated number of functions build per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsStorage": {
-                    "type": "array",
-                    "description": "Aggregated sum of functions build storage per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsTime": {
-                    "type": "array",
-                    "description": "Aggregated sum of  functions build compute time per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsMbSeconds": {
-                    "type": "array",
-                    "description": "Aggregated sum of functions build mbSeconds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "executions": {
-                    "type": "array",
-                    "description": "Aggregated number of  functions execution per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "executionsTime": {
-                    "type": "array",
-                    "description": "Aggregated number of functions execution compute time per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "executionsMbSeconds": {
-                    "type": "array",
-                    "description": "Aggregated number of functions mbSeconds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsSuccess": {
-                    "type": "array",
-                    "description": "Aggregated number of successful function builds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
-                "buildsFailed": {
-                    "type": "array",
-                    "description": "Aggregated number of failed function builds per period.",
-                    "items": {
-                        "type": "object",
-                        "$ref": "#\/definitions\/metric"
-                    },
-                    "x-example": []
-                },
                 "sitesTotal": {
                     "type": "integer",
                     "description": "Total aggregated number of sites.",
@@ -59738,6 +59668,60 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "deploymentsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of sites deployments.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "deploymentsStorageTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites deployment storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of sites build.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsStorageTotal": {
+                    "type": "integer",
+                    "description": "total aggregated sum of sites build storage.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites build compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites build mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTotal": {
+                    "type": "integer",
+                    "description": "Total  aggregated number of sites execution.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsTimeTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites  execution compute time.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "executionsMbSecondsTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated sum of sites execution mbSeconds.",
+                    "x-example": 0,
+                    "format": "int32"
                 },
                 "requestsTotal": {
                     "type": "integer",
@@ -59783,10 +59767,123 @@
                         "$ref": "#\/definitions\/metric"
                     },
                     "x-example": []
+                },
+                "deployments": {
+                    "type": "array",
+                    "description": "Aggregated number of sites deployment per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "deploymentsStorage": {
+                    "type": "array",
+                    "description": "Aggregated number of  sites deployment storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccessTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of successful site builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "buildsFailedTotal": {
+                    "type": "integer",
+                    "description": "Total aggregated number of failed site builds.",
+                    "x-example": 0,
+                    "format": "int32"
+                },
+                "builds": {
+                    "type": "array",
+                    "description": "Aggregated number of sites build per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsStorage": {
+                    "type": "array",
+                    "description": "Aggregated sum of sites build storage per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsTime": {
+                    "type": "array",
+                    "description": "Aggregated sum of  sites build compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated sum of sites build mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executions": {
+                    "type": "array",
+                    "description": "Aggregated number of  sites execution per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsTime": {
+                    "type": "array",
+                    "description": "Aggregated number of sites execution compute time per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "executionsMbSeconds": {
+                    "type": "array",
+                    "description": "Aggregated number of sites mbSeconds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsSuccess": {
+                    "type": "array",
+                    "description": "Aggregated number of successful site builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
+                },
+                "buildsFailed": {
+                    "type": "array",
+                    "description": "Aggregated number of failed site builds per period.",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#\/definitions\/metric"
+                    },
+                    "x-example": []
                 }
             },
             "required": [
                 "range",
+                "sitesTotal",
+                "sites",
                 "deploymentsTotal",
                 "deploymentsStorageTotal",
                 "buildsTotal",
@@ -59796,6 +59893,12 @@
                 "executionsTotal",
                 "executionsTimeTotal",
                 "executionsMbSecondsTotal",
+                "requestsTotal",
+                "requests",
+                "inboundTotal",
+                "inbound",
+                "outboundTotal",
+                "outbound",
                 "deployments",
                 "deploymentsStorage",
                 "buildsSuccessTotal",
@@ -59808,18 +59911,12 @@
                 "executionsTime",
                 "executionsMbSeconds",
                 "buildsSuccess",
-                "buildsFailed",
-                "sitesTotal",
-                "sites",
-                "requestsTotal",
-                "requests",
-                "inboundTotal",
-                "inbound",
-                "outboundTotal",
-                "outbound"
+                "buildsFailed"
             ],
             "example": {
                 "range": "30d",
+                "sitesTotal": 0,
+                "sites": [],
                 "deploymentsTotal": 0,
                 "deploymentsStorageTotal": 0,
                 "buildsTotal": 0,
@@ -59829,6 +59926,12 @@
                 "executionsTotal": 0,
                 "executionsTimeTotal": 0,
                 "executionsMbSecondsTotal": 0,
+                "requestsTotal": 0,
+                "requests": [],
+                "inboundTotal": 0,
+                "inbound": [],
+                "outboundTotal": 0,
+                "outbound": [],
                 "deployments": [],
                 "deploymentsStorage": [],
                 "buildsSuccessTotal": 0,
@@ -59841,15 +59944,7 @@
                 "executionsTime": [],
                 "executionsMbSeconds": [],
                 "buildsSuccess": [],
-                "buildsFailed": [],
-                "sitesTotal": 0,
-                "sites": [],
-                "requestsTotal": 0,
-                "requests": [],
-                "inboundTotal": 0,
-                "inbound": [],
-                "outboundTotal": 0,
-                "outbound": []
+                "buildsFailed": []
             }
         },
         "usageSite": {
