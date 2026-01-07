@@ -8,6 +8,7 @@ class Projects extends Base
         'name',
         'teamId',
         'labels',
+        'search'
     ];
 
     /**
