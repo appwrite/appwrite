@@ -136,13 +136,8 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
-                Query::or([
-                    Query::equal('projectInternalId', [$document->getSequence()]),
-                    Query::and([
-                        Query::equal('resourceType', ['projects']),
-                        Query::equal('resourceInternalId', [$document->getSequence()]),
-                    ])
-                ]),
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$document->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
