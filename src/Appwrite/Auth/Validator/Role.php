@@ -77,9 +77,13 @@ class Role extends Validator
             return false;
         }
 
-        $role = DbRole::parse($value);
-        $valid = $role->getRole() === Roles::ROLE_PROJECT ? !empty($role->getIdentifier()) && \in_array($role->getDimension(), $this->roles) : \in_array($role->getRole(), $this->roles);
+        try {
+            $role = DbRole::parse($value);
+            $valid = $role->getRole() === Roles::ROLE_PROJECT ? !empty($role->getIdentifier()) && \in_array($role->getDimension(), $this->roles) : \in_array($role->getRole(), $this->roles);
+            return $valid;
+        } catch (\Exception $e) {
+            return false;
+        }
 
-        return $valid;
     }
 }

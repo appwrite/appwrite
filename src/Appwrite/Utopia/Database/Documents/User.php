@@ -62,7 +62,7 @@ class User extends Document
         }
 
         foreach ($this->getAttribute('memberships', []) as $node) {
-            if (!isset($node['confirm']) || !$node['confirm'] || !isset($node['id']) || !isset($node['teamId'])) {
+            if (!isset($node['confirm']) || !$node['confirm'] || !isset($node['$id']) || !isset($node['teamId'])) {
                 continue;
             }
 
@@ -74,7 +74,7 @@ class User extends Document
                 $roles = \array_merge($roles, $projectRoles);
             } else {
                 $roles[] = Role::team($node['teamId'])->toString(); // Add base role for the team
-                $teamRoles = \array_map(fn ($role) => Role::team($node['teamId'], $role)->toString(), $node['roles'] ?? []); 
+                $teamRoles = \array_map(fn ($role) => Role::team($node['teamId'], $role)->toString(), $node['roles'] ?? []);
                 $roles = \array_merge($roles, $teamRoles);
             }
         }
