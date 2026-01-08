@@ -60,34 +60,61 @@ class Get extends Action
         }
 
         $sslContext = stream_context_create([
-            "ssl" => [
-                "capture_peer_cert" => true
-            ]
+            'ssl' => [
+                'capture_peer_cert' => true,
+                'SNI_enabled' => true,
+                'peer_name' => $domain,
+            ],
         ]);
-        $sslSocket = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
+
+        $sslSocket = @stream_socket_client('ssl://' . $domain . ':443', $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
+
         if (!$sslSocket) {
-            throw new Exception(Exception::HEALTH_INVALID_HOST);
+            throw new Exception(Exception::HEALTH_INVALID_HOST, 'Failed to connect to host: (' . ($errno ?? 'unknown') . ') ' . ($errstr ?? 'unknown'));
         }
 
-        $streamContextParams = stream_context_get_params($sslSocket);
-        $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'];
-        $certificatePayload = openssl_x509_parse($peerCertificate);
+        try {
+            $streamContextParams = stream_context_get_params($sslSocket);
+            $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'] ?? null;
 
+            if ($peerCertificate === null) {
+                throw new Exception(Exception::HEALTH_INVALID_HOST, 'Peer certificate not available for ' . $domain);
+            }
 
-        $sslExpiration = $certificatePayload['validTo_time_t'];
-        $status = $sslExpiration < time() ? 'fail' : 'pass';
+            $certificatePayload = @openssl_x509_parse($peerCertificate);
+            if ($certificatePayload === false || !\is_array($certificatePayload)) {
+                throw new Exception(Exception::HEALTH_INVALID_HOST, 'Failed to parse peer certificate for ' . $domain);
+            }
 
-        if ($status === 'fail') {
-            throw new Exception(Exception::HEALTH_CERTIFICATE_EXPIRED);
+            $validFrom = $certificatePayload['validFrom_time_t'] ?? null;
+            $validTo = $certificatePayload['validTo_time_t'] ?? null;
+
+            if ($validFrom === null || $validTo === null) {
+                throw new Exception(Exception::HEALTH_INVALID_HOST, 'Certificate missing validity period for ' . $domain);
+            }
+
+            $sslExpiration = $validTo;
+            $status = $sslExpiration < time() ? 'fail' : 'pass';
+
+            if ($status === 'fail') {
+                throw new Exception(Exception::HEALTH_CERTIFICATE_EXPIRED);
+            }
+
+            $name = $certificatePayload['name'] ?? null;
+            if (empty($name) && !empty($certificatePayload['subject']['CN'])) {
+                $name = '/CN=' . $certificatePayload['subject']['CN'];
+            }
+
+            $response->dynamic(new Document([
+                'name' => $name ?? '',
+                'subjectSN' => $certificatePayload['subject']['CN'] ?? '',
+                'issuerOrganisation' => $certificatePayload['issuer']['O'] ?? '',
+                'validFrom' => $validFrom,
+                'validTo' => $validTo,
+                'signatureTypeSN' => $certificatePayload['signatureTypeSN'] ?? '',
+            ]), Response::MODEL_HEALTH_CERTIFICATE);
+        } finally {
+            @fclose($sslSocket);
         }
-
-        $response->dynamic(new Document([
-            'name' => $certificatePayload['name'],
-            'subjectSN' => $certificatePayload['subject']['CN'],
-            'issuerOrganisation' => $certificatePayload['issuer']['O'],
-            'validFrom' => $certificatePayload['validFrom_time_t'],
-            'validTo' => $certificatePayload['validTo_time_t'],
-            'signatureTypeSN' => $certificatePayload['signatureTypeSN'],
-        ]), Response::MODEL_HEALTH_CERTIFICATE);
     }
 }
