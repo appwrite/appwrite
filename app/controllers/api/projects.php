@@ -64,7 +64,7 @@ App::init()
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
         }
     });
-
+ 
 App::post('/v1/projects')
     ->desc('Create project')
     ->groups(['api', 'projects'])
