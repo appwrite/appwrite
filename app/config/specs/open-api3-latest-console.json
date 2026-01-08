@@ -5862,7 +5862,7 @@
                 "x-appwrite": {
                     "method": "chat",
                     "group": "console",
-                    "weight": 496,
+                    "weight": 532,
                     "cookies": false,
                     "type": "",
                     "demo": "assistant\/chat.md",
@@ -5923,7 +5923,7 @@
                 "x-appwrite": {
                     "method": "getResource",
                     "group": null,
-                    "weight": 497,
+                    "weight": 533,
                     "cookies": false,
                     "type": "",
                     "demo": "console\/get-resource.md",
@@ -5998,7 +5998,7 @@
                 "x-appwrite": {
                     "method": "variables",
                     "group": "console",
-                    "weight": 495,
+                    "weight": 531,
                     "cookies": false,
                     "type": "",
                     "demo": "console\/variables.md",
@@ -10221,6 +10221,122 @@
                 }
             }
         },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/relationship\/{key}": {
+            "patch": {
+                "summary": "Update relationship attribute",
+                "operationId": "databasesUpdateRelationshipAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Update relationship attribute. [Learn more about relationship attributes](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-attributes).\n",
+                "responses": {
+                    "200": {
+                        "description": "AttributeRelationship",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeRelationship"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": true,
+                "x-appwrite": {
+                    "method": "updateRelationshipAttribute",
+                    "group": "attributes",
+                    "weight": 349,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/update-relationship-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-relationship-attribute.md",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tablesDB.updateRelationshipColumn"
+                    },
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Attribute Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "onDelete": {
+                                        "type": "string",
+                                        "description": "Constraints option",
+                                        "x-example": "cascade",
+                                        "enum": [
+                                            "cascade",
+                                            "restrict",
+                                            "setNull"
+                                        ],
+                                        "x-enum-name": "RelationMutate",
+                                        "x-enum-keys": [],
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Attribute Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/string": {
             "post": {
                 "summary": "Create string attribute",
@@ -10894,122 +11010,6 @@
                 ]
             }
         },
-        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/{key}\/relationship": {
-            "patch": {
-                "summary": "Update relationship attribute",
-                "operationId": "databasesUpdateRelationshipAttribute",
-                "tags": [
-                    "databases"
-                ],
-                "description": "Update relationship attribute. [Learn more about relationship attributes](https:\/\/appwrite.io\/docs\/databases-relationships#relationship-attributes).\n",
-                "responses": {
-                    "200": {
-                        "description": "AttributeRelationship",
-                        "content": {
-                            "application\/json": {
-                                "schema": {
-                                    "$ref": "#\/components\/schemas\/attributeRelationship"
-                                }
-                            }
-                        }
-                    }
-                },
-                "deprecated": true,
-                "x-appwrite": {
-                    "method": "updateRelationshipAttribute",
-                    "group": "attributes",
-                    "weight": 349,
-                    "cookies": false,
-                    "type": "",
-                    "demo": "databases\/update-relationship-attribute.md",
-                    "rate-limit": 0,
-                    "rate-time": 3600,
-                    "rate-key": "url:{url},ip:{ip}",
-                    "scope": "collections.write",
-                    "platforms": [
-                        "console",
-                        "server"
-                    ],
-                    "packaging": false,
-                    "public": true,
-                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-relationship-attribute.md",
-                    "deprecated": {
-                        "since": "1.8.0",
-                        "replaceWith": "tablesDB.updateRelationshipColumn"
-                    },
-                    "auth": {
-                        "Project": []
-                    }
-                },
-                "security": [
-                    {
-                        "Project": [],
-                        "Key": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "databaseId",
-                        "description": "Database ID.",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<DATABASE_ID>"
-                        },
-                        "in": "path"
-                    },
-                    {
-                        "name": "collectionId",
-                        "description": "Collection ID.",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "x-example": "<COLLECTION_ID>"
-                        },
-                        "in": "path"
-                    },
-                    {
-                        "name": "key",
-                        "description": "Attribute Key.",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "in": "path"
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application\/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "onDelete": {
-                                        "type": "string",
-                                        "description": "Constraints option",
-                                        "x-example": "cascade",
-                                        "enum": [
-                                            "cascade",
-                                            "restrict",
-                                            "setNull"
-                                        ],
-                                        "x-enum-name": "RelationMutate",
-                                        "x-enum-keys": [],
-                                        "x-nullable": true
-                                    },
-                                    "newKey": {
-                                        "type": "string",
-                                        "description": "New Attribute Key.",
-                                        "x-example": null,
-                                        "x-nullable": true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/documents": {
             "get": {
                 "summary": "List documents",
@@ -11214,6 +11214,7 @@
                                 "databaseId",
                                 "collectionId",
                                 "documents",
+                                "transactionId",
                                 "transactionId"
                             ],
                             "required": [
@@ -13307,6 +13308,2412 @@
                 ]
             }
         },
+        "\/documentsdb": {
+            "get": {
+                "summary": "List databases",
+                "operationId": "documentsDBList",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.",
+                "responses": {
+                    "200": {
+                        "description": "Databases List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/databaseList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "list",
+                    "group": "documentsdb",
+                    "weight": 433,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/list.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "databases.read",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/list.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following columns: name",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SEARCH>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create database",
+                "operationId": "documentsDBCreate",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Create a new Database.\n",
+                "responses": {
+                    "201": {
+                        "description": "Database",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/database"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "create",
+                    "group": "documentsdb",
+                    "weight": 429,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/create.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "databases.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/create.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "databaseId": {
+                                        "type": "string",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "x-example": "<DATABASE_ID>"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Database name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "description": "Is the database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "databaseId",
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/documentsdb\/usage": {
+            "get": {
+                "summary": "Get DocumentsDB usage stats",
+                "operationId": "documentsDBListUsage",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                "responses": {
+                    "200": {
+                        "description": "UsageDatabases",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/usageDatabases"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listUsage",
+                    "group": null,
+                    "weight": 435,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/list-usage.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/list-usage.md",
+                    "methods": [
+                        {
+                            "name": "listUsage",
+                            "namespace": "documentsDB",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "range"
+                            ],
+                            "required": [],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/usageDatabases"
+                                }
+                            ],
+                            "description": "List usage metrics and statistics for all databases in the project. You can view the total number of databases, collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                            "demo": "documentsdb\/list-usage.md",
+                            "public": true
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "range",
+                        "description": "Date range.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "24h",
+                            "enum": [
+                                "24h",
+                                "30d",
+                                "90d"
+                            ],
+                            "x-enum-name": "UsageRange",
+                            "x-enum-keys": [
+                                "Twenty Four Hours",
+                                "Thirty Days",
+                                "Ninety Days"
+                            ],
+                            "default": "30d"
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/documentsdb\/{databaseId}": {
+            "get": {
+                "summary": "Get database",
+                "operationId": "documentsDBGet",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get a database by its unique ID. This endpoint response returns a JSON object with the database metadata.",
+                "responses": {
+                    "200": {
+                        "description": "Database",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/database"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "get",
+                    "group": "documentsdb",
+                    "weight": 430,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/get.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "databases.read",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/get.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update database",
+                "operationId": "documentsDBUpdate",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Update a database by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Database",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/database"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "update",
+                    "group": "documentsdb",
+                    "weight": 431,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/update.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "databases.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/update.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Database name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "description": "Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete database",
+                "operationId": "documentsDBDelete",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Delete a database by its unique ID. Only API keys with with databases.write scope can delete a database.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "delete",
+                    "group": "documentsdb",
+                    "weight": 432,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/delete.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "databases.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/delete.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections": {
+            "get": {
+                "summary": "List collections",
+                "operationId": "documentsDBListCollections",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get a list of all collections that belong to the provided databaseId. You can use the search parameter to filter your results.",
+                "responses": {
+                    "200": {
+                        "description": "Collections List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/collectionList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listCollections",
+                    "group": "collections",
+                    "weight": 440,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/list-collections.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/list-collections.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, enabled, documentSecurity",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "search",
+                        "description": "Search term to filter your list results. Max length: 256 chars.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<SEARCH>",
+                            "default": ""
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create collection",
+                "operationId": "documentsDBCreateCollection",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Create a new Collection. Before using this route, you should create a new database resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#documentsDBCreateCollection) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Collection",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/collection"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createCollection",
+                    "group": "collections",
+                    "weight": 436,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/create-collection.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/create-collection.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "collectionId": {
+                                        "type": "string",
+                                        "description": "Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "x-example": "<COLLECTION_ID>"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Collection name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "description": "An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                        "x-example": "[\"read(\"any\")\"]",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "documentSecurity": {
+                                        "type": "boolean",
+                                        "description": "Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                        "x-example": false
+                                    },
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "description": "Is collection enabled? When set to 'disabled', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.",
+                                        "x-example": false
+                                    },
+                                    "attributes": {
+                                        "type": "array",
+                                        "description": "Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, integer, float, boolean, datetime, relationship), size (integer, required for string type), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "indexes": {
+                                        "type": "array",
+                                        "description": "Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC\/DESC, optional), and lengths (array of integers, optional).",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "collectionId",
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}": {
+            "get": {
+                "summary": "Get collection",
+                "operationId": "documentsDBGetCollection",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get a collection by its unique ID. This endpoint response returns a JSON object with the collection metadata.",
+                "responses": {
+                    "200": {
+                        "description": "Collection",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/collection"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getCollection",
+                    "group": "collections",
+                    "weight": 437,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/get-collection.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/get-collection.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update collection",
+                "operationId": "documentsDBUpdateCollection",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Update a collection by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Collection",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/collection"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateCollection",
+                    "group": "collections",
+                    "weight": 438,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/update-collection.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/update-collection.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Collection name. Max length: 128 chars.",
+                                        "x-example": "<NAME>"
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "description": "An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                        "x-example": "[\"read(\"any\")\"]",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "documentSecurity": {
+                                        "type": "boolean",
+                                        "description": "Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                        "x-example": false
+                                    },
+                                    "enabled": {
+                                        "type": "boolean",
+                                        "description": "Is collection enabled? When set to 'disabled', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete collection",
+                "operationId": "documentsDBDeleteCollection",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Delete a collection by its unique ID. Only users with write permissions have access to delete this resource.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteCollection",
+                    "group": "collections",
+                    "weight": 439,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/delete-collection.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/delete-collection.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/documents": {
+            "post": {
+                "summary": "Create document",
+                "operationId": "documentsDBCreateDocument",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#documentsDBCreateCollection) API or directly from your database console.",
+                "responses": {
+                    "201": {
+                        "description": "Document",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/document"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createDocument",
+                    "group": "documents",
+                    "weight": 447,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/create-document.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/create-document.md",
+                    "methods": [
+                        {
+                            "name": "createDocuments",
+                            "namespace": "documentsDB",
+                            "desc": "Create documents",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/documentList"
+                                }
+                            ],
+                            "description": "Create new Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#documentsDBCreateCollection) API or directly from your database console.",
+                            "demo": "documentsdb\/create-documents.md",
+                            "public": true
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": [],
+                        "JWT": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection). Make sure to define attributes before creating documents.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "documentId": {
+                                        "type": "string",
+                                        "description": "Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char. Max length is 36 chars.",
+                                        "x-example": "<DOCUMENT_ID>"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "description": "Document data as JSON object.",
+                                        "x-example": "{\"username\":\"walter.obrien\",\"email\":\"walter.obrien@example.com\",\"fullName\":\"Walter O'Brien\",\"age\":30,\"isAdmin\":false}"
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "description": "An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https:\/\/appwrite.io\/docs\/permissions).",
+                                        "x-example": "[\"read(\"any\")\"]",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "documents": {
+                                        "type": "array",
+                                        "description": "Array of documents data as JSON objects.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "summary": "Upsert documents",
+                "operationId": "documentsDBUpsertDocuments",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Create or update Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#documentsDBCreateCollection) API or directly from your database console.\n",
+                "responses": {
+                    "201": {
+                        "description": "Documents List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/documentList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "upsertDocuments",
+                    "group": "documents",
+                    "weight": 452,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/upsert-documents.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/upsert-documents.md",
+                    "methods": [
+                        {
+                            "name": "upsertDocuments",
+                            "namespace": "documentsDB",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "collectionId",
+                                "documents",
+                                "transactionId"
+                            ],
+                            "required": [
+                                "databaseId",
+                                "collectionId",
+                                "documents"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 201,
+                                    "model": "#\/components\/schemas\/documentList"
+                                }
+                            ],
+                            "description": "Create or update Documents. Before using this route, you should create a new collection resource using either a [server integration](https:\/\/appwrite.io\/docs\/server\/databases#documentsDBCreateCollection) API or directly from your database console.\n",
+                            "demo": "documentsdb\/upsert-documents.md",
+                            "public": true
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "documents": {
+                                        "type": "array",
+                                        "description": "Array of document data as JSON objects. May contain partial documents.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                },
+                                "required": [
+                                    "documents"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "summary": "Update documents",
+                "operationId": "documentsDBUpdateDocuments",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Update all documents that match your queries, if no queries are submitted then all documents are updated. You can pass only specific fields to be updated.",
+                "responses": {
+                    "200": {
+                        "description": "Documents List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/documentList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateDocuments",
+                    "group": "documents",
+                    "weight": 450,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/update-documents.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/update-documents.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data": {
+                                        "type": "object",
+                                        "description": "Document data as JSON object. Include only attribute and value pairs to be updated.",
+                                        "x-example": "{}"
+                                    },
+                                    "queries": {
+                                        "type": "array",
+                                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete documents",
+                "operationId": "documentsDBDeleteDocuments",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Bulk delete documents using queries, if no queries are passed then all documents are deleted.",
+                "responses": {
+                    "200": {
+                        "description": "Documents List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/documentList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteDocuments",
+                    "group": "documents",
+                    "weight": 454,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/delete-documents.md",
+                    "rate-limit": 60,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/delete-documents.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "queries": {
+                                        "type": "array",
+                                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/logs": {
+            "get": {
+                "summary": "List document logs",
+                "operationId": "documentsDBListDocumentLogs",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get the document activity logs list by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Logs List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/logList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listDocumentLogs",
+                    "group": "logs",
+                    "weight": 456,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/list-document-logs.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "documents.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/get-document-logs.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DOCUMENT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Only supported methods are limit and offset",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/decrement": {
+            "patch": {
+                "summary": "Decrement document attribute",
+                "operationId": "documentsDBDecrementDocumentAttribute",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Decrement a specific column of a row by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/document"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "decrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 458,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/decrement-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/decrement-document-attribute.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "JWT": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DOCUMENT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "number",
+                                        "description": "Value to decrement the attribute by. The value must be a number.",
+                                        "x-example": null
+                                    },
+                                    "min": {
+                                        "type": "number",
+                                        "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
+                                        "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/documents\/{documentId}\/{attribute}\/increment": {
+            "patch": {
+                "summary": "Increment document attribute",
+                "operationId": "documentsDBIncrementDocumentAttribute",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Increment a specific column of a row by a given value.",
+                "responses": {
+                    "200": {
+                        "description": "Document",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/document"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "incrementDocumentAttribute",
+                    "group": "documents",
+                    "weight": 457,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/increment-document-attribute.md",
+                    "rate-limit": 120,
+                    "rate-time": 60,
+                    "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
+                    "scope": "documents.write",
+                    "platforms": [
+                        "client",
+                        "server",
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/increment-document-attribute.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "JWT": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "documentId",
+                        "description": "Document ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DOCUMENT_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "attribute",
+                        "description": "Attribute key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "number",
+                                        "description": "Value to increment the attribute by. The value must be a number.",
+                                        "x-example": null
+                                    },
+                                    "max": {
+                                        "type": "number",
+                                        "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
+                                        "x-example": null
+                                    },
+                                    "transactionId": {
+                                        "type": "string",
+                                        "description": "Transaction ID for staging the operation.",
+                                        "x-example": "<TRANSACTION_ID>"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/indexes": {
+            "get": {
+                "summary": "List indexes",
+                "operationId": "documentsDBListIndexes",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "List indexes in the collection.",
+                "responses": {
+                    "200": {
+                        "description": "Indexes List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/indexList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listIndexes",
+                    "group": "indexes",
+                    "weight": 446,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/list-indexes.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/list-indexes.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: key, type, status, attributes, error",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "total",
+                        "description": "When set to false, the total count returned will be 0 and will not be calculated.",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "x-example": false,
+                            "default": true
+                        },
+                        "in": "query"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create index",
+                "operationId": "documentsDBCreateIndex",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.\nAttributes can be `key`, `fulltext`, and `unique`.",
+                "responses": {
+                    "202": {
+                        "description": "Index",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/index"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createIndex",
+                    "group": "indexes",
+                    "weight": 443,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/create-index.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/create-index.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Index Key.",
+                                        "x-example": null
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "description": "Index type.",
+                                        "x-example": "key",
+                                        "enum": [
+                                            "key",
+                                            "fulltext",
+                                            "unique",
+                                            "spatial"
+                                        ],
+                                        "x-enum-name": "IndexType",
+                                        "x-enum-keys": []
+                                    },
+                                    "attributes": {
+                                        "type": "array",
+                                        "description": "Array of attributes to index. Maximum of 100 attributes are allowed, each 32 characters long.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "orders": {
+                                        "type": "array",
+                                        "description": "Array of index orders. Maximum of 100 orders are allowed.",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "asc",
+                                                "desc"
+                                            ],
+                                            "x-enum-name": "OrderBy",
+                                            "x-enum-keys": []
+                                        }
+                                    },
+                                    "lengths": {
+                                        "type": "array",
+                                        "description": "Length of index. Maximum of 100",
+                                        "x-example": null,
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "type",
+                                    "attributes"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/indexes\/{key}": {
+            "get": {
+                "summary": "Get index",
+                "operationId": "documentsDBGetIndex",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get index by ID.",
+                "responses": {
+                    "200": {
+                        "description": "Index",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/index"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getIndex",
+                    "group": "indexes",
+                    "weight": 444,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/get-index.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/get-index.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Index Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete index",
+                "operationId": "documentsDBDeleteIndex",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Delete an index.",
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "deleteIndex",
+                    "group": "indexes",
+                    "weight": 445,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/delete-index.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/delete-index.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Index Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/logs": {
+            "get": {
+                "summary": "List collection logs",
+                "operationId": "documentsDBListCollectionLogs",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get the collection activity logs list by its unique ID.",
+                "responses": {
+                    "200": {
+                        "description": "Logs List",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/logList"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "listCollectionLogs",
+                    "group": "collections",
+                    "weight": 441,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/list-collection-logs.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/get-collection-logs.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "queries",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Only supported methods are limit and offset",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": []
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
+        "\/documentsdb\/{databaseId}\/collections\/{collectionId}\/usage": {
+            "get": {
+                "summary": "Get collection usage stats",
+                "operationId": "documentsDBGetCollectionUsage",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get usage metrics and statistics for a collection. Returning the total number of documents. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                "responses": {
+                    "200": {
+                        "description": "UsageCollection",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/usageCollection"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getCollectionUsage",
+                    "group": null,
+                    "weight": 442,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/get-collection-usage.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/get-collection-usage.md",
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "range",
+                        "description": "Date range.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "24h",
+                            "enum": [
+                                "24h",
+                                "30d",
+                                "90d"
+                            ],
+                            "x-enum-name": "UsageRange",
+                            "x-enum-keys": [
+                                "Twenty Four Hours",
+                                "Thirty Days",
+                                "Ninety Days"
+                            ],
+                            "default": "30d"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ]
+            }
+        },
+        "\/documentsdb\/{databaseId}\/usage": {
+            "get": {
+                "summary": "Get DocumentsDB usage stats",
+                "operationId": "documentsDBGetUsage",
+                "tags": [
+                    "documentsDB"
+                ],
+                "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                "responses": {
+                    "200": {
+                        "description": "UsageDocumentsDB",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/usageDocumentsDB"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "getUsage",
+                    "group": null,
+                    "weight": 434,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "documentsdb\/get-usage.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.read",
+                    "platforms": [
+                        "console"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/documentsdb\/get-database-usage.md",
+                    "methods": [
+                        {
+                            "name": "getUsage",
+                            "namespace": "documentsDB",
+                            "desc": "",
+                            "auth": {
+                                "Project": []
+                            },
+                            "parameters": [
+                                "databaseId",
+                                "range"
+                            ],
+                            "required": [
+                                "databaseId"
+                            ],
+                            "responses": [
+                                {
+                                    "code": 200,
+                                    "model": "#\/components\/schemas\/usageDocumentsDB"
+                                }
+                            ],
+                            "description": "Get usage metrics and statistics for a database. You can view the total number of collections, documents, and storage usage. The response includes both current totals and historical data over time. Use the optional range parameter to specify the time window for historical data: 24h (last 24 hours), 30d (last 30 days), or 90d (last 90 days). If not specified, range defaults to 30 days.",
+                            "demo": "documentsdb\/get-usage.md",
+                            "public": true
+                        }
+                    ],
+                    "auth": {
+                        "Project": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "range",
+                        "description": "Date range.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "24h",
+                            "enum": [
+                                "24h",
+                                "30d",
+                                "90d"
+                            ],
+                            "x-enum-name": "UsageRange",
+                            "x-enum-keys": [
+                                "Twenty Four Hours",
+                                "Thirty Days",
+                                "Ninety Days"
+                            ],
+                            "default": "30d"
+                        },
+                        "in": "query"
+                    }
+                ]
+            }
+        },
         "\/functions": {
             "get": {
                 "summary": "List functions",
@@ -13331,7 +15738,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 439,
+                    "weight": 475,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list.md",
@@ -13416,7 +15823,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 436,
+                    "weight": 472,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create.md",
@@ -13711,7 +16118,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 441,
+                    "weight": 477,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-runtimes.md",
@@ -13761,7 +16168,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 442,
+                    "weight": 478,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-specifications.md",
@@ -13811,7 +16218,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 465,
+                    "weight": 501,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-templates.md",
@@ -14003,7 +16410,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 464,
+                    "weight": 500,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-template.md",
@@ -14063,7 +16470,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 458,
+                    "weight": 494,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-usage.md",
@@ -14135,7 +16542,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 437,
+                    "weight": 473,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get.md",
@@ -14195,7 +16602,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 438,
+                    "weight": 474,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update.md",
@@ -14487,7 +16894,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 440,
+                    "weight": 476,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete.md",
@@ -14549,7 +16956,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 445,
+                    "weight": 481,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-function-deployment.md",
@@ -14630,7 +17037,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 446,
+                    "weight": 482,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-deployments.md",
@@ -14725,7 +17132,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 443,
+                    "weight": 479,
                     "cookies": false,
                     "type": "upload",
                     "demo": "functions\/create-deployment.md",
@@ -14824,7 +17231,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 451,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-duplicate-deployment.md",
@@ -14910,7 +17317,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 448,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
@@ -15027,7 +17434,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 449,
+                    "weight": 485,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-vcs-deployment.md",
@@ -15125,7 +17532,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 444,
+                    "weight": 480,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-deployment.md",
@@ -15188,7 +17595,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 447,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-deployment.md",
@@ -15253,7 +17660,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 450,
+                    "weight": 486,
                     "cookies": false,
                     "type": "location",
                     "demo": "functions\/get-deployment-download.md",
@@ -15344,7 +17751,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 452,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-deployment-status.md",
@@ -15416,7 +17823,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 455,
+                    "weight": 491,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -15503,7 +17910,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 453,
+                    "weight": 489,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -15621,7 +18028,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 454,
+                    "weight": 490,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -15687,7 +18094,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 456,
+                    "weight": 492,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-execution.md",
@@ -15759,7 +18166,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 457,
+                    "weight": 493,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-usage.md",
@@ -15841,7 +18248,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 461,
+                    "weight": 497,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-variables.md",
@@ -15901,7 +18308,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 459,
+                    "weight": 495,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-variable.md",
@@ -15993,7 +18400,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 460,
+                    "weight": 496,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-variable.md",
@@ -16063,7 +18470,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 462,
+                    "weight": 498,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-variable.md",
@@ -16157,7 +18564,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 463,
+                    "weight": 499,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-variable.md",
@@ -23618,6 +26025,8 @@
                                                 "document",
                                                 "attribute",
                                                 "collection",
+                                                "documentsdb",
+                                                "vectordb",
                                                 "bucket",
                                                 "file",
                                                 "function",
@@ -23724,6 +26133,8 @@
                                     "document",
                                     "attribute",
                                     "collection",
+                                    "documentsdb",
+                                    "vectordb",
                                     "bucket",
                                     "file",
                                     "function",
@@ -25299,7 +27710,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "projects",
-                    "weight": 434,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/list.md",
@@ -25324,7 +27735,7 @@
                 "parameters": [
                     {
                         "name": "queries",
-                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, teamId, labels",
+                        "description": "Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https:\/\/appwrite.io\/docs\/queries). Maximum of 100 queries are allowed, each 4096 characters long. You may filter on the following attributes: name, teamId, labels, search",
                         "required": false,
                         "schema": {
                             "type": "array",
@@ -26966,7 +29377,7 @@
                 "x-appwrite": {
                     "method": "listDevKeys",
                     "group": "devKeys",
-                    "weight": 432,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/list-dev-keys.md",
@@ -27037,7 +29448,7 @@
                 "x-appwrite": {
                     "method": "createDevKey",
                     "group": "devKeys",
-                    "weight": 429,
+                    "weight": 465,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/create-dev-key.md",
@@ -27122,7 +29533,7 @@
                 "x-appwrite": {
                     "method": "getDevKey",
                     "group": "devKeys",
-                    "weight": 431,
+                    "weight": 467,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/get-dev-key.md",
@@ -27190,7 +29601,7 @@
                 "x-appwrite": {
                     "method": "updateDevKey",
                     "group": "devKeys",
-                    "weight": 430,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/update-dev-key.md",
@@ -27276,7 +29687,7 @@
                 "x-appwrite": {
                     "method": "deleteDevKey",
                     "group": "devKeys",
-                    "weight": 433,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/delete-dev-key.md",
@@ -28014,7 +30425,7 @@
                 "x-appwrite": {
                     "method": "updateLabels",
                     "group": "projects",
-                    "weight": 435,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "projects\/update-labels.md",
@@ -31449,7 +33860,7 @@
                 "x-appwrite": {
                     "method": "listRules",
                     "group": null,
-                    "weight": 511,
+                    "weight": 547,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/list-rules.md",
@@ -31534,7 +33945,7 @@
                 "x-appwrite": {
                     "method": "createAPIRule",
                     "group": null,
-                    "weight": 506,
+                    "weight": 542,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-api-rule.md",
@@ -31601,7 +34012,7 @@
                 "x-appwrite": {
                     "method": "createFunctionRule",
                     "group": null,
-                    "weight": 508,
+                    "weight": 544,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-function-rule.md",
@@ -31679,7 +34090,7 @@
                 "x-appwrite": {
                     "method": "createRedirectRule",
                     "group": null,
-                    "weight": 509,
+                    "weight": 545,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-redirect-rule.md",
@@ -31792,7 +34203,7 @@
                 "x-appwrite": {
                     "method": "createSiteRule",
                     "group": null,
-                    "weight": 507,
+                    "weight": 543,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/create-site-rule.md",
@@ -31870,7 +34281,7 @@
                 "x-appwrite": {
                     "method": "getRule",
                     "group": null,
-                    "weight": 510,
+                    "weight": 546,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/get-rule.md",
@@ -31921,7 +34332,7 @@
                 "x-appwrite": {
                     "method": "deleteRule",
                     "group": null,
-                    "weight": 512,
+                    "weight": 548,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/delete-rule.md",
@@ -31981,7 +34392,7 @@
                 "x-appwrite": {
                     "method": "updateRuleVerification",
                     "group": null,
-                    "weight": 513,
+                    "weight": 549,
                     "cookies": false,
                     "type": "",
                     "demo": "proxy\/update-rule-verification.md",
@@ -32041,7 +34452,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 468,
+                    "weight": 504,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list.md",
@@ -32126,7 +34537,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 466,
+                    "weight": 502,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create.md",
@@ -32379,7 +34790,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 471,
+                    "weight": 507,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-frameworks.md",
@@ -32429,7 +34840,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 494,
+                    "weight": 530,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -32479,7 +34890,7 @@
                 "x-appwrite": {
                     "method": "listTemplates",
                     "group": "templates",
-                    "weight": 490,
+                    "weight": 526,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-templates.md",
@@ -32608,7 +35019,7 @@
                 "x-appwrite": {
                     "method": "getTemplate",
                     "group": "templates",
-                    "weight": 491,
+                    "weight": 527,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-template.md",
@@ -32668,7 +35079,7 @@
                 "x-appwrite": {
                     "method": "listUsage",
                     "group": null,
-                    "weight": 492,
+                    "weight": 528,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-usage.md",
@@ -32740,7 +35151,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 467,
+                    "weight": 503,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get.md",
@@ -32800,7 +35211,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 469,
+                    "weight": 505,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update.md",
@@ -33049,7 +35460,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 470,
+                    "weight": 506,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete.md",
@@ -33111,7 +35522,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 477,
+                    "weight": 513,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-site-deployment.md",
@@ -33192,7 +35603,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 476,
+                    "weight": 512,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-deployments.md",
@@ -33287,7 +35698,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 472,
+                    "weight": 508,
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
@@ -33392,7 +35803,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 480,
+                    "weight": 516,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-duplicate-deployment.md",
@@ -33473,7 +35884,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 473,
+                    "weight": 509,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
@@ -33590,7 +36001,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 474,
+                    "weight": 510,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-vcs-deployment.md",
@@ -33689,7 +36100,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 475,
+                    "weight": 511,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-deployment.md",
@@ -33752,7 +36163,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 478,
+                    "weight": 514,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-deployment.md",
@@ -33817,7 +36228,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 479,
+                    "weight": 515,
                     "cookies": false,
                     "type": "location",
                     "demo": "sites\/get-deployment-download.md",
@@ -33908,7 +36319,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 481,
+                    "weight": 517,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-deployment-status.md",
@@ -33980,7 +36391,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 483,
+                    "weight": 519,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -34066,7 +36477,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 482,
+                    "weight": 518,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -34129,7 +36540,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 484,
+                    "weight": 520,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -34201,7 +36612,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 493,
+                    "weight": 529,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-usage.md",
@@ -34283,7 +36694,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 487,
+                    "weight": 523,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -34343,7 +36754,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 485,
+                    "weight": 521,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -34435,7 +36846,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 486,
+                    "weight": 522,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -34505,7 +36916,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 488,
+                    "weight": 524,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -34599,7 +37010,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 489,
+                    "weight": 525,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -34671,7 +37082,7 @@
                 "x-appwrite": {
                     "method": "listBuckets",
                     "group": "buckets",
-                    "weight": 521,
+                    "weight": 557,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-buckets.md",
@@ -34757,7 +37168,7 @@
                 "x-appwrite": {
                     "method": "createBucket",
                     "group": "buckets",
-                    "weight": 519,
+                    "weight": 555,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/create-bucket.md",
@@ -34892,7 +37303,7 @@
                 "x-appwrite": {
                     "method": "getBucket",
                     "group": "buckets",
-                    "weight": 520,
+                    "weight": 556,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket.md",
@@ -34953,7 +37364,7 @@
                 "x-appwrite": {
                     "method": "updateBucket",
                     "group": "buckets",
-                    "weight": 522,
+                    "weight": 558,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-bucket.md",
@@ -35085,7 +37496,7 @@
                 "x-appwrite": {
                     "method": "deleteBucket",
                     "group": "buckets",
-                    "weight": 523,
+                    "weight": 559,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-bucket.md",
@@ -35148,7 +37559,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 526,
+                    "weight": 562,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -35247,7 +37658,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 524,
+                    "weight": 560,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -35348,7 +37759,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 525,
+                    "weight": 561,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -35422,7 +37833,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 527,
+                    "weight": 563,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -35514,7 +37925,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 528,
+                    "weight": 564,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -35583,7 +37994,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 530,
+                    "weight": 566,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -35663,7 +38074,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 529,
+                    "weight": 565,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -35893,7 +38304,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 531,
+                    "weight": 567,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -35980,7 +38391,7 @@
                 "x-appwrite": {
                     "method": "getUsage",
                     "group": null,
-                    "weight": 533,
+                    "weight": 569,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-usage.md",
@@ -36053,7 +38464,7 @@
                 "x-appwrite": {
                     "method": "getBucketUsage",
                     "group": null,
-                    "weight": 534,
+                    "weight": 570,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket-usage.md",
@@ -44258,7 +46669,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 516,
+                    "weight": 552,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -44352,7 +46763,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 514,
+                    "weight": 550,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -44441,7 +46852,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 515,
+                    "weight": 551,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -44501,7 +46912,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 517,
+                    "weight": 553,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -44571,7 +46982,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 518,
+                    "weight": 554,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",
@@ -50736,7 +53147,8 @@
                         "x-example": "legacy",
                         "enum": [
                             "legacy",
-                            "tablesdb"
+                            "tablesdb",
+                            "documentsdb"
                         ]
                     }
                 },
@@ -59027,6 +61439,113 @@
                     "databaseWrites": []
                 }
             },
+            "usageDocumentsDB": {
+                "description": "UsageDocumentsDB",
+                "type": "object",
+                "properties": {
+                    "range": {
+                        "type": "string",
+                        "description": "Time range of the usage stats.",
+                        "x-example": "30d"
+                    },
+                    "collectionsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of collections.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "documentsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of documents.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "storageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated storage used in bytes.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "databaseReadsTotal": {
+                        "type": "integer",
+                        "description": "Total number of database reads.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "databaseWritesTotal": {
+                        "type": "integer",
+                        "description": "Total number of database writes.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "collections": {
+                        "type": "array",
+                        "description": "Aggregated number of collections per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "documents": {
+                        "type": "array",
+                        "description": "Aggregated number of documents per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "storage": {
+                        "type": "array",
+                        "description": "Aggregated storage used in bytes per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "databaseReads": {
+                        "type": "array",
+                        "description": "An array of aggregated number of database reads.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "databaseWrites": {
+                        "type": "array",
+                        "description": "An array of aggregated number of database writes.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    }
+                },
+                "required": [
+                    "range",
+                    "collectionsTotal",
+                    "documentsTotal",
+                    "storageTotal",
+                    "databaseReadsTotal",
+                    "databaseWritesTotal",
+                    "collections",
+                    "documents",
+                    "storage",
+                    "databaseReads",
+                    "databaseWrites"
+                ],
+                "example": {
+                    "range": "30d",
+                    "collectionsTotal": 0,
+                    "documentsTotal": 0,
+                    "storageTotal": 0,
+                    "databaseReadsTotal": 0,
+                    "databaseWritesTotal": 0,
+                    "collections": [],
+                    "documents": [],
+                    "storage": [],
+                    "databaseReads": [],
+                    "databaseWrites": []
+                }
+            },
             "usageTable": {
                 "description": "UsageTable",
                 "type": "object",
@@ -60324,7 +62843,13 @@
                     },
                     "documentsTotal": {
                         "type": "integer",
-                        "description": "Total aggregated  number of documents.",
+                        "description": "Total aggregated  number of documents in legacy\/tablesdb.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "documentsdbDocumentsTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated  number of documents in documentsdb.",
                         "x-example": 0,
                         "format": "int32"
                     },
@@ -60340,9 +62865,21 @@
                         "x-example": 0,
                         "format": "int32"
                     },
+                    "documentsdbTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated number of documentsdb.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
                     "databasesStorageTotal": {
                         "type": "integer",
                         "description": "Total aggregated sum of databases storage size (in bytes).",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "documentsdbDatabasesStorageTotal": {
+                        "type": "integer",
+                        "description": "Total aggregated sum of documentsdb databases storage size (in bytes).",
                         "x-example": 0,
                         "format": "int32"
                     },
@@ -60403,6 +62940,18 @@
                     "databasesWritesTotal": {
                         "type": "integer",
                         "description": "Total number of databases writes.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "documentsdbDatabasesReadsTotal": {
+                        "type": "integer",
+                        "description": "Total number of documentsdb databases reads.",
+                        "x-example": 0,
+                        "format": "int32"
+                    },
+                    "documentsdbDatabasesWritesTotal": {
+                        "type": "integer",
+                        "description": "Total number of documentsdb databases writes.",
                         "x-example": 0,
                         "format": "int32"
                     },
@@ -60522,6 +63071,30 @@
                         },
                         "x-example": []
                     },
+                    "documentsdbDatabasesReads": {
+                        "type": "array",
+                        "description": "An array of aggregated number of documentsdb database reads.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "documentsdbDatabasesWrites": {
+                        "type": "array",
+                        "description": "An array of aggregated number of documentsdb database writes.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
+                    "documentsdbDatabasesStorage": {
+                        "type": "array",
+                        "description": "An array of aggregated sum of documentsdb databases storage size (in bytes) per period.",
+                        "items": {
+                            "$ref": "#\/components\/schemas\/metric"
+                        },
+                        "x-example": []
+                    },
                     "imageTransformations": {
                         "type": "array",
                         "description": "An array of aggregated number of image transformations.",
@@ -60540,9 +63113,12 @@
                 "required": [
                     "executionsTotal",
                     "documentsTotal",
+                    "documentsdbDocumentsTotal",
                     "rowsTotal",
                     "databasesTotal",
+                    "documentsdbTotal",
                     "databasesStorageTotal",
+                    "documentsdbDatabasesStorageTotal",
                     "usersTotal",
                     "filesStorageTotal",
                     "functionsStorageTotal",
@@ -60553,6 +63129,8 @@
                     "buildsMbSecondsTotal",
                     "databasesReadsTotal",
                     "databasesWritesTotal",
+                    "documentsdbDatabasesReadsTotal",
+                    "documentsdbDatabasesWritesTotal",
                     "requests",
                     "network",
                     "users",
@@ -60568,15 +63146,21 @@
                     "authPhoneCountryBreakdown",
                     "databasesReads",
                     "databasesWrites",
+                    "documentsdbDatabasesReads",
+                    "documentsdbDatabasesWrites",
+                    "documentsdbDatabasesStorage",
                     "imageTransformations",
                     "imageTransformationsTotal"
                 ],
                 "example": {
                     "executionsTotal": 0,
                     "documentsTotal": 0,
+                    "documentsdbDocumentsTotal": 0,
                     "rowsTotal": 0,
                     "databasesTotal": 0,
+                    "documentsdbTotal": 0,
                     "databasesStorageTotal": 0,
+                    "documentsdbDatabasesStorageTotal": 0,
                     "usersTotal": 0,
                     "filesStorageTotal": 0,
                     "functionsStorageTotal": 0,
@@ -60587,6 +63171,8 @@
                     "buildsMbSecondsTotal": 0,
                     "databasesReadsTotal": 0,
                     "databasesWritesTotal": 0,
+                    "documentsdbDatabasesReadsTotal": 0,
+                    "documentsdbDatabasesWritesTotal": 0,
                     "requests": [],
                     "network": [],
                     "users": [],
@@ -60602,6 +63188,9 @@
                     "authPhoneCountryBreakdown": [],
                     "databasesReads": [],
                     "databasesWrites": [],
+                    "documentsdbDatabasesReads": [],
+                    "documentsdbDatabasesWrites": [],
+                    "documentsdbDatabasesStorage": [],
                     "imageTransformations": [],
                     "imageTransformationsTotal": 0
                 }
