@@ -444,14 +444,14 @@ class Migrations extends Action
                     $destination?->success();
                     $source?->success();
 
-                    // todo: Move to CSV hook
+                    // TODO: Move to CSV hook
                     if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
+                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
                     }
                 }
             } finally {
-                $source?->cleanUp();
-                $destination?->cleanUp();
+                $source?->cleanup();
+                $destination?->cleanup();
 
                 $transfer = null;
                 $source = null;
@@ -466,11 +466,10 @@ class Migrations extends Action
      * @param Document $project
      * @param Document $migration
      * @param Mail $queueForMails
+     * @param Realtime $queueForRealtime
+     * @param array $platform
+     * @param Authorization $authorization
      * @return void
-     * @throws AuthorizationException
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
-     * @throws Exception
      */
     protected function handleCSVExportComplete(
         Document $project,
