@@ -100,12 +100,6 @@
     "provide": {
         "ext-phpiredis": "*"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/migration.git"
-        }
-    ],
     "config": {
         "platform": {
             "php": "8.3"
