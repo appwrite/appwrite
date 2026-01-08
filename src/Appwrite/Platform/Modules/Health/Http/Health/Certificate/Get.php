@@ -60,11 +60,11 @@ class Get extends Action
         }
 
         $sslContext = stream_context_create([
-            'ssl' => [
-                'capture_peer_cert' => true,
-            ],
+            "ssl" => [
+                "capture_peer_cert" => true
+            ]
         ]);
-        $sslSocket = stream_socket_client('ssl://' . $domain . ':443', $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
+        $sslSocket = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
         if (!$sslSocket) {
             throw new Exception(Exception::HEALTH_INVALID_HOST);
         }
@@ -73,11 +73,6 @@ class Get extends Action
         $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'];
         $certificatePayload = openssl_x509_parse($peerCertificate);
 
-        fclose($sslSocket); // Close the socket to prevent resource leak
-
-        if ($certificatePayload === false) {
-            throw new Exception(Exception::HEALTH_INVALID_HOST);
-        }
 
         $sslExpiration = $certificatePayload['validTo_time_t'];
         $status = $sslExpiration < time() ? 'fail' : 'pass';
@@ -87,12 +82,12 @@ class Get extends Action
         }
 
         $response->dynamic(new Document([
-            'name' => $certificatePayload['name'] ?? '',
-            'subjectCN' => $certificatePayload['subject']['CN'] ?? '',
-            'issuerOrganisation' => $certificatePayload['issuer']['O'] ?? '',
+            'name' => $certificatePayload['name'],
+            'subjectSN' => $certificatePayload['subject']['CN'],
+            'issuerOrganisation' => $certificatePayload['issuer']['O'],
             'validFrom' => $certificatePayload['validFrom_time_t'],
             'validTo' => $certificatePayload['validTo_time_t'],
-            'signatureTypeSN' => $certificatePayload['signatureTypeSN'] ?? '',
+            'signatureTypeSN' => $certificatePayload['signatureTypeSN'],
         ]), Response::MODEL_HEALTH_CERTIFICATE);
     }
 }
