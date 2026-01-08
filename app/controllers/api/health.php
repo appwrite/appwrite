@@ -11,6 +11,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
@@ -955,6 +956,7 @@ App::get('/v1/health/queue/failed/:name')
         System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME),
         System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME),
         System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME),
+        System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_CLASS_NAME),
         System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
         System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME)
     ]), 'The name of the queue')
@@ -972,6 +974,7 @@ App::get('/v1/health/queue/failed/:name')
     ->inject('queueForBuilds')
     ->inject('queueForMessaging')
     ->inject('queueForMigrations')
+    ->inject('queueForScreenshots')
     ->action(function (
         string $name,
         int|string $threshold,
@@ -987,7 +990,8 @@ App::get('/v1/health/queue/failed/:name')
         Certificate $queueForCertificates,
         Build $queueForBuilds,
         Messaging $queueForMessaging,
-        Migration $queueForMigrations
+        Migration $queueForMigrations,
+        Screenshot $queueForScreenshots,
     ) {
         $threshold = \intval($threshold);
 
@@ -1003,6 +1007,7 @@ App::get('/v1/health/queue/failed/:name')
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
             System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $queueForCertificates,
             System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,
+            System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_CLASS_NAME) => $queueForScreenshots,
             System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $queueForMessaging,
             System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $queueForMigrations,
         };
