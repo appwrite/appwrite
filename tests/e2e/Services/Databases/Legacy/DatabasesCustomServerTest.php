@@ -744,7 +744,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertTrue($lastName['body']['encrypt']);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $actors['body']['$id'], 'lastName');
 
         $response = $this->client->call(Client::METHOD_GET, $attributesPath . '/lastName', array_merge([
             'content-type' => 'application/json',
@@ -765,8 +765,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('lastName', $lastName['body']['key']);
         $this->assertEquals('string', $lastName['body']['type']);
 
-        // Wait for database worker to finish creating attributes
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $actors['body']['$id']);
 
         // Creating document to ensure cache is purged on schema change
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents', array_merge([
@@ -884,8 +883,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        // Wait for database worker to finish creating attributes
-        sleep(2);
+        $this->waitForAttribute($databaseId, $actors['body']['$id'], 'unneeded');
 
         // Creating document to ensure cache is purged on schema change
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents', array_merge([
@@ -918,8 +916,7 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        // Wait for database worker to finish creating index
-        sleep(2);
+        $this->waitForIndex($databaseId, $actors['body']['$id'], 'key_lastName');
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -947,7 +944,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(204, $attribute['headers']['status-code']);
 
-        sleep(2);
+        $this->waitForAttributeDeletion($databaseId, $actors['body']['$id'], $unneededId);
 
         // Check document to ensure cache is purged on schema change
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents/' . $document['body']['$id'], array_merge([
@@ -991,8 +988,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(204, $index['headers']['status-code']);
 
-        // Wait for database worker to finish deleting index
-        sleep(2);
+        $this->waitForIndexDeletion($databaseId, $data['collectionId'], $data['key']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
             'content-type' => 'application/json',
@@ -1036,7 +1032,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('attribute1', $attribute1['body']['key']);
         $this->assertEquals('attribute2', $attribute2['body']['key']);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $data['collectionId']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1064,7 +1060,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('index1', $index1['body']['key']);
         $this->assertEquals('index2', $index2['body']['key']);
 
-        sleep(2);
+        $this->waitForAllIndexes($databaseId, $data['collectionId']);
 
         // Expected behavior: deleting attribute2 will cause index2 to be dropped, and index1 rebuilt with a single key
         $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/attributes/' . $attribute2['body']['key'], array_merge([
@@ -1075,8 +1071,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(204, $deleted['headers']['status-code']);
 
-        // wait for database worker to complete
-        sleep(2);
+        $this->waitForAttributeDeletion($databaseId, $data['collectionId'], $attribute2['body']['key']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'], array_merge([
             'content-type' => 'application/json',
@@ -1164,7 +1159,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('attribute1', $attribute1['body']['key']);
         $this->assertEquals('attribute2', $attribute2['body']['key']);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1192,7 +1187,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('index1', $index1['body']['key']);
         $this->assertEquals('index2', $index2['body']['key']);
 
-        sleep(2);
+        $this->waitForAllIndexes($databaseId, $collectionId);
 
         // Expected behavior: deleting attribute1 would cause index1 to be a duplicate of index2 and automatically removed
         $deleted = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $attribute1['body']['key'], array_merge([
@@ -1203,8 +1198,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(204, $deleted['headers']['status-code']);
 
-        // wait for database worker to complete
-        sleep(2);
+        $this->waitForAttributeDeletion($databaseId, $collectionId, $attribute1['body']['key']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -1353,7 +1347,7 @@ class DatabasesCustomServerTest extends Scope
             'key' => 'collection2'
         ]);
 
-        sleep(2);
+        $this->waitForAttribute($databaseId, $collection1, 'collection2');
 
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collection2, array_merge([
             'content-type' => 'application/json',
@@ -1361,7 +1355,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()));
 
-        sleep(2);
+        $this->waitForAttributeDeletion($databaseId, $collection1, 'collection2');
 
         $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1 . '/attributes', array_merge([
             'content-type' => 'application/json',
@@ -1422,7 +1416,7 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals(202, $attribute['headers']['status-code']);
         }
 
-        sleep(5);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         $tooWide = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -1489,7 +1483,7 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals(202, $attribute['headers']['status-code']);
         }
 
-        sleep(10);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -1541,7 +1535,7 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals("key_attribute{$i}", $index['body']['key']);
         }
 
-        sleep(5);
+        $this->waitForAllIndexes($databaseId, $collectionId);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -1726,7 +1720,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
 
-        sleep(5);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         return [
             'databaseId' => $databaseId,
@@ -3745,7 +3739,7 @@ class DatabasesCustomServerTest extends Scope
             ]
         ]);
 
-        \sleep(2);
+        // Collections are created synchronously, no wait needed
     }
 
     public function cleanupRelationshipCollection(): void
@@ -3756,7 +3750,20 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
 
-        \sleep(2);
+        // Poll until database is deleted (returns 404)
+        $start = microtime(true) * 1000;
+        $timeoutMs = 30000;
+        while ((microtime(true) * 1000) - $start < $timeoutMs) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/database1', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]);
+            if ($response['headers']['status-code'] === 404) {
+                return;
+            }
+            usleep(100 * 1000);
+        }
     }
 
     public function testAttributeRenameRelationshipOneToMany()
@@ -3780,7 +3787,7 @@ class DatabasesCustomServerTest extends Scope
             'twoWayKey' => 'level1'
         ]);
 
-        \sleep(3);
+        $this->waitForAttribute($databaseId, $collection1Id, 'level2');
 
         $collection1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1Id, [
             'content-type' => 'application/json',
@@ -3894,7 +3901,7 @@ class DatabasesCustomServerTest extends Scope
             'twoWayKey' => 'level1'
         ]);
 
-        \sleep(3);
+        $this->waitForAttribute($databaseId, $collection1Id, 'level2');
 
         $collection1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1Id, [
             'content-type' => 'application/json',
@@ -4008,7 +4015,7 @@ class DatabasesCustomServerTest extends Scope
             'twoWayKey' => 'level1'
         ]);
 
-        \sleep(3);
+        $this->waitForAttribute($databaseId, $collection1Id, 'level2');
 
         $collection1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1Id, [
             'content-type' => 'application/json',
@@ -4126,7 +4133,7 @@ class DatabasesCustomServerTest extends Scope
             'twoWayKey' => 'level1'
         ]);
 
-        \sleep(3);
+        $this->waitForAttribute($databaseId, $collection1Id, 'level2');
 
         $collection1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1Id, [
             'content-type' => 'application/json',
@@ -4274,7 +4281,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $numberAttribute['headers']['status-code']);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $data['$id'], 'number');
 
         $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
             'content-type' => 'application/json',
@@ -4446,7 +4453,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $data['$id'], 'level2');
 
         $response = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$data['$id']}/documents", array_merge([
             'content-type' => 'application/json',
@@ -4512,8 +4519,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $numberAttribute['headers']['status-code']);
 
-        // Wait for database worker to create attributes
-        sleep(2);
+        $this->waitForAttribute($data['databaseId'], $data['$id'], 'number');
 
         // Create documents
         $createBulkDocuments = function ($amount = 10) use ($data) {
@@ -4544,7 +4550,7 @@ class DatabasesCustomServerTest extends Scope
          * This test specifically failed on 1.6.x response format,
          * could be due to the slow or overworked machine, but being safe here!
          */
-        sleep(5);
+        usleep(500 * 1000); // 500ms for cache purge
 
         // TEST: Update all documents
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
@@ -4570,7 +4576,7 @@ class DatabasesCustomServerTest extends Scope
          * This test specifically failed on 1.6.x response format,
          * could be due to the slow or overworked machine, but being safe here!
          */
-        sleep(5);
+        usleep(500 * 1000); // 500ms for cache purge
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -4751,7 +4757,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $data['$id'], 'level2');
 
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -4819,8 +4825,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $numberAttribute['headers']['status-code']);
 
-        // Wait for database worker to create attributes
-        sleep(2);
+        $this->waitForAttribute($data['databaseId'], $data['$id'], 'number');
 
         // Create documents
         $createBulkDocuments = function ($amount = 10) use ($data) {
@@ -4944,7 +4949,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $data['$id'], 'level2');
 
         $response = $this->client->call(Client::METHOD_PUT, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5011,8 +5016,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $numberAttribute['headers']['status-code']);
 
-        // wait for database worker to create attributes
-        sleep(2);
+        $this->waitForAttribute($data['databaseId'], $data['$id'], 'number');
 
         // Create documents
         $createBulkDocuments = function ($amount = 11) use ($data) {
@@ -5285,7 +5289,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(1);
+        $this->waitForAttribute($data['databaseId'], $data['$id'], 'level2');
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -5345,7 +5349,7 @@ class DatabasesCustomServerTest extends Scope
             'format' => 'datetime',
         ]);
 
-        sleep(1);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         $date = '2000-01-01T10:00:00.000+00:00';
 
@@ -5466,7 +5470,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => false,
         ]);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $collectionId, 'string');
 
         $createDate = '2000-01-01T10:00:00.000+00:00';
         $updateDate = '2000-02-01T15:30:00.000+00:00';
@@ -5753,7 +5757,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => false,
         ]);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $collectionId, 'string');
 
         $createDate = '2000-01-01T10:00:00.000+00:00';
         $updateDate = '2000-02-01T15:30:00.000+00:00';
@@ -5984,7 +5988,7 @@ class DatabasesCustomServerTest extends Scope
             'required' => false,
         ]);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $collectionId, 'string');
 
         $createDate = '2000-01-01T10:00:00.000+00:00';
         $updateDate = '2000-02-01T15:30:00.000+00:00';
@@ -6296,8 +6300,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(202, $polygonAttribute['headers']['status-code']);
 
-        // Wait for attributes to be created
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Test 1: Bulk create with spatial data
         $spatialDocuments = [];
@@ -6686,8 +6689,7 @@ class DatabasesCustomServerTest extends Scope
         // Handle both 201 (created) and 202 (accepted) status codes
         $this->assertEquals(202, $lineAttribute['headers']['status-code']);
 
-        // Wait for attributes to be created
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Test bulk create with line string data
         $lineStringDocuments = [];

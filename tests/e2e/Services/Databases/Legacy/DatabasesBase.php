@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases\Legacy;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Tests\E2E\Traits\SchemaPoll;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -16,6 +17,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait DatabasesBase
 {
+    use SchemaPoll;
     public function testCreateDatabase(): array
     {
         /**

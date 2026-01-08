@@ -64,9 +64,9 @@ class DatabasesCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        sleep(1);
-
         $this->assertEquals(202, $response['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $moviesId, 'title');
 
         // Document aliases write to update, delete
         $row1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $moviesId . '/rows', array_merge([
@@ -157,8 +157,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        // Wait for database worker to finish creating attributes
-        sleep(2);
+        $this->waitForAttribute($databaseId, 'permissionCheck', 'name');
 
         // Creating row by server, give read permission to our user + some other user
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/permissionCheck/rows', array_merge([
@@ -212,8 +211,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
 
 
-        // Wait for database worker to finish deleting table
-        sleep(2);
+        usleep(500 * 1000);
 
         // Make sure table has been deleted
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/permissionCheck', array_merge([
@@ -275,8 +273,6 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        \sleep(2);
-
         // Creating two way relationship between table 1 and table 2 from table 1
         $relation = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
@@ -291,7 +287,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => $table1['body']['$id']
         ]);
 
-        \sleep(3);
+        $this->waitForAttribute($databaseId, $table1['body']['$id'], $table2['body']['$id']);
 
         // Update relation from table 2 to on delete restrict
         $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $table2['body']['$id'] . '/columns/' . $table1['body']['$id'] . '/relationship', array_merge([
@@ -362,8 +358,6 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        \sleep(2);
-
         $relation = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -377,7 +371,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'same_key'
         ]);
 
-        \sleep(2);
+        $this->waitForAttribute($databaseId, $table1['body']['$id'], 'attr1');
 
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertEquals('same_key', $relation['body']['twoWayKey']);
@@ -395,8 +389,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'same_key'
         ]);
 
-        \sleep(2);
-
+        // This request fails with 409 - no need to wait
         $this->assertEquals(409, $relation['body']['code']);
         $this->assertEquals('Column with the requested key \'same_key\' already exists. Column keys must be unique, try again with a different key.', $relation['body']['message']);
 
@@ -413,7 +406,7 @@ class DatabasesCustomClientTest extends Scope
             'key' => 'attr3',
         ]);
 
-        \sleep(2);
+        $this->waitForAttribute($databaseId, $table1['body']['$id'], 'attr3');
 
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertArrayHasKey('twoWayKey', $relation['body']);
@@ -431,8 +424,7 @@ class DatabasesCustomClientTest extends Scope
             'key' => 'attr4',
         ]);
 
-        \sleep(2);
-
+        // This request fails with 409 - no need to wait
         $this->assertEquals('Column with the requested key \'attr4\' already exists. Column keys must be unique, try again with a different key.', $relation['body']['message']);
         $this->assertEquals(409, $relation['body']['code']);
 
@@ -450,7 +442,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'playlist',
         ]);
 
-        \sleep(2);
+        $this->waitForAttribute($databaseId, $table1['body']['$id'], 'songs');
 
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertArrayHasKey('twoWayKey', $relation['body']);
@@ -469,8 +461,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'playlist2',
         ]);
 
-        \sleep(2);
-
+        // This request fails with 409 - no need to wait
         $this->assertEquals(409, $relation['body']['code']);
         $this->assertEquals('Creating more than one "manyToMany" relationship on the same table is currently not permitted.', $relation['body']['message']);
     }
@@ -674,7 +665,12 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
         ]);
 
-        \sleep(2);
+        $this->waitForAllAttributes($databaseId, $table1['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $table2['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $table3['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $table4['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $table5['body']['$id']);
+
         // Creating parent row with a child reference to test the permissions
         $parentDocument = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $table1['body']['$id'] . '/rows', array_merge([
             'content-type' => 'application/json',

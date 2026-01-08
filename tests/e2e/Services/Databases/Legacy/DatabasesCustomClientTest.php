@@ -64,9 +64,9 @@ class DatabasesCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        sleep(1);
-
         $this->assertEquals(202, $response['headers']['status-code']);
+
+        $this->waitForAttribute($databaseId, $moviesId, 'title');
 
         // Document aliases write to update, delete
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
@@ -157,8 +157,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        // Wait for database worker to finish creating attributes
-        sleep(2);
+        $this->waitForAttribute($databaseId, 'permissionCheck', 'name');
 
         // Creating document by server, give read permission to our user + some other user
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/permissionCheck/documents', array_merge([
@@ -212,8 +211,18 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
 
 
-        // Wait for database worker to finish deleting collection
-        sleep(2);
+        $start = microtime(true) * 1000;
+        while ((microtime(true) * 1000) - $start < 30000) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/permissionCheck', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            if ($response['headers']['status-code'] === 404) {
+                break;
+            }
+            usleep(100 * 1000);
+        }
 
         // Make sure collection has been deleted
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/permissionCheck', array_merge([
@@ -275,7 +284,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        \sleep(2);
+        // Collections are created synchronously, no wait needed
 
         // Creating two way relationship between collection 1 and collection 2 from collection 1
         $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
@@ -291,7 +300,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => $collection1['body']['$id']
         ]);
 
-        \sleep(3);
+        $this->waitForAttribute($databaseId, $collection1['body']['$id'], $collection2['body']['$id']);
 
         // Update relation from collection 2 to on delete restrict
         $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/attributes/' . $collection1['body']['$id'] . '/relationship', array_merge([
@@ -362,7 +371,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        \sleep(2);
+        // Collections are created synchronously, no wait needed
 
         $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
@@ -377,10 +386,10 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'same_key'
         ]);
 
-        \sleep(2);
-
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertEquals('same_key', $relation['body']['twoWayKey']);
+
+        $this->waitForAttribute($databaseId, $collection1['body']['$id'], 'attr1');
 
         $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
@@ -395,8 +404,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'same_key'
         ]);
 
-        \sleep(2);
-
+        // No wait needed - request fails immediately with 409
         $this->assertEquals(409, $relation['body']['code']);
         $this->assertEquals('Attribute with the requested key \'same_key\' already exists. Attribute keys must be unique, try again with a different key.', $relation['body']['message']);
 
@@ -413,10 +421,10 @@ class DatabasesCustomClientTest extends Scope
             'key' => 'attr3',
         ]);
 
-        \sleep(2);
-
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertArrayHasKey('twoWayKey', $relation['body']);
+
+        $this->waitForAttribute($databaseId, $collection1['body']['$id'], 'attr3');
 
         // twoWayKey is null,   TwoWayKey is default, second POST
         $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
@@ -431,8 +439,7 @@ class DatabasesCustomClientTest extends Scope
             'key' => 'attr4',
         ]);
 
-        \sleep(2);
-
+        // No wait needed - request fails immediately with 409
         $this->assertEquals('Attribute with the requested key \'attr4\' already exists. Attribute keys must be unique, try again with a different key.', $relation['body']['message']);
         $this->assertEquals(409, $relation['body']['code']);
 
@@ -450,10 +457,10 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'playlist',
         ]);
 
-        \sleep(2);
-
         $this->assertEquals(202, $relation['headers']['status-code']);
         $this->assertArrayHasKey('twoWayKey', $relation['body']);
+
+        $this->waitForAttribute($databaseId, $collection1['body']['$id'], 'songs');
 
         // Second RelationshipManyToMany on Same collections
         $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
@@ -469,8 +476,7 @@ class DatabasesCustomClientTest extends Scope
             'twoWayKey' => 'playlist2',
         ]);
 
-        \sleep(2);
-
+        // No wait needed - request fails immediately with 409
         $this->assertEquals(409, $relation['body']['code']);
         $this->assertEquals('Creating more than one "manyToMany" relationship on the same collection is currently not permitted.', $relation['body']['message']);
     }
@@ -674,7 +680,12 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
         ]);
 
-        \sleep(2);
+        $this->waitForAllAttributes($databaseId, $collection1['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $collection2['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $collection3['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $collection4['body']['$id']);
+        $this->waitForAllAttributes($databaseId, $collection5['body']['$id']);
+
         // Creating parent document with a child reference to test the permissions
         $parentDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',

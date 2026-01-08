@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Traits\SchemaPoll;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -15,6 +16,7 @@ class ACIDTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
+    use SchemaPoll;
 
     /**
      * Test atomicity - all operations succeed or all fail
@@ -73,7 +75,8 @@ class ACIDTest extends Scope
             'attributes' => ['email']
         ]);
 
-        sleep(3);
+        $this->waitForAttribute($databaseId, $collectionId, 'email');
+        $this->waitForIndex($databaseId, $collectionId, 'unique_email');
 
         // Create first document outside transaction
         $doc1 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
@@ -229,7 +232,7 @@ class ACIDTest extends Scope
             'max' => 100
         ]);
 
-        sleep(3);
+        $this->waitForAttribute($databaseId, $collectionId, 'age');
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
@@ -350,7 +353,7 @@ class ACIDTest extends Scope
             'max' => 1000000
         ]);
 
-        sleep(2);
+        $this->waitForAttribute($databaseId, $collectionId, 'counter');
 
         // Create initial document with counter
         $doc = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
@@ -507,7 +510,7 @@ class ACIDTest extends Scope
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->waitForAttribute($databaseId, $collectionId, 'data');
 
         // Create and commit transaction with multiple operations
         $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
