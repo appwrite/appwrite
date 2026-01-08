@@ -213,6 +213,22 @@ switch ($type) {
             border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #D8D8DB);
             background: var(--color-bgColor-neutral-primary, #FFF);
             color: var(--color-fgColor-neutral-secondary, #56565C);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .bordered-button:hover {
+            background: #F5F5F5;
+            border-color: #B8B8BB;
+            transform: translateY(-1px);
+        }
+
+        .bordered-button:focus {
+            outline: 2px solid #5A67D8;
+            outline-offset: 2px;
+        }
+
+        .bordered-button:active {
+            transform: translateY(0);
         }
 
         button {
@@ -228,6 +244,25 @@ switch ($type) {
             border: var(--border-width-S, 1px) solid transparent;
             background: var(--color-bgColor-neutral-primary, #FFF);
             color: var(--color-fgColor-neutral-secondary, #56565C);
+            transition: all 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background: #F5F5F5;
+            transform: translateY(-1px);
+        }
+
+        button:focus {
+            outline: 2px solid #5A67D8;
+            outline-offset: 2px;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        a {
+            text-decoration: none;
         }
 
         .center {
@@ -312,10 +347,22 @@ switch ($type) {
             font-weight: 500;
             line-height: 140%;
             letter-spacing: -0.45px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            transition: all 0.2s ease-in-out;
         }
         
         .back-button:hover {
             text-decoration: underline;
+            color: #2D2D31;
+        }
+
+        .back-button:focus {
+            outline: 2px solid #5A67D8;
+            outline-offset: 2px;
+            border-radius: 4px;
         }
 
         .trace-grid {
@@ -403,9 +450,26 @@ switch ($type) {
                 color: var(--color-fgColor-neutral-secondary, #C3C3C6);
             }
 
+            .bordered-button:hover {
+                background: #2D2D31;
+                border-color: #56565C;
+            }
+
+            .bordered-button:focus {
+                outline-color: #818CF8;
+            }
+
             button {
                 background: var(--color-bgColor-neutral-primary, #1D1D21);
                 color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            button:hover {
+                background: #2D2D31;
+            }
+
+            button:focus {
+                outline-color: #818CF8;
             }
 
             .brand p {
@@ -438,6 +502,14 @@ switch ($type) {
 
             .back-button {
                 color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .back-button:hover {
+                color: #EDEDF0;
+            }
+
+            .back-button:focus {
+                outline-color: #818CF8;
             }
 
             .trace-grid {
