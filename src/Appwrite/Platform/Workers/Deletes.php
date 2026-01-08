@@ -187,7 +187,7 @@ class Deletes extends Action
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
-                $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
+                $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);

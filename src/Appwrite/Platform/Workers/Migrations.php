@@ -110,8 +110,16 @@ class Migrations extends Action
         $events = $payload['events'] ?? [];
         $migration = new Document($payload['migration'] ?? []);
 
+        if ($migration->isEmpty()) {
+            throw new \Exception('Migration not found');
+        }
+
         if ($project->getId() === 'console') {
             return;
+        }
+
+        if ($project->isEmpty()) {
+            throw new \Exception('Project not found');
         }
 
         $this->dbForProject = $dbForProject;
@@ -312,7 +320,8 @@ class Migrations extends Action
         Mail $queueForMails,
         array $platform,
     ): void {
-        $project = $this->dbForPlatform->getDocument('projects', $this->project->getId());
+        $project = $this->project;
+
         $tempAPIKey = $this->generateAPIKey($project);
 
         $transfer = $source = $destination = null;
@@ -386,62 +395,59 @@ class Migrations extends Action
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
-            if (! $migration->isEmpty()) {
-                $migration->setAttribute('status', 'failed');
-                $migration->setAttribute('stage', 'finished');
+            $migration->setAttribute('status', 'failed');
+            $migration->setAttribute('stage', 'finished');
 
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source') ?? '',
-                    'destination' => $migration->getAttribute('destination') ?? '',
-                ]);
+            call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                'migrationId' => $migration->getId(),
+                'source' => $migration->getAttribute('source') ?? '',
+                'destination' => $migration->getAttribute('destination') ?? '',
+            ]);
 
-                return;
-            }
-
-            if ($transfer) {
-                $sourceErrors = $source->getErrors();
-                $destinationErrors = $destination->getErrors();
-                $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
-            }
         } finally {
-            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            try {
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-            if ($migration->getAttribute('status', '') === 'failed') {
-                Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
+                if ($migration->getAttribute('status', '') === 'failed') {
+                    Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
-                $sourceErrors = $source?->getErrors() ?? [];
-                $destinationErrors = $destination?->getErrors() ?? [];
+                    $sourceErrors = $source?->getErrors() ?? [];
+                    $destinationErrors = $destination?->getErrors() ?? [];
 
-                foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    /** @var MigrationException $error */
-                    if ($error->getCode() === 0 || $error->getCode() >= 500) {
-                        ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                            'migrationId' => $migration->getId(),
-                            'source' => $migration->getAttribute('source') ?? '',
-                            'destination' => $migration->getAttribute('destination') ?? '',
-                            'resourceName' => $error->getResourceName(),
-                            'resourceGroup' => $error->getResourceGroup(),
-                        ]);
+                    foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
+                        /** @var MigrationException $error */
+                        if ($error->getCode() === 0 || $error->getCode() >= 500) {
+                            ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                                'migrationId' => $migration->getId(),
+                                'source' => $migration->getAttribute('source') ?? '',
+                                'destination' => $migration->getAttribute('destination') ?? '',
+                                'resourceName' => $error->getResourceName(),
+                                'resourceGroup' => $error->getResourceGroup(),
+                            ]);
+                        }
+                    }
+
+                    $source?->error();
+                    $destination?->error();
+                }
+
+                if ($migration->getAttribute('status', '') === 'completed') {
+                    $destination?->success();
+                    $source?->success();
+
+                    // todo: Move to CSV hook
+                    if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
+                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
                     }
                 }
+            } finally {
+                $source?->cleanUp();
+                $destination?->cleanUp();
 
-                $source?->error();
-                $destination?->error();
+                $transfer = null;
+                $source = null;
+                $destination = null;
             }
-
-            if ($migration->getAttribute('status', '') === 'completed') {
-                $destination?->success();
-                $source?->success();
-
-                if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
-                }
-            }
-
-            $transfer = null;
-            $source = null;
-            $destination = null;
         }
     }
 

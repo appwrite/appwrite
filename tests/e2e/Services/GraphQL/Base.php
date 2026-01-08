@@ -2334,7 +2334,8 @@ trait Base
                         buckets {
                             _id
                             name
-                            enabled
+                            enabled,
+                            totalSize
                         }
                     }
                 }';
@@ -2344,6 +2345,7 @@ trait Base
                         _id
                         name
                         enabled
+                        totalSize
                     }
                 }';
             case self::UPDATE_BUCKET:
