@@ -30,6 +30,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Roles;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -388,11 +389,24 @@ App::init()
             }
 
             $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+
+            $hasProjectSpecificPermissions = false;
+            foreach ($adminRoles as $adminRole) {
+                $adminRole = Role::parse($adminRole);
+                if ($adminRole->getRole() === Roles::ROLE_PROJECT) {
+                    $hasProjectSpecificPermissions = true;
+                    $adminRole = $adminRole->getDimension();
+                } else {
+                    $adminRole = $adminRole->getRole();
+                }
+                $scopes = \array_merge($scopes, $roles[$adminRole]['scopes'] ?? []);
             }
 
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            Authorization::setDefaultStatus($hasProjectSpecificPermissions);  // Cancel security segmentation for admin users.
+
+            if (!$hasProjectSpecificPermissions) {
+                $role = $adminRole;
+            }
         }
 
         $scopes = \array_unique($scopes);

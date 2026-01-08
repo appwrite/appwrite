@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ff3172688b600aa3c560131c9d9c5588",
+    "content-hash": "38fc202d6085525f33d0a38ca2a1e7ae",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3899,16 +3899,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "3.6.1",
+            "version": "dev-ser-541-3.x",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c8c1b2f5770245dd4006e2680681e3efbe8b1fa7"
+                "reference": "1a96b93b041083af14a6a1d90cab7de0cae51a55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c8c1b2f5770245dd4006e2680681e3efbe8b1fa7",
-                "reference": "c8c1b2f5770245dd4006e2680681e3efbe8b1fa7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/1a96b93b041083af14a6a1d90cab7de0cae51a55",
+                "reference": "1a96b93b041083af14a6a1d90cab7de0cae51a55",
                 "shasum": ""
             },
             "require": {
@@ -3937,7 +3937,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "php -d memory_limit=2G ./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "php -d memory_limit=2G ./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3950,10 +3981,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/3.6.1"
+                "source": "https://github.com/utopia-php/database/tree/ser-541-3.x",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2025-12-16T09:55:41+00:00"
+            "time": "2026-01-08T06:55:21+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8943,10 +8974,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-ser-541-3.x",
+            "alias": "3.3.99",
+            "alias_normalized": "3.3.99.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/audit": 5
+        "utopia-php/audit": 5,
+        "utopia-php/database": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

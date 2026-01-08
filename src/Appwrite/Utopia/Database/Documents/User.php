@@ -18,6 +18,7 @@ class User extends Document
     public const ROLE_ADMIN = 'admin';
     public const ROLE_DEVELOPER = 'developer';
     public const ROLE_OWNER = 'owner';
+    public const ROLE_MEMBER = 'member';
     public const ROLE_APPS = 'apps';
     public const ROLE_SYSTEM = 'system';
 
@@ -61,19 +62,20 @@ class User extends Document
         }
 
         foreach ($this->getAttribute('memberships', []) as $node) {
-            if (!isset($node['confirm']) || !$node['confirm']) {
+            if (!isset($node['confirm']) || !$node['confirm'] || !isset($node['id']) || !isset($node['teamId'])) {
                 continue;
             }
 
-            if (isset($node['$id']) && isset($node['teamId'])) {
-                $roles[] = Role::team($node['teamId'])->toString();
-                $roles[] = Role::member($node['$id'])->toString();
+            $roles[] = Role::member($node['$id'])->toString(); // Add base role for this membership
 
-                if (isset($node['roles'])) {
-                    foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                        $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
-                    }
-                }
+            $projectRoles = \array_filter($node['roles'] ?? [], fn ($role) => str_starts_with($role, Roles::ROLE_PROJECT));
+            if (!empty($projectRoles)) {
+                $roles[] = Role::team($node['teamId'], self::ROLE_MEMBER)->toString(); // Add member role for the team
+                $roles = \array_merge($roles, $projectRoles);
+            } else {
+                $roles[] = Role::team($node['teamId'])->toString(); // Add base role for the team
+                $teamRoles = \array_map(fn ($role) => Role::team($node['teamId'], $role)->toString(), $node['roles'] ?? []); 
+                $roles = \array_merge($roles, $teamRoles);
             }
         }
 

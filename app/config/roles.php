@@ -130,6 +130,10 @@ return [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins),
     ],
+    User::ROLE_MEMBER => [
+        'label' => 'Member',
+        'scopes' => \array_merge($member),
+    ],
     User::ROLE_APPS => [
         'label' => 'Applications',
         'scopes' => ['global', 'health.read', 'graphql'],

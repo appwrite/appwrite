@@ -52,7 +52,7 @@
         "utopia-php/cache": "0.13.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "1.*.*",
-        "utopia-php/database": "3.*.*",
+        "utopia-php/database": "dev-ser-541-3.x as 3.3.99",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "0.9.*",
         "utopia-php/emails": "0.6.*",
@@ -100,6 +100,12 @@
     "provide": {
         "ext-phpiredis": "*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/database"
+        }
+    ],
     "config": {
         "platform": {
             "php": "8.3"
