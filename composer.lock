@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aecb99247e6e5090561afd7134c247f9",
+    "content-hash": "ff3172688b600aa3c560131c9d9c5588",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4516,16 +4516,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.3.12",
+            "version": "1.3.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "1b8d5519c50630e4c0b6a79be615b70d5f23d2e4"
+                "reference": "c5e3f5e970e62e8f7db97b5b90baae2af800a715"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/1b8d5519c50630e4c0b6a79be615b70d5f23d2e4",
-                "reference": "1b8d5519c50630e4c0b6a79be615b70d5f23d2e4",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c5e3f5e970e62e8f7db97b5b90baae2af800a715",
+                "reference": "c5e3f5e970e62e8f7db97b5b90baae2af800a715",
                 "shasum": ""
             },
             "require": {
@@ -4551,25 +4551,7 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Migration"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -4582,10 +4564,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/migration/tree/1.3.12",
-                "issues": "https://github.com/utopia-php/migration/issues"
+                "issues": "https://github.com/utopia-php/migration/issues",
+                "source": "https://github.com/utopia-php/migration/tree/1.3.13"
             },
-            "time": "2026-01-07T06:07:33+00:00"
+            "time": "2026-01-07T14:48:05+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8989,5 +8971,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
