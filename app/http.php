@@ -12,6 +12,8 @@ use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
 use Utopia\App;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Compression\Compression;
@@ -274,8 +276,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 
         // create appwrite database, `dbForPlatform` is a direct access call.
         createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections) {
-            if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($dbForPlatform);
+            if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
+                $adapter = new AdapterDatabase($dbForPlatform);
+                $audit = new Audit($adapter);
                 $audit->setup();
             }
 
@@ -417,8 +420,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 }
             }
 
-            if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($dbForProject);
+            if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
+                $adapter = new AdapterDatabase($dbForProject);
+                $audit = new Audit($adapter);
                 $audit->setup();
             }
 
