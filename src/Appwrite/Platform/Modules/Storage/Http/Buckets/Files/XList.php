@@ -16,6 +16,7 @@ use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -85,10 +86,9 @@ class XList extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(\Utopia\Database\Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         try {

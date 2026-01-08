@@ -17,6 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
 use Utopia\Platform\Action;
@@ -139,10 +140,9 @@ class Get extends Action
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid && !$isToken) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         if ($fileSecurity && !$valid && !$isToken) {

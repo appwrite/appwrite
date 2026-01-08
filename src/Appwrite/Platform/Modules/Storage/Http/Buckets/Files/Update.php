@@ -14,6 +14,7 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -86,10 +87,9 @@ class Update extends Action
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_UPDATE);
-        $valid = $validator->isValid($bucket->getUpdate());
+        $valid = $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         // Read permission should not be required for update
@@ -120,7 +120,7 @@ class Update extends Action
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!$authorization->isRole($role)) {
+                    if (!$authorization->hasRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }

@@ -22,6 +22,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -118,15 +119,14 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $validator = new Authorization(\Utopia\Database\Database::PERMISSION_CREATE);
-        if (!$validator->isValid($bucket->getCreate())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $allowedPermissions = [
-            \Utopia\Database\Database::PERMISSION_READ,
-            \Utopia\Database\Database::PERMISSION_UPDATE,
-            \Utopia\Database\Database::PERMISSION_DELETE,
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
         ];
 
         // Map aggregate permissions to into the set of individual permissions they represent.
@@ -156,7 +156,7 @@ class Create extends Action
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!$authorization->isRole($role)) {
+                    if (!$authorization->hasRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -381,8 +381,7 @@ class Create extends Action
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                $validator = new Authorization(\Utopia\Database\Database::PERMISSION_CREATE);
-                if (!$validator->isValid($bucket->getCreate())) {
+                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
                 $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
@@ -426,8 +425,7 @@ class Create extends Action
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                $validator = new Authorization(\Utopia\Database\Database::PERMISSION_CREATE);
-                if (!$validator->isValid($bucket->getCreate())) {
+                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
