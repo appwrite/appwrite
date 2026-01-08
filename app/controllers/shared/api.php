@@ -389,23 +389,28 @@ App::init()
             }
 
             $scopes = []; // Reset scope if admin
+            $projectRoles = \array_filter($adminRoles, fn ($role) => str_starts_with($role, Roles::ROLE_PROJECT));
 
-            $hasProjectSpecificPermissions = false;
-            foreach ($adminRoles as $adminRole) {
-                $adminRole = Role::parse($adminRole);
-                if ($adminRole->getRole() === Roles::ROLE_PROJECT) {
-                    $hasProjectSpecificPermissions = true;
-                    $adminRole = $adminRole->getDimension();
-                } else {
-                    $adminRole = $adminRole->getRole();
+            // No project-specific permissions present for the user
+            if (empty($projectRoles)) {
+                foreach ($adminRoles as $role) {
+                    $scopes = \array_merge($scopes, $roles[$role]['scopes']);
                 }
-                $scopes = \array_merge($scopes, $roles[$adminRole]['scopes'] ?? []);
-            }
+                Authorization::setDefaultStatus(false); // Cancel security segmentation for admin users.
+            } else {
+                // Project-specific permissions present for the user
+                if ($project->getId() === 'console') {
+                    $role = User::ROLE_MEMBER; // Per-project users are considered to have 'member' role at the team level.
+                } else {
+                    $projectRoles = \array_filter($adminRoles, fn ($role) => str_starts_with($role, Role::project($project->getId())->toString()));
 
-            Authorization::setDefaultStatus($hasProjectSpecificPermissions);  // Cancel security segmentation for admin users.
+                    if (empty($projectRoles)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                    }
 
-            if (!$hasProjectSpecificPermissions) {
-                $role = $adminRole;
+                    $role = Role::parse($projectRoles[0])->getDimension(); // There must be only one role for a project.
+                }
+                $scopes = $roles[$role]['scopes'];
             }
         }
 

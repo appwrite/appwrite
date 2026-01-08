@@ -264,7 +264,6 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'teamId' => ID::unique(),
             'name' => 'Arsenal',
-            'roles' => ['player'],
         ]);
 
         $this->assertEquals(201, $team['headers']['status-code']);
