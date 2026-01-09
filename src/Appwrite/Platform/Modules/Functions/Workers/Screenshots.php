@@ -237,6 +237,7 @@ class Screenshots extends Action
                 $updates->setAttribute($key, $fileId);
             }
 
+            $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n");
 
             // Apply screenshot properties
@@ -257,39 +258,8 @@ class Screenshots extends Action
 
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
-        } finally {
-            // Fill failure screenshots if not successful
-
-            if (\is_null($deployment) || $deployment->isEmpty()) {
-                return;
-            }
-
-            if (\is_null($site) || $site->isEmpty()) {
-                return;
-            }
-
-            $updates = new Document();
-
-            if (empty($deployment->getAttribute('screenshotDark', ''))) {
-                $updates->setAttribute('screenshotDark', '/console/images/sites/screenshot-placeholder-dark.svg');
-            }
-            if (empty($deployment->getAttribute('screenshotLight', ''))) {
-                $updates->setAttribute('screenshotLight', '/console/images/sites/screenshot-placeholder-light.svg');
-            }
-
-            if (!$updates->isEmpty()) {
-                // Apply screenshot properties
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $updates);
-
-                $queueForRealtime
-                    ->setPayload($deployment->getArrayCopy())
-                    ->trigger();
-
-                $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                    'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
-                    'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
-                ]));
-            }
+            
+            throw $th;
         }
     }
 
