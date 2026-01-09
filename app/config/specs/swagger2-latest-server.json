@@ -12487,6 +12487,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.read",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
@@ -12554,6 +12555,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
@@ -12624,6 +12626,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.read",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
@@ -12687,6 +12690,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
@@ -12766,6 +12770,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
@@ -12831,6 +12836,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "server",
                         "client"
                     ],
@@ -13579,6 +13585,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
@@ -13680,6 +13687,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
@@ -14180,6 +14188,7 @@
                     "rate-key": "url:{url},ip:{ip}",
                     "scope": "documents.read",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
@@ -14280,6 +14289,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
@@ -14423,6 +14433,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
@@ -14528,6 +14539,7 @@
                     "rate-key": "ip:{ip},method:{method},url:{url},userId:{userId}",
                     "scope": "documents.write",
                     "platforms": [
+                        "console",
                         "client",
                         "server"
                     ],
