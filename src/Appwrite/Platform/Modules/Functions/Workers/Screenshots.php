@@ -13,7 +13,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -55,7 +54,7 @@ class Screenshots extends Action
         Document $project,
         Device $deviceForFiles
     ): void {
-        Console::log('Build action started');
+        Console::log('Screenshot action started');
 
         $payload = $message->getPayload() ?? [];
 
@@ -67,8 +66,17 @@ class Screenshots extends Action
 
         $deploymentId = $payload['deploymentId'] ?? null;
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($deployment->isEmpty()) {
+            throw new \Exception('Deployment not found');
+        }
+
         $siteId = $deployment->getAttribute('resourceId');
         $site = $dbForProject->getDocument('sites', $siteId);
+
+        if ($site->isEmpty()) {
+            throw new \Exception('Site not found');
+        }
 
         // Realtime preparation
         $event = "sites.[siteId].deployments.[deploymentId].update";
@@ -83,21 +91,25 @@ class Screenshots extends Action
         $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
 
         try {
-            $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+            $rule = $dbForPlatform->findOne('rules', [
                 Query::equal("projectInternalId", [$project->getSequence()]),
                 Query::equal("type", ["deployment"]),
                 Query::equal('deploymentInternalId', [$deployment->getSequence()]),
-            ]));
+            ]);
 
             if ($rule->isEmpty()) {
-                throw new \Exception("Rule for build not found");
+                throw new \Exception("Rule for deployment not found");
             }
 
             $client = new FetchClient();
             $client->setTimeout(\intval($site->getAttribute('timeout', '15')) * 1000);
             $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
 
-            $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+            $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
+
+            if ($bucket->isEmpty()) {
+                throw new \Exception('Bucket not found');
+            }
 
             $configs = [
                 'screenshotLight' => [
@@ -220,7 +232,7 @@ class Screenshots extends Action
                     'metadata' => ['content_type' => $mimeType],
                 ]);
 
-                Authorization::skip(fn () => $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file));
+                $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file);
 
                 $updates->setAttribute($key, $fileId);
             }
