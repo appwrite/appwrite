@@ -1,0 +1,1538 @@
+import { useState, useEffect } from 'react'
+import { useParams } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ID } from '@appwrite.io/console'
+import { sdk } from '@/lib/appwrite/sdk'
+import { toast } from 'sonner'
+import { formatDistanceToNow } from 'date-fns'
+import { formatDateTime } from '@/lib/date-utils'
+import {
+  useBackupPolicies,
+  useBackupArchives,
+} from '@/lib/react-query/hooks'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { getBackupStatusVariant, type BackupStatus } from '@/lib/utils/status-badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { Pagination } from '@/components/global/shared/Pagination'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  Plus,
+  MoreHorizontal,
+  Archive,
+  Trash2,
+  RotateCcw,
+  Copy,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Lock,
+} from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { IdInput } from '@/components/ui/id-input'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import type { Models } from '@appwrite.io/console'
+import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
+
+interface BackupsViewProps {
+  databaseId: string
+}
+
+export function BackupsView({ databaseId }: BackupsViewProps) {
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string
+  const queryClient = useQueryClient()
+  const [backupsPage, setBackupsPage] = useState(1)
+  const [backupsPageSize, setBackupsPageSize] = useState(10)
+  const [createPolicyDialogOpen, setCreatePolicyDialogOpen] = useState(false)
+  const [createManualBackupDialogOpen, setCreateManualBackupDialogOpen] = useState(false)
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
+  const [deletePolicyDialogOpen, setDeletePolicyDialogOpen] = useState(false)
+  const [deleteBackupDialogOpen, setDeleteBackupDialogOpen] = useState(false)
+  const [selectedPolicy, setSelectedPolicy] = useState<Models.BackupPolicy | null>(null)
+  const [selectedBackup, setSelectedBackup] = useState<Models.BackupArchive | null>(null)
+  const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
+
+  // Get project to get teamId for organization plan
+  const { project } = useProject(projectId)
+  
+  // Get organization plan to check backups availability
+  const { plan: organizationPlan, isLoading: planLoading } = useOrganizationPlan(project?.teamId)
+  const backupsEnabled = organizationPlan?.backupsEnabled ?? false
+  const backupPoliciesLimit = organizationPlan?.backupPolicies ?? 0
+
+  // Fetch policies and archives
+  const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
+    projectId,
+    databaseId,
+  )
+  const { data: archivesData, isLoading: archivesLoading } = useBackupArchives(
+    projectId,
+    databaseId,
+    backupsPage - 1,
+    backupsPageSize,
+  )
+
+  const policies: Models.BackupPolicy[] = policiesData?.policies || []
+  const archives: Models.BackupArchive[] = archivesData?.archives || []
+  const archivesTotal = archivesData?.total || 0
+
+  // Only show loading if we don't have data yet (account for prefetched data from route loader)
+  const isPoliciesActuallyLoading = policiesLoading && policies.length === 0 && !policiesData
+  const isArchivesActuallyLoading = archivesLoading && archives.length === 0 && !archivesData
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!projectId || !databaseId) return
+
+    let subscription: { close: () => Promise<void> } | null = null
+
+    const setupSubscription = async () => {
+      try {
+        subscription = await sdk.forProject(projectId).realtime.subscribe(
+          [`projects.${projectId}`],
+          (response) => {
+            if (
+              response.events?.some(
+                (event) => event.includes('archives.') || event.includes('policies.'),
+              )
+            ) {
+              // Invalidate both policies and archives queries for this database
+              queryClient.invalidateQueries({ 
+                queryKey: ['backup-policies', 'project', projectId, 'database', databaseId] 
+              })
+              queryClient.invalidateQueries({ 
+                queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+              })
+            }
+          },
+        )
+      } catch (error) {
+        // Silently ignore realtime errors
+        console.error('Failed to subscribe to backups realtime:', error)
+      }
+    }
+
+    setupSubscription()
+
+    return () => {
+      if (subscription) {
+        subscription.close().catch(() => {
+          // Silently ignore cleanup errors
+        })
+      }
+    }
+  }, [projectId, databaseId, queryClient])
+
+  // Check if backups are disabled
+  // Wait for plan to load before determining if backups are disabled
+  const isBackupsDisabled = 
+    planLoading 
+      ? false // Don't show lock screen while loading
+      : !backupsEnabled
+
+  // Policy mutations
+  const createPolicyMutation = useMutation({
+    mutationFn: async (policies: Array<{
+      policyId: string
+      services: string[]
+      retention: number
+      schedule: string
+      name?: string
+      resourceId?: string
+      enabled?: boolean
+    }>) => {
+      const projectSdk = sdk.forProject(projectId)
+      return Promise.all(
+        policies.map((policy) =>
+          projectSdk.backups.createPolicy({
+            policyId: policy.policyId,
+            services: policy.services,
+            retention: policy.retention,
+            schedule: policy.schedule,
+            name: policy.name,
+            resourceId: policy.resourceId || databaseId,
+            enabled: policy.enabled ?? true,
+          }),
+        ),
+      )
+    },
+    onSuccess: (_data, variables) => {
+      if (variables.length === 1) {
+        toast.success(
+          <div>
+            <b>{variables[0].name || 'Policy'}</b> policy has been created
+          </div>,
+        )
+      } else {
+        toast.success('Backup policies have been created')
+      }
+      // Invalidate policies query for this specific database
+      queryClient.invalidateQueries({ 
+        queryKey: ['backup-policies', 'project', projectId, 'database', databaseId] 
+      })
+      setCreatePolicyDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create backup policy')
+    },
+  })
+
+  const deletePolicyMutation = useMutation({
+    mutationFn: async (policyId: string) => {
+      const projectSdk = sdk.forProject(projectId)
+      return projectSdk.backups.deletePolicy({ policyId })
+    },
+    onSuccess: () => {
+      toast.success('Backup policy has been deleted')
+      // Invalidate policies query for this specific database
+      queryClient.invalidateQueries({ 
+        queryKey: ['backup-policies', 'project', projectId, 'database', databaseId] 
+      })
+      setDeletePolicyDialogOpen(false)
+      setSelectedPolicy(null)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete backup policy')
+    },
+  })
+
+  // Archive mutations
+  const createArchiveMutation = useMutation({
+    mutationFn: async () => {
+      const projectSdk = sdk.forProject(projectId)
+      return projectSdk.backups.createArchive({
+        services: ['databases'],
+        resourceId: databaseId,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Database backup has started')
+      // Invalidate archives query for this specific database (all pages)
+      queryClient.invalidateQueries({ 
+        queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+      })
+      setCreateManualBackupDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create backup')
+    },
+  })
+
+  const deleteArchiveMutation = useMutation({
+    mutationFn: async (archiveId: string) => {
+      const projectSdk = sdk.forProject(projectId)
+      return projectSdk.backups.deleteArchive({ archiveId })
+    },
+    onSuccess: () => {
+      toast.success('1 backup deleted')
+      // Invalidate archives query for this specific database (all pages)
+      queryClient.invalidateQueries({ 
+        queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+      })
+      setDeleteBackupDialogOpen(false)
+      setSelectedBackup(null)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete backup')
+    },
+  })
+
+  const createRestorationMutation = useMutation({
+    mutationFn: async (params: {
+      archiveId: string
+      services: string[]
+      newResourceId?: string
+      newResourceName?: string
+    }) => {
+      const projectSdk = sdk.forProject(projectId)
+      return projectSdk.backups.createRestoration(params)
+    },
+    onSuccess: () => {
+      toast.success('Database restore initiated')
+      // Invalidate archives query to refresh backup status
+      queryClient.invalidateQueries({ 
+        queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+      })
+      setRestoreDialogOpen(false)
+      setSelectedBackup(null)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to restore backup')
+    },
+  })
+
+  // Format backup size
+  const formatSize = (bytes: number | undefined) => {
+    if (!bytes) return '-'
+    const mb = bytes / (1024 * 1024)
+    if (mb < 1) {
+      return `${(bytes / 1024).toFixed(2)} KB`
+    }
+    return `${mb.toFixed(2)} MB`
+  }
+
+  // Get backup status badge
+  const getBackupStatus = (status: string) => {
+    const statusMap: Record<string, { label: string; icon: typeof Clock }> = {
+      pending: { label: 'Pending', icon: Clock },
+      completed: { label: 'Complete', icon: CheckCircle2 },
+      uploading: { label: 'Processing', icon: Loader2 },
+      downloading: { label: 'Processing', icon: Loader2 },
+      failed: { label: 'Failed', icon: AlertCircle },
+    }
+    
+    const statusInfo = statusMap[status] || { label: 'Waiting', icon: Clock }
+    const variant = getBackupStatusVariant(status as BackupStatus)
+    
+    return {
+      label: statusInfo.label,
+      variant,
+      icon: statusInfo.icon,
+    }
+  }
+
+  // Calculate next backup date from cron
+  const getNextBackupDate = (schedule: string) => {
+    // Simple implementation - for hourly (0 * * * *) and daily (* * * *)
+    // In production, use a proper cron parser library
+    const now = new Date()
+    const nextDate = new Date(now)
+    
+    if (schedule === '0 * * * *') {
+      // Hourly - next hour at minute 0
+      nextDate.setHours(nextDate.getHours() + 1, 0, 0, 0)
+    } else if (schedule.includes('* * *')) {
+      // Daily - next day at 00:00
+      nextDate.setDate(nextDate.getDate() + 1)
+      nextDate.setHours(0, 0, 0, 0)
+    } else {
+      // For other schedules, return a placeholder
+      return 'Calculating...'
+    }
+    
+    return formatDateTime(nextDate)
+  }
+
+  // Get previous backup for a policy
+  const getPreviousBackup = (policyId: string) => {
+    return archives.find(
+      (archive) =>
+        (archive.policyId as string | null | undefined) === policyId &&
+        archive.status === 'completed',
+    )
+  }
+
+  if (isBackupsDisabled) {
+    return (
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-muted-foreground" />
+              <CardTitle>Backups</CardTitle>
+            </div>
+            <CardDescription>
+              Backups are not available on your current plan. Upgrade to enable automated backups.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Policies Section */}
+        <div className="lg:col-span-1">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[15px] font-semibold text-foreground">Policies</h3>
+              {policies.length > 0 && backupPoliciesLimit > 0 && backupPoliciesLimit < 10000 && (
+                <Badge variant="secondary" className="text-[12px] font-normal">
+                  {policies.length}/{backupPoliciesLimit}
+                </Badge>
+              )}
+            </div>
+            {backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      onClick={() => setCreatePolicyDialogOpen(true)}
+                      disabled
+                      size="sm"
+                      className="h-8 gap-1.5 text-[12px] font-medium text-white hover:opacity-90"
+                      style={{ backgroundColor: '#f02e65' }}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Create policy
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">
+                    Policy limit reached. Upgrade to create more.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                onClick={() => setCreatePolicyDialogOpen(true)}
+                disabled={backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit}
+                size="sm"
+                className="h-8 gap-1.5 text-[12px] font-medium text-white hover:opacity-90"
+                style={{ backgroundColor: '#f02e65' }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Create policy
+              </Button>
+            )}
+          </div>
+          <div>
+            {isPoliciesActuallyLoading ? (
+              <div className="rounded-lg border border-border bg-card py-12 text-center">
+                <div className="text-muted-foreground">Loading policies...</div>
+              </div>
+            ) : policies.length === 0 ? (
+              <div className="rounded-lg border border-border bg-card py-12 text-center min-h-[280px] flex flex-col items-center justify-center">
+                <Archive className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="text-[14px] font-medium text-foreground mb-1">
+                  Ensure your data stays safe
+                </p>
+                <p className="text-[13px] text-muted-foreground mb-4">
+                  Create a backup policy to automate regular and secure data protection.
+                </p>
+                <Button onClick={() => setCreatePolicyDialogOpen(true)} size="sm" className="h-9 text-[13px]">
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Create policy
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {policies.map((policy) => {
+                  const previousBackup = getPreviousBackup(policy.$id)
+                  const scheduleText =
+                    policy.schedule === '0 * * * *'
+                      ? 'Runs hourly'
+                      : policy.schedule.includes('* * *')
+                      ? 'Runs daily'
+                      : 'Runs on schedule'
+                  const retentionText =
+                    policy.retention === 36500
+                      ? 'Retained forever'
+                      : policy.retention === 7
+                      ? 'Retained for 1 week'
+                      : policy.retention === 1
+                      ? 'Retained for 1 day'
+                      : `Retained for ${policy.retention} days`
+
+                  return (
+                    <div
+                      key={policy.$id}
+                      className="rounded-lg border border-border bg-background p-4"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-[14px] font-medium text-foreground">
+                              {policy.name || 'Unnamed Policy'}
+                            </h4>
+                          </div>
+                          <p className="text-[13px] text-muted-foreground">
+                            {scheduleText} • {retentionText}
+                          </p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedPolicy(policy)
+                                setDeletePolicyDialogOpen(true)
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <div className="border-t border-border my-3" />
+                      <div className="grid grid-cols-2 gap-4 text-[13px]">
+                        <div>
+                          <div className="text-muted-foreground mb-1.5">Previous</div>
+                          <div className="flex items-center gap-1.5">
+                            {previousBackup ? (
+                              <>
+                                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                                <DateTooltip date={previousBackup.$createdAt} />
+                              </>
+                            ) : (
+                              <>
+                                <div className="h-2 w-2 rounded-full bg-muted-foreground shrink-0" />
+                                <span className="text-foreground">No backups yet</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground mb-1.5">Next</div>
+                          <div className="text-foreground">{getNextBackupDate(policy.schedule)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Backups Section */}
+        <div className="lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Backups
+              </h3>
+            </div>
+            <Button
+              onClick={() => setCreateManualBackupDialogOpen(true)}
+              size="sm"
+              className="h-8 gap-1.5 text-[12px] font-medium text-white hover:opacity-90"
+              style={{ backgroundColor: '#f02e65' }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Manual backup
+            </Button>
+          </div>
+          <div>
+            {isArchivesActuallyLoading ? (
+              <div className="rounded-lg border border-border bg-card py-12 text-center">
+                <div className="text-muted-foreground">Loading backups...</div>
+              </div>
+            ) : archives.length === 0 ? (
+              <div className="rounded-lg border border-border bg-card py-12 text-center min-h-[280px] flex flex-col items-center justify-center">
+                <Archive className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="text-[14px] font-medium text-foreground mb-1">No backups yet</p>
+                <p className="text-[13px] text-muted-foreground mb-4">
+                  Create a manual backup or set up a policy to get started.
+                </p>
+                <Button
+                  onClick={() => setCreateManualBackupDialogOpen(true)}
+                  size="sm"
+                  className="h-9 text-[13px]"
+                >
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Create manual backup
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-lg border border-border bg-background overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-[50px]">
+                          <Checkbox
+                            checked={
+                              archives.length > 0 &&
+                              archives.every((archive) => selectedBackups.has(archive.$id))
+                            }
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedBackups(new Set(archives.map((a) => a.$id)))
+                              } else {
+                                setSelectedBackups(new Set())
+                              }
+                            }}
+                          />
+                        </TableHead>
+                        <TableHead>Backups</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Policy</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {archives.map((archive) => {
+                        const status = getBackupStatus(archive.status)
+                        const StatusIcon = status.icon
+                        // Handle null policyId for manual backups (API may return null even though type says string)
+                        const policyId = archive.policyId as string | null | undefined
+                        const policy = policyId
+                          ? policies.find((p) => p.$id === policyId)
+                          : null
+
+                        return (
+                          <TableRow key={archive.$id} className="hover:bg-muted/50">
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedBackups.has(archive.$id)}
+                                onCheckedChange={(checked) => {
+                                  const newSelected = new Set(selectedBackups)
+                                  if (checked) {
+                                    newSelected.add(archive.$id)
+                                  } else {
+                                    newSelected.delete(archive.$id)
+                                  }
+                                  setSelectedBackups(newSelected)
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <DateTooltip date={archive.$createdAt} />
+                            </TableCell>
+                            <TableCell>{formatSize(archive.size)}</TableCell>
+                            <TableCell>
+                              <Badge variant={status.variant} className="gap-1.5">
+                                <StatusIcon className="h-3 w-3" />
+                                {status.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {policy ? (
+                                <span className="text-[13px]">{policy.name || 'Unnamed Policy'}</span>
+                              ) : (
+                                <span className="text-[13px] text-muted-foreground">Manual</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {archive.status === 'completed' && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedBackup(archive)
+                                        setRestoreDialogOpen(true)
+                                      }}
+                                    >
+                                      <RotateCcw className="mr-2 h-4 w-4" />
+                                      Restore
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(archive.$id)
+                                      toast.success('Backup ID copied to clipboard')
+                                    }}
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Copy ID
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedBackup(archive)
+                                      setDeleteBackupDialogOpen(true)
+                                    }}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+                {archivesTotal > 0 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={backupsPage}
+                      totalItems={archivesTotal}
+                      pageSize={backupsPageSize}
+                      pageSizeOptions={[10, 25, 50, 100]}
+                      onPageChange={setBackupsPage}
+                      onPageSizeChange={(size) => {
+                        setBackupsPageSize(size)
+                        setBackupsPage(1)
+                      }}
+                      showTotal={true}
+                      itemLabel="backups"
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Create Policy Dialog */}
+      <CreatePolicyDialog
+        open={createPolicyDialogOpen}
+        onOpenChange={setCreatePolicyDialogOpen}
+        onSubmit={(policies) => {
+          createPolicyMutation.mutate(policies)
+        }}
+        isLoading={createPolicyMutation.isPending}
+        databaseId={databaseId}
+        existingPoliciesCount={policies.length}
+        backupPoliciesLimit={backupPoliciesLimit}
+      />
+
+      {/* Create Manual Backup Dialog */}
+      <CreateManualBackupDialog
+        open={createManualBackupDialogOpen}
+        onOpenChange={setCreateManualBackupDialogOpen}
+        onSubmit={() => {
+          createArchiveMutation.mutate()
+        }}
+        isLoading={createArchiveMutation.isPending}
+      />
+
+      {/* Restore Backup Dialog */}
+      {selectedBackup && (
+        <RestoreBackupDialog
+          open={restoreDialogOpen}
+          onOpenChange={setRestoreDialogOpen}
+          backup={selectedBackup}
+          databaseId={databaseId}
+          onSubmit={(params) => {
+            createRestorationMutation.mutate(params)
+          }}
+          isLoading={createRestorationMutation.isPending}
+        />
+      )}
+
+      {/* Delete Policy Dialog */}
+      {selectedPolicy && (
+        <DeletePolicyDialog
+          open={deletePolicyDialogOpen}
+          onOpenChange={setDeletePolicyDialogOpen}
+          policy={selectedPolicy}
+          onConfirm={() => {
+            deletePolicyMutation.mutate(selectedPolicy.$id)
+          }}
+          isLoading={deletePolicyMutation.isPending}
+        />
+      )}
+
+      {/* Delete Backup Dialog */}
+      {selectedBackup && (
+        <DeleteBackupDialog
+          open={deleteBackupDialogOpen}
+          onOpenChange={setDeleteBackupDialogOpen}
+          backup={selectedBackup}
+          onConfirm={() => {
+            deleteArchiveMutation.mutate(selectedBackup.$id)
+          }}
+          isLoading={deleteArchiveMutation.isPending}
+        />
+      )}
+    </div>
+  )
+}
+
+// Create Policy Dialog Component
+interface CreatePolicyDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: (policies: Array<{
+    policyId: string
+    services: string[]
+    retention: number
+    schedule: string
+    name?: string
+    resourceId?: string
+    enabled?: boolean
+  }>) => void
+  isLoading: boolean
+  databaseId: string
+  existingPoliciesCount: number
+  backupPoliciesLimit: number
+}
+
+function CreatePolicyDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  isLoading,
+  databaseId,
+  existingPoliciesCount,
+  backupPoliciesLimit,
+}: CreatePolicyDialogProps) {
+  const [selectedPresets, setSelectedPresets] = useState<string[]>([])
+  const [customPolicies, setCustomPolicies] = useState<Array<{
+    frequency: 'hourly' | 'daily' | 'weekly' | 'monthly'
+    time: string
+    dayOfWeek?: number[]
+    dayOfMonth?: 'first' | 'middle' | 'end'
+    retention: number
+    retentionUnit: 'days' | 'weeks' | 'months' | 'years' | 'forever'
+    customRetention?: number
+    name: string
+  }>>([])
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setSelectedPresets([])
+      setCustomPolicies([])
+    }
+    onOpenChange(newOpen)
+  }
+
+  const handleSubmit = () => {
+    const policies: Array<{
+      policyId: string
+      services: string[]
+      retention: number
+      schedule: string
+      name?: string
+      resourceId?: string
+      enabled?: boolean
+    }> = []
+
+    // Add preset policies
+    if (selectedPresets.includes('hourly')) {
+      policies.push({
+        policyId: ID.unique(),
+        services: ['databases'],
+        retention: 1,
+        schedule: '0 * * * *',
+        name: 'Hourly backup',
+        resourceId: databaseId,
+        enabled: true,
+      })
+    }
+    if (selectedPresets.includes('daily')) {
+      policies.push({
+        policyId: ID.unique(),
+        services: ['databases'],
+        retention: 7,
+        schedule: '0 2 * * *',
+        name: 'Daily backup',
+        resourceId: databaseId,
+        enabled: true,
+      })
+    }
+
+    // Add custom policies
+    customPolicies.forEach((custom) => {
+      let schedule = ''
+      let retention = custom.retention
+
+      // Calculate retention in days
+      if (custom.retentionUnit === 'forever') {
+        retention = 36500
+      } else if (custom.retentionUnit === 'weeks') {
+        retention = (custom.customRetention || 1) * 7
+      } else if (custom.retentionUnit === 'months') {
+        retention = (custom.customRetention || 1) * 30
+      } else if (custom.retentionUnit === 'years') {
+        retention = (custom.customRetention || 1) * 365
+      } else {
+        retention = custom.customRetention || 1
+      }
+
+      // Build schedule
+      const [hour, minute] = custom.time.split(':').map(Number)
+      if (custom.frequency === 'hourly') {
+        schedule = `0 * * * *`
+      } else if (custom.frequency === 'daily') {
+        schedule = `${minute || 0} ${hour || 2} * * *`
+      } else if (custom.frequency === 'weekly') {
+        const dayOfWeek = custom.dayOfWeek?.[0] || 1
+        schedule = `${minute || 0} ${hour || 2} * * ${dayOfWeek}`
+      } else if (custom.frequency === 'monthly') {
+        const dayOfMonth = custom.dayOfMonth === 'first' ? 1 : custom.dayOfMonth === 'middle' ? 15 : 28
+        schedule = `${minute || 0} ${hour || 2} ${dayOfMonth} * *`
+      }
+
+      policies.push({
+        policyId: ID.unique(),
+        services: ['databases'],
+        retention,
+        schedule,
+        name: custom.name || `${custom.frequency} backup`,
+        resourceId: databaseId,
+        enabled: true,
+      })
+    })
+
+    if (policies.length === 0) return
+
+    onSubmit(policies)
+  }
+
+  const totalPolicies = selectedPresets.length + customPolicies.length
+  const canCreateCustom = backupPoliciesLimit === 0 || existingPoliciesCount + totalPolicies < backupPoliciesLimit
+  // Pro plan (limit = 1) only supports daily preset, no custom policies
+  // Plans with limit > 1 or limit === 0 (unlimited) support custom policies
+  const supportsCustomPolicies = backupPoliciesLimit === 0 || backupPoliciesLimit > 1
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogTitle>Create backup policy</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {supportsCustomPolicies
+              ? 'Choose preset policies or create custom backup schedules.'
+              : 'Your plan only supports the daily preset policy. Upgrade to create custom policies.'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+
+        <div className="px-6 pb-4 pt-0 space-y-6">
+          {/* Preset Policies */}
+          <div className="space-y-3">
+            <Label className="text-[13px]">Preset Policies</Label>
+            <div className="space-y-2">
+              {supportsCustomPolicies && (
+                <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
+                  <Checkbox
+                    id="hourly"
+                    checked={selectedPresets.includes('hourly')}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedPresets([...selectedPresets, 'hourly'])
+                      } else {
+                        setSelectedPresets(selectedPresets.filter((p) => p !== 'hourly'))
+                      }
+                    }}
+                  />
+                  <Label htmlFor="hourly" className="flex-1 cursor-pointer">
+                    <div className="font-medium text-[13px]">Hourly</div>
+                    <div className="text-[12px] text-muted-foreground">
+                      Runs every hour, retained for 24 hours
+                    </div>
+                  </Label>
+                </div>
+              )}
+              <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
+                <Checkbox
+                  id="daily"
+                  checked={selectedPresets.includes('daily')}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedPresets([...selectedPresets, 'daily'])
+                    } else {
+                      setSelectedPresets(selectedPresets.filter((p) => p !== 'daily'))
+                    }
+                  }}
+                />
+                <Label htmlFor="daily" className="flex-1 cursor-pointer">
+                  <div className="font-medium text-[13px]">Daily</div>
+                  <div className="text-[12px] text-muted-foreground">
+                    Runs every day, retained for 7 days
+                  </div>
+                </Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Custom Policies - Only if plan supports custom policies */}
+          {supportsCustomPolicies && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-[13px]">Custom Policies</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCustomPolicies([
+                      ...customPolicies,
+                      {
+                        frequency: 'daily',
+                        time: '02:00',
+                        retention: 7,
+                        retentionUnit: 'days',
+                        name: '',
+                      },
+                    ])
+                  }}
+                  disabled={!canCreateCustom}
+                >
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Add custom policy
+                </Button>
+              </div>
+
+              {customPolicies.map((policy, index) => (
+                <Card key={index}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-[14px]">Custom Policy {index + 1}</CardTitle>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setCustomPolicies(customPolicies.filter((_, i) => i !== index))
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[13px]">Frequency</Label>
+                      <Select
+                        value={policy.frequency}
+                        onValueChange={(value: 'hourly' | 'daily' | 'weekly' | 'monthly') => {
+                          const updated = [...customPolicies]
+                          updated[index].frequency = value
+                          setCustomPolicies(updated)
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hourly">Hourly</SelectItem>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {policy.frequency !== 'hourly' && (
+                      <div className="space-y-2">
+                        <Label className="text-[13px]">Time</Label>
+                        <Input
+                          type="time"
+                          value={policy.time}
+                          onChange={(e) => {
+                            const updated = [...customPolicies]
+                            updated[index].time = e.target.value
+                            setCustomPolicies(updated)
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {policy.frequency === 'weekly' && (
+                      <div className="space-y-2">
+                        <Label className="text-[13px]">Day of Week</Label>
+                        <Select
+                          value={policy.dayOfWeek?.[0]?.toString() || '1'}
+                          onValueChange={(value) => {
+                            const updated = [...customPolicies]
+                            updated[index].dayOfWeek = [parseInt(value)]
+                            setCustomPolicies(updated)
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Monday</SelectItem>
+                            <SelectItem value="2">Tuesday</SelectItem>
+                            <SelectItem value="3">Wednesday</SelectItem>
+                            <SelectItem value="4">Thursday</SelectItem>
+                            <SelectItem value="5">Friday</SelectItem>
+                            <SelectItem value="6">Saturday</SelectItem>
+                            <SelectItem value="0">Sunday</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {policy.frequency === 'monthly' && (
+                      <div className="space-y-2">
+                        <Label className="text-[13px]">Day of Month</Label>
+                        <Select
+                          value={policy.dayOfMonth || 'first'}
+                          onValueChange={(value: 'first' | 'middle' | 'end') => {
+                            const updated = [...customPolicies]
+                            updated[index].dayOfMonth = value
+                            setCustomPolicies(updated)
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="first">First of month</SelectItem>
+                            <SelectItem value="middle">Middle (15th)</SelectItem>
+                            <SelectItem value="end">End (28th)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-[13px]">Retention</Label>
+                      <Select
+                        value={policy.retentionUnit}
+                        onValueChange={(value: 'days' | 'weeks' | 'months' | 'years' | 'forever') => {
+                          const updated = [...customPolicies]
+                          updated[index].retentionUnit = value
+                          setCustomPolicies(updated)
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="days">Days</SelectItem>
+                          <SelectItem value="weeks">Weeks</SelectItem>
+                          <SelectItem value="months">Months</SelectItem>
+                          <SelectItem value="years">Years</SelectItem>
+                          <SelectItem value="forever">Forever</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {policy.retentionUnit !== 'forever' && (
+                      <div className="space-y-2">
+                        <Label className="text-[13px]">Number</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={policy.customRetention || 1}
+                          onChange={(e) => {
+                            const updated = [...customPolicies]
+                            updated[index].customRetention = parseInt(e.target.value) || 1
+                            setCustomPolicies(updated)
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-[13px]">Policy Name</Label>
+                      <Input
+                        placeholder={`${policy.frequency} backup`}
+                        value={policy.name}
+                        onChange={(e) => {
+                          const updated = [...customPolicies]
+                          updated[index].name = e.target.value
+                          setCustomPolicies(updated)
+                        }}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isLoading || totalPolicies === 0}>
+            Create
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Create Manual Backup Dialog
+interface CreateManualBackupDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: () => void
+  isLoading: boolean
+}
+
+function CreateManualBackupDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  isLoading,
+}: CreateManualBackupDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 text-left">
+          <DialogTitle>Create manual backup</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Manual backups are <b>retained forever</b> unless manually deleted. Use for major data
+            changes or rollback safeguards.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+
+        <div className="px-6 pb-4 pt-0">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-[13px]">
+              <b>Depending on the size of your data, this may take a while.</b>
+            </AlertDescription>
+          </Alert>
+        </div>
+
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} disabled={isLoading}>
+            Create
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Restore Backup Dialog
+interface RestoreBackupDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  backup: Models.BackupArchive
+  databaseId: string
+  onSubmit: (params: {
+    archiveId: string
+    services: string[]
+    newResourceId?: string
+    newResourceName?: string
+  }) => void
+  isLoading: boolean
+}
+
+function RestoreBackupDialog({
+  open,
+  onOpenChange,
+  backup,
+  databaseId,
+  onSubmit,
+  isLoading,
+}: RestoreBackupDialogProps) {
+  const [restoreOption, setRestoreOption] = useState<'new' | 'same'>('new')
+  const [newDatabaseName, setNewDatabaseName] = useState('')
+  const [newDatabaseId, setNewDatabaseId] = useState('')
+  const [confirmSameDbRestore, setConfirmSameDbRestore] = useState(false)
+
+  const formatSize = (bytes: number | undefined) => {
+    if (!bytes) return '-'
+    const mb = bytes / (1024 * 1024)
+    if (mb < 1) {
+      return `${(bytes / 1024).toFixed(2)} KB`
+    }
+    return `${mb.toFixed(2)} MB`
+  }
+
+  const handleSubmit = () => {
+    if (restoreOption === 'new') {
+      if (!newDatabaseName) return
+      onSubmit({
+        archiveId: backup.$id,
+        services: ['databases'],
+        newResourceId: newDatabaseId || undefined,
+        newResourceName: newDatabaseName,
+      })
+    } else {
+      if (!confirmSameDbRestore) return
+      onSubmit({
+        archiveId: backup.$id,
+        services: ['databases'],
+        newResourceId: databaseId,
+      })
+    }
+  }
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setRestoreOption('new')
+      setNewDatabaseName('')
+      setNewDatabaseId('')
+      setConfirmSameDbRestore(false)
+    }
+    onOpenChange(newOpen)
+  }
+
+  const isDisabled: boolean =
+    restoreOption === 'new'
+      ? !newDatabaseName.trim() || Boolean(newDatabaseId && newDatabaseId === databaseId)
+      : !confirmSameDbRestore
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md p-0 max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="px-6 pt-6 text-left">
+          <DialogTitle>Restore backup</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Choose where to restore this backup.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+
+        <div className="px-6 pb-4 pt-0 space-y-4">
+          {/* Backup Info Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <CardTitle className="text-[14px]">
+                  {new Date(backup.$createdAt).toLocaleString()}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-[13px]">
+              <div>
+                <span className="text-muted-foreground">Status: </span>
+                <span className="text-foreground">Completed</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Size: </span>
+                <span className="text-foreground">{formatSize(backup.size)}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Time ago: </span>
+                <span className="text-foreground">
+                  {formatDistanceToNow(new Date(backup.$createdAt), { addSuffix: true })}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Restore Options */}
+          <RadioGroup value={restoreOption} onValueChange={(value) => setRestoreOption(value as 'new' | 'same')}>
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
+                <RadioGroupItem value="new" id="new" className="mt-1" />
+                <Label htmlFor="new" className="flex-1 cursor-pointer">
+                  <div className="font-medium text-[13px] mb-1">Restore in new database</div>
+                  <div className="text-[12px] text-muted-foreground">
+                    Duplicate to a new database with a different name
+                  </div>
+                </Label>
+              </div>
+
+              <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
+                <RadioGroupItem value="same" id="same" className="mt-1" />
+                <Label htmlFor="same" className="flex-1 cursor-pointer">
+                  <div className="font-medium text-[13px] mb-1">Restore in current database</div>
+                  <div className="text-[12px] text-muted-foreground">
+                    Overwrite current database with backup data
+                  </div>
+                </Label>
+              </div>
+            </div>
+          </RadioGroup>
+
+          {/* Conditional Fields */}
+          {restoreOption === 'new' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-db-name" className="text-[13px]">
+                  Database Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="new-db-name"
+                  placeholder="Enter database name"
+                  value={newDatabaseName}
+                  onChange={(e) => setNewDatabaseName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-db-id" className="text-[13px]">
+                  Database ID (optional)
+                </Label>
+                <IdInput
+                  id="new-db-id"
+                  value={newDatabaseId}
+                  onChange={(id) => setNewDatabaseId(id || '')}
+                  placeholder="Leave blank to auto-generate"
+                />
+                {newDatabaseId === databaseId && (
+                  <p className="text-[12px] text-destructive">
+                    Database ID must be different from source database
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {restoreOption === 'same' && (
+            <div className="flex items-start space-x-2 rounded-lg border border-border p-4">
+              <Checkbox
+                id="confirm-same-db"
+                checked={confirmSameDbRestore}
+                onCheckedChange={(checked) => setConfirmSameDbRestore(checked === true)}
+              />
+              <Label htmlFor="confirm-same-db" className="flex-1 cursor-pointer text-[13px]">
+                I understand this will overwrite the current database
+              </Label>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isLoading || isDisabled}>
+            Restore
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Delete Policy Dialog
+interface DeletePolicyDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  policy: Models.BackupPolicy
+  onConfirm: () => void
+  isLoading: boolean
+}
+
+function DeletePolicyDialog({
+  open,
+  onOpenChange,
+  policy,
+  onConfirm,
+  isLoading,
+}: DeletePolicyDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 text-left">
+          <DialogTitle>Delete policy</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Are you sure you want to delete the <strong>{policy.name || 'Unnamed Policy'}</strong> policy? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="border-t border-border" />
+        <div className="px-6 pb-4 pt-0">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-[13px]">
+              This will also delete all backups associated with this policy.
+            </AlertDescription>
+          </Alert>
+        </div>
+
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-[13px]"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-9 text-[13px]"
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
+            Delete
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Delete Backup Dialog
+interface DeleteBackupDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  backup: Models.BackupArchive
+  onConfirm: () => void
+  isLoading: boolean
+}
+
+function DeleteBackupDialog({
+  open,
+  onOpenChange,
+  backup,
+  onConfirm,
+  isLoading,
+}: DeleteBackupDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 text-left">
+          <DialogTitle>Delete backup</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Are you sure you want to delete the backup from{' '}
+            <strong>{new Date(backup.$createdAt).toLocaleString()}</strong>? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-[13px]"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-9 text-[13px]"
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
+            Delete
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+

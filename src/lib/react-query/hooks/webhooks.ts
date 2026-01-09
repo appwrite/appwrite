@@ -1,0 +1,241 @@
+/**
+ * React Query hooks for Webhooks
+ * 
+ * Handles webhook fetching, creation, updating, and deletion.
+ */
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { sdk } from '@/lib/appwrite/sdk'
+import { Dependencies } from './dependencies'
+import { DEFAULT_STALE_TIME } from './constants'
+
+// ============================================================================
+// QUERY FUNCTIONS
+// ============================================================================
+
+/**
+ * Query function to fetch webhooks for a project
+ * 
+ * This is extracted so it can be reused in both hooks and route loaders.
+ * 
+ * @param projectId - The project ID
+ * @returns Webhooks list response from the API
+ */
+export async function fetchProjectWebhooks(projectId: string) {
+  if (!projectId) {
+    return { webhooks: [], total: 0 }
+  }
+
+  const response = await sdk.forConsole.projects.listWebhooks({ projectId })
+  return {
+    webhooks: response.webhooks || [],
+    total: response.total || 0,
+  }
+}
+
+// ============================================================================
+// HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch webhooks for a project
+ * 
+ * @param projectId - The project ID
+ * @returns Webhooks list with loading state
+ */
+export function useProjectWebhooks(projectId: string | null | undefined) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['webhooks', 'project', projectId],
+    queryFn: () => fetchProjectWebhooks(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+
+  return {
+    webhooks: data?.webhooks || [],
+    total: data?.total || 0,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to get a single webhook
+ * 
+ * @param projectId - The project ID
+ * @param webhookId - The webhook ID
+ */
+export function useProjectWebhook(
+  projectId: string | null | undefined,
+  webhookId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['webhook', 'project', projectId, webhookId],
+    queryFn: async () => {
+      if (!projectId || !webhookId) {
+        throw new Error('Project ID and Webhook ID are required')
+      }
+      return await sdk.forConsole.projects.getWebhook({ projectId, webhookId })
+    },
+    enabled: !!projectId && !!webhookId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+
+  return {
+    webhook: data || null,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to create a webhook
+ * 
+ * @param projectId - The project ID
+ */
+export function useCreateWebhook(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: {
+      name: string
+      events: string[]
+      url: string
+      security: boolean
+      enabled?: boolean
+      httpUser?: string
+      httpPass?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk.forConsole.projects.createWebhook({
+        projectId,
+        name: data.name,
+        events: data.events,
+        url: data.url,
+        security: data.security,
+        enabled: data.enabled ?? true,
+        httpUser: data.httpUser,
+        httpPass: data.httpPass,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['webhooks', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.WEBHOOKS,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update a webhook
+ * 
+ * @param projectId - The project ID
+ */
+export function useUpdateWebhook(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: {
+      webhookId: string
+      name: string
+      events: string[]
+      url: string
+      security: boolean
+      enabled?: boolean
+      httpUser?: string
+      httpPass?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk.forConsole.projects.updateWebhook({
+        projectId,
+        webhookId: data.webhookId,
+        name: data.name,
+        events: data.events,
+        url: data.url,
+        security: data.security,
+        enabled: data.enabled,
+        httpUser: data.httpUser,
+        httpPass: data.httpPass,
+      })
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['webhooks', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['webhook', 'project', projectId, variables.webhookId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.WEBHOOKS,
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.WEBHOOK,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update webhook signature key
+ * 
+ * @param projectId - The project ID
+ */
+export function useUpdateWebhookSignature(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (webhookId: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk.forConsole.projects.updateWebhookSignature({
+        projectId,
+        webhookId,
+      })
+    },
+    onSuccess: (_, webhookId) => {
+      queryClient.invalidateQueries({
+        queryKey: ['webhook', 'project', projectId, webhookId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.WEBHOOK,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete a webhook
+ * 
+ * @param projectId - The project ID
+ */
+export function useDeleteWebhook(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (webhookId: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk.forConsole.projects.deleteWebhook({ projectId, webhookId })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['webhooks', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.WEBHOOKS,
+      })
+    },
+  })
+}
+

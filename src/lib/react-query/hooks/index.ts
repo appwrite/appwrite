@@ -1,0 +1,36 @@
+/**
+ * React Query Hooks - Organized by Domain
+ * 
+ * This index file re-exports all hooks from domain-specific modules.
+ * The hooks are organized by resource type for better maintainability.
+ * 
+ * All hooks have been migrated from the monolithic hooks.ts file into
+ * domain-specific modules. This barrel file provides a single import point
+ * for all hooks while maintaining clear organization.
+ */
+
+// Re-export constants
+export * from './constants'
+
+// Re-export dependencies
+export * from './dependencies'
+
+// Re-export from organized modules
+export * from './organizations'
+export * from './teams'
+export * from './projects'
+export * from './users'
+export * from './databases'
+export * from './storage'
+export * from './functions'
+export * from './sites'
+export * from './auth'
+export * from './email'
+export * from './webhooks'
+export * from './migrations'
+export * from './smtp'
+export * from './domains'
+export * from './backups'
+export * from './locale'
+export * from './vcs'
+

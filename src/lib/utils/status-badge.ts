@@ -1,0 +1,218 @@
+/**
+ * Status Badge Utilities
+ * 
+ * Provides standardized colors and variants for status badges across the application.
+ * All status badges should use these utilities for consistency.
+ */
+
+/**
+ * Status types for general use cases
+ */
+export type StatusType =
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'info'
+  | 'pending'
+  | 'processing'
+  | 'active'
+  | 'inactive'
+  | 'completed'
+  | 'failed'
+  | 'verified'
+  | 'unverified'
+
+/**
+ * Get status badge variant for Badge component
+ * Maps status types to Badge component variants
+ */
+export function getStatusVariant(
+  status: StatusType,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+  switch (status) {
+    case 'success':
+    case 'active':
+    case 'completed':
+    case 'verified':
+      return 'default'
+    case 'error':
+    case 'failed':
+    case 'unverified':
+      return 'destructive'
+    case 'warning':
+    case 'pending':
+      return 'secondary'
+    case 'processing':
+    case 'info':
+    case 'inactive':
+    default:
+      return 'secondary'
+  }
+}
+
+/**
+ * Get status badge color classes for custom styling
+ * Returns Tailwind CSS classes for consistent status colors
+ */
+export function getStatusColor(status: StatusType): string {
+  switch (status) {
+    case 'success':
+    case 'active':
+    case 'completed':
+    case 'verified':
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+    case 'error':
+    case 'failed':
+    case 'unverified':
+      return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+    case 'warning':
+    case 'pending':
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+    case 'processing':
+      return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+    case 'info':
+      return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20'
+    case 'inactive':
+    default:
+      return 'bg-muted text-muted-foreground border-border'
+  }
+}
+
+/**
+ * Invoice status types
+ */
+export type InvoiceStatus = 'paid' | 'pending' | 'overdue' | 'failed'
+
+/**
+ * Get invoice status badge color classes
+ */
+export function getInvoiceStatusColor(status: InvoiceStatus): string {
+  switch (status) {
+    case 'paid':
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+    case 'pending':
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+    case 'overdue':
+    case 'failed':
+      return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+    default:
+      return 'bg-muted text-muted-foreground border-border'
+  }
+}
+
+/**
+ * Plan types for organizations
+ */
+export type PlanType = 'enterprise' | 'scale' | 'pro' | 'free'
+
+/**
+ * Get plan badge color classes
+ */
+export function getPlanBadgeColor(plan: PlanType): string {
+  switch (plan) {
+    case 'enterprise':
+      return 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/20'
+    case 'scale':
+      return 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/20'
+    case 'pro':
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
+    case 'free':
+    default:
+      return 'bg-muted text-muted-foreground border-border'
+  }
+}
+
+/**
+ * Usage status types
+ */
+export type UsageStatus = 'normal' | 'warning' | 'critical'
+
+/**
+ * Get usage status badge color classes
+ */
+export function getUsageStatusColor(status: UsageStatus): string {
+  switch (status) {
+    case 'normal':
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+    case 'warning':
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+    case 'critical':
+      return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+    default:
+      return 'bg-muted text-muted-foreground border-border'
+  }
+}
+
+/**
+ * Backup status types
+ */
+export type BackupStatus = 'pending' | 'completed' | 'processing' | 'failed' | 'uploading' | 'downloading'
+
+/**
+ * Get backup status badge variant
+ */
+export function getBackupStatusVariant(
+  status: BackupStatus,
+): 'default' | 'secondary' | 'destructive' {
+  switch (status) {
+    case 'completed':
+      return 'default'
+    case 'failed':
+      return 'destructive'
+    case 'pending':
+    case 'processing':
+    case 'uploading':
+    case 'downloading':
+    default:
+      return 'secondary'
+  }
+}
+
+/**
+ * Migration status types
+ */
+export type MigrationStatus = 'completed' | 'processing' | 'failed' | 'pending'
+
+/**
+ * Get migration status badge variant
+ */
+export function getMigrationStatusVariant(
+  status: MigrationStatus,
+): 'default' | 'secondary' | 'destructive' {
+  switch (status) {
+    case 'completed':
+      return 'default'
+    case 'failed':
+      return 'destructive'
+    case 'processing':
+    case 'pending':
+    default:
+      return 'secondary'
+  }
+}
+
+/**
+ * Domain status types
+ */
+export type DomainStatus = 'verified' | 'verifying' | 'unverified' | 'created'
+
+/**
+ * Get domain status badge variant
+ */
+export function getDomainStatusVariant(
+  status: DomainStatus,
+): 'default' | 'secondary' | 'destructive' | null {
+  switch (status) {
+    case 'verified':
+      return null // No badge for verified domains
+    case 'verifying':
+      return 'secondary'
+    case 'unverified':
+    case 'created':
+      return 'destructive'
+    default:
+      return 'secondary'
+  }
+}
+
+

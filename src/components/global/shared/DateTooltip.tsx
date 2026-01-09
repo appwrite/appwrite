@@ -1,0 +1,223 @@
+import { useState } from 'react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
+
+interface DateTooltipProps {
+  /** ISO timestamp string or Date object */
+  date: string | Date
+  /** Optional className for the trigger element */
+  className?: string
+  /** If true, shows formatted date instead of relative time */
+  showFormattedDate?: boolean
+}
+
+/**
+ * Formats a date to show relative time with detailed popover
+ * showing precise breakdown, UTC time, and local time
+ */
+export function DateTooltip({ date, className, showFormattedDate = false }: DateTooltipProps) {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+
+  // Calculate relative time
+  const now = new Date()
+  const diffMs = dateObj.getTime() - now.getTime()
+  const isFuture = diffMs > 0
+  const absDiffMs = Math.abs(diffMs)
+  const diffSeconds = Math.floor(absDiffMs / 1000)
+  const diffMinutes = Math.floor(diffSeconds / 60)
+  const diffHours = Math.floor(diffMinutes / 60)
+  const diffDays = Math.floor(diffHours / 24)
+  const diffWeeks = Math.floor(diffDays / 7)
+  const diffMonths = Math.floor(diffDays / 30)
+  const diffYears = Math.floor(diffDays / 365)
+
+  // Simple relative time for display
+  const getSimpleRelativeTime = (): string => {
+    if (diffSeconds < 60) return 'Just now'
+    
+    // Find the most appropriate unit to display, skipping zero values
+    let timeStr: string
+    
+    if (diffYears > 0) {
+      timeStr = `${diffYears} year${diffYears !== 1 ? 's' : ''}`
+    } else if (diffMonths > 0) {
+      timeStr = `${diffMonths} month${diffMonths !== 1 ? 's' : ''}`
+    } else if (diffWeeks > 0) {
+      timeStr = `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''}`
+    } else if (diffDays > 0) {
+      timeStr = `${diffDays} day${diffDays !== 1 ? 's' : ''}`
+    } else if (diffHours > 0) {
+      timeStr = `${diffHours} hour${diffHours !== 1 ? 's' : ''}`
+    } else {
+      timeStr = `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`
+    }
+    
+    return isFuture ? `in ${timeStr}` : `${timeStr} ago`
+  }
+
+  // Detailed breakdown for tooltip
+  const getDetailedRelativeTime = (): string => {
+    const parts: string[] = []
+    let remaining = absDiffMs
+
+    // Calculate all time units
+    const years = Math.floor(remaining / (365 * 24 * 60 * 60 * 1000))
+    remaining -= years * 365 * 24 * 60 * 60 * 1000
+
+    const months = Math.floor(remaining / (30 * 24 * 60 * 60 * 1000))
+    remaining -= months * 30 * 24 * 60 * 60 * 1000
+
+    const weeks = Math.floor(remaining / (7 * 24 * 60 * 60 * 1000))
+    remaining -= weeks * 7 * 24 * 60 * 60 * 1000
+
+    const days = Math.floor(remaining / (24 * 60 * 60 * 1000))
+    remaining -= days * 24 * 60 * 60 * 1000
+
+    const hours = Math.floor(remaining / (60 * 60 * 1000))
+    remaining -= hours * 60 * 60 * 1000
+
+    const minutes = Math.floor(remaining / (60 * 1000))
+
+    // Build array of time units with their values
+    const timeUnits: Array<{ value: number; label: string }> = [
+      { value: years, label: 'year' },
+      { value: months, label: 'month' },
+      { value: weeks, label: 'week' },
+      { value: days, label: 'day' },
+      { value: hours, label: 'hour' },
+      { value: minutes, label: 'minute' },
+    ]
+
+    // Find the first non-zero unit to start from
+    let startIndex = 0
+    for (let i = 0; i < timeUnits.length; i++) {
+      if (timeUnits[i].value > 0) {
+        startIndex = i
+        break
+      }
+    }
+
+    // Add parts starting from the first non-zero unit, up to 3 parts max
+    for (let i = startIndex; i < timeUnits.length && parts.length < 3; i++) {
+      const unit = timeUnits[i]
+      if (unit.value > 0 || (i === timeUnits.length - 1 && parts.length === 0)) {
+        const plural = unit.value !== 1 ? 's' : ''
+        parts.push(`${unit.value} ${unit.label}${plural}`)
+      }
+    }
+
+    return isFuture 
+      ? `in ${parts.join(', ')}` 
+      : `${parts.join(', ')} ago`
+  }
+
+  // Format date in international format: "Dec 11, 2025, 07:22"
+  const formatDateTime = (d: Date, timeZone?: string): string => {
+    return d.toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone,
+    })
+  }
+
+  const utcTime = formatDateTime(dateObj, 'UTC')
+  const localTime = formatDateTime(dateObj)
+
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <span
+          className={cn('cursor-default', className)}
+          onMouseEnter={() => setIsOpen(true)}
+          onMouseLeave={() => setIsOpen(false)}
+        >
+          {showFormattedDate ? formatDateTime(dateObj) : getSimpleRelativeTime()}
+        </span>
+      </PopoverTrigger>
+      <PopoverContent
+        side="top"
+        align="center"
+        sideOffset={8}
+        className="w-auto max-w-[280px] p-0"
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+      >
+        <div className="flex flex-col">
+          {/* Detailed relative time */}
+          <div className="border-b border-border px-3 py-2">
+            <p className="text-[12px] text-muted-foreground">
+              {getDetailedRelativeTime()}
+            </p>
+          </div>
+
+          {/* UTC and Local times */}
+          <div className="flex flex-col gap-1.5 px-3 py-2">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[13px] text-popover-foreground">
+                {utcTime}
+              </span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                UTC
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[13px] text-popover-foreground">
+                {localTime}
+              </span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                Local
+              </span>
+            </div>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+/**
+ * Utility function to format date for display without tooltip
+ * Uses international format: "11 Dec 2025"
+ */
+export function formatDate(date: string | Date): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  return dateObj.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+/**
+ * Utility function to get simple relative time string
+ */
+export function getRelativeTimeString(date: string | Date): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const now = new Date()
+  const diffMs = now.getTime() - dateObj.getTime()
+  const diffMinutes = Math.floor(diffMs / 60000)
+
+  if (diffMinutes < 1) return 'Just now'
+  if (diffMinutes < 60) return `${diffMinutes}m ago`
+
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours}h ago`
+
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays < 7) return `${diffDays}d ago`
+
+  const diffWeeks = Math.floor(diffDays / 7)
+  if (diffWeeks < 4) return `${diffWeeks}w ago`
+
+  return formatDate(dateObj)
+}

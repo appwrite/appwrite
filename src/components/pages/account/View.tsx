@@ -1,0 +1,220 @@
+import { useMemo, useState } from 'react'
+import { useLocation, Link } from '@tanstack/react-router'
+import { type Tab } from '../projects/$projectId/shared/ServiceHeader'
+import { AccountOverview } from './Overview'
+import { AccountSessions } from './Sessions'
+import { User, CreditCard, LogOut } from 'lucide-react'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { ConsoleHeader } from '@/components/global/layout/Header'
+import { ConsoleFooter } from '@/components/global/layout/Footer'
+import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
+import { CommandCenter } from '@/components/global/shared/CommandCenter'
+import { cn } from '@/lib/utils'
+import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
+
+const tabs: Tab[] = [
+  { 
+    id: 'overview', 
+    label: 'Overview',
+    to: '/account',
+  },
+  { 
+    id: 'sessions', 
+    label: 'Sessions',
+    to: '/account/sessions',
+  },
+  { 
+    id: 'payments', 
+    label: 'Payments',
+    to: '/account/payments',
+  },
+]
+
+interface AccountViewProps {
+  activeTab?: string
+}
+
+export function AccountView({ activeTab: tabProp }: AccountViewProps) {
+  const location = useLocation()
+  const { account, signOut } = useAuth()
+  const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+
+  // Command center shortcut (Cmd+K / Ctrl+K)
+  useKeyboardShortcut('meta+k', () => {
+    setCommandCenterOpen(true)
+  })
+
+  useKeyboardShortcut('control+k', () => {
+    setCommandCenterOpen(true)
+  })
+
+  // Focus search shortcut (/)
+  useKeyboardShortcut('/', (e) => {
+    e.preventDefault()
+    setCommandCenterOpen(true)
+  })
+
+  // Derive active tab from pathname if prop is not provided
+  const activeTab = useMemo(() => {
+    if (tabProp) return tabProp
+    
+    // Extract tab from pathname
+    // Pattern: /account or /account/:tab
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const accountIndex = pathParts.findIndex(part => part === 'account')
+    
+    if (accountIndex >= 0) {
+      // Check if there's a tab segment after 'account'
+      if (pathParts[accountIndex + 1]) {
+        const tabFromPath = pathParts[accountIndex + 1]
+        if (['overview', 'sessions', 'payments'].includes(tabFromPath)) {
+          return tabFromPath
+        }
+      }
+    }
+    
+    // Default to overview for index route (/account or /account/)
+    return 'overview'
+  }, [tabProp, location.pathname])
+
+  const getEmptyStateContent = () => {
+    switch (activeTab) {
+      case 'sessions':
+        return {
+          icon: LogOut,
+          title: 'Sessions',
+          description: 'Manage your active sessions and devices',
+        }
+      case 'payments':
+        return {
+          icon: CreditCard,
+          title: 'Payments',
+          description: 'Manage your payment methods and billing',
+        }
+      default:
+        return {
+          icon: User,
+          title: 'Account',
+          description: 'This section is under construction',
+        }
+    }
+  }
+
+  const emptyState = getEmptyStateContent()
+  const Icon = emptyState.icon
+
+  return (
+    <div className="flex h-screen flex-col bg-background">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-30 flex-shrink-0">
+        {/* Payment Alert */}
+        <PaymentAlert />
+
+        {/* Console Header */}
+        <ConsoleHeader onCommandCenterOpen={() => setCommandCenterOpen(true)} />
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        {/* Account Header with Tabs */}
+        <div>
+          {/* Title Row */}
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+            <h1 className="text-[20px] font-semibold text-foreground">
+              {account?.name || account?.email || 'Account'}
+            </h1>
+            <button
+              onClick={async () => {
+                await signOut()
+              }}
+              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+
+          {/* Tabs Row */}
+          <div className="border-b border-border">
+            <div
+              className="mx-auto flex w-full max-w-7xl gap-0 overflow-x-auto px-4 sm:px-6"
+              role="tablist"
+            >
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id
+                return (
+                  <Link
+                    key={tab.id}
+                    to={tab.to as any}
+                    replace
+                    role="tab"
+                    aria-selected={isActive}
+                    className={cn(
+                      'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                      isActive
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground/80',
+                    )}
+                  >
+                    {tab.label}
+                    {tab.count !== undefined && (
+                      <span
+                        className={cn(
+                          'rounded-full px-1.5 py-0.5 text-[10px]',
+                          isActive
+                            ? 'bg-accent text-foreground'
+                            : 'bg-muted text-muted-foreground',
+                        )}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                    {isActive && (
+                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <main className="flex-1">
+          {activeTab === 'overview' ? (
+            <AccountOverview />
+          ) : activeTab === 'sessions' ? (
+            <AccountSessions />
+          ) : (
+            <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+              <div className="flex h-full min-h-[400px] items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+                    <Icon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h2 className="mb-1.5 text-[15px] font-medium text-foreground">
+                    {emptyState.title}
+                  </h2>
+                  <p className="text-[13px] text-muted-foreground">
+                    {emptyState.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Footer */}
+        <ConsoleFooter />
+      </div>
+
+      {/* Command Center */}
+      <CommandCenter
+        open={commandCenterOpen}
+        onOpenChange={setCommandCenterOpen}
+      />
+    </div>
+  )
+}
+

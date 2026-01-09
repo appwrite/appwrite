@@ -1,0 +1,118 @@
+import { useMutation } from '@tanstack/react-query'
+import {
+  createFileRoute,
+  useNavigate,
+  useRouter,
+  useSearch,
+} from '@tanstack/react-router'
+import { z } from 'zod'
+import { SignIn } from '@/components/global/auth/SignIn'
+import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
+import { sdk } from '@/lib/appwrite/sdk'
+import { AppwriteException } from '@appwrite.io/console'
+import { toast } from 'sonner'
+
+// Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
+function isValidRelativeRedirect(url: string): boolean {
+  try {
+    // Must start with / and not contain :// (which would indicate a protocol)
+    return url.startsWith('/') && !url.includes('://')
+  } catch {
+    return false
+  }
+}
+
+const searchSchema = z.object({
+  redirect: z.string().optional().refine(
+    (val) => !val || isValidRelativeRedirect(val),
+    { message: 'Redirect must be a relative URL' }
+  ),
+})
+
+export const Route = createFileRoute('/_auth/sign-in')({
+  component: SignInPage,
+  validateSearch: searchSchema,
+})
+
+function SignInPage() {
+  const search = useSearch({ from: '/_auth/sign-in' })
+  const navigate = useNavigate()
+  const router = useRouter()
+
+  const signInMutation = useMutation({
+    mutationFn: async (data: { email: string; password: string }) => {
+      try {
+        await sdk.forConsole.account.createEmailPasswordSession({
+          email: data.email,
+          password: data.password,
+        })
+        
+        // After session creation, check if we can get account (MFA might be required)
+        // This will throw if MFA is required
+        await sdk.forConsole.account.get()
+      } catch (error: any) {
+        // Check for MFA requirement - this is the key check
+        if (error instanceof AppwriteException && error.type === 'user_more_factors_required') {
+          // Re-throw with a special marker so onError can handle it
+          throw { ...error, isMfaRequired: true }
+        }
+        // Re-throw other errors
+        throw error
+      }
+    },
+    onSuccess: async () => {
+      // Only called if account.get() succeeds (no MFA required)
+      await router.invalidate()
+      if (search.redirect && isValidRelativeRedirect(search.redirect)) {
+        navigate({ to: search.redirect as any })
+      } else {
+        navigate({ to: '/' })
+      }
+    },
+    onError: async (error: any) => {
+      // Handle MFA requirement - redirect to MFA page
+      if (error?.isMfaRequired || (error instanceof AppwriteException && error.type === 'user_more_factors_required')) {
+        const redirectUrl = search.redirect && isValidRelativeRedirect(search.redirect)
+          ? search.redirect
+          : undefined
+        navigate({
+          to: '/mfa',
+          search: redirectUrl ? { redirect: redirectUrl } : undefined,
+        })
+        return
+      }
+
+      // Show error for other failures
+      const errorMessage = error?.message || 'Failed to sign in'
+      toast.error(errorMessage)
+      console.error('Sign in error:', error)
+    },
+  })
+
+  return (
+    <div className="bg-background relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm md:max-w-4xl">
+        <SignIn
+          mode="sign-in"
+          onSubmit={(data) => signInMutation.mutate(data)}
+          isLoading={signInMutation.isPending}
+          redirect={search.redirect}
+        />
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          By clicking continue, you agree to our{' '}
+          <a href="#" className="underline underline-offset-4 hover:text-primary">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href="#" className="underline underline-offset-4 hover:text-primary">
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </div>
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
+        <AppwriteLogo className="h-6 w-auto" />
+      </div>
+    </div>
+  )
+}

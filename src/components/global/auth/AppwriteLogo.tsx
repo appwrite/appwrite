@@ -1,0 +1,2 @@
+export { AppwriteLogo } from './Logo'
+

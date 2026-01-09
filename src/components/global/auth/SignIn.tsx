@@ -1,0 +1,162 @@
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { Button } from '@/components/ui/button'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Link } from '@tanstack/react-router'
+import { Card } from '@/components/ui/card'
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+const signUpSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})
+
+interface SignInProps {
+  mode?: 'sign-in' | 'sign-up'
+  onSubmit: (data: { email: string; password: string }) => void
+  isLoading?: boolean
+  redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
+}
+
+export function SignIn({ mode = 'sign-in', onSubmit, isLoading, redirect }: SignInProps) {
+  const schema = mode === 'sign-in' ? loginSchema : signUpSchema
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
+
+  const handleSubmit = (data: z.infer<typeof schema>) => {
+    onSubmit(data)
+  }
+
+  return (
+    <Card className="overflow-hidden py-0">
+      <div className="grid md:grid-cols-2">
+        <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {mode === 'sign-in' ? 'Welcome back' : 'Create an account'}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {mode === 'sign-in'
+                    ? 'Login to your account'
+                    : 'Enter your details to create a new account'}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="m@example.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      {mode === 'sign-in' && (
+                        <Link
+                          to="/recovery"
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Forgot your password?
+                        </Link>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {mode === 'sign-in' ? 'Login' : 'Sign up'}
+              </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <Button variant="outline" type="button" className="w-full">
+                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.737 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"
+                  />
+                </svg>
+                Login with GitHub
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                {mode === 'sign-in' ? "Don't have an account? " : 'Already have an account? '}
+                <Link
+                  to={mode === 'sign-in' ? '/sign-up' : '/sign-in'}
+                  search={redirect ? { redirect } : undefined}
+                  className="text-primary hover:underline"
+                >
+                  {mode === 'sign-in' ? 'Sign up' : 'Sign in'}
+                </Link>
+              </p>
+            </form>
+          </Form>
+        </div>
+        <div className="hidden bg-background md:block min-h-[600px]">
+          <img
+            alt="Image"
+            className="h-full w-full object-cover"
+            height="600"
+            src="/cover.png"
+            width="600"
+          />
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+

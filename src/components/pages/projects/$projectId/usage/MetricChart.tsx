@@ -1,0 +1,236 @@
+import { useMemo } from 'react'
+import { cn } from '@/lib/utils'
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts'
+import { format } from 'date-fns'
+import { AlertTriangle, Info } from 'lucide-react'
+import {
+  type UsageMetric,
+  formatMetricValue,
+  getUsagePercentage,
+  getUsageStatus,
+} from './data'
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Progress } from '@/components/ui/progress'
+
+interface UsageMetricChartProps {
+  metric: UsageMetric
+  className?: string
+}
+
+export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
+  // Transform time series data for recharts
+  const chartData = useMemo(() => {
+    return metric.timeSeries.map((point) => ({
+      date: format(new Date(point.timestamp), 'MMM d'),
+      fullDate: format(new Date(point.timestamp), 'MMM d, yyyy'),
+      value: point.value,
+    }))
+  }, [metric.timeSeries])
+
+  // Calculate usage percentage and status
+  const usagePercentage = getUsagePercentage(metric.currentValue, metric.quota)
+  const usageStatus = getUsageStatus(usagePercentage)
+
+  // Determine chart color based on status
+  const chartColor = useMemo(() => {
+    switch (usageStatus) {
+      case 'critical':
+        return '#ef4444' // red-500
+      case 'warning':
+        return '#f59e0b' // amber-500
+      default:
+        return '#f02e65' // brand color
+    }
+  }, [usageStatus])
+
+  // Format the current value for display
+  const formattedValue = formatMetricValue(metric.currentValue, metric.unit)
+  const formattedQuota = metric.quota
+    ? formatMetricValue(metric.quota, metric.unit)
+    : 'Unlimited'
+
+  return (
+    <div
+      className={cn(
+        'rounded-lg border border-border bg-card overflow-hidden',
+        className,
+      )}
+    >
+      {/* Header */}
+      <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[14px] font-medium text-foreground">
+              {metric.name}
+            </h3>
+            <TooltipProvider delayDuration={0}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <button className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  className="max-w-xs text-[12px] leading-relaxed"
+                >
+                  <p>{metric.description}</p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+          </div>
+
+          {/* Current value and quota */}
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[24px] font-semibold text-foreground tabular-nums">
+              {formattedValue}
+            </span>
+            {metric.quota !== null && (
+              <span className="text-[13px] text-muted-foreground">
+                / {formattedQuota}
+              </span>
+            )}
+          </div>
+
+          {/* Progress bar for quota */}
+          {usagePercentage !== null && (
+            <div className="mt-3 space-y-1.5">
+              <Progress
+                value={usagePercentage}
+                className={cn(
+                  'h-2',
+                  usageStatus === 'critical' && '[&>div]:bg-red-500',
+                  usageStatus === 'warning' && '[&>div]:bg-amber-500',
+                  usageStatus === 'normal' && '[&>div]:bg-primary',
+                )}
+              />
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">
+                  {usagePercentage.toFixed(1)}% used
+                </span>
+                {usageStatus !== 'normal' && (
+                  <span
+                    className={cn(
+                      'flex items-center gap-1 font-medium',
+                      usageStatus === 'critical' && 'text-red-500',
+                      usageStatus === 'warning' && 'text-amber-500',
+                    )}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {usageStatus === 'critical'
+                      ? 'Approaching limit'
+                      : 'High usage'}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="p-4">
+        <div className="h-[180px] text-muted-foreground">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient
+                  id={`gradient-${metric.id}`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="0%" stopColor={chartColor} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={chartColor} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fill: 'currentColor',
+                  fontSize: 10,
+                }}
+                dy={10}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fill: 'currentColor',
+                  fontSize: 10,
+                }}
+                tickFormatter={(value) => {
+                  if (value >= 1_000_000)
+                    return `${(value / 1_000_000).toFixed(0)}M`
+                  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
+                  return value.toString()
+                }}
+                dx={-5}
+                width={45}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload || !payload.length) return null
+                  const data = payload[0].payload
+                  return (
+                    <div className="rounded-md border border-border bg-popover px-3 py-2 shadow-lg">
+                      <p className="text-[11px] text-muted-foreground mb-1">
+                        {data.fullDate}
+                      </p>
+                      <p className="text-[13px] font-medium text-foreground">
+                        {formatMetricValue(data.value, metric.unit)}{' '}
+                        <span className="text-muted-foreground font-normal">
+                          {metric.unit}
+                        </span>
+                      </p>
+                    </div>
+                  )
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={chartColor}
+                strokeWidth={2}
+                fill={`url(#gradient-${metric.id})`}
+                name={metric.name}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="border-t border-border bg-muted/30 px-4 py-3">
+        <p className="text-[12px] leading-relaxed text-muted-foreground">
+          {metric.description}
+        </p>
+      </div>
+    </div>
+  )
+}

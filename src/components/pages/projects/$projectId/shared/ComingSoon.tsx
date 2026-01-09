@@ -1,0 +1,24 @@
+interface ComingSoonViewProps {
+  title: string
+  comingSoon?: boolean
+}
+
+export function ComingSoonView({ title, comingSoon }: ComingSoonViewProps) {
+  return (
+    <div className="flex h-full min-h-[400px] items-center justify-center px-4">
+      <div className="text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+          <span className="text-xl">🚧</span>
+        </div>
+        <h2 className="mb-1.5 text-[15px] font-medium text-foreground">
+          {title}
+        </h2>
+        <p className="text-[13px] text-muted-foreground">
+          {comingSoon
+            ? 'This feature is coming soon'
+            : 'This section is under construction'}
+        </p>
+      </div>
+    </div>
+  )
+}

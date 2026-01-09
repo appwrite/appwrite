@@ -1,0 +1,441 @@
+import { useState, useMemo, useEffect } from 'react'
+import {
+  Shield,
+  ShieldCheck,
+  ShieldX,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  AlertTriangle,
+  Globe,
+  Clock,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Cell,
+  Legend,
+} from 'recharts'
+import { format } from 'date-fns'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { mockFirewallAnalytics, type FirewallAnalytics } from '@/lib/utils/mock-data'
+
+interface AnalyticsTabProps {
+  projectId: string
+}
+
+interface StatCardProps {
+  label: string
+  value: string | number
+  change?: number
+  icon: React.ReactNode
+  trend?: 'up' | 'down'
+  className?: string
+}
+
+function StatCard({ label, value, change, icon, trend, className }: StatCardProps) {
+  return (
+    <Card className={cn('p-4', className)}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-[12px] text-muted-foreground mb-1">{label}</p>
+          <p className="text-[20px] font-semibold text-foreground mb-1">
+            {typeof value === 'number' ? value.toLocaleString() : value}
+          </p>
+          {change !== undefined && (
+            <div className="flex items-center gap-1">
+              {trend === 'up' ? (
+                <TrendingUp className="h-3 w-3 text-emerald-500" />
+              ) : trend === 'down' ? (
+                <TrendingDown className="h-3 w-3 text-red-500" />
+              ) : null}
+              <span
+                className={cn(
+                  'text-[11px] font-medium',
+                  trend === 'up' && 'text-emerald-500',
+                  trend === 'down' && 'text-red-500',
+                  !trend && 'text-muted-foreground',
+                )}
+              >
+                {change > 0 ? '+' : ''}
+                {change}%
+              </span>
+              <span className="text-[11px] text-muted-foreground">vs last period</span>
+            </div>
+          )}
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          {icon}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    value: number
+    dataKey: string
+    color?: string
+  }>
+  label?: string
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border border-border bg-popover px-3 py-2.5 shadow-xl">
+        <p className="mb-2 text-[12px] font-medium text-foreground">{label}</p>
+        <div className="space-y-1.5">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center justify-between gap-6">
+              <span className="text-[11px] text-muted-foreground capitalize">
+                {entry.dataKey.replace(/([A-Z])/g, ' $1').trim()}
+              </span>
+              <span className="text-[12px] font-medium text-foreground">
+                {entry.value.toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  return null
+}
+
+export function AnalyticsTab({ projectId }: AnalyticsTabProps) {
+  const [analytics, setAnalytics] = useState<FirewallAnalytics | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h')
+
+  useEffect(() => {
+    // Simulate loading
+    setIsLoading(true)
+    setTimeout(() => {
+      setAnalytics(mockFirewallAnalytics)
+      setIsLoading(false)
+    }, 500)
+  }, [timeRange])
+
+  // Listen for refresh event
+  useEffect(() => {
+    const handleRefresh = () => {
+      setIsLoading(true)
+      setTimeout(() => {
+        setAnalytics(mockFirewallAnalytics)
+        setIsLoading(false)
+      }, 500)
+    }
+
+    window.addEventListener('firewall-refresh-analytics', handleRefresh)
+    return () => {
+      window.removeEventListener('firewall-refresh-analytics', handleRefresh)
+    }
+  }, [])
+
+  const chartData = useMemo(() => {
+    if (!analytics) return []
+    return analytics.timeSeries.map((point) => ({
+      time: format(new Date(point.timestamp), 'HH:mm'),
+      fullTime: format(new Date(point.timestamp), 'MMM d, HH:mm'),
+      requests: point.requests,
+      blocked: point.blocked,
+      allowed: point.allowed,
+      challenged: point.challenged,
+    }))
+  }, [analytics])
+
+  const topBlockedIPs = useMemo(() => {
+    if (!analytics) return []
+    return analytics.topBlockedIPs.slice(0, 5)
+  }, [analytics])
+
+  const topBlockedCountries = useMemo(() => {
+    if (!analytics) return []
+    return analytics.topBlockedCountries.slice(0, 5)
+  }, [analytics])
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+        <Skeleton className="h-64 mb-6" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!analytics) {
+    return (
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <div className="rounded-xl border border-dashed border-border bg-card/50 p-8">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Activity className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="mb-2 text-[15px] font-medium text-foreground">
+              No analytics data
+            </h3>
+            <p className="max-w-sm text-[13px] text-muted-foreground">
+              Analytics data will appear here once your firewall rules start processing requests.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const blockRate = analytics.totalRequests > 0
+    ? ((analytics.totalBlocked / analytics.totalRequests) * 100).toFixed(1)
+    : '0.0'
+
+  return (
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+      {/* Time Range Selector */}
+      <div className="mb-6 flex items-center justify-end gap-2">
+        <div className="flex rounded-lg border border-border bg-card/50 p-1">
+          {(['24h', '7d', '30d'] as const).map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={cn(
+                'px-3 py-1.5 text-[12px] font-medium rounded transition-colors',
+                timeRange === range
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {range === '24h' ? '24 hours' : range === '7d' ? '7 days' : '30 days'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+        <StatCard
+          label="Total requests"
+          value={analytics.totalRequests}
+          change={analytics.requestsChange}
+          trend={analytics.requestsChange > 0 ? 'up' : 'down'}
+          icon={<Activity className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Blocked"
+          value={analytics.totalBlocked}
+          change={analytics.blockedChange}
+          trend={analytics.blockedChange > 0 ? 'up' : 'down'}
+          icon={<ShieldX className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Allowed"
+          value={analytics.totalAllowed}
+          change={analytics.allowedChange}
+          trend={analytics.allowedChange > 0 ? 'up' : 'down'}
+          icon={<ShieldCheck className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Block rate"
+          value={`${blockRate}%`}
+          change={analytics.blockRateChange}
+          trend={analytics.blockRateChange > 0 ? 'up' : 'down'}
+          icon={<AlertTriangle className="h-5 w-5" />}
+        />
+      </div>
+
+      {/* Main Chart */}
+      <Card className="p-5 mb-6">
+        <div className="mb-4">
+          <h3 className="text-[14px] font-semibold text-foreground mb-1">
+            Request activity over time
+          </h3>
+          <p className="text-[12px] text-muted-foreground">
+            Real-time view of requests processed by firewall rules
+          </p>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={chartData}>
+            <defs>
+              <linearGradient id="colorBlocked" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorAllowed" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorChallenged" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis
+              dataKey="time"
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend
+              wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
+              iconType="circle"
+            />
+            <Area
+              type="monotone"
+              dataKey="blocked"
+              stackId="1"
+              stroke="#ef4444"
+              fill="url(#colorBlocked)"
+              name="Blocked"
+            />
+            <Area
+              type="monotone"
+              dataKey="challenged"
+              stackId="1"
+              stroke="#f59e0b"
+              fill="url(#colorChallenged)"
+              name="Challenged"
+            />
+            <Area
+              type="monotone"
+              dataKey="allowed"
+              stackId="1"
+              stroke="#10b981"
+              fill="url(#colorAllowed)"
+              name="Allowed"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* Bottom Grid */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Top Blocked IPs */}
+        <Card className="p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-[14px] font-semibold text-foreground mb-1">
+                Top blocked IPs
+              </h3>
+              <p className="text-[12px] text-muted-foreground">
+                IP addresses with the most blocked requests
+              </p>
+            </div>
+            <Globe className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="space-y-3">
+            {topBlockedIPs.length === 0 ? (
+              <p className="text-[12px] text-muted-foreground text-center py-4">
+                No blocked IPs in this period
+              </p>
+            ) : (
+              topBlockedIPs.map((item, index) => (
+                <div
+                  key={item.ip}
+                  className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded bg-muted text-[10px] font-medium text-muted-foreground">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-foreground font-mono">
+                        {item.ip}
+                      </p>
+                      {item.country && (
+                        <p className="text-[11px] text-muted-foreground">
+                          {item.country}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[13px] font-semibold text-red-500">
+                      {item.count.toLocaleString()}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">blocked</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        {/* Top Blocked Countries */}
+        <Card className="p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-[14px] font-semibold text-foreground mb-1">
+                Top blocked countries
+              </h3>
+              <p className="text-[12px] text-muted-foreground">
+                Countries with the most blocked requests
+              </p>
+            </div>
+            <Globe className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="space-y-3">
+            {topBlockedCountries.length === 0 ? (
+              <p className="text-[12px] text-muted-foreground text-center py-4">
+                No blocked countries in this period
+              </p>
+            ) : (
+              topBlockedCountries.map((item, index) => (
+                <div
+                  key={item.country}
+                  className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded bg-muted text-[10px] font-medium text-muted-foreground">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-foreground">
+                        {item.country}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {item.code}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[13px] font-semibold text-red-500">
+                      {item.count.toLocaleString()}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">blocked</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+
+

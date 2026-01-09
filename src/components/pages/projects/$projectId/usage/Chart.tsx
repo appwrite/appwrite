@@ -1,0 +1,137 @@
+import { cn } from '@/lib/utils'
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { usageData } from '@/lib/utils/mock-data'
+
+interface UsageChartProps {
+  className?: string
+}
+
+export function UsageChart({ className }: UsageChartProps) {
+  return (
+    <div className={cn('rounded-lg border border-border bg-card', className)}>
+      <div className="flex flex-col gap-2 border-b border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4 sm:py-3">
+        <h3 className="text-[13px] font-medium text-foreground">
+          API Requests
+        </h3>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-1.5">
+            <div
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: '#f02e65' }}
+            />
+            <span className="text-[11px] text-muted-foreground">Requests</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+            <span className="text-[11px] text-muted-foreground">Bandwidth</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-2 sm:p-4">
+        <div className="h-[200px] text-muted-foreground">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={usageData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient
+                  id="requestsGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="0%" stopColor="#f02e65" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="#f02e65" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient
+                  id="bandwidthGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="0%"
+                    stopColor="hsl(var(--foreground))"
+                    stopOpacity={0.08}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="hsl(var(--foreground))"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fill: 'currentColor',
+                  fontSize: 10,
+                }}
+                dy={10}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fill: 'currentColor',
+                  fontSize: 10,
+                }}
+                tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                dx={-5}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                  padding: '8px 12px',
+                }}
+                labelStyle={{
+                  color: 'hsl(var(--muted-foreground))',
+                  fontSize: '11px',
+                  marginBottom: '4px',
+                }}
+                itemStyle={{
+                  color: 'hsl(var(--foreground))',
+                  fontSize: '12px',
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="requests"
+                stroke="#f02e65"
+                strokeWidth={1.5}
+                fill="url(#requestsGradient)"
+                name="Requests"
+              />
+              <Area
+                type="monotone"
+                dataKey="bandwidth"
+                stroke="hsl(var(--muted-foreground))"
+                strokeWidth={1.5}
+                fill="url(#bandwidthGradient)"
+                name="Bandwidth (MB)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  )
+}

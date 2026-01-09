@@ -1,0 +1,184 @@
+import { useState, useMemo, useEffect } from 'react'
+import { useParams, useNavigate } from '@tanstack/react-router'
+import { useProjectWebhooks } from '@/lib/react-query/hooks'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, Webhook as WebhookIcon } from 'lucide-react'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { Pagination } from '@/components/global/shared/Pagination'
+import { CreateWebhookDialog } from './webhooks/CreateWebhook'
+
+interface WebhooksProps {
+  projectId: string
+  searchValue?: string
+}
+
+export function Webhooks({ projectId, searchValue: searchValueProp = '' }: WebhooksProps) {
+  const navigate = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
+  const [createWebhookOpen, setCreateWebhookOpen] = useState(false)
+
+  const { webhooks, total, isLoading } = useProjectWebhooks(projectId)
+
+  // Listen for create event from ServiceHeader
+  useEffect(() => {
+    const handleCreate = () => {
+      setCreateWebhookOpen(true)
+    }
+    window.addEventListener('settings-create-webhook', handleCreate)
+    return () => {
+      window.removeEventListener('settings-create-webhook', handleCreate)
+    }
+  }, [])
+
+  // Filter webhooks by search
+  const filteredWebhooks = useMemo(() => {
+    if (!searchValueProp.trim()) return webhooks
+    const search = searchValueProp.toLowerCase()
+    return webhooks.filter(
+      (webhook) =>
+        webhook.name.toLowerCase().includes(search) ||
+        webhook.url.toLowerCase().includes(search) ||
+        webhook.$id.toLowerCase().includes(search),
+    )
+  }, [webhooks, searchValueProp])
+
+  // Convert 1-indexed page to 0-indexed for pagination
+  const pageIndexed = currentPage - 1
+  const paginatedWebhooks = useMemo(() => {
+    const start = pageIndexed * pageSize
+    const end = start + pageSize
+    return filteredWebhooks.slice(start, end)
+  }, [filteredWebhooks, pageIndexed, pageSize])
+
+  return (
+    <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : paginatedWebhooks.length === 0 ? (
+        <div className="rounded-lg border border-border bg-card py-12 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+            <WebhookIcon className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="mb-1 text-[14px] font-medium text-foreground">
+            {searchValueProp
+              ? `No webhooks found`
+              : 'No webhooks yet'}
+          </p>
+          <p className="text-[13px] text-muted-foreground">
+            {searchValueProp
+              ? 'Try adjusting your search'
+              : 'Set up webhooks to receive real-time notifications about events in your project'}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="rounded-lg border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Webhook ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Events</TableHead>
+                  <TableHead>URL</TableHead>
+                  <TableHead>Enabled</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Updated</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedWebhooks.map((webhook) => (
+                    <TableRow
+                      key={webhook.$id}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        navigate({
+                          to: '/projects/$projectId/settings/webhooks/$webhookId',
+                          params: { projectId, webhookId: webhook.$id },
+                        })
+                      }
+                    >
+                      <TableCell>
+                        <code className="text-[13px] font-mono text-muted-foreground">
+                          {webhook.$id.slice(0, 8)}...
+                        </code>
+                      </TableCell>
+                      <TableCell className="font-medium">{webhook.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-[12px]">
+                          {webhook.events?.length || 0} events
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="truncate text-[13px] text-muted-foreground">
+                          {webhook.url}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {webhook.enabled ? (
+                          <Badge variant="default" className="text-[12px]">
+                            Enabled
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[12px]">
+                            Disabled
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <DateTooltip date={webhook.$createdAt} />
+                      </TableCell>
+                      <TableCell>
+                        <DateTooltip date={webhook.$updatedAt} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+          </div>
+
+          {filteredWebhooks.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filteredWebhooks.length}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size)
+                setCurrentPage(1)
+              }}
+              itemLabel="webhooks"
+              className="border-t border-border bg-card"
+            />
+          )}
+        </>
+      )}
+
+      {/* Create Webhook Dialog */}
+      <CreateWebhookDialog
+        open={createWebhookOpen}
+        onOpenChange={setCreateWebhookOpen}
+        projectId={projectId}
+        onCreateSuccess={(webhookId) => {
+          navigate({
+            to: '/projects/$projectId/settings/webhooks/$webhookId',
+            params: { projectId, webhookId },
+          })
+        }}
+      />
+    </div>
+  )
+}
+

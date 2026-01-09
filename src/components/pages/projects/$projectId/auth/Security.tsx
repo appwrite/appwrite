@@ -1,0 +1,1512 @@
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import {
+  X,
+  RefreshCw,
+  Plus,
+  Copy,
+  Check,
+} from 'lucide-react'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  useUpdateAuthLimit,
+  useUpdateAuthDuration,
+  useUpdateAuthSessionsLimit,
+  useUpdateAuthPasswordHistory,
+  useUpdateAuthPasswordDictionary,
+  useUpdatePersonalDataCheck,
+  useUpdateSessionAlerts,
+  useUpdateSessionInvalidation,
+  useUpdateMockNumbers,
+  useUpdateMembershipsPrivacy,
+  useProject,
+  useOrganizationPlan,
+} from '@/lib/react-query/hooks'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import { Separator } from '@/components/ui/separator'
+import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
+import { cn } from '@/lib/utils'
+import {
+  createTimeUnitPair,
+  toSeconds,
+  fromSeconds,
+  type TimeUnit,
+  type TimeUnitPair,
+} from '@/lib/utils/time-unit-converter'
+
+interface SecurityProps {
+  projectId: string
+}
+
+// Dependencies enum for query invalidation
+enum Dependencies {
+  PROJECT = 'project',
+}
+
+export function Security({ projectId }: SecurityProps) {
+  // Get raw project data
+  const { data: projectData, isLoading } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: async () => {
+      const response = await sdk.forConsole.projects.get(projectId)
+      return response
+    },
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card py-12 text-center">
+        <div className="text-muted-foreground">Loading security settings...</div>
+      </div>
+    )
+  }
+
+  const authLimit = (projectData as any)?.authLimit ?? 0
+  // Parse authDuration as number (in seconds) - ensure it's a valid number
+  const authDuration = typeof (projectData as any)?.authDuration === 'number' 
+    ? (projectData as any).authDuration 
+    : typeof (projectData as any)?.authDuration === 'string'
+    ? parseInt((projectData as any).authDuration, 10) || 0
+    : 0
+  const authSessionsLimit = (projectData as any)?.authSessionsLimit ?? 10
+  const passwordHistoryLimit = (projectData as any)?.authPasswordHistory ?? 0
+  const passwordDictionary = (projectData as any)?.authPasswordDictionary ?? false
+  const personalDataCheck = (projectData as any)?.authPersonalDataCheck ?? false
+  const sessionAlerts = (projectData as any)?.authSessionAlerts ?? false
+  const sessionInvalidation = (projectData as any)?.authInvalidateSessions ?? false
+  const mockNumbers = (projectData as any)?.authMockNumbers ?? []
+  const membershipsPrivacy = {
+    userName: (projectData as any)?.authMembershipsUserName ?? true,
+    userEmail: (projectData as any)?.authMembershipsUserEmail ?? true,
+    mfa: (projectData as any)?.authMembershipsMfa ?? true,
+  }
+
+  return (
+    <div className="space-y-6">
+      <UsersLimitCard projectId={projectId} currentLimit={authLimit} />
+      <SessionLengthCard projectId={projectId} currentDuration={authDuration} />
+      <SessionsLimitCard projectId={projectId} currentLimit={authSessionsLimit} />
+      <PasswordHistoryCard
+        projectId={projectId}
+        currentLimit={passwordHistoryLimit}
+      />
+      <PasswordDictionaryCard
+        projectId={projectId}
+        currentEnabled={passwordDictionary}
+      />
+      <PersonalDataCard
+        projectId={projectId}
+        currentEnabled={personalDataCheck}
+      />
+      <SessionAlertsCard projectId={projectId} currentEnabled={sessionAlerts} />
+      <InvalidateSessionsCard
+        projectId={projectId}
+        currentEnabled={sessionInvalidation}
+      />
+      <MockPhoneNumbersCard
+        projectId={projectId}
+        currentNumbers={mockNumbers}
+      />
+      <MembershipsPrivacyCard
+        projectId={projectId}
+        currentPrivacy={membershipsPrivacy}
+      />
+    </div>
+  )
+}
+
+// ============================================================================
+// INDIVIDUAL FEATURE CARDS
+// ============================================================================
+
+function UsersLimitCard({
+  projectId,
+  currentLimit,
+}: {
+  projectId: string
+  currentLimit: number
+}) {
+  const [isUnlimited, setIsUnlimited] = useState(currentLimit === 0)
+  const [limit, setLimit] = useState(currentLimit === 0 ? 1000 : currentLimit)
+  const mutation = useUpdateAuthLimit(projectId)
+  const lastSubmittedValue = useRef<number | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      if (lastSubmittedValue.current === null || currentLimit === lastSubmittedValue.current) {
+        setIsUnlimited(currentLimit === 0)
+        setLimit(currentLimit === 0 ? 1000 : currentLimit)
+        // Reset ref once we've synced to the expected value
+        if (lastSubmittedValue.current !== null && currentLimit === lastSubmittedValue.current) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentLimit, mutation.isPending])
+
+  const hasChanges = useMemo(() => {
+    const newLimit = isUnlimited ? 0 : limit
+    return newLimit !== currentLimit
+  }, [isUnlimited, limit, currentLimit])
+
+  const handleSubmit = () => {
+    const newLimit = isUnlimited ? 0 : limit
+    lastSubmittedValue.current = newLimit
+    mutation.mutate(newLimit, {
+      onSuccess: () => {
+        toast.success('Updated project users limit successfully')
+        // Track analytics: Submit.AuthLimitUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update users limit')
+        // Revert on error
+        lastSubmittedValue.current = null
+        // Track analytics: trackError(error, Submit.AuthLimitUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Users limit
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Limit new users from signing up for your project, regardless of
+              authentication method. You can still create users and team
+              memberships from your Appwrite console.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              id="users-limit-unlimited"
+              checked={isUnlimited}
+              onCheckedChange={setIsUnlimited}
+              disabled={mutation.isPending}
+            />
+            <Label
+              htmlFor="users-limit-unlimited"
+              className="text-[13px] text-foreground cursor-pointer"
+            >
+              Unlimited (Recommended)
+            </Label>
+          </div>
+          {!isUnlimited && (
+            <div className="space-y-2">
+              <Label htmlFor="users-limit-value" className="text-[13px]">
+                Maximum number of users
+              </Label>
+              <Input
+                id="users-limit-value"
+                type="number"
+                min={1}
+                max={10000}
+                value={limit}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10)
+                  if (!isNaN(value) && value >= 1 && value <= 10000) {
+                    setLimit(value)
+                  }
+                }}
+                disabled={mutation.isPending}
+                className="max-w-[200px]"
+              />
+              <p className="text-[12px] text-muted-foreground">
+                Between 1 and 10,000 users
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function SessionLengthCard({
+  projectId,
+  currentDuration,
+}: {
+  projectId: string
+  currentDuration: number
+}) {
+  const MAX_DURATION_SECONDS = 31_536_000 // 1 year in seconds (365 days)
+  
+  // Convert seconds to the best human-friendly unit (excluding years and months)
+  // Prefers the smallest unit that gives a whole number, otherwise the smallest unit
+  const getInitialPair = (seconds: number): TimeUnitPair => {
+    if (seconds === 0) {
+      return { value: 0, unit: 'seconds' }
+    }
+
+    // Available units in order from largest to smallest (excluding years and months)
+    const availableUnits: TimeUnit[] = ['weeks', 'days', 'hours', 'minutes', 'seconds']
+    
+    let bestWholeNumber: TimeUnitPair | null = null
+    let smallestUnit: TimeUnitPair | null = null
+    
+    // Try each unit to find the best one
+    for (const unit of availableUnits) {
+      const value = fromSeconds(seconds, unit)
+      // If value is >= 1, consider this unit
+      if (value >= 1) {
+        // Check if it's a whole number (within 0.01 tolerance)
+        const rounded = Math.round(value)
+        if (Math.abs(value - rounded) < 0.01) {
+          // This is a whole number - prefer the smallest whole number unit
+          if (!bestWholeNumber) {
+            bestWholeNumber = { value: rounded, unit }
+          }
+        }
+        // Track the smallest unit that gives >= 1 (even if fractional)
+        if (!smallestUnit) {
+          smallestUnit = { value: Math.round(value * 100) / 100, unit }
+        }
+      }
+    }
+    
+    // Prefer whole number, otherwise use smallest unit
+    if (bestWholeNumber) {
+      return bestWholeNumber
+    }
+    
+    if (smallestUnit) {
+      return smallestUnit
+    }
+    
+    // Fallback to seconds if less than 1 second (shouldn't happen in practice)
+    return { value: seconds, unit: 'seconds' }
+  }
+  
+  const initialPair = getInitialPair(currentDuration)
+  const [duration, setDuration] = useState(initialPair.value)
+  const [unit, setUnit] = useState<TimeUnit>(initialPair.unit)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const mutation = useUpdateAuthDuration(projectId)
+
+  // Only auto-select unit on initial load, preserve user's choice after that
+  useEffect(() => {
+    if (isInitialLoad) {
+      const pair = getInitialPair(currentDuration)
+      setDuration(pair.value)
+      setUnit(pair.unit)
+      setIsInitialLoad(false)
+    } else {
+      // After initial load, keep the current unit and just update the value
+      const newValue = fromSeconds(currentDuration, unit)
+      // Round appropriately based on unit
+      if (unit === 'seconds' || unit === 'minutes') {
+        setDuration(Math.round(newValue))
+      } else if (unit === 'hours') {
+        setDuration(Math.round(newValue * 10) / 10)
+      } else {
+        setDuration(Math.round(newValue * 100) / 100)
+      }
+    }
+  }, [currentDuration, unit, isInitialLoad])
+
+  // Calculate max value for current unit to prevent exceeding 1 year (365 days)
+  const maxValueForUnit = useMemo(() => {
+    return Math.floor(fromSeconds(MAX_DURATION_SECONDS, unit))
+  }, [unit])
+
+  // Check if current value exceeds the maximum
+  const currentDurationSeconds = useMemo(() => {
+    return toSeconds(duration, unit)
+  }, [duration, unit])
+
+  const exceedsMax = currentDurationSeconds > MAX_DURATION_SECONDS
+
+  // When unit changes, convert the current duration to the new unit
+  const handleUnitChange = (newUnit: TimeUnit) => {
+    // Convert current duration to seconds first
+    const currentSeconds = toSeconds(duration, unit)
+    // Convert to the new unit
+    const newValue = fromSeconds(currentSeconds, newUnit)
+    const maxForNewUnit = Math.floor(fromSeconds(MAX_DURATION_SECONDS, newUnit))
+    
+    // Round to reasonable precision based on unit
+    let roundedValue: number
+    if (newUnit === 'seconds' || newUnit === 'minutes') {
+      roundedValue = Math.round(newValue)
+    } else if (newUnit === 'hours') {
+      roundedValue = Math.round(newValue * 10) / 10
+    } else {
+      roundedValue = Math.round(newValue * 100) / 100
+    }
+    
+    // If the new value exceeds max for the new unit, clamp it
+    if (roundedValue > maxForNewUnit) {
+      setDuration(maxForNewUnit)
+    } else {
+      setDuration(roundedValue)
+    }
+    
+    setUnit(newUnit)
+  }
+
+  const hasChanges = useMemo(() => {
+    const newDurationSeconds = toSeconds(duration, unit)
+    return Math.abs(newDurationSeconds - currentDuration) > 0.5 // Allow small floating point differences
+  }, [duration, unit, currentDuration])
+
+  const handleSubmit = () => {
+    if (exceedsMax) {
+      toast.error(`Session length cannot exceed 365 days (1 year)`)
+      return
+    }
+    
+    const durationSeconds = toSeconds(duration, unit)
+    // Clamp to valid range before submitting
+    const clampedDuration = Math.max(0, Math.min(durationSeconds, MAX_DURATION_SECONDS))
+    mutation.mutate(clampedDuration, {
+      onSuccess: () => {
+        toast.success('Updated session length successfully')
+        // Track analytics: Submit.SessionsLengthUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update session length')
+        // Track analytics: trackError(error, Submit.SessionsLengthUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Session length
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              If you reduce the limit, users who are currently logged in will be
+              logged out of the application.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="flex gap-3">
+          <div className="space-y-2 flex-1 max-w-[200px]">
+            <Label htmlFor="session-length-value" className="text-[13px]">
+              Length
+            </Label>
+            <div className="space-y-1">
+              <Input
+                id="session-length-value"
+                type="number"
+                min={0}
+                max={maxValueForUnit}
+                value={duration}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value)
+                  if (!isNaN(value) && value >= 0) {
+                    setDuration(value)
+                  } else if (e.target.value === '') {
+                    setDuration(0)
+                  }
+                }}
+                disabled={mutation.isPending}
+                className={exceedsMax ? 'border-destructive' : ''}
+              />
+              {exceedsMax && (
+                <p className="text-[12px] text-destructive">
+                  Maximum is {maxValueForUnit} {unit} (365 days)
+                </p>
+              )}
+              {!exceedsMax && (
+                <p className="text-[12px] text-muted-foreground">
+                  Maximum: {maxValueForUnit} {unit} (365 days)
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="space-y-2 flex-1 max-w-[200px]">
+            <Label htmlFor="session-length-unit" className="text-[13px]">
+              Time period
+            </Label>
+            <Select
+              value={unit}
+              onValueChange={handleUnitChange}
+              disabled={mutation.isPending}
+            >
+              <SelectTrigger id="session-length-unit">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="seconds">Seconds</SelectItem>
+                <SelectItem value="minutes">Minutes</SelectItem>
+                <SelectItem value="hours">Hours</SelectItem>
+                <SelectItem value="days">Days</SelectItem>
+                <SelectItem value="weeks">Weeks</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* Spacer to match the height of helper text in the value field */}
+            <div className="h-5" />
+          </div>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending || exceedsMax}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function SessionsLimitCard({
+  projectId,
+  currentLimit,
+}: {
+  projectId: string
+  currentLimit: number
+}) {
+  const [limit, setLimit] = useState(currentLimit)
+  const mutation = useUpdateAuthSessionsLimit(projectId)
+
+  useEffect(() => {
+    setLimit(currentLimit)
+  }, [currentLimit])
+
+  const hasChanges = limit !== currentLimit
+
+  const handleSubmit = () => {
+    mutation.mutate(limit, {
+      onSuccess: () => {
+        toast.success('Sessions limit has been updated')
+        // Track analytics: Submit.SessionsLimitUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update sessions limit')
+        // Track analytics: trackError(error, Submit.SessionsLimitUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Sessions limit
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Maximum number of active sessions allowed per user.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="space-y-2 max-w-[200px]">
+          <Label htmlFor="sessions-limit-value" className="text-[13px]">
+            Limit
+          </Label>
+          <Input
+            id="sessions-limit-value"
+            type="number"
+            min={1}
+            max={100}
+            value={limit}
+            onChange={(e) => {
+              const value = parseInt(e.target.value, 10)
+              if (!isNaN(value) && value >= 1 && value <= 100) {
+                setLimit(value)
+              }
+            }}
+            disabled={mutation.isPending}
+          />
+          <p className="text-[12px] text-muted-foreground">
+            Between 1 and 100 sessions
+          </p>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function PasswordHistoryCard({
+  projectId,
+  currentLimit,
+}: {
+  projectId: string
+  currentLimit: number
+}) {
+  const [enabled, setEnabled] = useState(currentLimit > 0)
+  const [limit, setLimit] = useState(currentLimit > 0 ? currentLimit : 5)
+  const mutation = useUpdateAuthPasswordHistory(projectId)
+  const lastSubmittedValue = useRef<number | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      if (lastSubmittedValue.current === null || currentLimit === lastSubmittedValue.current) {
+        setEnabled(currentLimit > 0)
+        setLimit(currentLimit > 0 ? currentLimit : 5)
+        // Reset ref once we've synced to the expected value
+        if (lastSubmittedValue.current !== null && currentLimit === lastSubmittedValue.current) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentLimit, mutation.isPending])
+
+  const hasChanges = useMemo(() => {
+    const newLimit = enabled ? limit : 0
+    return newLimit !== currentLimit
+  }, [enabled, limit, currentLimit])
+
+  const handleSubmit = () => {
+    const newLimit = enabled ? limit : 0
+    lastSubmittedValue.current = newLimit
+    mutation.mutate(newLimit, {
+      onSuccess: () => {
+        toast.success('Updated password history limit.')
+        // Track analytics: Submit.AuthPasswordHistoryUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update password history')
+        // Revert on error
+        lastSubmittedValue.current = null
+        // Track analytics: trackError(error, Submit.AuthPasswordHistoryUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Password history
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Set the maximum number of passwords saved per user. Enabling this
+              option prevents users from reusing recent passwords by comparing
+              the new password with their password history.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              id="password-history-enabled"
+              checked={enabled}
+              onCheckedChange={setEnabled}
+              disabled={mutation.isPending}
+            />
+            <Label
+              htmlFor="password-history-enabled"
+              className="text-[13px] text-foreground cursor-pointer"
+            >
+              Password history
+            </Label>
+          </div>
+          {enabled && (
+            <div className="space-y-2 max-w-[200px]">
+              <Label htmlFor="password-history-limit" className="text-[13px]">
+                Limit
+              </Label>
+              <Input
+                id="password-history-limit"
+                type="number"
+                min={1}
+                max={20}
+                value={limit}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10)
+                  if (!isNaN(value) && value >= 1 && value <= 20) {
+                    setLimit(value)
+                  }
+                }}
+                disabled={mutation.isPending}
+              />
+              <p className="text-[12px] text-muted-foreground">
+                Between 1 and 20 passwords
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function PasswordDictionaryCard({
+  projectId,
+  currentEnabled,
+}: {
+  projectId: string
+  currentEnabled: boolean
+}) {
+  const [enabled, setEnabled] = useState(currentEnabled)
+  const mutation = useUpdateAuthPasswordDictionary(projectId)
+  const lastSubmittedValue = useRef<boolean | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+        setEnabled(currentEnabled)
+        // Reset ref once we've synced to the expected value
+        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentEnabled, mutation.isPending])
+
+  const hasChanges = enabled !== currentEnabled
+
+  const handleSubmit = () => {
+    lastSubmittedValue.current = enabled
+    mutation.mutate(enabled, {
+      onSuccess: () => {
+        toast.success('Updated password dictionary check.')
+        // Track analytics: Submit.AuthPasswordDictionaryUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update password dictionary')
+        // Revert on error
+        lastSubmittedValue.current = null
+        // Track analytics: trackError(error, Submit.AuthPasswordDictionaryUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Password dictionary
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Enabling this option prevents users from setting insecure passwords
+              by comparing the user's password with the{' '}
+              <a
+                href="https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                10k most commonly used passwords
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Switch
+            id="password-dictionary-enabled"
+            checked={enabled}
+            onCheckedChange={setEnabled}
+            disabled={mutation.isPending}
+          />
+          <Label
+            htmlFor="password-dictionary-enabled"
+            className="text-[13px] text-foreground cursor-pointer"
+          >
+            Password dictionary
+          </Label>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function PersonalDataCard({
+  projectId,
+  currentEnabled,
+}: {
+  projectId: string
+  currentEnabled: boolean
+}) {
+  const [enabled, setEnabled] = useState(currentEnabled)
+  const mutation = useUpdatePersonalDataCheck(projectId)
+  const lastSubmittedValue = useRef<boolean | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+        setEnabled(currentEnabled)
+        // Reset ref once we've synced to the expected value
+        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentEnabled, mutation.isPending])
+
+  const hasChanges = enabled !== currentEnabled
+
+  const handleSubmit = () => {
+    lastSubmittedValue.current = enabled
+    mutation.mutate(enabled, {
+      onSuccess: () => {
+        toast.success('Toggled personal data checks for passwords')
+        // Track analytics: Submit.AuthPersonalDataCheckUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update personal data check')
+        // Revert on error
+        lastSubmittedValue.current = null
+        // Track analytics: trackError(error, Submit.AuthPersonalDataCheckUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Personal data
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Do not allow passwords that contain any part of the user's personal
+              data. This includes the user's <code className="text-[12px] bg-muted px-1 py-0.5 rounded">name</code>,{' '}
+              <code className="text-[12px] bg-muted px-1 py-0.5 rounded">email</code>, or{' '}
+              <code className="text-[12px] bg-muted px-1 py-0.5 rounded">phone</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Switch
+            id="personal-data-enabled"
+            checked={enabled}
+            onCheckedChange={setEnabled}
+            disabled={mutation.isPending}
+          />
+          <Label
+            htmlFor="personal-data-enabled"
+            className="text-[13px] text-foreground cursor-pointer"
+          >
+            Disallow personal data
+          </Label>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function SessionAlertsCard({
+  projectId,
+  currentEnabled,
+}: {
+  projectId: string
+  currentEnabled: boolean
+}) {
+  const [enabled, setEnabled] = useState(currentEnabled)
+  const mutation = useUpdateSessionAlerts(projectId)
+  const lastSubmittedValue = useRef<boolean | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+        setEnabled(currentEnabled)
+        // Reset ref once we've synced to the expected value
+        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentEnabled, mutation.isPending])
+
+  const hasChanges = enabled !== currentEnabled
+
+  const handleSubmit = () => {
+    lastSubmittedValue.current = enabled
+    mutation.mutate(enabled, {
+      onSuccess: () => {
+        toast.success('Updated session alerts.')
+        // Track analytics: Submit.AuthSessionAlertsUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update session alerts')
+        // Revert on error
+        lastSubmittedValue.current = null
+        // Track analytics: trackError(error, Submit.AuthSessionAlertsUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Session alerts
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Enabling this option will send an email to the users when a new
+              session is created.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Switch
+            id="session-alerts-enabled"
+            checked={enabled}
+            onCheckedChange={setEnabled}
+            disabled={mutation.isPending}
+          />
+          <Label
+            htmlFor="session-alerts-enabled"
+            className="text-[13px] text-foreground cursor-pointer"
+          >
+            Session alerts
+          </Label>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function InvalidateSessionsCard({
+  projectId,
+  currentEnabled,
+}: {
+  projectId: string
+  currentEnabled: boolean
+}) {
+  const [enabled, setEnabled] = useState(currentEnabled)
+  const mutation = useUpdateSessionInvalidation(projectId)
+  const lastSubmittedValue = useRef<boolean | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+        setEnabled(currentEnabled)
+        // Reset ref once we've synced to the expected value
+        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentEnabled, mutation.isPending])
+
+  const hasChanges = enabled !== currentEnabled
+
+  const handleSubmit = () => {
+    lastSubmittedValue.current = enabled
+    mutation.mutate(enabled, {
+      onSuccess: () => {
+        toast.success('Updated session invalidation check.')
+        // Track analytics: Submit.AuthInvalidateSesssion
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update session invalidation')
+        // Revert on error
+        lastSubmittedValue.current = null
+        // Track analytics: trackError(error, Submit.AuthInvalidateSesssion)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Invalidate sessions
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Enabling this option will clear all existing sessions when the
+              user changes their password.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Switch
+            id="invalidate-sessions-enabled"
+            checked={enabled}
+            onCheckedChange={setEnabled}
+            disabled={mutation.isPending}
+          />
+          <Label
+            htmlFor="invalidate-sessions-enabled"
+            className="text-[13px] text-foreground cursor-pointer"
+          >
+            Invalidate sessions
+          </Label>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function MockPhoneNumbersCard({
+  projectId,
+  currentNumbers,
+}: {
+  projectId: string
+  currentNumbers: Array<{ phone: string; otp: string }>
+}) {
+  const [numbers, setNumbers] = useState<
+    Array<{ phone: string; otp: string; id: string }>
+  >(
+    currentNumbers.map((n, i) => ({
+      ...n,
+      id: `mock-${i}`,
+    })),
+  )
+  const [copiedItem, setCopiedItem] = useState<{
+    id: string
+    type: 'phone' | 'otp'
+  } | null>(null)
+  const mutation = useUpdateMockNumbers(projectId)
+
+  // Get project to access teamId (organization ID)
+  const { project } = useProject(projectId)
+  const orgId = project?.teamId
+
+  // Get organization plan to check if mock numbers are supported
+  const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const supportsMockNumbers = organizationPlan?.supportsMockNumbers ?? false
+
+  useEffect(() => {
+    setNumbers(
+      currentNumbers.map((n, i) => ({
+        ...n,
+        id: `mock-${i}`,
+      })),
+    )
+  }, [currentNumbers])
+
+  const hasChanges = useMemo(() => {
+    if (numbers.length !== currentNumbers.length) return true
+    return numbers.some(
+      (n, i) =>
+        n.phone !== currentNumbers[i]?.phone ||
+        n.otp !== currentNumbers[i]?.otp,
+    )
+  }, [numbers, currentNumbers])
+
+  const generatePhoneNumber = () => {
+    const areaCode = Math.floor(Math.random() * 800) + 200 // 200-999
+    const lineNumber = Math.floor(Math.random() * 10000) // 0000-9999
+    return `+1${areaCode}555${lineNumber.toString().padStart(4, '0')}`
+  }
+
+  const generateOTP = () => {
+    return Math.floor(Math.random() * 900000 + 100000).toString() // 100000-999999
+  }
+
+  const handleAddNumber = () => {
+    if (numbers.length >= 10) return
+    setNumbers([
+      ...numbers,
+      {
+        id: `mock-${Date.now()}`,
+        phone: generatePhoneNumber(),
+        otp: generateOTP(),
+      },
+    ])
+  }
+
+  const handleDeleteNumber = (id: string) => {
+    setNumbers(numbers.filter((n) => n.id !== id))
+  }
+
+  const handleRegeneratePhone = (id: string) => {
+    setNumbers(
+      numbers.map((n) =>
+        n.id === id ? { ...n, phone: generatePhoneNumber() } : n,
+      ),
+    )
+  }
+
+  const handleRegenerateOTP = (id: string) => {
+    setNumbers(
+      numbers.map((n) => (n.id === id ? { ...n, otp: generateOTP() } : n)),
+    )
+  }
+
+  const handlePhoneChange = (id: string, phone: string) => {
+    // Validate phone format (9-16 characters, starts with +)
+    if (phone.length >= 9 && phone.length <= 16 && phone.startsWith('+')) {
+      setNumbers(
+        numbers.map((n) => (n.id === id ? { ...n, phone } : n)),
+      )
+    } else if (phone === '') {
+      setNumbers(
+        numbers.map((n) => (n.id === id ? { ...n, phone: '' } : n)),
+      )
+    }
+  }
+
+  const handleOTPChange = (id: string, otp: string) => {
+    // Validate OTP format (6 digits)
+    if (/^[0-9]{0,6}$/.test(otp)) {
+      setNumbers(numbers.map((n) => (n.id === id ? { ...n, otp } : n)))
+    }
+  }
+
+  const handleCopy = (id: string, type: 'phone' | 'otp', value: string) => {
+    navigator.clipboard.writeText(value)
+    setCopiedItem({ id, type })
+    setTimeout(() => setCopiedItem(null), 2000)
+  }
+
+  const handleSubmit = () => {
+    const numbersToSubmit = numbers.map(({ phone, otp }) => ({ phone, otp }))
+    mutation.mutate(numbersToSubmit, {
+      onSuccess: () => {
+        toast.success('Mock phone numbers have been updated')
+        // Track analytics: Submit.AuthMockNumbersUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update mock phone numbers')
+        // Track analytics: trackError(error, Submit.AuthMockNumbersUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Mock phone numbers
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Generate <strong>fictional</strong> numbers to simulate phone
+              verification when testing demo accounts for submitting your
+              application to the App Store or Google Play.{' '}
+              <a
+                href="https://appwrite.io/docs/products/auth/security#mock-phone-numbers"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Learn more
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <UpgradeCurtain
+        isLocked={!supportsMockNumbers}
+        orgId={orgId}
+        message="Mock phone numbers are available on Appwrite Cloud Pro and higher plans."
+      >
+        <div>
+          <div className="px-6 py-4">
+            {numbers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-[13px] text-muted-foreground mb-4">
+                  No mock phone numbers configured
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAddNumber}
+                  disabled={mutation.isPending}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Generate number
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {numbers.map((number) => (
+                  <div
+                    key={number.id}
+                    className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/30"
+                  >
+                    <div className="flex-1 space-y-3">
+                      <div className="space-y-2">
+                        <Label className="text-[12px]">Phone number</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="tel"
+                            value={number.phone}
+                            onChange={(e) =>
+                              handlePhoneChange(number.id, e.target.value)
+                            }
+                            placeholder="+1234567890"
+                            minLength={9}
+                            maxLength={16}
+                            disabled={mutation.isPending}
+                            className="flex-1"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCopy(number.id, 'phone', number.phone)}
+                            disabled={mutation.isPending}
+                            className="h-9 w-9 p-0"
+                            title="Copy phone number"
+                          >
+                            {copiedItem?.id === number.id && copiedItem?.type === 'phone' ? (
+                              <Check className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRegeneratePhone(number.id)}
+                            disabled={mutation.isPending}
+                            className="h-9 w-9 p-0"
+                            title="Regenerate phone number"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[12px]">Verification code</Label>
+                        <div className="flex items-center gap-2">
+                          <InputOTP
+                            maxLength={6}
+                            value={number.otp}
+                            onChange={(value) => handleOTPChange(number.id, value)}
+                            disabled={mutation.isPending}
+                          >
+                            <InputOTPGroup>
+                              {Array.from({ length: 6 }).map((_, i) => (
+                                <InputOTPSlot key={i} index={i} />
+                              ))}
+                            </InputOTPGroup>
+                          </InputOTP>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCopy(number.id, 'otp', number.otp)}
+                            disabled={mutation.isPending}
+                            className="h-9 w-9 p-0"
+                            title="Copy verification code"
+                          >
+                            {copiedItem?.id === number.id && copiedItem?.type === 'otp' ? (
+                              <Check className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRegenerateOTP(number.id)}
+                            disabled={mutation.isPending}
+                            className="h-9 w-9 p-0"
+                            title="Regenerate verification code"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteNumber(number.id)}
+                      disabled={mutation.isPending}
+                      className="h-9 w-9 p-0 text-destructive hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {numbers.length < 10 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddNumber}
+                    disabled={mutation.isPending}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add number
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+          {numbers.length > 0 && (
+            <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={!hasChanges || mutation.isPending}
+                onClick={handleSubmit}
+              >
+                Update
+              </Button>
+            </div>
+          )}
+        </div>
+      </UpgradeCurtain>
+    </div>
+  )
+}
+
+function MembershipsPrivacyCard({
+  projectId,
+  currentPrivacy,
+}: {
+  projectId: string
+  currentPrivacy: { userName: boolean; userEmail: boolean; mfa: boolean }
+}) {
+  const [privacy, setPrivacy] = useState(currentPrivacy)
+  const mutation = useUpdateMembershipsPrivacy(projectId)
+  const lastSubmittedValue = useRef<string | null>(null)
+
+  useEffect(() => {
+    // Only sync from server if:
+    // 1. Mutation is not pending
+    // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
+    if (!mutation.isPending) {
+      const currentPrivacyStr = JSON.stringify(currentPrivacy)
+      if (lastSubmittedValue.current === null || currentPrivacyStr === lastSubmittedValue.current) {
+        setPrivacy(currentPrivacy)
+        // Reset ref once we've synced to the expected value
+        if (lastSubmittedValue.current !== null && currentPrivacyStr === lastSubmittedValue.current) {
+          lastSubmittedValue.current = null
+        }
+      }
+    }
+  }, [currentPrivacy, mutation.isPending])
+
+  const hasChanges = useMemo(() => {
+    return (
+      privacy.userName !== currentPrivacy.userName ||
+      privacy.userEmail !== currentPrivacy.userEmail ||
+      privacy.mfa !== currentPrivacy.mfa
+    )
+  }, [privacy, currentPrivacy])
+
+  const handleSubmit = () => {
+    lastSubmittedValue.current = JSON.stringify(privacy)
+    mutation.mutate(privacy, {
+      onSuccess: () => {
+        toast.success('Updated memberships privacy')
+        // Track analytics: Submit.AuthMembershipPrivacyUpdate
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update memberships privacy')
+        // Revert on error
+        lastSubmittedValue.current = null
+        // Track analytics: trackError(error, Submit.AuthMembershipPrivacyUpdate)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Memberships privacy
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Set privacy preferences to manage which details team members can
+              view about one another.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="privacy-user-name"
+              checked={privacy.userName}
+              onCheckedChange={(checked) =>
+                setPrivacy({ ...privacy, userName: checked === true })
+              }
+              disabled={mutation.isPending}
+            />
+            <Label
+              htmlFor="privacy-user-name"
+              className="text-[13px] text-foreground cursor-pointer"
+            >
+              Name
+            </Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="privacy-user-email"
+              checked={privacy.userEmail}
+              onCheckedChange={(checked) =>
+                setPrivacy({ ...privacy, userEmail: checked === true })
+              }
+              disabled={mutation.isPending}
+            />
+            <Label
+              htmlFor="privacy-user-email"
+              className="text-[13px] text-foreground cursor-pointer"
+            >
+              Email
+            </Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="privacy-mfa"
+              checked={privacy.mfa}
+              onCheckedChange={(checked) =>
+                setPrivacy({ ...privacy, mfa: checked === true })
+              }
+              disabled={mutation.isPending}
+            />
+            <Label
+              htmlFor="privacy-mfa"
+              className="text-[13px] text-foreground cursor-pointer"
+            >
+              MFA status
+            </Label>
+          </div>
+        </div>
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/30">
+        <Button
+          size="sm"
+          className="h-9 text-[13px]"
+          disabled={!hasChanges || mutation.isPending}
+          onClick={handleSubmit}
+        >
+          Update
+        </Button>
+      </div>
+    </div>
+  )
+}
+

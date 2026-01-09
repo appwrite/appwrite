@@ -1,0 +1,165 @@
+/**
+ * React hook for managing upload queue
+ */
+
+import { useState, useEffect, useCallback } from 'react'
+import { uploadManager } from './upload-manager'
+import type { UploadItem, UploadProgress } from './types'
+
+export function useUploadQueue(projectId?: string, bucketId?: string) {
+  const [uploads, setUploads] = useState<UploadItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load uploads for this bucket
+  useEffect(() => {
+    if (!projectId || !bucketId) {
+      setUploads([])
+      setIsLoading(false)
+      return
+    }
+
+    let mounted = true
+
+    async function loadUploads() {
+      try {
+        const items = await uploadManager.getBucketUploads(projectId, bucketId)
+        if (mounted) {
+          setUploads(items)
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error('Failed to load uploads:', error)
+        if (mounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadUploads()
+
+    // Set up progress listeners for all uploads
+    const unsubscribes: (() => void)[] = []
+
+    const setupListeners = async () => {
+      const items = await uploadManager.getBucketUploads(projectId, bucketId)
+      items.forEach((item) => {
+        const unsubscribe = uploadManager.onProgress(item.id, (progress) => {
+          if (mounted) {
+            setUploads((prev) =>
+              prev.map((u) =>
+                u.id === progress.id
+                  ? { ...u, status: progress.status, progress: progress.progress, error: progress.error }
+                  : u,
+              ),
+            )
+          }
+        })
+        unsubscribes.push(unsubscribe)
+      })
+    }
+
+    setupListeners()
+
+    // Poll for new uploads periodically
+    const interval = setInterval(() => {
+      loadUploads()
+    }, 2000)
+
+    return () => {
+      mounted = false
+      clearInterval(interval)
+      unsubscribes.forEach((unsubscribe) => unsubscribe())
+    }
+  }, [projectId, bucketId])
+
+  const queueUpload = useCallback(
+    async (
+      file: File,
+      fileId?: string,
+      permissions?: string[],
+    ): Promise<string> => {
+      if (!projectId || !bucketId) {
+        throw new Error('Project ID and Bucket ID are required')
+      }
+
+      const uploadId = await uploadManager.queueUpload(
+        projectId,
+        bucketId,
+        file,
+        fileId,
+        permissions,
+      )
+
+      // Set up progress listener
+      const unsubscribe = uploadManager.onProgress(uploadId, (progress) => {
+        setUploads((prev) => {
+          const existing = prev.find((u) => u.id === uploadId)
+          if (existing) {
+            return prev.map((u) =>
+              u.id === uploadId
+                ? { ...u, status: progress.status, progress: progress.progress, error: progress.error }
+                : u,
+            )
+          } else {
+            // Add new upload to list
+            return [
+              ...prev,
+              {
+                id: uploadId,
+                projectId,
+                bucketId,
+                fileId: fileId || '',
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                fileData: new ArrayBuffer(0), // Not needed in UI
+                permissions,
+                status: progress.status,
+                progress: progress.progress,
+                error: progress.error,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+              },
+            ]
+          }
+        })
+      })
+
+      // Reload uploads to get the full item
+      setTimeout(async () => {
+        const item = await uploadManager.getUploadStatus(uploadId)
+        if (item) {
+          setUploads((prev) => {
+            const existing = prev.find((u) => u.id === uploadId)
+            if (!existing) {
+              return [...prev, item]
+            }
+            return prev
+          })
+        }
+        unsubscribe()
+      }, 100)
+
+      return uploadId
+    },
+    [projectId, bucketId],
+  )
+
+  const cancelUpload = useCallback(async (uploadId: string) => {
+    await uploadManager.cancelUpload(uploadId)
+    setUploads((prev) => prev.filter((u) => u.id !== uploadId))
+  }, [])
+
+  const activeUploads = uploads.filter(
+    (u) => u.status === 'pending' || u.status === 'uploading',
+  )
+
+  return {
+    uploads,
+    activeUploads,
+    isLoading,
+    queueUpload,
+    cancelUpload,
+  }
+}
+
