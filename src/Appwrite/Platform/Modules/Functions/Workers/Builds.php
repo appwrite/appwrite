@@ -913,17 +913,6 @@ class Builds extends Action
             Console::log('Build details stored');
 
             $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
-            $logs = $deployment->getAttribute('buildLogs', '');
-
-            /** Screenshot site */
-            if ($resource->getCollection() === 'sites') {
-                $queueForScreenshots
-                    ->setDeploymentId($deployment->getId())
-                    ->setProject($project)
-                    ->trigger();
-
-                Console::log('Site screenshot queued');
-            }
 
             $logs = $deployment->getAttribute('buildLogs', '');
             $date = \date('H:i:s');
@@ -942,6 +931,16 @@ class Builds extends Action
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+            }
+            
+            /** Screenshot site */
+            if ($resource->getCollection() === 'sites') {
+                $queueForScreenshots
+                    ->setDeploymentId($deployment->getId())
+                    ->setProject($project)
+                    ->trigger();
+
+                Console::log('Site screenshot queued');
             }
 
             /** Set auto deploy */
@@ -1093,9 +1092,10 @@ class Builds extends Action
 
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
-            $deployment->setAttribute('buildEndedAt', $endTime);
-            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildEndedAt' => $endTime,
+                'buildDuration' => \intval(\ceil($durationEnd - $durationStart)),
+            ]));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
