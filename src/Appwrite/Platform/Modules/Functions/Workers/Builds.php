@@ -932,7 +932,7 @@ class Builds extends Action
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
-            
+
             /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
                 $queueForScreenshots

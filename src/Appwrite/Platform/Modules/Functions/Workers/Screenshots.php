@@ -258,7 +258,7 @@ class Screenshots extends Action
 
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
-            
+
             throw $th;
         }
     }
