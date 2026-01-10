@@ -623,6 +623,122 @@ Extract query functions for:
 
 **Note:** The SDK version we use has all required methods (like `.get()`, `.list()`, etc.), so no fallback logic is needed. Keep query functions simple and direct.
 
+### Route-Level Prefetching
+
+**IMPORTANT: All crucial HTTP calls using the SDK must be prefetched at the route level to prevent layout shifts and improve user experience.**
+
+Route loaders run before the component renders, allowing data to be available immediately when the page loads. This eliminates loading spinners on initial render and prevents content from jumping around.
+
+**What to Prefetch:**
+- ✅ Initial page of list data (first page, no search)
+- ✅ Total count for limit checking
+- ✅ Project data (if needed for plan limits)
+- ✅ Organization plan (if needed for limit checking)
+- ✅ Detail page data (when viewing a specific resource)
+- ✅ Related data needed for the initial view
+
+**What NOT to Prefetch:**
+- ❌ Search results (user hasn't searched yet)
+- ❌ Filtered data (user hasn't applied filters yet)
+- ❌ Subsequent pages (only prefetch page 1)
+- ❌ Optional/conditional data that may not be needed
+
+**Example Route File Structure:**
+
+```typescript
+// src/routes/_public/projects/$projectId/storage/index.tsx
+import { createFileRoute } from '@tanstack/react-router'
+import { StorageView } from '@/components/pages/projects/$projectId/storage/View'
+import { fetchProjectBuckets, fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+
+const BUCKETS_PER_PAGE = 25
+
+export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
+  loader: async ({ params, context }) => {
+    // Only run on client side (SDK requires browser environment)
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const { projectId } = params
+    const { queryClient } = context
+
+    if (projectId) {
+      // 1. Prefetch project to get teamId (needed for plan limits)
+      const projectData = await queryClient.fetchQuery({
+        queryKey: ['project', projectId],
+        queryFn: () => fetchProject(projectId),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
+
+      // 2. Prefetch organization plan if we have a teamId (for limit checking)
+      if (projectData?.teamId) {
+        await queryClient.prefetchQuery({
+          queryKey: ['organization', 'plan', projectData.teamId],
+          queryFn: () => fetchOrganizationPlan(projectData.teamId),
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        })
+      }
+
+      // 3. Prefetch initial page of resources (page 0, no search)
+      await queryClient.ensureQueryData({
+        queryKey: ['buckets', 'project', projectId, 0, BUCKETS_PER_PAGE, ''],
+        queryFn: () => fetchProjectBuckets(projectId, 0, BUCKETS_PER_PAGE, ''),
+        staleTime: 30 * 1000, // 30 seconds
+      })
+
+      // 4. Prefetch total count for limit checking (separate from search query)
+      await queryClient.prefetchQuery({
+        queryKey: ['buckets', 'project', projectId, 'total'],
+        queryFn: () => fetchProjectBuckets(projectId, 0, 1, ''),
+        staleTime: 30 * 1000, // 30 seconds
+      })
+    }
+  },
+  component: StorageIndexPage,
+})
+
+function StorageIndexPage() {
+  return <StorageView />
+}
+```
+
+**Key Points:**
+- Use `ensureQueryData` for data that must be available (will wait for it)
+- Use `prefetchQuery` for data that's nice to have (won't block rendering)
+- Use `fetchQuery` when you need the result to make decisions (like getting teamId)
+- Always check `typeof window === 'undefined'` since SDK is client-side only
+- Wrap in try-catch for non-critical prefetches to avoid blocking navigation
+- Use consistent query keys matching your hooks
+
+**Error Handling:**
+```typescript
+// For critical data - let it fail and show error boundary
+await queryClient.ensureQueryData({
+  queryKey: ['resource', projectId, resourceId],
+  queryFn: () => fetchResource(projectId, resourceId),
+  staleTime: 30 * 1000,
+})
+
+// For non-critical data - catch errors to avoid blocking navigation
+try {
+  await queryClient.prefetchQuery({
+    queryKey: ['optional-data', projectId],
+    queryFn: () => fetchOptionalData(projectId),
+    staleTime: 30 * 1000,
+  })
+} catch (error) {
+  // Log error but don't block rendering - let component handle error state
+  console.error('Error prefetching optional data:', error)
+}
+```
+
+**Benefits:**
+- **No layout shifts** - Data is ready when component renders
+- **Faster perceived load** - Users see content immediately
+- **Better UX** - No loading spinners on initial render
+- **Consistent behavior** - All routes follow the same pattern
+
 ## Row Creation
 
 When creating rows in tables, the ID input component (`IdInput`) is shown in the creation form (not during updates). Users can optionally specify a custom Row ID, or leave it blank to auto-generate using `ID.unique()` from the Appwrite SDK. The ID input is only visible during row creation, never during row updates.
@@ -678,4 +794,700 @@ This ensures consistency across the interface and prevents visual clutter from a
   <Icon className="mr-2 h-4 w-4" />
   Label
 </Button>
-``` 
+```
+
+## Standard Service Section/View Patterns
+
+When creating a new service section/view (like Auth, Functions, Storage), follow these consistent patterns to ensure a uniform user experience across the application.
+
+### Component Structure
+
+**1. Main View Component** (`View.tsx`):
+- Located in `components/pages/projects/$projectId/[service-name]/View.tsx`
+- Uses `ServiceHeader` component for consistent header/tabs/toolbar
+- Manages state for search, pagination, view modes (list/grid), and selections
+- Handles tab navigation via URL pathname (route-based tabs)
+- Renders tab-specific content conditionally
+
+**2. Shared Components**:
+- `ServiceHeader` - Standardized header with title, tabs, search, filters, and create button
+- `ResourceCard` - Consistent card display for grid view
+- `EmptyState` - Standardized empty states
+- `Pagination` - Consistent pagination component
+
+### Key Patterns
+
+**1. Tab Navigation (Route-Based)**:
+```typescript
+// Derive active tab from pathname
+const activeTab = useMemo(() => {
+  const pathParts = location.pathname.split('/').filter(Boolean)
+  const serviceIndex = pathParts.findIndex(part => part === 'service-name')
+  
+  if (serviceIndex >= 0) {
+    if (pathParts[serviceIndex + 1]) {
+      const tabFromPath = pathParts[serviceIndex + 1]
+      if (['tab1', 'tab2', 'tab3'].includes(tabFromPath)) {
+        return tabFromPath
+      }
+    }
+  }
+  
+  // Default to main tab for index route
+  return 'main-tab'
+}, [location.pathname])
+
+// Define tabs with route paths
+const tabs: Tab[] = useMemo(() => [
+  { 
+    id: 'main-tab', 
+    label: 'Main Tab', 
+    count: totalCount,
+    to: '/projects/$projectId/service-name/',
+    params: { projectId: projectId as string },
+  },
+  { 
+    id: 'other-tab', 
+    label: 'Other Tab',
+    to: '/projects/$projectId/service-name/other-tab',
+    params: { projectId: projectId as string },
+  },
+], [totalCount, projectId])
+```
+
+**2. ServiceHeader Usage**:
+```typescript
+<ServiceHeader
+  title="Service Name"
+  tabs={tabs}
+  activeTab={activeTab}
+  searchPlaceholder={activeTab === 'main-tab' ? 'Search resources...' : undefined}
+  searchValue={activeTab === 'main-tab' ? searchValue : undefined}
+  onSearchChange={activeTab === 'main-tab' ? handleSearchChange : undefined}
+  createLabel={getCreateLabel()}
+  onCreate={handleCreateClick}
+  createDisabled={isCreateDisabled}
+  showFilters={activeTab === 'main-tab'} // Optional
+  fullWidthBorder
+  rightContent={activeTab === 'main-tab' ? <ViewToggle /> : undefined}
+  contentAfterBorder={
+    activeTab === 'main-tab' ? (
+      <PlanLimitWarning
+        currentCount={totalCount}
+        limit={resourceLimit}
+        planName={organizationPlan?.name}
+        resourceName="resources"
+        orgId={project?.teamId}
+        isLoading={isLoading}
+      />
+    ) : undefined
+  }
+/>
+```
+
+**3. State Management**:
+```typescript
+// Search state
+const [searchValue, setSearchValue] = useState('')
+
+// Pagination state (1-indexed for UI)
+const [currentPage, setCurrentPage] = useState(1)
+const [pageSize, setPageSize] = useState(25)
+
+// View mode (list/grid)
+const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
+
+// Selection state for bulk operations
+const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+
+// Dialog states
+const [createDialogOpen, setCreateDialogOpen] = useState(false)
+const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+// Clear selection when navigating or searching
+useEffect(() => {
+  setSelectedItems(new Set())
+  setDeleteDialogOpen(false)
+}, [location.pathname, projectId, searchValue])
+```
+
+**4. Data Fetching**:
+```typescript
+// Convert 1-indexed page to 0-indexed for API
+const pageIndexed = currentPage - 1
+
+// Fetch resources
+const {
+  resources,
+  total,
+  isLoading,
+} = useProjectResources(projectId, pageIndexed, pageSize, searchValue)
+
+// Fetch total count without search (for limit checking)
+const {
+  data: totalResourcesData,
+  isLoading: totalResourcesLoading,
+} = useQuery({
+  queryKey: ['resources', 'project', projectId, 'total'],
+  queryFn: () => fetchProjectResources(projectId!, 0, 1, ''),
+  enabled: !!projectId,
+  staleTime: 30 * 1000,
+})
+
+const totalResourcesCount = totalResourcesData?.total || 0
+```
+
+**5. Plan Limit Checking**:
+```typescript
+// Get project to get teamId for organization plan
+const { project, isLoading: projectLoading } = useProject(projectId)
+
+// Get organization plan to check limits
+const { plan: organizationPlan, isLoading: planLoading } = useOrganizationPlan(project?.teamId)
+
+// Check if create button should be disabled
+const resourcesLimit = organizationPlan?.resources ?? 0
+const isCreateDisabled = resourcesLimit > 0 && totalResourcesCount >= resourcesLimit
+```
+
+**6. List View Pattern**:
+```typescript
+{viewMode === 'list' ? (
+  isLoading ? (
+    <div className="rounded-lg border border-border bg-card py-12 text-center">
+      <p className="text-[13px] text-muted-foreground">Loading resources...</p>
+    </div>
+  ) : paginatedResources.length > 0 ? (
+    <>
+      <div className="rounded-lg border border-border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[40px]">
+                <Checkbox
+                  checked={
+                    paginatedResources.length > 0 &&
+                    selectedItems.size === paginatedResources.length
+                  }
+                  onCheckedChange={toggleAllItems}
+                />
+              </TableHead>
+              <TableHead className="w-[180px]">Resource ID</TableHead>
+              <TableHead className="w-[200px]">Name</TableHead>
+              <TableHead className="w-[120px]">Created</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedResources.map((resource) => (
+              <TableRow
+                key={resource.$id}
+                className={cn(
+                  'cursor-pointer transition-colors',
+                  selectedItems.has(resource.$id)
+                    ? 'bg-sky-100 dark:bg-sky-950'
+                    : 'hover:bg-muted/50',
+                )}
+              >
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedItems.has(resource.$id)}
+                    onCheckedChange={() => toggleItem(resource.$id)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Link
+                    to="/projects/$projectId/service-name/$resourceId"
+                    params={{ projectId: projectId!, resourceId: resource.$id }}
+                    className="block"
+                  >
+                    <CopyableId id={resource.$id} size="xs" />
+                  </Link>
+                </TableCell>
+                {/* More cells... */}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={total}
+        pageSize={pageSize}
+        pageSizeOptions={[10, 25, 50, 100]}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        itemLabel="resources"
+      />
+    </>
+  ) : (
+    <EmptyState
+      icon={Icon}
+      title="No resources found"
+      description="Try adjusting your search"
+      isEmpty={!searchValue}
+      hasFilters={!!searchValue}
+      variant="card"
+    />
+  )
+) : (
+  // Grid view...
+)}
+```
+
+**7. Grid View Pattern**:
+```typescript
+{viewMode === 'grid' ? (
+  isLoading ? (
+    <div className="rounded-lg border border-border bg-card py-12 text-center">
+      <p className="text-[13px] text-muted-foreground">Loading resources...</p>
+    </div>
+  ) : paginatedResources.length > 0 ? (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {paginatedResources.map((resource) => (
+          <Link
+            key={resource.$id}
+            to="/projects/$projectId/service-name/$resourceId"
+            params={{ projectId, resourceId: resource.$id }}
+          >
+            <ResourceCard
+              title={resource.name}
+              resourceId={resource.$id}
+              icon={Icon}
+              iconColor="bg-muted text-muted-foreground"
+              status={resource.enabled === false ? 'error' : undefined}
+              statusLabel={resource.enabled === false ? 'Disabled' : undefined}
+              metadata={[
+                {
+                  label: 'Created',
+                  value: (
+                    <DateTooltip
+                      date={resource.$createdAt}
+                      className="text-[11px] font-medium text-muted-foreground"
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Link>
+        ))}
+      </div>
+      {!isLoading && paginatedResources.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={total}
+          pageSize={pageSize}
+          pageSizeOptions={[10, 25, 50, 100]}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(1)
+          }}
+          itemLabel="resources"
+        />
+      )}
+    </>
+  ) : (
+    <EmptyState
+      icon={Icon}
+      title="No resources found"
+      description="Create your first resource"
+      isEmpty={!searchValue}
+      hasFilters={!!searchValue}
+      variant="card"
+    />
+  )
+) : null}
+```
+
+**8. View Toggle Component**:
+```typescript
+const ViewToggle = () => (
+  <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
+    <Button
+      variant="ghost"
+      size="sm"
+      className={cn(
+        'h-7 w-7 p-0',
+        viewMode === 'list'
+          ? 'bg-background shadow-sm'
+          : 'hover:bg-transparent',
+      )}
+      onClick={() => setViewMode('list')}
+    >
+      <List className="h-4 w-4" />
+    </Button>
+    <Button
+      variant="ghost"
+      size="sm"
+      className={cn(
+        'h-7 w-7 p-0',
+        viewMode === 'grid'
+          ? 'bg-background shadow-sm'
+          : 'hover:bg-transparent',
+      )}
+      onClick={() => setViewMode('grid')}
+    >
+      <LayoutGrid className="h-4 w-4" />
+    </Button>
+  </div>
+)
+```
+
+**9. Bulk Delete Pattern**:
+```typescript
+// Bulk delete mutation
+const bulkDeleteMutation = useMutation({
+  mutationFn: async (itemIds: string[]) => {
+    if (!projectId) {
+      throw new Error('Project ID is required')
+    }
+    await Promise.all(
+      itemIds.map((itemId) => deleteResource(projectId, itemId)),
+    )
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ['resources', 'project', projectId],
+    })
+    toast.success(
+      `Successfully deleted ${selectedItems.size} resource${selectedItems.size > 1 ? 's' : ''}`,
+    )
+    setSelectedItems(new Set())
+    setDeleteDialogOpen(false)
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || 'Failed to delete resources')
+  },
+})
+
+// Bulk Delete Action Bar
+{selectedItems.size > 0 && (
+  <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+    <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+      <Badge variant="secondary" className="h-6 px-2.5">
+        {selectedItems.size} resource{selectedItems.size > 1 ? 's' : ''} selected
+      </Badge>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSelectedItems(new Set())}
+          className="h-8 text-xs"
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={handleBulkDelete}
+          disabled={bulkDeleteMutation.isPending}
+          className="h-8 gap-2"
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
+// Bulk Delete Confirmation Dialog
+<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+  <DialogContent className="sm:max-w-md p-0">
+    <DialogHeader className="px-6 pt-6 text-left">
+      <DialogTitle>Delete Resources</DialogTitle>
+      <DialogDescription className="text-[13px] mt-2">
+        Are you sure you want to delete {selectedItems.size} resource{selectedItems.size > 1 ? 's' : ''}? This action cannot be undone.
+      </DialogDescription>
+    </DialogHeader>
+    
+    <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <Button
+        variant="outline"
+        onClick={() => setDeleteDialogOpen(false)}
+        disabled={bulkDeleteMutation.isPending}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="destructive"
+        onClick={confirmBulkDelete}
+        disabled={bulkDeleteMutation.isPending}
+      >
+        Delete
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+```
+
+**10. Content Container**:
+```typescript
+<div className={cn(
+  "mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6",
+  (activeTab === 'settings' || activeTab === 'other-non-list-tab') && "pt-4 sm:pt-6"
+)}>
+  {/* Tab-specific content */}
+</div>
+```
+
+**11. Complete Page Structure Example**:
+
+To avoid inconsistent nesting of components or elements, follow this standard structure:
+
+```typescript
+// src/components/pages/projects/$projectId/storage/View.tsx
+export function StorageView() {
+  const { projectId } = useParams({ strict: false })
+  const location = useLocation()
+  const [searchValue, setSearchValue] = useState('')
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  // ... state management, data fetching, handlers ...
+
+  return (
+    <div className="flex h-full flex-col">
+      {/* ServiceHeader - Always at the top */}
+      <ServiceHeader
+        title="Storage"
+        searchPlaceholder="Search buckets..."
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        createLabel="Create bucket"
+        onCreate={() => setCreateDialogOpen(true)}
+        createDisabled={isCreateDisabled}
+        fullWidthBorder
+        rightContent={<ViewToggle />}
+        contentAfterBorder={
+          <PlanLimitWarning
+            currentCount={totalBucketsCount}
+            limit={bucketsLimit}
+            planName={organizationPlan?.name}
+            resourceName="buckets"
+            orgId={project?.teamId}
+            isLoading={projectLoading || planLoading || totalBucketsLoading}
+          />
+        }
+      />
+
+      {/* Content Container - Always use this structure */}
+      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+        {/* Conditional rendering based on view mode */}
+        {viewMode === 'list' ? (
+          // List view content
+          isLoading ? (
+            <div className="rounded-lg border border-border bg-card py-12 text-center">
+              <p className="text-[13px] text-muted-foreground">Loading buckets...</p>
+            </div>
+          ) : paginatedBuckets.length > 0 ? (
+            <>
+              <div className="rounded-lg border border-border bg-card">
+                <Table>
+                  {/* Table content */}
+                </Table>
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={bucketsTotal}
+                pageSize={pageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                itemLabel="buckets"
+              />
+            </>
+          ) : (
+            <EmptyState
+              icon={HardDrive}
+              title="No buckets found"
+              description="Create your first bucket to start storing files"
+              isEmpty={!searchValue}
+              hasFilters={!!searchValue}
+              variant="card"
+            />
+          )
+        ) : (
+          // Grid view content
+          <>
+            {isLoading ? (
+              <div className="rounded-lg border border-border bg-card py-12 text-center">
+                <p className="text-[13px] text-muted-foreground">Loading buckets...</p>
+              </div>
+            ) : paginatedBuckets.length > 0 ? (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {paginatedBuckets.map((bucket) => (
+                    <Link
+                      key={bucket.$id}
+                      to="/projects/$projectId/storage/$bucketId/"
+                      params={{ projectId, bucketId: bucket.$id }}
+                    >
+                      <ResourceCard
+                        title={bucket.name}
+                        resourceId={bucket.$id}
+                        icon={HardDrive}
+                        iconColor="bg-muted text-muted-foreground"
+                        metadata={[...]}
+                      />
+                    </Link>
+                  ))}
+                </div>
+                {!isLoading && paginatedBuckets.length > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={bucketsTotal}
+                    pageSize={pageSize}
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={(size) => {
+                      setPageSize(size)
+                      setCurrentPage(1)
+                    }}
+                    itemLabel="buckets"
+                  />
+                )}
+              </>
+            ) : (
+              <EmptyState
+                icon={HardDrive}
+                title="No buckets found"
+                description="Create your first bucket to start storing files"
+                isEmpty={!searchValue}
+                hasFilters={!!searchValue}
+                variant="card"
+              />
+            )}
+          </>
+        )}
+
+        {/* Bulk Delete Action Bar - Fixed position at bottom */}
+        {selectedItems.size > 0 && (
+          <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+            <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+              {/* Action bar content */}
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          {/* Dialog content */}
+        </Dialog>
+      </div>
+
+      {/* Create Dialog - Outside content container */}
+      <CreateBucketDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateBucketDialogOpen}
+        onCreate={(data) => createBucketMutation.mutate(data)}
+        isLoading={createBucketMutation.isPending}
+      />
+    </div>
+  )
+}
+```
+
+**Key Structure Rules:**
+
+1. **Outer Container**: Always use `<div className="flex h-full flex-col">` as the root
+2. **ServiceHeader**: Always at the top, outside content container
+3. **Content Container**: Use consistent padding and max-width:
+   ```typescript
+   <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+   ```
+4. **Conditional Rendering**: Use ternary operators for loading/empty/data states
+5. **Dialogs**: Place at the end, outside the content container
+6. **Fixed Elements**: Action bars use `fixed` positioning with proper z-index
+7. **Nesting**: Keep nesting consistent - don't add extra wrapper divs
+8. **Spacing**: Use consistent gap classes (`gap-3` for grids, `gap-2` for flex items)
+
+**❌ WRONG: Inconsistent Nesting**
+```typescript
+// ❌ DON'T: Add extra wrapper divs
+<div className="flex h-full flex-col">
+  <ServiceHeader />
+  <div className="container">
+    <div className="wrapper">
+      <div className="content">
+        {/* Content */}
+      </div>
+    </div>
+  </div>
+</div>
+
+// ❌ DON'T: Mix different container patterns
+<div className="max-w-7xl mx-auto">
+  <div className="px-6">
+    {/* Inconsistent with other views */}
+  </div>
+</div>
+```
+
+**✅ CORRECT: Standard Structure**
+```typescript
+// ✅ DO: Use the standard structure
+<div className="flex h-full flex-col">
+  <ServiceHeader />
+  <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+    {/* Content */}
+  </div>
+  <Dialog />
+</div>
+```
+
+### Required Features
+
+1. **Route-based tab navigation** - Tabs use Link components with route paths
+2. **Search functionality** - Search input in ServiceHeader, clears on tab change
+3. **Pagination** - 1-indexed for UI, 0-indexed for API calls
+4. **List/Grid view toggle** - Optional, shown in rightContent of ServiceHeader
+5. **Bulk selection** - Checkboxes for selecting multiple items
+6. **Bulk delete** - Action bar and confirmation dialog
+7. **Plan limit warnings** - Show PlanLimitWarning component when applicable
+8. **Empty states** - Different states for empty vs. no search results
+9. **Loading states** - Show loading message while fetching
+10. **Error handling** - Handle errors gracefully with user feedback
+
+### Optional Features
+
+1. **Filters** - Use `showFilters` prop on ServiceHeader
+2. **Real-time updates** - Subscribe to realtime events for live updates
+3. **Detail routes** - Create detail views for individual resources
+4. **Custom alerts** - Use `contentAfterBorder` for service-specific alerts
+5. **View mode persistence** - Store view mode preference in localStorage
+
+### File Organization
+
+```
+components/pages/projects/$projectId/[service-name]/
+├── View.tsx              # Main view component
+├── CreateDialog.tsx      # Create resource dialog
+├── [tab-name].tsx        # Tab-specific components (if complex)
+└── [resource-id]/
+    └── View.tsx          # Detail view for individual resource
+```
+
+### Example Route Structure
+
+```
+/projects/$projectId/service-name/              # Main tab (default)
+/projects/$projectId/service-name/other-tab    # Other tab
+/projects/$projectId/service-name/$resourceId   # Resource detail
+```
+
+### Best Practices
+
+1. **Always use Models types** - Import and use `Models.*` from `@appwrite.io/console`
+2. **Extract query functions** - Follow React Query patterns for hooks and route loaders
+3. **Prefetch at route level** - All crucial HTTP calls must be prefetched in route loaders to prevent layout shifts
+4. **Consistent page structure** - Follow the standard page structure pattern to avoid inconsistent nesting
+5. **Consistent spacing** - Use the same padding/margin patterns as other service views
+6. **Accessible** - Ensure proper ARIA labels and keyboard navigation
+7. **Responsive** - Test on mobile and desktop viewports
+8. **Performance** - Use pagination, avoid loading all resources at once
+9. **Error boundaries** - Handle API errors gracefully with user-friendly messages
