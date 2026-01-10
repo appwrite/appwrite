@@ -246,14 +246,14 @@
   "emails.otpSession.securityPhrase": "Die veiligheidsfrase vir hierdie e-pos is {{phrase}}. Jy kan hierdie e-pos vertrou as hierdie frase ooreenstem met die frase wat gewys is tydens aanmelding.",
   "emails.otpSession.thanks": "Dankie,",
   "emails.otpSession.signature": "{{project}} span",
-  "emails.sessionAlert.subject": "{{project}} Session Alert",
-  "emails.sessionAlert.hello": "Hello,",
-  "emails.sessionAlert.body": "We detected a new session on your {{project}} account. If this wasn't you, you can safely ignore this email.",
-  "emails.sessionAlert.listDevice": "Device: {{device}}",
-  "emails.sessionAlert.listIpAddress": "IP Address: {{ipAddress}}",
-  "emails.sessionAlert.listCountry": "Country: {{country}}",
-  "emails.sessionAlert.footer": "If you did not initiate this session, you can safely ignore this email.",
+  "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+  "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+  "emails.sessionAlert.hello": "Hello {{user}},",
+  "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+  "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+  "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+  "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+  "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
   "emails.sessionAlert.thanks": "Thanks,",
-  "emails.sessionAlert.signature": "{{project}} team",
-  "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC."
+  "emails.sessionAlert.signature": "{{project}} team"
 }
