@@ -2,21 +2,17 @@
 
 namespace Appwrite\Tests;
 
-use PHPUnit\Runner\AfterTestHook;
+use PHPUnit\Runner\Extension\Extension;
+use PHPUnit\Runner\Extension\Facade;
+use PHPUnit\Runner\Extension\ParameterCollection;
+use PHPUnit\TextUI\Configuration\Configuration;
 
-class TestHook implements AfterTestHook
+class TestHook implements Extension
 {
     protected const MAX_SECONDS_ALLOWED = 15;
-    public function executeAfterTest(string $test, float $time): void
-    {
-        printf(
-            "%s ended in %s milliseconds\n",
-            $test,
-            $time * 1000
-        );
 
-        if ($time > self::MAX_SECONDS_ALLOWED) {
-            fwrite(STDOUT, sprintf("\e[31mThe %s test is slow, it took %s seconds!\n\e[0m", $test, $time));
-        }
+    public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
+    {
+        $facade->registerSubscriber(new TestFinishedSubscriber(self::MAX_SECONDS_ALLOWED));
     }
 }
