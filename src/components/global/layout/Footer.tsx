@@ -30,7 +30,7 @@ export function ConsoleFooter() {
         <div className="flex flex-col items-center justify-between gap-3 @[640px]:flex-row">
           {/* Left section: Copyright and Status */}
           <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] text-muted-foreground @[640px]:justify-start">
-            <span>© {currentYear} Appwrite. All rights reserved.</span>
+            <span>© {currentYear} Appwrite®. All rights reserved.</span>
             <Badge
               variant="outline"
               className="border-emerald-500/30 bg-emerald-500/10 text-[11px] text-emerald-600 dark:text-emerald-400"
