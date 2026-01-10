@@ -290,6 +290,7 @@ class Exception extends \Exception
     public const string PROJECT_INVALID_FAILURE_URL = 'project_invalid_failure_url';
     public const string PROJECT_RESERVED_PROJECT = 'project_reserved_project';
     public const string PROJECT_KEY_EXPIRED = 'project_key_expired';
+    public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
 

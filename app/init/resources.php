@@ -451,15 +451,12 @@ App::setResource('user', function (string $mode, Document $project, Document $co
             );
 
             if (!empty($key)) {
-                $expired = false;
                 $expire = $key->getAttribute('expire');
                 if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-                    $expired = true;
+                    throw new Exception(Exception::ACCOUNT_KEY_EXPIRED);
                 }
 
-                if (!$expired) {
-                    $user = $accountKeyUser;
-                }
+                $user = $accountKeyUser;
             }
         }
     }

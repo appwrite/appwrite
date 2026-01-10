@@ -1074,6 +1074,11 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::ACCOUNT_KEY_EXPIRED => [
+        'name' => Exception::ACCOUNT_KEY_EXPIRED,
+        'description' => 'The account key has expired. Please generate a new key using the Appwrite console.',
+        'code' => 401,
+    ],
     Exception::ROUTER_HOST_NOT_FOUND => [
         'name' => Exception::ROUTER_HOST_NOT_FOUND,
         'description' => 'Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again.',
