@@ -86,7 +86,7 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
     "@types/bun": "^1.2.22",
-    "@types/node": "22.10.2",
+    "@types/node": "^22.12.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
