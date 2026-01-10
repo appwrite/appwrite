@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Databases\Transactions;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -11,6 +12,7 @@ use Utopia\Database\Helpers\Role;
 trait TransactionPermissionsBase
 {
     use DatabasesUrlHelpers;
+    use SchemaPolling;
 
     protected string $permissionsDatabase;
 
@@ -68,7 +70,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -134,7 +136,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create a document first with API key
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
@@ -208,7 +210,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -281,7 +283,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create a document with update permission at document level
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
@@ -360,7 +362,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create a document with delete permission at document level
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
@@ -441,7 +443,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -510,7 +512,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -580,7 +582,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -643,7 +645,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -706,7 +708,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -1043,7 +1045,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
 
         // Create user 1 (fresh) and their transaction
         $user1 = $this->getUser(true);

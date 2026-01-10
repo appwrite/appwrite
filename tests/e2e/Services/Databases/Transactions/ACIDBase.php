@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Databases\Transactions;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\SchemaPolling;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -10,6 +11,7 @@ use Utopia\Database\Helpers\Role;
 
 trait ACIDBase
 {
+    use SchemaPolling;
     /**
      * Test atomicity - all operations succeed or all fail
      */
@@ -56,6 +58,8 @@ trait ACIDBase
             'required' => true,
         ]);
 
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
         // Add unique index
         $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -64,10 +68,10 @@ trait ACIDBase
         ]), [
             'key' => 'unique_email',
             'type' => Database::INDEX_UNIQUE,
-            'attributes' => ['email']
+            $this->getIndexAttributesParam() => ['email']
         ]);
 
-        sleep(3);
+        $this->waitForIndex($databaseId, $collectionId, 'unique_email');
 
         // Create first document outside transaction
         $doc1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -161,7 +165,7 @@ trait ACIDBase
             ], $this->getHeaders()));
 
             $this->assertEquals(1, $documents['body']['total']); // Only the original document
-            $this->assertEquals('existing@example.com', $documents['body']['documents'][0]['email']);
+            $this->assertEquals('existing@example.com', $documents['body'][$this->getRecordResource()][0]['email']);
         }
     }
 
@@ -223,7 +227,7 @@ trait ACIDBase
             'max' => 100
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -344,7 +348,7 @@ trait ACIDBase
             'max' => 1000000
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create initial document with counter
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -501,7 +505,7 @@ trait ACIDBase
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create and commit transaction with multiple operations
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([

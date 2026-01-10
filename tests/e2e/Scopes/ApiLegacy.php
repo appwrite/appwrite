@@ -68,6 +68,11 @@ trait ApiLegacy
         return '$collectionId';
     }
 
+    protected function getOppositeContainerIdResponseKey(): string
+    {
+        return '$tableId';
+    }
+
     protected function getIndexAttributesParam(): string
     {
         return 'attributes';

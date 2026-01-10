@@ -68,6 +68,11 @@ trait ApiTablesDB
         return '$tableId';
     }
 
+    protected function getOppositeContainerIdResponseKey(): string
+    {
+        return '$collectionId';
+    }
+
     protected function getIndexAttributesParam(): string
     {
         return 'columns';

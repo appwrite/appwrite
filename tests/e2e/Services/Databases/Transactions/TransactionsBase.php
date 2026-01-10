@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Databases\Transactions;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\SchemaPolling;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -11,6 +12,7 @@ use Utopia\Database\Query;
 
 trait TransactionsBase
 {
+    use SchemaPolling;
     /**
      * Test creating a transaction
      */
@@ -145,7 +147,7 @@ trait TransactionsBase
         $this->assertEquals(202, $attribute['headers']['status-code']);
 
         // Wait for attribute to be created
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Add valid operations
         $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
@@ -289,7 +291,7 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -440,7 +442,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Add operations
         $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
@@ -530,7 +532,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction with minimum TTL (60 seconds)
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -620,7 +622,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -743,7 +745,7 @@ trait TransactionsBase
             'max' => 1000000,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create initial document
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -880,7 +882,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create document
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -995,7 +997,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create some initial documents
         for ($i = 1; $i <= 5; $i++) {
@@ -1149,7 +1151,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create unique index on email
         $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId, null), array_merge([
@@ -1162,7 +1164,7 @@ trait TransactionsBase
             $this->getIndexAttributesParam() => ['email'],
         ]);
 
-        sleep(2);
+        $this->waitForIndex($databaseId, $collectionId, 'unique_email');
 
         // Create an existing document
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -1283,7 +1285,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Test double commit
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -1407,7 +1409,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -1519,7 +1521,7 @@ trait TransactionsBase
             $this->assertEquals(202, $response['headers']['status-code']);
         }
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -1641,7 +1643,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create document outside transaction
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -1768,7 +1770,7 @@ trait TransactionsBase
             'max' => 10000,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -1884,7 +1886,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create document outside transaction
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -1998,7 +2000,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -2142,7 +2144,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create documents for bulk testing
         for ($i = 1; $i <= 3; $i++) {
@@ -2267,7 +2269,7 @@ trait TransactionsBase
             'max' => 10000,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create one document outside transaction
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -2412,7 +2414,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create documents for bulk testing
         for ($i = 1; $i <= 3; $i++) {
@@ -2547,7 +2549,7 @@ trait TransactionsBase
             'max' => 10,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create an existing document outside transaction for testing
         $existingDoc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -2806,7 +2808,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -2966,7 +2968,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(3); // Wait for attributes to be created
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create some existing documents
         for ($i = 1; $i <= 3; $i++) {
@@ -3147,7 +3149,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(3); // Wait for attributes to be created
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create existing documents
         for ($i = 1; $i <= 4; $i++) {
@@ -3312,7 +3314,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(3); // Wait for attributes to be created
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create existing documents
         for ($i = 1; $i <= 3; $i++) {
@@ -3474,7 +3476,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        sleep(3); // Wait for attributes to be created
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create existing documents
         for ($i = 1; $i <= 5; $i++) {
@@ -3631,7 +3633,7 @@ trait TransactionsBase
             'default' => 100,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create initial document
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -3780,7 +3782,7 @@ trait TransactionsBase
             'default' => 0,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create initial documents
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -3826,6 +3828,7 @@ trait TransactionsBase
         // Test: Response should return the correct container ID key for this API
         $this->assertEquals(200, $decrementResponse['headers']['status-code']);
         $this->assertArrayHasKey($this->getContainerIdResponseKey(), $decrementResponse['body'], 'Response should contain ' . $this->getContainerIdResponseKey());
+        $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $decrementResponse['body'], 'Response should not contain ' . $this->getOppositeContainerIdResponseKey());
         $this->assertEquals($collectionId, $decrementResponse['body'][$this->getContainerIdResponseKey()]);
         $this->assertEquals($databaseId, $decrementResponse['body']['$databaseId']);
 
@@ -3845,10 +3848,11 @@ trait TransactionsBase
 
         $this->assertEquals(200, $incrementResponse['headers']['status-code']);
         $this->assertArrayHasKey($this->getContainerIdResponseKey(), $incrementResponse['body'], 'Response should contain ' . $this->getContainerIdResponseKey());
+        $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $incrementResponse['body'], 'Response should not contain ' . $this->getOppositeContainerIdResponseKey());
         $this->assertEquals($collectionId, $incrementResponse['body'][$this->getContainerIdResponseKey()]);
         $this->assertEquals($databaseId, $incrementResponse['body']['$databaseId']);
 
-        // Commit transaction - this will fail if transaction log has 'column' instead of 'attribute'
+        // Commit transaction - this will fail if transaction log has wrong schema param
         $commitResponse = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3930,7 +3934,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create initial documents
         for ($i = 1; $i <= 5; $i++) {
@@ -4071,7 +4075,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create some initial documents
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -4230,7 +4234,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create initial documents
         for ($i = 1; $i <= 10; $i++) {
@@ -4363,7 +4367,7 @@ trait TransactionsBase
         $this->assertEquals(202, $attribute['headers']['status-code']);
 
         // Wait for attribute to be ready
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -4429,7 +4433,25 @@ trait TransactionsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Test 4: Missing documentId for create operation
+        // Test 4: Missing required containerId field
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => ['name' => 'Test']
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 5: Missing recordId for create operation
         $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4503,7 +4525,87 @@ trait TransactionsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Test 8: Empty operations array
+        // Test 8: BulkUpdate with invalid query format
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'bulkUpdate',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'data' => [
+                        'queries' => 'not an array',
+                        'data' => ['name' => 'Updated']
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 9: BulkDelete with missing queries
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'bulkDelete',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'data' => []
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 10: Increment with missing attribute
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'increment',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => ['value' => 1]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 11: Decrement with invalid value type
+        $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'action' => 'decrement',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => [
+                        $this->getSchemaParam() => 'counter',
+                        'value' => 'not a number'
+                    ]
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Test 12: Empty operations array
         $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4514,7 +4616,7 @@ trait TransactionsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        // Test 9: Operations not an array
+        // Test 13: Operations not an array
         $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4719,7 +4821,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create initial row
         $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), array_merge([
@@ -4845,7 +4947,7 @@ trait TransactionsBase
             'default' => 0,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create initial row
         $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), array_merge([
@@ -4952,7 +5054,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -5062,7 +5164,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
             'content-type' => 'application/json',
@@ -5166,7 +5268,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
             'content-type' => 'application/json',
@@ -5284,7 +5386,7 @@ trait TransactionsBase
             'required' => false,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
             'content-type' => 'application/json',
@@ -5411,7 +5513,7 @@ trait TransactionsBase
             'max' => 10000,
         ]);
 
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -5545,7 +5647,7 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(202, $column['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create initial row with some items
         $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), array_merge([
@@ -5671,7 +5773,7 @@ trait TransactionsBase
         ]);
 
         $this->assertEquals(202, $column['headers']['status-code']);
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create initial row
         $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), array_merge([
@@ -5808,7 +5910,7 @@ trait TransactionsBase
             $this->assertEquals(202, $column['headers']['status-code']);
         }
 
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create initial row
         $row = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tableId), array_merge([
