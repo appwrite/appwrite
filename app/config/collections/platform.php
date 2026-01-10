@@ -330,7 +330,18 @@ $platformCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
-            ]
+            ],
+            [
+                '$id' => ID::custom('labels'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => true,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -622,6 +633,17 @@ $platformCollections = [
         'name' => 'keys',
         'attributes' => [
             [
+                '$id' => ID::custom('resourceType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -642,17 +664,6 @@ $platformCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('resourceType'), // projects, teams, users
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => []
             ],
             [
                 '$id' => ID::custom('name'),
@@ -730,7 +741,7 @@ $platformCollections = [
                 'orders' => [],
             ],
             [
-                '$id' => '_key_accessedAt',
+                '$id' => ID::custom('_key_accessedAt'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
                 'lengths' => [],
@@ -1373,21 +1384,21 @@ $platformCollections = [
                 '$id' => '_key_type',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['type'],
-                'lengths' => [32],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_trigger',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['trigger'],
-                'lengths' => [32],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_deploymentResourceType',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['deploymentResourceType'],
-                'lengths' => [32],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -1429,20 +1440,20 @@ $platformCollections = [
                 '$id' => ID::custom('_key_owner'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['owner'],
-                'lengths' => [16],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_region'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['region'],
-                'lengths' => [16],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_piid_riid_rt'),
+                '$id' => ID::custom('_key_piid_diid_drt'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId', 'deploymentInternalId', 'deploymentResourceType'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => '_key_region_status_createdAt',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['region', 'status', '$createdAt'],
                 'lengths' => [],
                 'orders' => [],
             ],
