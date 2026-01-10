@@ -431,8 +431,6 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $clone = clone $team;
-
         // Sync delete
         $deletes = new Deletes();
         $deletes->deleteMemberships($getProjectDB, $clone, $project);

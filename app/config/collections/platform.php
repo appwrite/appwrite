@@ -726,8 +726,8 @@ $platformCollections = [
                 '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType', 'resourceInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'lengths' => [],
+                'orders' => [],
             ],
             [
                 '$id' => '_key_accessedAt',
