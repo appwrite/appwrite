@@ -781,7 +781,6 @@ export function BucketDetailView() {
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
                     itemLabel="files"
-                    className="mt-4 border-t border-border bg-card"
                   />
                 )}
 

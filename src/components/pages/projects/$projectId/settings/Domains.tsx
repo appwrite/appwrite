@@ -256,7 +256,6 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
                 setCurrentPage(1)
               }}
               itemLabel="domains"
-              className="border-t border-border bg-card"
             />
           )}
         </>

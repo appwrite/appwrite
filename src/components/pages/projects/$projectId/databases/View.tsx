@@ -549,7 +549,6 @@ export function DatabasesListView() {
                   onPageChange={handlePageChange}
                   onPageSizeChange={handlePageSizeChange}
                   itemLabel="databases"
-                  className="mt-4 border-t border-border bg-card"
                 />
               </>
             )}
@@ -4322,7 +4321,6 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
               itemLabel="rows"
-              className="mt-0 px-0 border-t-0"
             />
           </div>
           <div className="flex-shrink-0">

@@ -431,7 +431,6 @@ export function FunctionsView() {
                 setCurrentPage(0)
               }}
               itemLabel="functions"
-              className="mt-4 border-t border-border bg-card"
             />
           </>
             )}

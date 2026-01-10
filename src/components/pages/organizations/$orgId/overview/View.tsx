@@ -1276,16 +1276,14 @@ export function OrgOverview({ tab: tabProp }: OrgOverviewProps) {
 
                     {/* Pagination for Active Projects */}
                     {activeProjectsTotal > PROJECTS_PER_PAGE && (
-                      <div className="mt-6">
-                        <Pagination
-                          currentPage={activeProjectsPage + 1}
-                          totalItems={activeProjectsTotal}
-                          pageSize={PROJECTS_PER_PAGE}
-                          onPageChange={(page: number) => setActiveProjectsPage(page - 1)}
-                          onPageSizeChange={() => {}} // Page size is fixed
-                          itemLabel="projects"
-                        />
-                      </div>
+                      <Pagination
+                        currentPage={activeProjectsPage + 1}
+                        totalItems={activeProjectsTotal}
+                        pageSize={PROJECTS_PER_PAGE}
+                        onPageChange={(page: number) => setActiveProjectsPage(page - 1)}
+                        onPageSizeChange={() => {}} // Page size is fixed
+                        itemLabel="projects"
+                      />
                     )}
 
                 {/* Enterprise Success Manager - Only show if plan supports it */}
@@ -1544,16 +1542,14 @@ export function OrgOverview({ tab: tabProp }: OrgOverviewProps) {
 
                         {/* Pagination for Memberships */}
                         {membershipsTotal > MEMBERSHIPS_PER_PAGE && (
-                          <div className="mt-6">
-                            <Pagination
-                              currentPage={activeMembershipsPage + 1}
-                              totalItems={membershipsTotal}
-                              pageSize={MEMBERSHIPS_PER_PAGE}
-                              onPageChange={(page: number) => setActiveMembershipsPage(page - 1)}
-                              onPageSizeChange={() => {}} // Page size is fixed
-                              itemLabel="members"
-                            />
-                          </div>
+                          <Pagination
+                            currentPage={activeMembershipsPage + 1}
+                            totalItems={membershipsTotal}
+                            pageSize={MEMBERSHIPS_PER_PAGE}
+                            onPageChange={(page: number) => setActiveMembershipsPage(page - 1)}
+                            onPageSizeChange={() => {}} // Page size is fixed
+                            itemLabel="members"
+                          />
                         )}
                       </>
                     ) : (

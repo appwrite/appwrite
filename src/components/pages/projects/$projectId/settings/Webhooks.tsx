@@ -160,7 +160,6 @@ export function Webhooks({ projectId, searchValue: searchValueProp = '' }: Webho
                 setCurrentPage(1)
               }}
               itemLabel="webhooks"
-              className="border-t border-border bg-card"
             />
           )}
         </>

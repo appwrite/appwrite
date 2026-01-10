@@ -293,8 +293,12 @@ export function TeamMembers() {
           {totalPages > 1 && (
             <Pagination
               currentPage={page}
-              totalPages={totalPages}
+              totalItems={total}
+              pageSize={MEMBERSHIPS_PER_PAGE}
+              pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={setPage}
+              onPageSizeChange={() => {}}
+              itemLabel="members"
             />
           )}
         </>

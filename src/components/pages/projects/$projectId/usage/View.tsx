@@ -491,7 +491,7 @@ export function UsageView({ plan = 'pro', className }: UsageViewProps) {
         {/* Header */}
         <div className="border-b border-border">
           <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h1 className="text-[17px] font-semibold text-foreground">
                   Usage

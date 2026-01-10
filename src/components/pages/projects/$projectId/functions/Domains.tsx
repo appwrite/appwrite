@@ -175,7 +175,6 @@ export function FunctionDomains() {
                 setCurrentPage(0)
               }}
               itemLabel="domains"
-              className="border-t border-border bg-card"
             />
           </>
         ) : (

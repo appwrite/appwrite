@@ -131,7 +131,7 @@ export function Pagination({
       )}
     >
       {/* Left side - Total count and page size selector */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-3 min-w-0 mt-2">
         {showTotal && (
           <span className="hidden @[600px]:inline whitespace-nowrap">
             {totalItems === 0
@@ -146,7 +146,7 @@ export function Pagination({
             value={pageSize.toString()}
             onValueChange={handlePageSizeChange}
           >
-            <SelectTrigger className="h-7 w-[70px] text-[12px]">
+            <SelectTrigger className="h-6 w-[70px] text-[12px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

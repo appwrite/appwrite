@@ -1061,12 +1061,12 @@ export function TemplatesView() {
               setTemplatesPage(0) // Reset to first page (0-indexed)
             }}
             itemLabel="templates"
-            className="mt-4 border-t border-border bg-card"
+            className="mt-2"
           />
 
           {/* Partners Callout Card */}
           <div className="mt-6 rounded-lg border border-border bg-gradient-to-br from-card via-card to-muted/30 p-6 transition-all hover:border-border hover:shadow-lg">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 flex-1">
                 <h3 className="mb-1 text-[15px] font-semibold text-foreground">
                   Become a Technology Partner

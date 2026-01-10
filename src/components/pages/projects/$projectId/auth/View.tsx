@@ -762,7 +762,7 @@ export function AuthView() {
                 </div>
               )
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {paginatedUsers.map((user) => {
                     const verification = getUserVerificationStatus(user)
@@ -999,7 +999,7 @@ export function AuthView() {
                 </div>
               )
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {paginatedTeams.map((team) => (
                     <Link

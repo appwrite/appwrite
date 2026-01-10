@@ -481,7 +481,6 @@ export function StorageView() {
                   setCurrentPage(1)
                 }}
                 itemLabel="buckets"
-                className="mt-4 border-t border-border bg-card"
               />
             )}
           </>

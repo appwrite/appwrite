@@ -399,7 +399,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
       <div>
         {/* Title Row */}
         <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
             {/* Left: Title */}
             <div className="flex items-center gap-3">
               <h1 className="text-[17px] font-semibold text-foreground">
