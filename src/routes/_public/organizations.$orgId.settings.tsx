@@ -1,6 +1,4 @@
-import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
 import { createFileRoute } from '@tanstack/react-router'
-import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { fetchOrganizations } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
@@ -19,15 +17,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
   },
-  component: OrgOverviewPage,
+  component: SettingsPage,
 })
 
-function OrgOverviewPage() {
-  const { orgId } = Route.useParams()
-  return (
-    <RequireAuth>
-      <OrgOverview key={`org-${orgId}-settings`} />
-    </RequireAuth>
-  )
+// This route doesn't need to render anything - parent OrgOverview handles the content
+function SettingsPage() {
+  return null
 }
 

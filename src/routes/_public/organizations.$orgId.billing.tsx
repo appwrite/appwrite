@@ -1,6 +1,4 @@
-import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
 import { createFileRoute } from '@tanstack/react-router'
-import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { fetchOrganizations, fetchOrganizationInvoices } from '@/lib/react-query/hooks'
 
 const INVOICES_PER_PAGE = 5
@@ -32,14 +30,10 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
       })
     }
   },
-  component: OrgOverviewPage,
+  component: BillingPage,
 })
 
-function OrgOverviewPage() {
-  const { orgId } = Route.useParams()
-  return (
-    <RequireAuth>
-      <OrgOverview key={`org-${orgId}-billing`} />
-    </RequireAuth>
-  )
+// This route doesn't need to render anything - parent OrgOverview handles the content
+function BillingPage() {
+  return null
 }

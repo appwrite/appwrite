@@ -1,9 +1,6 @@
-import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
 import { createFileRoute } from '@tanstack/react-router'
-import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import { fetchOrganizationMemberships, fetchOrganizations, fetchActiveProjects } from '@/lib/react-query/hooks'
+import { fetchOrganizationMemberships, fetchOrganizations } from '@/lib/react-query/hooks'
 
-const PROJECTS_PER_PAGE = 25
 const MEMBERSHIPS_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/organizations/$orgId/members')({
@@ -32,15 +29,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId/members')({
       })
     }
   },
-  component: OrgOverviewPage,
+  component: MembersPage,
 })
 
-function OrgOverviewPage() {
-  const { orgId } = Route.useParams()
-  return (
-    <RequireAuth>
-      <OrgOverview key={`org-${orgId}-members`} />
-    </RequireAuth>
-  )
+// This route doesn't need to render anything - parent OrgOverview handles the content
+function MembersPage() {
+  return null
 }
 

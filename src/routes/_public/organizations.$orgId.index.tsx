@@ -1,6 +1,4 @@
-import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
 import { createFileRoute } from '@tanstack/react-router'
-import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { fetchOrganizationMemberships, fetchOrganizations, fetchActiveProjects, fetchOrganizationPlan } from '@/lib/react-query/hooks'
 
 const PROJECTS_PER_PAGE = 25
@@ -54,15 +52,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
       })
     }
   },
-  component: OrgOverviewPage,
+  component: OrgOverviewIndexPage,
 })
 
-function OrgOverviewPage() {
-  const { orgId } = Route.useParams()
-  return (
-    <RequireAuth>
-      <OrgOverview key={`org-${orgId}-projects-index`} />
-    </RequireAuth>
-  )
+// Index route doesn't need to render anything - parent OrgOverview handles the content
+function OrgOverviewIndexPage() {
+  return null
 }
 

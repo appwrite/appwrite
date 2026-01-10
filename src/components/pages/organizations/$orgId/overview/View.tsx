@@ -1,4 +1,4 @@
-import { Link, useParams, useNavigate, useLocation, useSearch } from '@tanstack/react-router'
+import { Link, useParams, useNavigate, useLocation, useSearch, Outlet } from '@tanstack/react-router'
 import {
   Plus,
   Globe,
@@ -86,6 +86,7 @@ import { formatDate } from '@/lib/date-utils'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
+import { DomainsView } from '../domains/View'
 import { ConsoleFooter } from '@/components/global/layout/Footer'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -179,9 +180,10 @@ function ProjectCardFooter({
 
 interface OrgOverviewProps {
   tab?: 'projects' | 'members' | 'domains' | 'billing' | 'settings'
+  children?: React.ReactNode
 }
 
-export function OrgOverview({ tab: tabProp }: OrgOverviewProps) {
+export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const { orgId } = useParams({ from: '/_public/organizations/$orgId' })
@@ -190,9 +192,50 @@ export function OrgOverview({ tab: tabProp }: OrgOverviewProps) {
   const search = useSearch({ strict: false })
   const [searchQuery, setSearchQuery] = useState('')
   
+  // Check if we're on a detail route (e.g., /organizations/:orgId/domains/:domainId)
+  const isDetailRoute = useMemo(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const orgIndex = pathParts.findIndex(part => part === 'organizations')
+    
+    if (orgIndex >= 0) {
+      // Check if we're on a detail route (has an ID after a tab)
+      // Pattern: ['organizations', 'orgId', 'tab', 'detailId']
+      if (pathParts[orgIndex + 3]) {
+        const tab = pathParts[orgIndex + 2]
+        const detailId = pathParts[orgIndex + 3]
+        // If the detailId looks like an ID (long alphanumeric), we're on a detail route
+        if (detailId && detailId.length > 10 && ['domains'].includes(tab)) {
+          return true
+        }
+      }
+    }
+    return false
+  }, [location.pathname])
+
+  // Check if we should render children (domains list) vs tab content
+  const shouldRenderChildren = useMemo(() => {
+    // Only render children for domains route (not domain detail)
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const orgIndex = pathParts.findIndex(part => part === 'organizations')
+    
+    if (orgIndex >= 0) {
+      const tab = pathParts[orgIndex + 2]
+      // Only domains route should render children (DomainsView)
+      // Other routes (index, members, billing, settings) render tab content
+      return tab === 'domains' && !isDetailRoute
+    }
+    
+    return false
+  }, [location.pathname, isDetailRoute])
+
   // Derive active tab from pathname if prop is not provided
   const activeTab = useMemo(() => {
     if (tabProp) return tabProp
+    
+    // If we're on a detail route, don't set active tab (let child route handle it)
+    if (isDetailRoute) {
+      return null
+    }
     
     // Extract tab from pathname
     // Pattern: /organizations/:orgId or /organizations/:orgId/:tab
@@ -212,7 +255,7 @@ export function OrgOverview({ tab: tabProp }: OrgOverviewProps) {
     
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
-  }, [tabProp, location.pathname])
+  }, [tabProp, location.pathname, isDetailRoute])
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -1137,7 +1180,12 @@ export function OrgOverview({ tab: tabProp }: OrgOverviewProps) {
         {/* Main Content */}
         <main className="flex-1">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-            {activeTab === 'projects' && (
+            {/* Render child routes (domains list) when on domains route */}
+            {shouldRenderChildren && children ? (
+              <div className="h-full">{children}</div>
+            ) : (
+              <>
+                {activeTab === 'projects' && (
               <>
                 {/* Error State */}
                 {activeProjectsError && (
@@ -1942,18 +1990,8 @@ export function OrgOverview({ tab: tabProp }: OrgOverviewProps) {
 
             {activeTab === 'billing' && <BillingTab />}
 
-            {activeTab === 'domains' && (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                  <Globe className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-[15px] font-medium text-foreground">
-                  Custom Domains
-                </h3>
-                <p className="mt-1 text-[13px] text-muted-foreground">
-                  Manage custom domains for your organization's projects
-                </p>
-              </div>
+            {activeTab === 'domains' && <DomainsView />}
+              </>
             )}
           </div>
         </main>

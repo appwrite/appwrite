@@ -1,11 +1,8 @@
 import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import { fetchOrganizationMemberships, fetchOrganizations, fetchActiveProjects } from '@/lib/react-query/hooks'
+import { fetchOrganizations } from '@/lib/react-query/hooks'
 import { z } from 'zod'
-
-const PROJECTS_PER_PAGE = 25
-const MEMBERSHIPS_PER_PAGE = 25
 
 const searchSchema = z.object({
   createOrg: z.boolean().optional(),
@@ -28,31 +25,32 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
       queryFn: fetchOrganizations,
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
-
-    // Prefetch projects for the organization (initial page, no search)
-    if (orgId) {
-      await queryClient.prefetchQuery({
-        queryKey: ['projects', 'active', 0, '', orgId],
-        queryFn: () => fetchActiveProjects(orgId, 0, PROJECTS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      // Prefetch memberships for the organization (initial page, no search)
-      await queryClient.prefetchQuery({
-        queryKey: ['memberships', 'organization', orgId, 0, MEMBERSHIPS_PER_PAGE, ''],
-        queryFn: () => fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-    }
   },
-  component: OrgOverviewPage,
+  component: OrganizationLayout,
 })
 
-function OrgOverviewPage() {
-  const { orgId } = Route.useParams()
+function OrganizationLayout() {
+  const matches = useMatches()
+  
+  // Check if we're on a domain detail route (should not have org header/tabs)
+  const isDomainDetailRoute = matches.some(
+    (match) =>
+      match.routeId.includes('/domains/$domainId') ||
+      match.routeId === '/_public/organizations/$orgId/domains/$domainId' ||
+      match.routeId.startsWith('/_public/organizations/$orgId/domains/$domainId')
+  )
+
   return (
     <RequireAuth>
-      <OrgOverview key={`org-${orgId}-projects`} />
+      {isDomainDetailRoute ? (
+        // For domain detail routes, render outlet directly (they have their own layout)
+        <Outlet />
+      ) : (
+        // For other routes, render OrgOverview which provides header/tabs
+        <OrgOverview>
+          <Outlet />
+        </OrgOverview>
+      )}
     </RequireAuth>
   )
 }

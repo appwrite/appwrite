@@ -1,0 +1,214 @@
+/**
+ * React Query hooks for Domains (Proxy Rules)
+ * 
+ * Handles domain/proxy rule fetching, creation, verification, and deletion.
+ */
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Query } from '@appwrite.io/console'
+import { sdk } from '@/lib/appwrite/sdk'
+import { Dependencies } from './dependencies'
+import { DEFAULT_STALE_TIME } from './constants'
+
+// ============================================================================
+// QUERY FUNCTIONS
+// ============================================================================
+
+/**
+ * Query function to fetch proxy rules (domains) for a project
+ * 
+ * @param projectId - The project ID
+ * @param region - The project region
+ * @param search - Optional search query
+ * @returns Proxy rules list response from the API
+ */
+export async function fetchProjectDomains(
+  projectId: string,
+  region?: string,
+  search?: string,
+) {
+  if (!projectId) {
+    return { rules: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId, region)
+  const queries = [
+    Query.equal('type', 'api'),
+    Query.equal('trigger', 'manual'),
+  ]
+
+  const response = await projectSdk.proxy.listRules({
+    queries,
+    search: search?.trim() || undefined,
+  })
+
+  return {
+    rules: response.rules || [],
+    total: response.total || 0,
+  }
+}
+
+// ============================================================================
+// HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch proxy rules (domains) for a project
+ * 
+ * @param projectId - The project ID
+ * @param region - The project region
+ * @param search - Optional search query
+ * @returns Proxy rules list with loading state
+ */
+export function useProjectDomains(
+  projectId: string | null | undefined,
+  region?: string,
+  search?: string,
+) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['proxy-rules', 'project', projectId, region, search],
+    queryFn: () => fetchProjectDomains(projectId!, region, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+
+  return {
+    rules: data?.rules || [],
+    total: data?.total || 0,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to get a single domain (proxy rule)
+ * 
+ * @param projectId - The project ID
+ * @param region - The project region
+ * @param ruleId - The rule ID
+ */
+export function useProjectDomain(
+  projectId: string | null | undefined,
+  region: string | undefined,
+  ruleId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['proxy-rule', 'project', projectId, region, ruleId],
+    queryFn: async () => {
+      if (!projectId || !ruleId) {
+        throw new Error('Project ID and Rule ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.proxy.getRule({ ruleId })
+    },
+    enabled: !!projectId && !!ruleId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+
+  return {
+    rule: data || null,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to create a domain (API proxy rule)
+ * 
+ * @param projectId - The project ID
+ * @param region - The project region
+ */
+export function useCreateDomain(projectId: string | null | undefined, region?: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (domain: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!domain.trim()) {
+        throw new Error('Domain is required')
+      }
+
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.proxy.createAPIRule({
+        domain: domain.toLowerCase().trim(),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DOMAINS,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to verify a domain
+ * 
+ * @param projectId - The project ID
+ * @param region - The project region
+ */
+export function useVerifyDomain(projectId: string | null | undefined, region?: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (ruleId: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!ruleId) {
+        throw new Error('Rule ID is required')
+      }
+
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.proxy.updateRuleVerification({ ruleId })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DOMAINS,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete a domain
+ * 
+ * @param projectId - The project ID
+ * @param region - The project region
+ */
+export function useDeleteDomain(projectId: string | null | undefined, region?: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (ruleId: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!ruleId) {
+        throw new Error('Rule ID is required')
+      }
+
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.proxy.deleteRule({ ruleId })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DOMAINS,
+      })
+    },
+  })
+}
+
