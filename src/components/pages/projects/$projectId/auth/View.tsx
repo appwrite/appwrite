@@ -679,7 +679,7 @@ export function AuthView() {
                               </Link>
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center justify-center">
+                              <div className="flex items-center justify-start">
                                 <Link
                                   to="/projects/$projectId/auth/users/$userId"
                                   params={{ projectId: projectId!, userId: user.$id }}
