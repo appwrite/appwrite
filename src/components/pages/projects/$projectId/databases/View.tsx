@@ -4180,15 +4180,7 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
                   'w-[180px] px-3 py-1.5',
                   columns.length === 0 ? 'border-b border-gray-200 dark:border-border' : bodyCellBorderClass,
                 )}>
-                  <div className="flex items-center gap-2">
-                    <Table2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    <code
-                      className="block max-w-[140px] truncate whitespace-nowrap font-mono text-[12px] text-foreground"
-                      title={row.$id}
-                    >
-                      {row.$id}
-                    </code>
-                  </div>
+                  <CopyableId id={row.$id} size="xs" />
                 </td>
                 {columns.map((col: string, colIndex: number) => (
                   <td
