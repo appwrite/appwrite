@@ -433,19 +433,19 @@ App::delete('/v1/teams/:teamId')
 
         // Sync delete
         $deletes = new Deletes();
-        $deletes->deleteMemberships($getProjectDB, $clone, $project);
+        $deletes->deleteMemberships($getProjectDB, $team, $project);
 
         // Async delete
         if ($project->getId() === 'console') {
             $queueForDeletes
                 ->setType(DELETE_TYPE_TEAM_PROJECTS)
-                ->setDocument($clone)
+                ->setDocument($team)
                 ->trigger();
         }
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($clone);
+            ->setDocument($team);
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
