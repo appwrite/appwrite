@@ -86,23 +86,8 @@ export async function fetchApiKeys(projectId: string) {
     throw new Error('Project ID is required')
   }
   // Fetch API keys from the console SDK
-  // Try different possible method names
-  try {
-    // Try projects.listKeys if it exists
-    if ((sdk.forConsole.projects as any).listKeys) {
-      return await (sdk.forConsole.projects as any).listKeys(projectId)
-    }
-    // Try projects.listSecrets if it exists
-    if ((sdk.forConsole.projects as any).listSecrets) {
-      return await (sdk.forConsole.projects as any).listSecrets(projectId)
-    }
-    // Fallback: return empty array if methods don't exist
-    return { keys: [] }
-  } catch (err) {
-    // If API call fails, return empty array
-    console.warn('Failed to fetch API keys:', err)
-    return { keys: [] }
-  }
+  const response = await sdk.forConsole.projects.listKeys({ projectId })
+  return response
 }
 
 /**
@@ -359,14 +344,14 @@ export function useApiKeys(projectId: string | undefined) {
   const apiKeys = useMemo(() => {
     if (!apiKeysData) return []
     
-    // Handle different possible response structures
-    const keys = (apiKeysData as any).keys || (apiKeysData as any).apiKeys || (apiKeysData as any).secrets || (apiKeysData as any) || []
+    // Use the keys array from KeyList response
+    const keys = apiKeysData.keys || []
     
     return keys.map((key: any) => ({
       id: key.$id || key.id || '',
-      name: key.name || key.label || 'Unnamed Key',
-      key: key.secret || key.key || key.value || '',
-      scopes: key.scopes || key.permissions || [],
+      name: key.name || 'Unnamed Key',
+      key: key.secret || '',
+      scopes: key.scopes || [],
       createdAt: key.$createdAt || new Date().toISOString(),
       lastUsed: key.accessedAt || null,
       expire: key.expire || null,
@@ -379,6 +364,131 @@ export function useApiKeys(projectId: string | undefined) {
     error,
     refetch,
   }
+}
+
+/**
+ * Hook to create an API key
+ * 
+ * @param projectId - The project ID
+ */
+export function useCreateApiKey(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      name,
+      scopes,
+      expire,
+    }: {
+      name: string
+      scopes?: string[]
+      expire?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!name.trim()) {
+        throw new Error('API key name is required')
+      }
+      return await sdk.forConsole.projects.createKey({
+        projectId,
+        name: name.trim(),
+        scopes,
+        expire,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['apiKeys', projectId],
+      })
+      // Also invalidate project query since keys are part of project data
+      queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update an API key
+ * 
+ * @param projectId - The project ID
+ */
+export function useUpdateApiKey(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      keyId,
+      name,
+      scopes,
+      expire,
+    }: {
+      keyId: string
+      name: string
+      scopes?: string[]
+      expire?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!keyId) {
+        throw new Error('API key ID is required')
+      }
+      if (!name.trim()) {
+        throw new Error('API key name is required')
+      }
+      return await sdk.forConsole.projects.updateKey({
+        projectId,
+        keyId,
+        name: name.trim(),
+        scopes,
+        expire,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['apiKeys', projectId],
+      })
+      // Also invalidate project query since keys are part of project data
+      queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete an API key
+ * 
+ * @param projectId - The project ID
+ */
+export function useDeleteApiKey(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (keyId: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!keyId) {
+        throw new Error('API key ID is required')
+      }
+      return await sdk.forConsole.projects.deleteKey({
+        projectId,
+        keyId,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['apiKeys', projectId],
+      })
+      // Also invalidate project query since keys are part of project data
+      queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+      })
+    },
+  })
 }
 
 /**

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -371,6 +371,23 @@ function getScopeVariants(scope: string): string[] {
   return variants
 }
 
+// Helper to get all available scopes (including variants)
+export function getAllAvailableScopes(): string[] {
+  const isCloud = isCloudEnvironment()
+  const backupScopeList = ['policies.read', 'policies.write', 'archives.read', 'archives.write', 'restorations.read', 'restorations.write']
+  
+  const allVariants = new Set<string>()
+  SCOPE_CATALOG.forEach((scopeDef) => {
+    // Filter out backup scopes if not cloud
+    if (backupScopeList.includes(scopeDef.scope) && !isCloud) {
+      return
+    }
+    const variants = getScopeVariants(scopeDef.scope)
+    variants.forEach((v) => allVariants.add(v))
+  })
+  return Array.from(allVariants)
+}
+
 // Helper to convert legacy scopes to newer format for display
 function normalizeScopeForDisplay(scope: string): string {
   return LEGACY_SCOPE_MAP[scope] || scope
@@ -389,6 +406,31 @@ interface ScopeEditorProps {
 
 export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorProps) {
   const isCloud = isCloudEnvironment()
+  const [openCategories, setOpenCategories] = useState<string[]>([])
+  const openCategoriesRef = useRef<string[]>([])
+  const previousValueRef = useRef<string[]>(value)
+  const isUserInteractionRef = useRef(false)
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    openCategoriesRef.current = openCategories
+  }, [openCategories])
+  
+  // Reset accordion state when value changes externally (not from user interaction)
+  useEffect(() => {
+    // Check if value changed externally (not from our internal handlers)
+    const valueChanged = JSON.stringify(previousValueRef.current) !== JSON.stringify(value)
+    if (valueChanged && !isUserInteractionRef.current) {
+      // Value changed externally, reset accordion to all closed
+      setOpenCategories([])
+      openCategoriesRef.current = []
+    }
+    // Reset the flag after processing
+    if (isUserInteractionRef.current) {
+      isUserInteractionRef.current = false
+    }
+    previousValueRef.current = value
+  }, [value])
 
   // Filter scopes catalog - exclude legacy scopes from display
   const availableScopes = useMemo(() => {
@@ -461,6 +503,7 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
 
   // Handle scope toggle
   const handleScopeToggle = (scope: string, checked: boolean) => {
+    isUserInteractionRef.current = true
     const variants = getScopeVariants(scope)
     let newScopes: string[]
 
@@ -477,6 +520,7 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
 
   // Handle category toggle
   const handleCategoryToggle = (category: string, checked: boolean) => {
+    isUserInteractionRef.current = true
     const categoryScopes = scopesByCategory[category] || []
     const allVariants = new Set<string>()
 
@@ -498,20 +542,57 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
     onChange(newScopes)
   }
 
+  // Track if we're in the middle of a select/deselect all operation
+  const isSelectingAllRef = useRef(false)
+  
   // Handle select all
-  const handleSelectAll = () => {
+  const handleSelectAll = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    isSelectingAllRef.current = true
+    isUserInteractionRef.current = true
     const allVariants = new Set<string>()
     availableScopes.forEach((scopeDef) => {
       const variants = getScopeVariants(scopeDef.scope)
       variants.forEach((v) => allVariants.add(v))
     })
     onChange(Array.from(allVariants))
+    // Reset flag after state update
+    requestAnimationFrame(() => {
+      isSelectingAllRef.current = false
+    })
   }
 
   // Handle deselect all
-  const handleDeselectAll = () => {
+  const handleDeselectAll = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    isSelectingAllRef.current = true
+    isUserInteractionRef.current = true
     onChange([])
+    // Reset flag after state update
+    requestAnimationFrame(() => {
+      isSelectingAllRef.current = false
+    })
   }
+  
+  // Custom onValueChange that prevents unwanted opens during select/deselect all
+  const handleAccordionChange = (newValue: string[]) => {
+    // Don't allow accordion to change if we're in the middle of select/deselect all
+    if (isSelectingAllRef.current) {
+      return
+    }
+    setOpenCategories(newValue)
+    openCategoriesRef.current = newValue
+  }
+  
+  // Preserve accordion state when scopes change externally
+  useLayoutEffect(() => {
+    if (isSelectingAllRef.current) {
+      // Restore the previous accordion state
+      setOpenCategories(openCategoriesRef.current)
+    }
+  }, [value])
 
   // Get category selection state
   const getCategoryState = (category: string): 'checked' | 'unchecked' | 'indeterminate' => {
@@ -536,23 +617,23 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
   return (
     <div className="space-y-4">
       {/* Action Buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end gap-1.5">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 text-[13px]"
+          className="h-7 px-2.5 text-[12px]"
           onClick={handleSelectAll}
           disabled={disabled}
         >
           Select all
         </Button>
-        <Separator orientation="vertical" className="h-4" />
+        <Separator orientation="vertical" className="h-3" />
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 text-[13px]"
+          className="h-7 px-2.5 text-[12px]"
           onClick={handleDeselectAll}
           disabled={disabled}
         >
@@ -560,10 +641,13 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
         </Button>
       </div>
 
-      <Separator />
-
       {/* Scope Categories */}
-      <Accordion type="multiple" className="w-full">
+      <Accordion
+        type="multiple"
+        value={openCategories}
+        onValueChange={handleAccordionChange}
+        className="w-full"
+      >
         {CATEGORY_ORDER.map((category, categoryIndex) => {
           const categoryScopes = scopesByCategory[category] || []
           if (categoryScopes.length === 0) return null

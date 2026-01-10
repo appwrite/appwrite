@@ -125,15 +125,9 @@ function ProjectLayout() {
             )}
           >
             <div className={cn('flex-1', (isFixedLayoutView || isDetailRoute) && 'min-h-0')}>
-              {isFullWidth || hasTabs ? (
                 <div className={cn('h-full', (isFixedLayoutView || isDetailRoute) && 'min-h-0')}>
                   <Outlet />
                 </div>
-              ) : (
-                <div className="mx-auto max-w-6xl">
-                  <Outlet />
-                </div>
-              )}
             </div>
             {!hideFooter && <ConsoleFooter />}
           </main>

@@ -1,0 +1,288 @@
+import { useState } from 'react'
+import { Key, Eye, Copy, Check, MoreHorizontal } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+
+export interface ApiKey {
+  id: string
+  name: string
+  key: string
+  scopes: string[]
+  createdAt: string
+  lastUsed: string | null
+  expire: string | null
+}
+
+interface ApiKeysListProps {
+  apiKeys: ApiKey[]
+  isLoading?: boolean
+  onView?: (keyId: string) => void
+  onUpdate?: (keyId: string) => void
+  onDelete?: (keyId: string) => void
+  onCopy?: (key: string, field: string) => void
+  copiedField?: string | null
+  showActions?: boolean
+}
+
+export function ApiKeysList({
+  apiKeys,
+  isLoading = false,
+  onView,
+  onUpdate,
+  onDelete,
+  onCopy,
+  copiedField,
+  showActions = true,
+}: ApiKeysListProps) {
+  const [viewingKeyId, setViewingKeyId] = useState<string | null>(null)
+
+  const maskKey = (key: string) => {
+    return key.slice(0, 7) + '•'.repeat(24) + key.slice(-4)
+  }
+
+  const getExpirationStatus = (expire: string | null) => {
+    if (!expire) return null
+
+    const now = new Date()
+    const expireDate = new Date(expire)
+    const isExpired = expireDate < now
+    const isExpiringSoon =
+      !isExpired &&
+      expireDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000 // 7 days
+
+    return { isExpired, isExpiringSoon, expireDate }
+  }
+
+  const viewingKey = apiKeys.find((key) => key.id === viewingKeyId)
+
+  const handleView = (keyId: string) => {
+    if (onView) {
+      onView(keyId)
+    } else {
+      setViewingKeyId(keyId)
+    }
+  }
+
+  const handleCopy = (key: string, field: string) => {
+    if (onCopy) {
+      onCopy(key, field)
+    } else {
+      navigator.clipboard.writeText(key)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card py-12 text-center">
+        <p className="text-[13px] text-muted-foreground">Loading API keys...</p>
+      </div>
+    )
+  }
+
+  if (apiKeys.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-card py-12 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+          <Key className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <p className="mb-1 text-[14px] font-medium text-foreground">
+          No API keys found
+        </p>
+        <p className="text-[13px] text-muted-foreground">
+          Create your first API key to authenticate your applications
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="rounded-xl border border-border bg-card/50">
+        <div className="divide-y divide-border">
+          {apiKeys.map((apiKey) => {
+            const expirationStatus = getExpirationStatus(apiKey.expire)
+            return (
+              <div
+                key={apiKey.id}
+                className="flex items-center justify-between gap-3 p-4"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <p className="text-[14px] font-medium text-foreground">
+                      {apiKey.name}
+                    </p>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                      {apiKey.scopes.length === 0
+                        ? 'No scopes'
+                        : `${apiKey.scopes.length} scope${apiKey.scopes.length !== 1 ? 's' : ''}`}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <code className="rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground">
+                      {maskKey(apiKey.key)}
+                    </code>
+                    <button
+                      onClick={() => handleView(apiKey.id)}
+                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      title="View key"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
+                      }
+                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      title="Copy key"
+                    >
+                      {copiedField === `apiKey-${apiKey.id}` ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                    <div className="ml-auto flex items-center gap-3">
+                      <span className="text-[12px] text-muted-foreground">
+                        Created{' '}
+                        <DateTooltip
+                          date={apiKey.createdAt}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      </span>
+                      <span className="text-[12px] text-muted-foreground">
+                        {apiKey.expire ? (
+                          <>
+                            Expires{' '}
+                            <DateTooltip
+                              date={apiKey.expire}
+                              className="text-[12px] text-muted-foreground"
+                            />
+                          </>
+                        ) : (
+                          'No expiration'
+                        )}
+                      </span>
+                      {expirationStatus && expirationStatus.isExpired ? (
+                        <Badge variant="secondary" className="text-[10px]">
+                          Expired
+                        </Badge>
+                      ) : expirationStatus && expirationStatus.isExpiringSoon ? (
+                        <Badge variant="warning" className="text-[10px]">
+                          Expires soon
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+                {showActions && (onUpdate || onDelete) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {onUpdate && (
+                        <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
+                          Update
+                        </DropdownMenuItem>
+                      )}
+                      {onDelete && (
+                        <DropdownMenuItem
+                          onClick={() => onDelete(apiKey.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* API Key View Modal */}
+      <Dialog
+        open={viewingKeyId !== null}
+        onOpenChange={(open) => !open && setViewingKeyId(null)}
+      >
+        <DialogContent className="sm:max-w-[600px] p-0">
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>{viewingKey?.name || 'API Key'}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Copy the full API key below. Keep it secure and never share it
+              publicly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+
+          <div className="px-6 pb-4 pt-0">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                API Key
+              </label>
+              <textarea
+                readOnly
+                value={viewingKey?.key || ''}
+                className="w-full min-h-[100px] rounded-md border border-border bg-muted px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onClick={(e) =>
+                  (e.target as HTMLTextAreaElement).select()
+                }
+              />
+            </div>
+          </div>
+
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setViewingKeyId(null)}
+            >
+              Close
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (viewingKey?.key) {
+                  handleCopy(viewingKey.key, 'apiKeyModal')
+                }
+              }}
+              className="gap-2"
+            >
+              {copiedField === 'apiKeyModal' ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+

@@ -1,23 +1,26 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   TrendingUp,
   TrendingDown,
   Key,
-  Eye,
-  Copy,
-  MoreHorizontal,
   Plus,
-  Check,
   Link,
   Plug2,
+  Check,
+  Copy,
 } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { RequestsChart } from './RequestsChart'
 import { TopRequests } from './TopRequests'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { dashboardStats, formatNumber } from '@/lib/utils/mock-data'
-import { useProject, fetchProject } from '@/lib/react-query/hooks'
+import {
+  useProject,
+  useApiKeys,
+  useCreateApiKey,
+  useUpdateApiKey,
+  useDeleteApiKey,
+  fetchApiKeys,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -25,6 +28,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { PlatformIcon } from '@/components/global/shared/Icon'
+import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ApiKeysList } from '../shared/ApiKeysList'
+import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
+import { useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   Dialog,
   DialogContent,
@@ -32,10 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { PlatformIcon } from '@/components/global/shared/Icon'
-import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
+import type { Models } from '@appwrite.io/console'
 
 interface OverviewTab {
   id: string
@@ -165,17 +173,6 @@ function getPlatformDisplayName(platform: string): string {
   return nameMap[normalized] || normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
 
-interface ApiKey {
-  id: string
-  name: string
-  key: string
-  scopes: string[]
-  createdAt: string
-  lastUsed: string | null
-  expire: string | null
-}
-
-
 interface DashboardOverviewProps {
   projectId: string
 }
@@ -183,7 +180,11 @@ interface DashboardOverviewProps {
 export function DashboardOverview({ projectId }: DashboardOverviewProps) {
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [copiedField, setCopiedField] = useState<string | null>(null)
-  const [viewingKeyId, setViewingKeyId] = useState<string | null>(null)
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
+  const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const handleConnectPlatform = (platformType?: string) => {
     // TODO: Implement platform connection logic
@@ -192,47 +193,43 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
   }
 
   const handleCreateApiKey = () => {
-    // TODO: Implement API key creation logic
-    // This will trigger the create API key flow
-    console.log('Create API key clicked')
+    setCreateDrawerOpen(true)
   }
 
-  const handleCreateApiKeyForLanguage = (languageId: string) => {
-    // TODO: Implement API key creation logic for specific language
-    // This will trigger the create API key flow with language context
-    console.log('Create API key for language clicked', languageId)
-    handleCreateApiKey()
+  const handleCreateApiKeyForLanguage = () => {
+    setCreateDrawerOpen(true)
+  }
+
+  const handleCreate = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
+    createMutation.mutate(data, {
+      onSuccess: () => {
+        toast.success('API key created successfully')
+        setCreateDrawerOpen(false)
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error) || 'Failed to create API key')
+      },
+    })
   }
 
   // Fetch real project data from console SDK
   const { project: currentProject } = useProject(projectId)
   
-  // Get raw project data to extract keys (keys are already in the project object)
-  const { data: rawProjectData, isLoading: isLoadingKeys } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: () => fetchProject(projectId!),
-    enabled: !!projectId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
-  
-  // Extract and map API keys from the project object
-  const apiKeys = useMemo(() => {
-    if (!rawProjectData) return []
-    
-    // Keys are already in the project object
-    const keys = (rawProjectData as any).keys || []
-    
-    // Map to the ApiKey format expected by the component
-    return keys.map((key: any) => ({
-      id: key.$id || key.id || '',
-      name: key.name || key.label || 'Unnamed Key',
-      key: key.secret || key.key || key.value || '',
-      scopes: key.scopes || key.permissions || [],
-      createdAt: key.$createdAt || new Date().toISOString(),
-      lastUsed: key.accessedAt || null,
-      expire: key.expire || null,
-    }))
-  }, [rawProjectData])
+  // Fetch API keys using the hook
+  const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId)
+
+  // Create mutation
+  const createMutation = useCreateApiKey(projectId)
+
+  // Update mutation
+  const updateMutation = useUpdateApiKey(projectId)
+
+  // Delete mutation
+  const deleteMutation = useDeleteApiKey(projectId)
 
   // Build integrations list from project platforms/clients data
   const integrations = useMemo(() => {
@@ -302,7 +299,13 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
     }
   }, [projectEndpoint])
 
-  const viewingKey = apiKeys.find((key: ApiKey) => key.id === viewingKeyId)
+  const handleViewApiKey = () => {
+    // Navigate to API keys page to view/manage
+    navigate({
+      to: '/projects/$projectId/api-keys',
+      params: { projectId },
+    })
+  }
 
   const copyToClipboard = (text: string, field?: string) => {
     navigator.clipboard.writeText(text)
@@ -312,20 +315,83 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
     }
   }
 
-  const maskKey = (key: string) => {
-    return key.slice(0, 7) + '•'.repeat(24) + key.slice(-4)
+  const handleUpdate = (keyId: string) => {
+    setSelectedKeyId(keyId)
+    setUpdateDrawerOpen(true)
   }
 
-  const getExpirationStatus = (expire: string | null) => {
-    if (!expire) return null
-    
-    const now = new Date()
-    const expireDate = new Date(expire)
-    const isExpired = expireDate < now
-    const isExpiringSoon = !isExpired && expireDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000 // 7 days
-    
-    return { isExpired, isExpiringSoon, expireDate }
+  const handleUpdateSubmit = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
+    if (!selectedKeyId) return
+
+    updateMutation.mutate(
+      {
+        keyId: selectedKeyId,
+        ...data,
+      },
+      {
+        onSuccess: () => {
+          toast.success('API key updated successfully')
+          setUpdateDrawerOpen(false)
+          setSelectedKeyId(null)
+        },
+        onError: (error: Error) => {
+          toast.error(getErrorMessage(error) || 'Failed to update API key')
+        },
+      },
+    )
   }
+
+  const handleDelete = (keyId: string) => {
+    setSelectedKeyId(keyId)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = () => {
+    if (!selectedKeyId) return
+
+    deleteMutation.mutate(selectedKeyId, {
+      onSuccess: () => {
+        toast.success('API key deleted successfully')
+        setDeleteDialogOpen(false)
+        setSelectedKeyId(null)
+      },
+      onError: (error: Error) => {
+        toast.error(getErrorMessage(error) || 'Failed to delete API key')
+      },
+    })
+  }
+
+  const selectedKey = selectedKeyId
+    ? apiKeys.find((key) => key.id === selectedKeyId)
+    : null
+
+  // Get the full key data for update (we need to fetch it from the API)
+  const [updateKeyData, setUpdateKeyData] = useState<Models.Key | null>(null)
+
+  useEffect(() => {
+    if (updateDrawerOpen && selectedKeyId) {
+      // Fetch the full key data for update
+      const fetchKeyData = async () => {
+        try {
+          const response = await fetchApiKeys(projectId)
+          const key = response.keys.find(
+            (k: Models.Key) => k.$id === selectedKeyId,
+          )
+          setUpdateKeyData(key || null)
+        } catch (error) {
+          console.error('Failed to fetch key data:', error)
+          setUpdateKeyData(null)
+        }
+      }
+      fetchKeyData()
+    } else {
+      setUpdateKeyData(null)
+    }
+  }, [updateDrawerOpen, selectedKeyId, projectId])
 
   return (
     <div>
@@ -714,7 +780,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                     {supportedLanguages.map(({ id, name }) => (
                       <Button
                         key={id}
-                        onClick={() => handleCreateApiKeyForLanguage(id)}
+                        onClick={handleCreateApiKeyForLanguage}
                         variant="outline"
                         size="lg"
                       >
@@ -727,149 +793,72 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
               </div>
             </div>
           ) : (
-          <div className="rounded-xl border border-border bg-card/50">
-            <div className="divide-y divide-border">
-              {apiKeys.map((apiKey: ApiKey) => (
-                <div
-                  key={apiKey.id}
-                  className="flex items-center justify-between gap-3 p-4"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <p className="text-[14px] font-medium text-foreground">
-                        {apiKey.name}
-                      </p>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                        {apiKey.scopes.length === 0 ? 'No scopes' : `${apiKey.scopes.length} scope${apiKey.scopes.length !== 1 ? 's' : ''}`}
-                      </span>
-                    </div>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <code className="rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground">
-                        {maskKey(apiKey.key)}
-                      </code>
-                      <button
-                        onClick={() => setViewingKeyId(apiKey.id)}
-                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        title="View key"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => copyToClipboard(apiKey.key, `apiKey-${apiKey.id}`)}
-                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                        title="Copy key"
-                      >
-                        {copiedField === `apiKey-${apiKey.id}` ? (
-                          <Check className="h-3.5 w-3.5 text-emerald-500" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                      {(() => {
-                        const expirationStatus = getExpirationStatus(apiKey.expire)
-                        
-                        return (
-                          <div className="ml-auto flex items-center gap-3">
-                            <span className="text-[12px] text-muted-foreground">
-                              Created{' '}
-                              <DateTooltip
-                                date={apiKey.createdAt}
-                                className="text-[12px] text-muted-foreground"
-                              />
-                            </span>
-                            <span className="text-[12px] text-muted-foreground">
-                              {apiKey.expire ? (
-                                <>
-                                  Expires{' '}
-                                  <DateTooltip
-                                    date={apiKey.expire}
-                                    className="text-[12px] text-muted-foreground"
-                                  />
-                                </>
-                              ) : (
-                                'No expiration'
-                              )}
-                            </span>
-                            {expirationStatus && expirationStatus.isExpired ? (
-                              <Badge variant="secondary" className="text-[10px]">
-                                Expired
-                              </Badge>
-                            ) : expirationStatus && expirationStatus.isExpiringSoon ? (
-                              <Badge variant="warning" className="text-[10px]">
-                                Expires soon
-                              </Badge>
-                            ) : null}
-                          </div>
-                        )
-                      })()}
-                    </div>
-                  </div>
-                  <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </div>
-                ))}
-            </div>
-          </div>
+            <ApiKeysList
+              apiKeys={apiKeys}
+              isLoading={false}
+              onView={handleViewApiKey}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              onCopy={copyToClipboard}
+              copiedField={copiedField}
+              showActions={true}
+            />
           )}
         </div>
-
-        {/* API Key View Modal */}
-        <Dialog open={viewingKeyId !== null} onOpenChange={(open) => !open && setViewingKeyId(null)}>
-          <DialogContent className="sm:max-w-[600px] p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
-              <DialogTitle>{viewingKey?.name || 'API Key'}</DialogTitle>
-              <DialogDescription className="text-[13px] mt-2">
-                Copy the full API key below. Keep it secure and never share it publicly.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="border-t border-border" />
-            
-            <div className="px-6 pb-4 pt-0">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">API Key</label>
-                <textarea
-                  readOnly
-                  value={viewingKey?.key || ''}
-                  className="w-full min-h-[100px] rounded-md border border-border bg-muted px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                />
-              </div>
-            </div>
-            
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setViewingKeyId(null)}
-              >
-                Close
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (viewingKey?.key) {
-                    copyToClipboard(viewingKey.key, 'apiKeyModal')
-                  }
-                }}
-                className="gap-2"
-              >
-                {copiedField === 'apiKeyModal' ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </>
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Create Drawer */}
+      <ApiKeyDrawer
+        open={createDrawerOpen}
+        onOpenChange={setCreateDrawerOpen}
+        onSubmit={handleCreate}
+        isLoading={createMutation.isPending}
+      />
+
+      {/* Update Drawer */}
+      <ApiKeyDrawer
+        open={updateDrawerOpen}
+        onOpenChange={(open) => {
+          setUpdateDrawerOpen(open)
+          if (!open) {
+            setSelectedKeyId(null)
+            setUpdateKeyData(null)
+          }
+        }}
+        onSubmit={handleUpdateSubmit}
+        isLoading={updateMutation.isPending}
+        apiKey={updateKeyData}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>Delete API key</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Are you sure you want to delete "{selectedKey?.name}"? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
