@@ -218,9 +218,9 @@ trait TeamsBaseClient
         $this->assertEquals(false, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($email);
 
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
 
@@ -285,9 +285,9 @@ trait TeamsBaseClient
         $this->assertEquals(false, (new DateTimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($secondEmail);
 
-        $this->assertEquals($secondEmail, $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $secondEmail);
         $this->assertEquals($secondName, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
 
@@ -308,7 +308,8 @@ trait TeamsBaseClient
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $membershipUid = $tokens['membershipId'];
         $userUid = $tokens['userId'];
@@ -604,7 +605,8 @@ trait TeamsBaseClient
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($user['email']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $user['email']);
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
 
         $secret = $tokens['secret'];

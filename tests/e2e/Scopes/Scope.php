@@ -59,6 +59,33 @@ abstract class Scope extends TestCase
         return [];
     }
 
+    /**
+     * Get the last email sent to a specific address.
+     * This is more reliable than getLastEmail() when tests run in parallel.
+     */
+    protected function getLastEmailByAddress(string $address): array
+    {
+        sleep(3);
+
+        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+
+        if ($emails && is_array($emails)) {
+            // Search from the end (most recent) to the beginning
+            for ($i = count($emails) - 1; $i >= 0; $i--) {
+                $email = $emails[$i];
+                if (isset($email['to']) && is_array($email['to'])) {
+                    foreach ($email['to'] as $recipient) {
+                        if (isset($recipient['address']) && $recipient['address'] === $address) {
+                            return $email;
+                        }
+                    }
+                }
+            }
+        }
+
+        return [];
+    }
+
     protected function extractQueryParamsFromEmailLink(string $html): array
     {
         foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
@@ -129,14 +156,38 @@ abstract class Scope extends TestCase
      */
     protected function getLastRequest(): array
     {
+        return $this->getLastRequestForProject($this->getProject()['$id']);
+    }
+
+    /**
+     * Get the last webhook request for a specific project.
+     * Polls with retry to handle parallel test race conditions.
+     */
+    protected function getLastRequestForProject(string $projectId, int $maxAttempts = 10, int $delayMs = 500): array
+    {
         $hostname = 'request-catcher-webhook';
 
         sleep(2);
 
-        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
-        $request['data'] = json_decode($request['data'], true);
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
+            if ($request) {
+                $request['data'] = json_decode($request['data'], true);
 
-        return $request;
+                $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
+                if ($requestProjectId === $projectId) {
+                    return $request;
+                }
+            }
+
+            usleep($delayMs * 1000);
+        }
+
+        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
+        if ($request) {
+            $request['data'] = json_decode($request['data'], true);
+        }
+        return $request ?? [];
     }
 
     /**

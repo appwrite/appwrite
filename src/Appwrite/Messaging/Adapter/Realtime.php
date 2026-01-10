@@ -36,12 +36,15 @@ class Realtime extends MessagingAdapter
      */
     public array $subscriptions = [];
 
-    private PubSubPool $pubSubPool;
+    private ?PubSubPool $pubSubPool = null;
 
-    public function __construct()
+    private function getPubSubPool(): PubSubPool
     {
-        global $register;
-        $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+        if ($this->pubSubPool === null) {
+            global $register;
+            $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+        }
+        return $this->pubSubPool;
     }
 
     /**
@@ -148,7 +151,7 @@ class Realtime extends MessagingAdapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
-        $this->pubSubPool->publish('realtime', json_encode([
+        $this->getPubSubPool()->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,

@@ -152,15 +152,16 @@ class TeamsCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $email = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         Console::log(json_encode([
-            'testTeamsInviteHTMLInjection' => $email
+            'testTeamsInviteHTMLInjection' => $lastEmail
         ], JSON_PRETTY_PRINT));
 
         $encoded = 'http://localhost:5000/join-us\&quot;&gt;&lt;/a&gt;&lt;h1&gt;INJECTED&lt;/h1&gt;?';
 
-        $this->assertStringNotContainsString('<h1>INJECTED</h1>', $email['html']);
-        $this->assertStringContainsString($encoded, $email['html']);
+        $this->assertStringNotContainsString('<h1>INJECTED</h1>', $lastEmail['html']);
+        $this->assertStringContainsString($encoded, $lastEmail['html']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([
             'content-type' => 'application/json',

@@ -214,8 +214,8 @@ class AccountCustomServerTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);

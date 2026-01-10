@@ -163,9 +163,9 @@ trait AccountBase
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('otpuser@appwrite.io');
 
-        $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser@appwrite.io');
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         // FInd 6 concurrent digits in email text - OTP
@@ -242,8 +242,8 @@ trait AccountBase
 
         $phrase = $response['body']['phrase'];
 
-        $lastEmail = $this->getLastEmail();
-        $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
+        $lastEmail = $this->getLastEmailByAddress('otpuser@appwrite.io');
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser@appwrite.io');
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);
         $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
