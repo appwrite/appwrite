@@ -15,6 +15,7 @@ import { getMigrationStatusVariant, type MigrationStatus } from '@/lib/utils/sta
 import { cn } from '@/lib/utils'
 import { Loader2, ArrowRightLeft } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import type { Models } from '@appwrite.io/console'
 import { MigrationDetailsDialog } from './migrations/MigrationDetails'
 import { ExportDataDialog } from './migrations/ExportData'
@@ -67,17 +68,13 @@ export function Migrations({ projectId }: MigrationsProps) {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : migrations.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-            <ArrowRightLeft className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="mb-1 text-[14px] font-medium text-foreground">
-            No migrations yet
-          </p>
-          <p className="text-[13px] text-muted-foreground">
-            Import data from another platform or export your project data
-          </p>
-        </div>
+        <EmptyState
+          icon={ArrowRightLeft}
+          title="No migrations yet"
+          description="Import data from another platform or export your project data"
+          isEmpty={true}
+          variant="card"
+        />
       ) : (
         <div className="rounded-lg border border-border bg-card">
           <Table>

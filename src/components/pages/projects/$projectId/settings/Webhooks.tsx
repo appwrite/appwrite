@@ -13,6 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Webhook as WebhookIcon } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CreateWebhookDialog } from './webhooks/CreateWebhook'
 
@@ -67,21 +68,18 @@ export function Webhooks({ projectId, searchValue: searchValueProp = '' }: Webho
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : paginatedWebhooks.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-            <WebhookIcon className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="mb-1 text-[14px] font-medium text-foreground">
-            {searchValueProp
-              ? `No webhooks found`
-              : 'No webhooks yet'}
-          </p>
-          <p className="text-[13px] text-muted-foreground">
-            {searchValueProp
+        <EmptyState
+          icon={WebhookIcon}
+          title={searchValueProp ? 'No webhooks found' : 'No webhooks yet'}
+          description={
+            searchValueProp
               ? 'Try adjusting your search'
-              : 'Set up webhooks to receive real-time notifications about events in your project'}
-          </p>
-        </div>
+              : 'Set up webhooks to receive real-time notifications about events in your project'
+          }
+          isEmpty={!searchValueProp}
+          hasFilters={!!searchValueProp}
+          variant="card"
+        />
       ) : (
         <>
           <div className="rounded-lg border border-border bg-card">

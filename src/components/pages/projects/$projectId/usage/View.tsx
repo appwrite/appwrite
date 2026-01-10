@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/collapsible'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { UsageMetricChart } from './MetricChart'
 import {
   type UsageCategory,
@@ -363,21 +364,13 @@ function UsageErrorState({ onRetry }: UsageErrorStateProps) {
 
 function UsageEmptyState() {
   return (
-    <div className="flex h-full items-center justify-center p-6">
-      <div className="max-w-md text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <Database className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h2 className="mb-2 text-[16px] font-semibold text-foreground">
-          No usage data available
-        </h2>
-        <p className="text-[13px] text-muted-foreground">
-          Usage metrics will appear here once your project starts receiving
-          traffic. Deploy your first function or create some data to get
-          started.
-        </p>
-      </div>
-    </div>
+    <EmptyState
+      icon={Database}
+      title="No usage data available"
+      description="Usage metrics will appear here once your project starts receiving traffic. Deploy your first function or create some data to get started."
+      isEmpty={true}
+      variant="centered"
+    />
   )
 }
 

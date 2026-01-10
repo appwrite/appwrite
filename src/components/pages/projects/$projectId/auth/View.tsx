@@ -16,6 +16,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
@@ -749,17 +750,14 @@ export function AuthView() {
                   />
                 </>
               ) : (
-                <div className="rounded-lg border border-border bg-card py-12 text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No users found
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    Try adjusting your search or filters
-                  </p>
-                </div>
+                <EmptyState
+                  icon={Users}
+                  title="No users found"
+                  description="Try adjusting your search or filters"
+                  isEmpty={!usersSearchValue}
+                  hasFilters={!!usersSearchValue}
+                  variant="card"
+                />
               )
             ) : (
               <div className="flex flex-col gap-2">
@@ -803,16 +801,15 @@ export function AuthView() {
                   })}
 
                   {paginatedUsers.length === 0 && (
-                    <div className="col-span-full py-12 text-center">
-                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                        <Users className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <p className="mb-1 text-[14px] font-medium text-foreground">
-                        No users found
-                      </p>
-                      <p className="text-[13px] text-muted-foreground">
-                        Try adjusting your search or filters
-                      </p>
+                    <div className="col-span-full">
+                      <EmptyState
+                        icon={Users}
+                        title="No users found"
+                        description="Try adjusting your search or filters"
+                        isEmpty={!usersSearchValue}
+                        hasFilters={!!usersSearchValue}
+                        variant="card"
+                      />
                     </div>
                   )}
                 </div>
@@ -986,17 +983,14 @@ export function AuthView() {
                   />
                 </>
               ) : (
-                <div className="rounded-lg border border-border bg-card py-12 text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No teams found
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    Try adjusting your search
-                  </p>
-                </div>
+                <EmptyState
+                  icon={Users}
+                  title="No teams found"
+                  description="Try adjusting your search"
+                  isEmpty={!teamsSearchValue}
+                  hasFilters={!!teamsSearchValue}
+                  variant="card"
+                />
               )
             ) : (
               <div className="flex flex-col gap-2">
@@ -1027,16 +1021,15 @@ export function AuthView() {
                   ))}
 
                   {paginatedTeams.length === 0 && (
-                    <div className="col-span-full py-12 text-center">
-                      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                        <Users className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <p className="mb-1 text-[14px] font-medium text-foreground">
-                        No teams found
-                      </p>
-                      <p className="text-[13px] text-muted-foreground">
-                        Try adjusting your search
-                      </p>
+                    <div className="col-span-full">
+                      <EmptyState
+                        icon={Users}
+                        title="No teams found"
+                        description="Try adjusting your search"
+                        isEmpty={!teamsSearchValue}
+                        hasFilters={!!teamsSearchValue}
+                        variant="card"
+                      />
                     </div>
                   )}
                 </div>

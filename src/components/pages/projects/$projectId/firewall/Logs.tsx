@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { mockFirewallLogs, type FirewallLog } from '@/lib/utils/mock-data'
 
@@ -229,21 +230,18 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
       </div>
 
       {filteredLogs.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/50 p-8">
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Search className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="mb-2 text-[15px] font-medium text-foreground">
-              No logs found
-            </h3>
-            <p className="max-w-sm text-[13px] text-muted-foreground">
-              {searchValue || filterAction !== 'all' || filterRule !== 'all'
-                ? 'Try adjusting your filters to see more logs.'
-                : 'Firewall logs will appear here once rules start processing requests.'}
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="No logs found"
+          description={
+            searchValue || filterAction !== 'all' || filterRule !== 'all'
+              ? 'Try adjusting your filters to see more logs.'
+              : 'Firewall logs will appear here once rules start processing requests.'
+          }
+          isEmpty={!searchValue && filterAction === 'all' && filterRule === 'all'}
+          hasFilters={!!searchValue || filterAction !== 'all' || filterRule !== 'all'}
+          variant="card"
+        />
       ) : (
         <div className="rounded-xl border border-border bg-card/50">
           <Table>

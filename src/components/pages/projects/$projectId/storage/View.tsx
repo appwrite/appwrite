@@ -7,6 +7,7 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -379,17 +380,14 @@ export function StorageView() {
               />
             </>
           ) : (
-            <div className="rounded-lg border border-border bg-card py-12 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                <FolderOpen className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                No buckets found
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                Create your first bucket to start storing files
-              </p>
-            </div>
+            <EmptyState
+              icon={FolderOpen}
+              title="No buckets found"
+              description="Create your first bucket to start storing files"
+              isEmpty={!searchValue}
+              hasFilters={!!searchValue}
+              variant="card"
+            />
           )
         ) : (
           <>
@@ -457,17 +455,14 @@ export function StorageView() {
                 })}
               </div>
             ) : (
-              <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                  <HardDrive className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <p className="mb-1 text-[14px] font-medium text-foreground">
-                  No buckets found
-                </p>
-                <p className="text-[13px] text-muted-foreground">
-                  Create your first bucket to start storing files
-                </p>
-              </div>
+              <EmptyState
+                icon={HardDrive}
+                title="No buckets found"
+                description="Create your first bucket to start storing files"
+                isEmpty={!searchValue}
+                hasFilters={!!searchValue}
+                variant="card"
+              />
             )}
             {!bucketsLoading && paginatedBuckets.length > 0 && (
               <Pagination

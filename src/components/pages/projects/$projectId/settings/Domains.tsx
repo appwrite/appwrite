@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 import { MoreHorizontal, ExternalLink, AlertCircle, Loader2, FileText, RefreshCw, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
 import { AddDomainDialog } from './domains/AddDomain'
@@ -143,21 +144,18 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : paginatedRules.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-            <ExternalLink className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="mb-1 text-[14px] font-medium text-foreground">
-            {searchValueProp
-              ? `No domains found`
-              : 'No domains yet'}
-          </p>
-          <p className="text-[13px] text-muted-foreground">
-            {searchValueProp
+        <EmptyState
+          icon={ExternalLink}
+          title={searchValueProp ? 'No domains found' : 'No domains yet'}
+          description={
+            searchValueProp
               ? 'Try adjusting your search'
-              : 'Add a custom domain to serve your Appwrite API on your own domain'}
-          </p>
-        </div>
+              : 'Add a custom domain to serve your Appwrite API on your own domain'
+          }
+          isEmpty={!searchValueProp}
+          hasFilters={!!searchValueProp}
+          variant="card"
+        />
       ) : (
         <>
           <div className="rounded-lg border border-border bg-card">

@@ -26,6 +26,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -701,21 +702,18 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
             </div>
           </>
         ) : (
-          <div className="flex h-full items-center justify-center py-16">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                <Activity className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                No activities found
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                {hasActiveFilters || searchValue
-                  ? 'Try adjusting your search or filters'
-                  : 'Activity will appear here as you use your project'}
-              </p>
-            </div>
-          </div>
+          <EmptyState
+            icon={Activity}
+            title="No activities found"
+            description={
+              hasActiveFilters || searchValue
+                ? 'Try adjusting your search or filters'
+                : 'Activity will appear here as you use your project'
+            }
+            isEmpty={!hasActiveFilters && !searchValue}
+            hasFilters={hasActiveFilters || !!searchValue}
+            variant="centered"
+          />
         )}
       </div>
     </div>

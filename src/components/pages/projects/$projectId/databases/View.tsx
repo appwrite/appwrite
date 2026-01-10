@@ -67,6 +67,7 @@ import { Card } from '@/components/ui/card'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { SampleDataModal } from './tables/SampleData'
 import { generateSampleRows, type Column } from '@/lib/utils/sample-data'
 import { IdInput } from '@/components/ui/id-input'
@@ -472,17 +473,14 @@ export function DatabasesListView() {
               />
             </>
           ) : (
-                <div className="rounded-lg border border-border bg-card py-12 text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <Database className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No databases found
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    Create your first database to get started
-                  </p>
-                </div>
+                <EmptyState
+                  icon={Database}
+                  title="No databases found"
+                  description="Create your first database to get started"
+                  isEmpty={!searchValue}
+                  hasFilters={!!searchValue}
+                  variant="card"
+                />
               )
             ) : (
               <>
@@ -527,19 +525,18 @@ export function DatabasesListView() {
                   </Link>
                 ))}
 
-                {paginatedDatabases.length === 0 && (
-                  <div className="col-span-full py-12 text-center">
-                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                      <Database className="h-5 w-5 text-muted-foreground" />
+                  {paginatedDatabases.length === 0 && (
+                    <div className="col-span-full">
+                      <EmptyState
+                        icon={Database}
+                        title="No databases found"
+                        description="Create your first database to get started"
+                        isEmpty={!searchValue}
+                        hasFilters={!!searchValue}
+                        variant="card"
+                      />
                     </div>
-                    <p className="mb-1 text-[14px] font-medium text-foreground">
-                      No databases found
-                    </p>
-                    <p className="text-[13px] text-muted-foreground">
-                      Create your first database to get started
-                    </p>
-                  </div>
-                )}
+                  )}
                 </div>
                 <Pagination
                   currentPage={currentPage}

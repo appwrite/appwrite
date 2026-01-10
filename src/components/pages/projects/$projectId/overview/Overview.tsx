@@ -44,6 +44,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 
 interface OverviewTab {
   id: string
@@ -658,7 +659,11 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
             </Button>
           </div>
           {integrations.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card/50 p-8">
+            <EmptyState
+              icon={Plug2}
+              variant="card"
+              isEmpty={true}
+            >
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                   <Plug2 className="h-6 w-6 text-muted-foreground" />
@@ -690,7 +695,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                   ))}
                 </div>
               </div>
-            </div>
+            </EmptyState>
           ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {integrations.map((integration) => (
@@ -757,7 +762,11 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
               </div>
             </div>
           ) : apiKeys.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card/50 p-8">
+            <EmptyState
+              icon={Key}
+              variant="card"
+              isEmpty={true}
+            >
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                   <Key className="h-6 w-6 text-muted-foreground" />
@@ -791,7 +800,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                   </div>
                 </div>
               </div>
-            </div>
+            </EmptyState>
           ) : (
             <ApiKeysList
               apiKeys={apiKeys}

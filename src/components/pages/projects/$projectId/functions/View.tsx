@@ -6,6 +6,7 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { useProjectFunctions, Dependencies, useProject, useOrganizationPlan, fetchProjectFunctions } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -293,14 +294,21 @@ export function FunctionsView() {
             <p className="text-sm text-muted-foreground">Loading functions...</p>
           </div>
         ) : noSearchResults ? (
-          <div className="flex h-full items-center justify-center py-16">
+          <EmptyState
+            icon={Play}
+            title="No functions found"
+            description={`No functions match "${searchValue}"`}
+            isEmpty={false}
+            hasFilters={true}
+            variant="card"
+          >
             <div className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                  <Play className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <p className="mb-1 text-[14px] font-medium text-foreground">
-                  No functions found
-                </p>
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+                <Play className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="mb-1 text-[14px] font-medium text-foreground">
+                No functions found
+              </p>
               <p className="mb-4 text-[13px] text-muted-foreground">
                 No functions match "{searchValue}"
               </p>
@@ -321,10 +329,16 @@ export function FunctionsView() {
               >
                 Clear search
               </Button>
-              </div>
             </div>
+          </EmptyState>
         ) : !hasFunctions ? (
-          <div className="flex h-full items-center justify-center py-16">
+          <EmptyState
+            icon={Play}
+            title="Create your first function"
+            description="Deploy and manage serverless functions with Appwrite Functions."
+            isEmpty={true}
+            variant="card"
+          >
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
                 <Play className="h-5 w-5 text-muted-foreground" />
@@ -355,7 +369,7 @@ export function FunctionsView() {
                 </Button>
               </div>
             </div>
-          </div>
+          </EmptyState>
         ) : (
           <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

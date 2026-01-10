@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 
 export interface ApiKey {
   id: string
@@ -96,17 +97,13 @@ export function ApiKeysList({
 
   if (apiKeys.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-          <Key className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <p className="mb-1 text-[14px] font-medium text-foreground">
-          No API keys found
-        </p>
-        <p className="text-[13px] text-muted-foreground">
-          Create your first API key to authenticate your applications
-        </p>
-      </div>
+      <EmptyState
+        icon={Key}
+        title="No API keys found"
+        description="Create your first API key to authenticate your applications"
+        isEmpty={true}
+        variant="card"
+      />
     )
   }
 
