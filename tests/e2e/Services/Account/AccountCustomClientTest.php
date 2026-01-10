@@ -1443,7 +1443,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => ID::unique(),
-            'email' => 'otpuser2@appwrite.io'
+            'email' => 'otpuser3@appwrite.io'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
@@ -1457,9 +1457,9 @@ class AccountCustomClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
+        $lastEmail = $this->getLastEmailByAddress('otpuser3@appwrite.io');
 
-        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser2@appwrite.io');
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser3@appwrite.io');
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         // Find 6 concurrent digits in email text - OTP
@@ -1484,7 +1484,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
 
         $lastEmailId = $lastEmail['id'];
-        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
+        $lastEmail = $this->getLastEmailByAddress('otpuser3@appwrite.io');
         $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
 
