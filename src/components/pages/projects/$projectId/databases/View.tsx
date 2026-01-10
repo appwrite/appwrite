@@ -3318,6 +3318,8 @@ function RowEditDrawer({
                           const isRTLContent = isRTL(stringValue)
                           const showNullCheckbox = !isRequired
                           const useTextarea = size && size >= 50
+                          const needsCounterSpace = hasLimit || showNullCheckbox
+                          const counterPadding = needsCounterSpace ? (isRTLContent ? "pl-28" : "pr-28") : ""
                           
                           return (
                             <div className="space-y-1.5">
@@ -3354,7 +3356,8 @@ function RowEditDrawer({
                                     className={cn(
                                       "min-h-[36px] max-h-[600px] text-[13px] resize-none",
                                       isNull && "opacity-50 cursor-not-allowed",
-                                      showNullCheckbox ? "pb-8" : "pb-2"
+                                      showNullCheckbox ? "pb-8" : "pb-2",
+                                      counterPadding
                                     )}
                                     rows={1}
                                   />
@@ -3380,13 +3383,16 @@ function RowEditDrawer({
                                     placeholder={isRequired ? undefined : 'NULL'}
                                     className={cn(
                                       "h-9 text-[13px]",
-                                      isNull && "opacity-50 cursor-not-allowed"
+                                      isNull && "opacity-50 cursor-not-allowed",
+                                      counterPadding
                                     )}
                                   />
                                 )}
                                 <div className={cn(
                                   "absolute flex items-center gap-2 pointer-events-none",
-                                  useTextarea ? "bottom-2 right-2" : "top-1/2 -translate-y-1/2 right-2"
+                                  useTextarea 
+                                    ? isRTLContent ? "bottom-2 left-2" : "bottom-2 right-2"
+                                    : isRTLContent ? "top-1/2 -translate-y-1/2 left-2" : "top-1/2 -translate-y-1/2 right-2"
                                 )}>
                                   {hasLimit && (
                                     <span className={cn(
@@ -3811,6 +3817,14 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
     return { full: stringValue, display: trimmed, isNull: false }
   }
 
+  // Detect RTL content
+  const isRTL = (text: string | null | undefined): boolean => {
+    if (!text || typeof text !== 'string') return false
+    // Check for RTL characters (Arabic, Hebrew, etc.)
+    const rtlPattern = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/
+    return rtlPattern.test(text)
+  }
+
   // The parent container constrains height with overflow-hidden
   // This component fills available space and handles its own scrolling
   // Only show loading on initial load, not during pagination (use isFetching for that)
@@ -4195,6 +4209,9 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
                           | null
                           | undefined,
                       )
+                      // Only apply RTL detection to string values
+                      const cellValue = row.data[col as keyof typeof row.data]
+                      const isRTLContent = typeof cellValue === 'string' ? isRTL(cellValue) : false
                       return (
                         <span
                           className={cn(
@@ -4202,6 +4219,7 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
                             isNull ? "text-foreground/60" : "text-foreground"
                           )}
                           title={full}
+                          dir={isRTLContent ? 'rtl' : 'ltr'}
                         >
                           {display}
                         </span>
