@@ -12,7 +12,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { getBackupStatusVariant, type BackupStatus } from '@/lib/utils/status-badge'
 import {
   Table,
   TableBody,
@@ -36,6 +35,7 @@ import {
 } from '@/components/ui/dialog'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import {
   Tooltip,
   TooltipContent,
@@ -311,20 +311,19 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   // Get backup status badge
   const getBackupStatus = (status: string) => {
-    const statusMap: Record<string, { label: string; icon: typeof Clock }> = {
-      pending: { label: 'Pending', icon: Clock },
-      completed: { label: 'Complete', icon: CheckCircle2 },
-      uploading: { label: 'Processing', icon: Loader2 },
-      downloading: { label: 'Processing', icon: Loader2 },
-      failed: { label: 'Failed', icon: AlertCircle },
+    const statusMap: Record<string, { label: string; icon: typeof Clock; badgeVariant: 'completed' | 'failed' | 'pending' | 'processing' }> = {
+      pending: { label: 'Pending', icon: Clock, badgeVariant: 'pending' },
+      completed: { label: 'Complete', icon: CheckCircle2, badgeVariant: 'completed' },
+      uploading: { label: 'Processing', icon: Loader2, badgeVariant: 'processing' },
+      downloading: { label: 'Processing', icon: Loader2, badgeVariant: 'processing' },
+      failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' },
     }
     
-    const statusInfo = statusMap[status] || { label: 'Waiting', icon: Clock }
-    const variant = getBackupStatusVariant(status as BackupStatus)
+    const statusInfo = statusMap[status] || { label: 'Waiting', icon: Clock, badgeVariant: 'pending' as const }
     
     return {
       label: statusInfo.label,
-      variant,
+      badgeVariant: statusInfo.badgeVariant,
       icon: statusInfo.icon,
     }
   }
@@ -572,7 +571,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
               </div>
             ) : (
               <>
-                <div className="rounded-lg border border-border bg-background overflow-hidden">
+                <div className="rounded-lg border border-border bg-card">
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
@@ -591,11 +590,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                             }}
                           />
                         </TableHead>
-                        <TableHead>Backups</TableHead>
-                        <TableHead>Size</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[180px]">Backup ID</TableHead>
+                        <TableHead className="w-[150px]">Created</TableHead>
+                        <TableHead className="w-[100px]">Size</TableHead>
+                        <TableHead className="w-[120px]">Status</TableHead>
                         <TableHead>Policy</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
+                        <TableHead className="w-[100px] text-right pr-4"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -626,61 +626,74 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                               />
                             </TableCell>
                             <TableCell>
-                              <DateTooltip date={archive.$createdAt} />
+                              <CopyableId id={archive.$id} size="sm" maxWidth={180} />
                             </TableCell>
-                            <TableCell>{formatSize(archive.size)}</TableCell>
                             <TableCell>
-                              <Badge variant={status.variant} className="gap-1.5">
+                              <DateTooltip
+                                date={archive.$createdAt}
+                                className="text-[12px] font-medium text-muted-foreground"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {formatSize(archive.size)}
+                              </code>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={status.badgeVariant} className="gap-1.5 text-[11px] font-medium">
                                 <StatusIcon className="h-3 w-3" />
                                 {status.label}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               {policy ? (
-                                <span className="text-[13px]">{policy.name || 'Unnamed Policy'}</span>
+                                <span className="text-[12px] text-foreground">{policy.name || 'Unnamed Policy'}</span>
                               ) : (
-                                <span className="text-[13px] text-muted-foreground">Manual</span>
+                                <span className="text-[12px] text-muted-foreground">Manual</span>
                               )}
                             </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {archive.status === 'completed' && (
+                            <TableCell className="text-right pr-4">
+                              <div className="flex justify-end">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 cursor-pointer">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    {archive.status === 'completed' && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setSelectedBackup(archive)
+                                          setRestoreDialogOpen(true)
+                                        }}
+                                      >
+                                        <RotateCcw className="mr-1.5 h-4 w-4" />
+                                        Restore
+                                      </DropdownMenuItem>
+                                    )}
                                     <DropdownMenuItem
                                       onClick={() => {
-                                        setSelectedBackup(archive)
-                                        setRestoreDialogOpen(true)
+                                        navigator.clipboard.writeText(archive.$id)
+                                        toast.success('Backup ID copied to clipboard')
                                       }}
                                     >
-                                      <RotateCcw className="mr-2 h-4 w-4" />
-                                      Restore
+                                      <Copy className="mr-1.5 h-4 w-4" />
+                                      Copy ID
                                     </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(archive.$id)
-                                      toast.success('Backup ID copied to clipboard')
-                                    }}
-                                  >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    Copy ID
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedBackup(archive)
-                                      setDeleteBackupDialogOpen(true)
-                                    }}
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      onClick={() => {
+                                        setSelectedBackup(archive)
+                                        setDeleteBackupDialogOpen(true)
+                                      }}
+                                    >
+                                      <Trash2 className="mr-1.5 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </TableCell>
                           </TableRow>
                         )

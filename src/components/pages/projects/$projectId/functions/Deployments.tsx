@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useParams, Link, useNavigate, useLocation } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { Info, MoreHorizontal, Clock, Trash2, GitBranch, GitCommit, Shield, CheckCircle2, HelpCircle, Lock } from 'lucide-react'
+import { Info, MoreHorizontal, Clock, Trash2, GitBranch, GitCommit, Shield, CheckCircle2, HelpCircle, Lock, Loader2, AlertCircle } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
@@ -167,14 +167,19 @@ function getVcsProvider(deployment: any): { name: string; icon: React.ReactNode 
 }
 
 function getDeploymentStatusBadge(status: string) {
-  const statusMap: Record<string, { label: string; variant: 'processing' | 'pending' | 'failed' | 'outline' }> = {
-    ready: { label: 'Ready', variant: 'processing' },
-    building: { label: 'Building', variant: 'processing' },
-    processing: { label: 'Processing', variant: 'processing' },
-    waiting: { label: 'Waiting', variant: 'pending' },
-    failed: { label: 'Failed', variant: 'failed' },
+  const statusMap: Record<string, { label: string; badgeVariant: 'completed' | 'failed' | 'pending' | 'processing'; icon: typeof CheckCircle2 }> = {
+    ready: { label: 'Ready', badgeVariant: 'completed', icon: CheckCircle2 },
+    building: { label: 'Building', badgeVariant: 'processing', icon: Loader2 },
+    processing: { label: 'Processing', badgeVariant: 'processing', icon: Loader2 },
+    waiting: { label: 'Waiting', badgeVariant: 'pending', icon: Clock },
+    failed: { label: 'Failed', badgeVariant: 'failed', icon: AlertCircle },
   }
-  return statusMap[status] || { label: status, variant: 'outline' }
+  const statusInfo = statusMap[status] || { label: status, badgeVariant: 'pending' as const, icon: Clock }
+  return {
+    label: statusInfo.label,
+    badgeVariant: statusInfo.badgeVariant,
+    icon: statusInfo.icon,
+  }
 }
 
 export function FunctionDeployments() {
@@ -820,7 +825,7 @@ export function FunctionDeployments() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[40px] pl-6 sm:pl-8">
+                    <TableHead className="w-[50px]">
                       <Checkbox
                         checked={
                           (() => {
@@ -837,52 +842,55 @@ export function FunctionDeployments() {
                         onCheckedChange={toggleAllDeployments}
                       />
                     </TableHead>
-                    <TableHead className="pl-6 sm:pl-8">Deployment ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Total size</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead className="w-[180px]">Deployment ID</TableHead>
+                    <TableHead className="w-[120px]">Status</TableHead>
+                    <TableHead className="w-[150px]">Type</TableHead>
+                    <TableHead className="w-[200px]">Source</TableHead>
+                    <TableHead className="w-[100px]">Total size</TableHead>
+                    <TableHead className="w-[100px]">Duration</TableHead>
+                    <TableHead className="w-[150px]">Created</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {deployments.map((deployment, index) => {
+                  {deployments.map((deployment) => {
                     const statusBadge = getDeploymentStatusBadge(deployment.status)
                     const isActive = deployment.$id === activeDeployment?.$id
                     return (
                       <TableRow
                         key={deployment.$id}
                         className={cn(
-                          'transition-colors',
-                          index === deployments.length - 1 && 'border-b border-border',
                           selectedDeployments.has(deployment.$id)
                             ? 'bg-sky-100 dark:bg-sky-950'
                             : 'hover:bg-muted/50',
                         )}
                       >
-                        <TableCell onClick={(e) => e.stopPropagation()} className="pl-6 sm:pl-8 py-3">
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Checkbox
                             checked={selectedDeployments.has(deployment.$id)}
                             onCheckedChange={() => toggleDeployment(deployment.$id)}
                             disabled={isActive}
                           />
                         </TableCell>
-                        <TableCell className="pl-6 sm:pl-8 py-3">
-                          <CopyableId id={deployment.$id} size="xs" />
+                        <TableCell>
+                          <CopyableId id={deployment.$id} size="sm" maxWidth={180} />
                         </TableCell>
-                        <TableCell className="py-3">
+                        <TableCell>
                           {isActive ? (
-                            <Badge variant="active">
+                            <Badge variant="active" className="gap-1.5 text-[11px] font-medium">
+                              <CheckCircle2 className="h-3 w-3" />
                               Active
                             </Badge>
                           ) : (
-                          <Badge variant={statusBadge.variant}>
+                          <Badge variant={statusBadge.badgeVariant} className="gap-1.5 text-[11px] font-medium">
+                            {(() => {
+                              const StatusIcon = statusBadge.icon
+                              return <StatusIcon className="h-3 w-3" />
+                            })()}
                             {statusBadge.label}
                           </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="py-3">
+                        <TableCell>
                           {(() => {
                             const vcsProvider = getVcsProvider(deployment)
                             if (vcsProvider) {
@@ -900,7 +908,7 @@ export function FunctionDeployments() {
                               }
                               // Fallback if no repository info
                               return (
-                                <div className="flex items-center gap-1.5 text-[13px] text-foreground">
+                                <div className="flex items-center gap-1.5 text-[12px] text-foreground">
                                   {vcsProvider.icon}
                                   <span>{vcsProvider.name}</span>
                                 </div>
@@ -909,18 +917,18 @@ export function FunctionDeployments() {
                             // Show deployment type for non-VCS deployments
                             const typeLabel = deployment.type === 'cli' ? 'CLI' : deployment.type === 'manual' ? 'Manual' : deployment.type || 'N/A'
                             return (
-                              <div className="flex items-center gap-2 text-[13px] text-foreground">
-                                {deployment.type === 'cli' && <GitBranch className="h-4 w-4" />}
+                              <div className="flex items-center gap-1.5 text-[12px] text-foreground">
+                                {deployment.type === 'cli' && <GitBranch className="h-3.5 w-3.5" />}
                                 <span>{typeLabel}</span>
                               </div>
                             )
                           })()}
                         </TableCell>
-                        <TableCell className="py-3">
+                        <TableCell>
                           {(() => {
                             const vcsProvider = getVcsProvider(deployment)
                             if (!vcsProvider) {
-                              return <span className="text-[13px] text-muted-foreground">—</span>
+                              return <span className="text-[12px] text-muted-foreground">—</span>
                             }
                             
                             const commitMessage = deployment.providerCommitMessage
@@ -929,13 +937,13 @@ export function FunctionDeployments() {
                             const branch = deployment.providerBranch
                             
                             if (!commitMessage && !branch && !commitHash) {
-                              return <span className="text-[13px] text-muted-foreground">—</span>
+                              return <span className="text-[12px] text-muted-foreground">—</span>
                             }
                             
                             return (
                               <div className="space-y-1.5 min-w-0">
                                 {commitMessage && (
-                                  <div className="text-[13px] text-foreground line-clamp-1 font-mono">
+                                  <div className="text-[12px] text-foreground line-clamp-1 font-mono">
                                     {commitUrl ? (
                                       <a
                                         href={commitUrl}
@@ -955,7 +963,7 @@ export function FunctionDeployments() {
                                   </div>
                                 )}
                                 {(branch || commitHash) && (
-                                  <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground flex-wrap">
+                                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
                                     {branch && (
                                       <div className="flex items-center gap-1">
                                         <GitBranch className="h-3 w-3" />
@@ -977,16 +985,23 @@ export function FunctionDeployments() {
                             )
                           })()}
                         </TableCell>
-                        <TableCell className="py-3 text-[13px] text-muted-foreground">
-                          {formatSize((deployment.buildSize || 0) + (deployment.sourceSize || 0))}
+                        <TableCell>
+                          <code className="text-[12px] font-mono text-muted-foreground">
+                            {formatSize((deployment.buildSize || 0) + (deployment.sourceSize || 0))}
+                          </code>
                         </TableCell>
-                        <TableCell className="py-3 text-[13px] text-muted-foreground">
-                          {deployment.buildDuration
-                            ? formatDuration(deployment.buildDuration)
-                            : 'N/A'}
+                        <TableCell>
+                          <code className="text-[12px] font-mono text-muted-foreground">
+                            {deployment.buildDuration
+                              ? formatDuration(deployment.buildDuration)
+                              : '—'}
+                          </code>
                         </TableCell>
-                        <TableCell className="py-3 pr-6 sm:pr-8">
-                          <DateTooltip date={deployment.$createdAt} />
+                        <TableCell>
+                          <DateTooltip
+                            date={deployment.$createdAt}
+                            className="text-[12px] font-medium text-muted-foreground"
+                          />
                         </TableCell>
                       </TableRow>
                     )
