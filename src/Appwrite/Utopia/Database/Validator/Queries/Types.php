@@ -87,19 +87,13 @@ class Types extends Validator
                     throw new \Exception("Query method {$query->getMethod()} not allowed");
                 }
 
-                /**
-                 * Check only allowed attributed
-                 */
-                //if (Query::isFilter($query->getMethod())) {
-                    if (
-                        $query->getMethod() !== Query::TYPE_SELECT &&
-                        !empty($query->getAttribute()) &&
-                        !in_array($query->getAttribute(), $this->allowedAttributes)
-                    ) {
-                        throw new \Exception('shmuel');
-                    }
-                //}
-
+                if (
+                    $query->getMethod() !== Query::TYPE_SELECT &&
+                    !empty($query->getAttribute()) &&
+                    !in_array($query->getAttribute(), $this->allowedAttributes)
+                ) {
+                    throw new \Exception('shmuel');
+                }
             }
 
             $validator = new DocumentsValidator(
