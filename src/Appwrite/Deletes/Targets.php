@@ -6,8 +6,8 @@ use Appwrite\Extend\Exception;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Query;
 
 class Targets
 {
@@ -52,7 +52,7 @@ class Targets
                             $totalAttribute,
                             min: 0
                         );
-                    } catch (LimitException $e){
+                    } catch (LimitException $e) {
                         Console::error("delete subscribers limit reached (topicId={$topicId}): {$e->getMessage()}");
                     }
                 }
