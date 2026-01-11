@@ -28,17 +28,25 @@ class Types extends Validator
     protected ?QueryContext $context = null;
 
     /**
-     * @param array<string> $types
+     * @param string[] $allowedAttributes
      */
-    public function __construct(array $types = [], ?QueryContext $context = null)
+    protected array $allowedAttributes;
+
+    /**
+     * @param array $types
+     * @param QueryContext|null $context
+     * @param array $allowedAttributes
+     */
+    public function __construct(array $types = [], ?QueryContext $context = null, array $allowedAttributes = [])
     {
         $this->types = $types;
 
-        if ($context === null) {
+        if (is_null($context)) {
             $context = new QueryContext();
         }
 
         $this->context = $context;
+        $this->allowedAttributes = $allowedAttributes;
     }
 
     /**
@@ -69,11 +77,6 @@ class Types extends Validator
                     $query = Query::parse($query);
                 }
 
-                if (Query::isFilter($query->getMethod())) {
-                    throw new \Exception('shmuel');
-                    // Check only allowed attribtes!!
-                }
-
                 if ($query->isNested()) {
                     if (!self::isValid($query->getValues())) {
                         throw new \Exception('Invalid queries');
@@ -83,6 +86,20 @@ class Types extends Validator
                 if (!in_array($query->getMethod(), $this->types)) {
                     throw new \Exception("Query method {$query->getMethod()} not allowed");
                 }
+
+                /**
+                 * Check only allowed attributed
+                 */
+                //if (Query::isFilter($query->getMethod())) {
+                    if (
+                        $query->getMethod() !== Query::TYPE_SELECT &&
+                        !empty($query->getAttribute()) &&
+                        !in_array($query->getAttribute(), $this->allowedAttributes)
+                    ) {
+                        throw new \Exception('shmuel');
+                    }
+                //}
+
             }
 
             $validator = new DocumentsValidator(

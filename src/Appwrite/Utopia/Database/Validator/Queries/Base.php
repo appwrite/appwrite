@@ -132,7 +132,7 @@ class Base extends Types
         $context = new QueryContext();
         $context->add($this->collection);
 
-        parent::__construct($this->types, $context);
+        parent::__construct($this->types, $context, $allowedAttributes);
     }
 
     public function isSelectQueryAllowed(): bool
