@@ -24,6 +24,9 @@ const config = defineConfig({
     devtoolsJson(),
     viteReact(),
   ],
+  build: {
+    outDir: '.output',
+  },
   server: {
     host: '::',
     allowedHosts: true,

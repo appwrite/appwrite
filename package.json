@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "generate:routes": "tsr generate",
-    "clean": "rm -rf .ouptut dist node_modules/.vite .nitro .tanstack"
+    "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack"
   },
   "dependencies": {
     "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9b32107",
