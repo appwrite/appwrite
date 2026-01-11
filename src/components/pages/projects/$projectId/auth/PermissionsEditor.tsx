@@ -370,13 +370,17 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                           ? 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
                           : isSelected
                             ? 'border-primary bg-primary/5 cursor-pointer'
-                            : 'border-border hover:bg-accent cursor-pointer'
+                            : 'border-border hover:bg-muted/50 cursor-pointer'
                       )}
                     >
                       <Checkbox 
                         checked={isSelected} 
-                        onCheckedChange={() => !isAlreadyAdded && handleToggleUser(user.$id)}
+                        onCheckedChange={() => {
+                          if (!isAlreadyAdded) handleToggleUser(user.$id)
+                        }}
                         disabled={isAlreadyAdded}
+                        onClick={(e) => e.stopPropagation()}
+                        className="cursor-pointer"
                       />
                       <Avatar className="size-8">
                         {user.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
@@ -507,13 +511,17 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                           ? 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
                           : isSelected
                             ? 'border-primary bg-primary/5 cursor-pointer'
-                            : 'border-border hover:bg-accent cursor-pointer'
+                            : 'border-border hover:bg-muted/50 cursor-pointer'
                       )}
                     >
                       <Checkbox 
                         checked={isSelected} 
-                        onCheckedChange={() => !isAlreadyAdded && handleToggleTeam(team.id)}
+                        onCheckedChange={() => {
+                          if (!isAlreadyAdded) handleToggleTeam(team.id)
+                        }}
                         disabled={isAlreadyAdded}
+                        onClick={(e) => e.stopPropagation()}
+                        className="cursor-pointer"
                       />
                       <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <Building2 className="size-4 text-muted-foreground" />

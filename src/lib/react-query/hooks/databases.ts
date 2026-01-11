@@ -511,8 +511,8 @@ export async function updateProjectTableRow(
       delete updateParams.data.$id
     }
     
-    // Add permissions if provided
-    if (permissions && permissions.length > 0) {
+    // Add permissions if provided (including empty array to clear permissions)
+    if (permissions !== undefined) {
       updateParams.permissions = permissions
     }
     

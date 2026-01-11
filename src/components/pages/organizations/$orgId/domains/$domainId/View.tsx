@@ -909,7 +909,7 @@ export function DomainDetailView() {
                             <TableCell className="text-right pr-4">
                               {record.lock ? (
                                 <div className="flex justify-end">
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 cursor-pointer" disabled>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled>
                                     <Lock className="h-4 w-4 text-muted-foreground" />
                                   </Button>
                                 </div>
@@ -917,7 +917,7 @@ export function DomainDetailView() {
                                 <div className="flex justify-end">
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 cursor-pointer">
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                                         <MoreHorizontal className="h-4 w-4" />
                                       </Button>
                                     </DropdownMenuTrigger>

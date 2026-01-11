@@ -2565,6 +2565,7 @@ interface RowData {
   data: Record<string, string | number | boolean>
   $createdAt?: string
   $updatedAt?: string
+  $permissions?: string[]
 }
 
 import { PointEditor, LineEditor, PolygonEditor } from './tables/spatial'
@@ -2615,9 +2616,10 @@ function RowEditDrawer({
 
   // Initialize row permissions from row data
   useEffect(() => {
-    if (row && (row as any).$permissions) {
-      setRowPermissions((row as any).$permissions || [])
-    } else if (row) {
+    if (row) {
+      setRowPermissions(row.$permissions || [])
+    } else {
+      // Reset permissions when drawer closes or in create mode
       setRowPermissions([])
     }
   }, [row])
@@ -2766,7 +2768,12 @@ function RowEditDrawer({
     // For create mode, pass customRowId if set, otherwise pass null to use auto-generated
     // For update mode, pass the existing row ID
     const idToSave = isCreateMode ? (customRowId || null) : (row?.$id || null)
-    onSave(idToSave, formData, customRowId, rowPermissions.length > 0 ? rowPermissions : undefined)
+    // Always pass permissions when updating (even if empty, to allow clearing permissions)
+    // For create mode, only pass if permissions are set
+    const permissionsToSave = isCreateMode 
+      ? (rowPermissions.length > 0 ? rowPermissions : undefined)
+      : rowPermissions // Always pass for updates, even if empty
+    onSave(idToSave, formData, customRowId, permissionsToSave)
     // Don't close drawer here - wait for mutation to complete
   }
 
@@ -3463,7 +3470,7 @@ function RowEditDrawer({
         </div>
 
         {/* Footer with actions */}
-        <div className="flex items-center justify-start gap-2 border-t border-border px-6 pb-6 pt-4">
+        <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button onClick={handleSave} disabled={isSaving}>
             {isCreateMode ? 'Create Row' : 'Update'}
           </Button>
@@ -3587,6 +3594,12 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
     await createColumnMutationForEmptyState.mutateAsync(data)
   }
 
+  const handleCreateColumn = () => {
+    // Always use the local column dialog in the rows view
+    setSelectedColumn(null)
+    setColumnDialogOpen(true)
+  }
+
   // Fetch columns from the project SDK
   const {
     columns: apiColumns,
@@ -3617,6 +3630,7 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
       data,
       $createdAt: row.$createdAt,
       $updatedAt: row.$updatedAt,
+      $permissions: row.$permissions || [],
     }
   })
 
@@ -3858,12 +3872,6 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
         setFocusedField(null)
         setEditDrawerOpen(true)
       }
-    }
-
-    const handleCreateColumn = () => {
-      // Always use the local column dialog in the rows view
-      setSelectedColumn(null)
-      setColumnDialogOpen(true)
     }
 
     const handleSuggestColumns = () => {
@@ -4134,15 +4142,28 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
               </th>
               <th
                 className={cn(
-                  'sticky right-0 z-30 bg-background p-0',
+                  'relative sticky right-0 z-30 bg-background p-0',
                   'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db,inset_1px_0_0_0_#d1d5db]',
                   'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1),inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
                 )}
                 style={{ width: '40px', minWidth: '40px', maxWidth: '40px' }}
               >
-                <div className="flex h-full w-[40px] items-center justify-center py-2">
-                  <Plus className="h-4 w-4 text-muted-foreground" />
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCreateColumn()
+                      }}
+                      className="absolute inset-0 flex cursor-pointer items-center justify-center transition-colors hover:bg-muted/50"
+                    >
+                      <Plus className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Create column
+                  </TooltipContent>
+                </Tooltip>
               </th>
             </tr>
           </thead>
