@@ -53,7 +53,7 @@ class Targets
                             min: 0
                         );
                     } catch (LimitException $e) {
-                        Console::error("delete subscribers limit reached (topicId={$topicId}): {$e->getMessage()}");
+                        Console::error("Delete subscribers decreaseDocumentAttribute (topicId={$topicId}): {$e->getMessage()}");
                     }
                 }
             }
