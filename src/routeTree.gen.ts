@@ -55,6 +55,7 @@ import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './rout
 import { Route as PublicProjectsProjectIdFunctionsIndexRouteImport } from './routes/_public/projects.$projectId.functions.index'
 import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './routes/_public/projects.$projectId.databases.index'
 import { Route as PublicProjectsProjectIdAuthIndexRouteImport } from './routes/_public/projects.$projectId.auth.index'
+import { Route as PublicOrganizationsOrgIdDomainsIndexRouteImport } from './routes/_public/organizations.$orgId.domains.index'
 import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId'
 import { Route as PublicProjectsProjectIdSettingsWebhooksRouteImport } from './routes/_public/projects.$projectId.settings.webhooks'
 import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './routes/_public/projects.$projectId.settings.smtp'
@@ -365,6 +366,12 @@ const PublicProjectsProjectIdAuthIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => PublicProjectsProjectIdAuthRoute,
+  } as any)
+const PublicOrganizationsOrgIdDomainsIndexRoute =
+  PublicOrganizationsOrgIdDomainsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicOrganizationsOrgIdDomainsRoute,
   } as any)
 const PublicProjectsProjectIdStorageBucketIdRoute =
   PublicProjectsProjectIdStorageBucketIdRouteImport.update({
@@ -764,6 +771,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
+  '/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
@@ -826,7 +834,6 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
-  '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
@@ -852,6 +859,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
+  '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthIndexRoute
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsIndexRoute
@@ -954,6 +962,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
   '/_public/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
+  '/_public/organizations/$orgId/domains/': typeof PublicOrganizationsOrgIdDomainsIndexRoute
   '/_public/projects/$projectId/auth/': typeof PublicProjectsProjectIdAuthIndexRoute
   '/_public/projects/$projectId/databases/': typeof PublicProjectsProjectIdDatabasesIndexRoute
   '/_public/projects/$projectId/functions/': typeof PublicProjectsProjectIdFunctionsIndexRoute
@@ -1055,6 +1064,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/storage/$bucketId'
+    | '/organizations/$orgId/domains/'
     | '/projects/$projectId/auth/'
     | '/projects/$projectId/databases/'
     | '/projects/$projectId/functions/'
@@ -1117,7 +1127,6 @@ export interface FileRouteTypes {
     | '/'
     | '/account/$tab'
     | '/organizations/$orgId/billing'
-    | '/organizations/$orgId/domains'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
     | '/projects/$projectId/activity'
@@ -1143,6 +1152,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/migrations'
     | '/projects/$projectId/settings/smtp'
     | '/projects/$projectId/settings/webhooks'
+    | '/organizations/$orgId/domains'
     | '/projects/$projectId/auth'
     | '/projects/$projectId/databases'
     | '/projects/$projectId/functions'
@@ -1244,6 +1254,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/settings/smtp'
     | '/_public/projects/$projectId/settings/webhooks'
     | '/_public/projects/$projectId/storage/$bucketId'
+    | '/_public/organizations/$orgId/domains/'
     | '/_public/projects/$projectId/auth/'
     | '/_public/projects/$projectId/databases/'
     | '/_public/projects/$projectId/functions/'
@@ -1621,6 +1632,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/auth/'
       preLoaderRoute: typeof PublicProjectsProjectIdAuthIndexRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthRoute
+    }
+    '/_public/organizations/$orgId/domains/': {
+      id: '/_public/organizations/$orgId/domains/'
+      path: '/'
+      fullPath: '/organizations/$orgId/domains/'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsIndexRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdDomainsRoute
     }
     '/_public/projects/$projectId/storage/$bucketId': {
       id: '/_public/projects/$projectId/storage/$bucketId'
@@ -2067,12 +2085,15 @@ const PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren =
 
 interface PublicOrganizationsOrgIdDomainsRouteChildren {
   PublicOrganizationsOrgIdDomainsDomainIdRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
+  PublicOrganizationsOrgIdDomainsIndexRoute: typeof PublicOrganizationsOrgIdDomainsIndexRoute
 }
 
 const PublicOrganizationsOrgIdDomainsRouteChildren: PublicOrganizationsOrgIdDomainsRouteChildren =
   {
     PublicOrganizationsOrgIdDomainsDomainIdRoute:
       PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren,
+    PublicOrganizationsOrgIdDomainsIndexRoute:
+      PublicOrganizationsOrgIdDomainsIndexRoute,
   }
 
 const PublicOrganizationsOrgIdDomainsRouteWithChildren =

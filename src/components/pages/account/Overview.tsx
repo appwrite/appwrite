@@ -960,7 +960,7 @@ function RecoveryCodesMethod({
       return await sdk.forConsole.account.createMFARecoveryCodes()
     },
     onSuccess: (data) => {
-      setRecoveryCodes(data.codes || [])
+      setRecoveryCodes(('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [])
       setCodesDialogOpen(true)
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
     },
@@ -974,7 +974,7 @@ function RecoveryCodesMethod({
       return await sdk.forConsole.account.updateMFARecoveryCodes()
     },
     onSuccess: (data) => {
-      setRecoveryCodes(data.codes || [])
+      setRecoveryCodes(('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [])
       setCodesDialogOpen(true)
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
     },
@@ -986,7 +986,7 @@ function RecoveryCodesMethod({
   const handleView = async () => {
     try {
       const data = await sdk.forConsole.account.getMFARecoveryCodes()
-      setRecoveryCodes(data.codes || [])
+      setRecoveryCodes(('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [])
       setCodesDialogOpen(true)
     } catch (error: any) {
       // If codes don't exist, create them

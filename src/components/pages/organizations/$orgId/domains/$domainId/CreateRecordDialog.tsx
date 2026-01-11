@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -16,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 
 const DNS_RECORD_TYPES = [
   'A',
@@ -29,6 +24,19 @@ const DNS_RECORD_TYPES = [
   'HTTPS',
   'ALIAS',
 ] as const
+
+const DNS_RECORD_DESCRIPTIONS: Record<string, string> = {
+  A: 'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.',
+  AAAA: 'AAAA records map a domain to an IPv6 address, providing the same function as A records but for IPv6-enabled devices.',
+  CNAME: 'CNAME records alias one domain name to another, allowing you to point subdomains or other domain names to an existing domain.',
+  MX: 'MX records specify mail servers responsible for receiving emails for a domain, helping route email traffic to the correct mail server.',
+  TXT: 'TXT records store arbitrary text data in DNS, commonly used for verification purposes, such as domain ownership or email security settings.',
+  NS: 'NS records define the authoritative DNS servers for a domain, directing queries to the servers that manage the domain\'s DNS settings.',
+  SRV: 'SRV records specify the location (hostname and port number) of servers for specific services, directing traffic to particular servers based on service types.',
+  CAA: 'CAA records define which certificate authorities can issue SSL certificates for your domain. To avoid setup issues, make sure certainly.com is authorized.',
+  HTTPS: 'HTTPS records define which service or endpoint handles secure HTTPS traffic for your domain, typically used in SSL/TLS configurations.',
+  ALIAS: 'ALIAS records are similar to CNAMEs but can be used for the root domain, allowing you to point your domain to another domain or server.',
+}
 
 const DEFAULT_TTL = 3600
 
@@ -77,6 +85,12 @@ export function CreateRecordDialog({
     }
   }, [open])
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isLoading) {
+      onOpenChange(newOpen)
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !value.trim()) return
@@ -97,19 +111,20 @@ export function CreateRecordDialog({
   const requiresSRVFields = type === 'SRV'
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 text-left">
-          <DialogTitle>Add DNS Record</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            Create a new DNS record for your domain.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="border-t border-border" />
+    <BaseDrawer
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Create DNS Record"
+      maxWidth="sm:max-w-lg"
+    >
+      <>
+        <div className="border-t border-border shrink-0" />
 
-        <form onSubmit={handleSubmit}>
-          <div className="px-6 pb-4 pt-0 space-y-4">
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto">
+            <div className="px-6 py-6">
+              <div className="space-y-5">
+                <div className="space-y-2">
               <Label htmlFor="type">
                 Type <span className="text-destructive">*</span>
               </Label>
@@ -125,9 +140,12 @@ export function CreateRecordDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+              <p className="text-[12px] text-muted-foreground">
+                {DNS_RECORD_DESCRIPTIONS[type] || ''}
+              </p>
+                </div>
 
-            <div className="space-y-2">
+                <div className="space-y-2">
               <Label htmlFor="name">
                 Name <span className="text-destructive">*</span>
               </Label>
@@ -142,10 +160,10 @@ export function CreateRecordDialog({
               <p className="text-[12px] text-muted-foreground">
                 Use @ for the root domain, or enter a subdomain (e.g., www, mail)
               </p>
-            </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="value">
+                <div className="space-y-2">
+                  <Label htmlFor="value">
                 Value <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -169,10 +187,10 @@ export function CreateRecordDialog({
                 }
                 disabled={isLoading}
               />
-            </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="ttl">
+                <div className="space-y-2">
+                  <Label htmlFor="ttl">
                 TTL <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -186,10 +204,10 @@ export function CreateRecordDialog({
               <p className="text-[12px] text-muted-foreground">
                 Time to live in seconds (default: 3600)
               </p>
-            </div>
+                </div>
 
-            {requiresPriority && (
-              <div className="space-y-2">
+                {requiresPriority && (
+                  <div className="space-y-2">
                 <Label htmlFor="priority">
                   Priority <span className="text-destructive">*</span>
                 </Label>
@@ -207,12 +225,12 @@ export function CreateRecordDialog({
                     ? 'Lower numbers have higher priority'
                     : 'Priority for SRV record'}
                 </p>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {requiresSRVFields && (
-              <>
-                <div className="space-y-2">
+                {requiresSRVFields && (
+                  <>
+                    <div className="space-y-2">
                   <Label htmlFor="weight">
                     Weight <span className="text-destructive">*</span>
                   </Label>
@@ -241,37 +259,44 @@ export function CreateRecordDialog({
                     max="65535"
                     disabled={isLoading}
                   />
-                </div>
-              </>
-            )}
+                    </div>
+                  </>
+                )}
 
-            <div className="space-y-2">
-              <Label htmlFor="comment">Comment (optional)</Label>
-              <Input
-                id="comment"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Optional comment"
-                disabled={isLoading}
-              />
+                <div className="space-y-2">
+                  <Label htmlFor="comment">Comment (optional)</Label>
+                  <Textarea
+                    id="comment"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Optional comment"
+                    disabled={isLoading}
+                    rows={3}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button
+              type="submit"
+              disabled={isLoading || !name.trim() || !value.trim()}
+            >
+              Create Record
+            </Button>
+            <Button
+              type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !name.trim() || !value.trim()}>
-              Add Record
-            </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </>
+    </BaseDrawer>
   )
 }
 

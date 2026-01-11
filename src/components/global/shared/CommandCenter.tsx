@@ -767,7 +767,7 @@ export function CommandCenter({
 
     // Databases
     if (searchScope === 'databases' && projectDatabases && !databasesLoading) {
-      projectDatabases.forEach((db) => {
+      projectDatabases.forEach((db: any) => {
         items.push({
           id: `db-${db.$id}`,
           label: db.name,
@@ -1340,12 +1340,10 @@ export function CommandCenter({
                       <span
                         className={cn(
                           'rounded-full px-2 py-0.5 text-[10px] font-medium',
-                          fn.status === 'active'
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-muted text-muted-foreground',
+                          'bg-muted text-muted-foreground',
                         )}
                       >
-                        {fn.status || 'inactive'}
+                        Function
                       </span>
                     </CommandItem>
                   ))

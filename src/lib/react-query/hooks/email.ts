@@ -63,9 +63,9 @@ export function useEmailTemplate(
     staleTime: DEFAULT_STALE_TIME,
     // Keep previous data visible when switching languages/templates
     // This prevents showing a loader and keeps the form filled with previous data
-    placeholderData: (previousData) => {
+    placeholderData: (previousData: Models.EmailTemplate | undefined) => {
       // First, try to get cached data for the current query key
-      const cachedData = queryClient.getQueryData(['emailTemplate', projectId, type, locale])
+      const cachedData = queryClient.getQueryData<Models.EmailTemplate>(['emailTemplate', projectId, type, locale])
       if (cachedData) return cachedData
       
       // If no cached data, keep the previous data visible (from previous locale/template)

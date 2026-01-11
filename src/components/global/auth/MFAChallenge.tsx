@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/input-otp'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import { ArrowLeft, Smartphone, Mail, LockOpen } from 'lucide-react'
+import { ArrowLeft, Smartphone, Mail } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 
 interface MFAChallengeProps {
@@ -84,7 +84,6 @@ export async function verifyMFAChallenge(
 
 export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
   const navigate = useNavigate()
-  const router = useRouter()
   const queryClient = useQueryClient()
   const [challengeType, setChallengeType] = useState<AuthenticationFactor | null>(null)
   const [challenge, setChallenge] = useState<Models.MfaChallenge | null>(null)

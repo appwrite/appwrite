@@ -1,4 +1,4 @@
-import { Globe, Monitor, Smartphone, Tablet, Watch, Tv, Gamepad2 } from 'lucide-react'
+import { Globe, Monitor, Smartphone, Watch, Tv } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
@@ -158,7 +158,6 @@ export function PlatformIcon({ platform, className, size = 'md', initialIcon }: 
   const isWeb = normalized === 'web'
   
   const baseIcon = getBasePlatformIcon(normalized, size)
-  const iconSize = sizeClasses[size]
   
   // Badge size based on main icon size
   const badgeSize = {

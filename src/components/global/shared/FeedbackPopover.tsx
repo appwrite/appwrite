@@ -17,7 +17,6 @@ import {
   ThumbsDown,
   Lightbulb,
   Bug,
-  Sparkles,
   Send,
   Check,
 } from 'lucide-react'

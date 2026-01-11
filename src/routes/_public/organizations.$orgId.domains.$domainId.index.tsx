@@ -21,20 +21,31 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains/$dom
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Prefetch domain details
+    // Prefetch domain details and DNS records
     if (domainId) {
-      await queryClient.ensureQueryData({
-        queryKey: ['domain', domainId],
-        queryFn: () => fetchDomain(domainId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      // Prefetch domain details
+      try {
+        await queryClient.ensureQueryData({
+          queryKey: ['domain', domainId],
+          queryFn: () => fetchDomain(domainId),
+          staleTime: 30 * 1000, // 30 seconds
+        })
+      } catch (error) {
+        // Log error but don't block rendering
+        console.error('Error prefetching domain data:', error)
+      }
 
-      // Prefetch DNS records (initial page)
-      await queryClient.prefetchQuery({
-        queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
-        queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      // Prefetch DNS records (initial page) - use ensureQueryData to prevent layout shifts
+      try {
+        await queryClient.ensureQueryData({
+          queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
+          queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
+          staleTime: 30 * 1000, // 30 seconds
+        })
+      } catch (error) {
+        // Log error but don't block rendering
+        console.error('Error prefetching DNS records:', error)
+      }
     }
   },
   component: DomainDetailPage,

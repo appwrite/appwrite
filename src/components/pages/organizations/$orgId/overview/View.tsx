@@ -1,4 +1,4 @@
-import { Link, useParams, useNavigate, useLocation, useSearch, Outlet } from '@tanstack/react-router'
+import { Link, useParams, useNavigate, useLocation, useSearch, Outlet, useMatches } from '@tanstack/react-router'
 import {
   Plus,
   Globe,
@@ -190,50 +190,70 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
+  const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
   
-  // Check if we're on a detail route (e.g., /organizations/:orgId/domains/:domainId)
-  const isDetailRoute = useMemo(() => {
+  // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
+  const isDomainDetailRoute = useMemo(() => {
+    // First check route matches (most reliable)
+    const isDetailRouteByMatch = matches.some(
+      (match) =>
+        match.routeId.includes('/domains/$domainId') ||
+        match.routeId === '/_public/organizations/$orgId/domains/$domainId' ||
+        match.routeId.startsWith('/_public/organizations/$orgId/domains/$domainId')
+    )
+    
+    if (isDetailRouteByMatch) {
+      return true
+    }
+    
+    // Fallback: check pathname for detail route pattern (helps during navigation transitions)
+    // Pattern: /organizations/:orgId/domains/:domainId
     const pathParts = location.pathname.split('/').filter(Boolean)
     const orgIndex = pathParts.findIndex(part => part === 'organizations')
     
-    if (orgIndex >= 0) {
-      // Check if we're on a detail route (has an ID after a tab)
-      // Pattern: ['organizations', 'orgId', 'tab', 'detailId']
-      if (pathParts[orgIndex + 3]) {
-        const tab = pathParts[orgIndex + 2]
-        const detailId = pathParts[orgIndex + 3]
-        // If the detailId looks like an ID (long alphanumeric), we're on a detail route
-        if (detailId && detailId.length > 10 && ['domains'].includes(tab)) {
-          return true
-        }
+    if (orgIndex >= 0 && pathParts[orgIndex + 2] === 'domains' && pathParts[orgIndex + 3]) {
+      const domainId = pathParts[orgIndex + 3]
+      // If the domainId looks like an ID (long alphanumeric), we're on a detail route
+      if (domainId && domainId.length > 10) {
+        return true
       }
     }
+    
     return false
-  }, [location.pathname])
+  }, [matches, location.pathname])
 
   // Check if we should render children (domains list) vs tab content
   const shouldRenderChildren = useMemo(() => {
-    // Only render children for domains route (not domain detail)
-    const pathParts = location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex(part => part === 'organizations')
-    
-    if (orgIndex >= 0) {
-      const tab = pathParts[orgIndex + 2]
-      // Only domains route should render children (DomainsView)
-      // Other routes (index, members, billing, settings) render tab content
-      return tab === 'domains' && !isDetailRoute
+    // If we're on a domain detail route, definitely don't render children
+    // (though the organization layout should bypass OrgOverview entirely for detail routes)
+    if (isDomainDetailRoute) {
+      return false
     }
     
-    return false
-  }, [location.pathname, isDetailRoute])
+    // Check if we're on the domains index route by looking for the index route match
+    const isDomainsIndexRoute = matches.some(
+      (match) => match.routeId === '/_public/organizations/$orgId/domains/'
+    )
+    
+    // Also check pathname as fallback (helps during navigation transitions)
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const orgIndex = pathParts.findIndex(part => part === 'organizations')
+    const isDomainsRouteByPath = orgIndex >= 0 && 
+      pathParts[orgIndex + 2] === 'domains' && 
+      !pathParts[orgIndex + 3] // No domainId means we're on the index route
+    
+    // Only render children if we're on the domains index route
+    // The organization layout will handle detail routes by bypassing OrgOverview entirely
+    return isDomainsIndexRoute || isDomainsRouteByPath
+  }, [matches, location.pathname, isDomainDetailRoute])
 
   // Derive active tab from pathname if prop is not provided
   const activeTab = useMemo(() => {
     if (tabProp) return tabProp
     
     // If we're on a detail route, don't set active tab (let child route handle it)
-    if (isDetailRoute) {
+    if (isDomainDetailRoute) {
       return null
     }
     
@@ -255,7 +275,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
-  }, [tabProp, location.pathname, isDetailRoute])
+  }, [tabProp, location.pathname, isDomainDetailRoute])
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -682,7 +702,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       count: membershipsTotal,
       to: '/organizations/$orgId/members',
     },
-    { id: 'domains', label: 'Domains', to: '/organizations/$orgId/domains' },
+    { id: 'domains', label: 'Domains', to: '/organizations/$orgId/domains/' },
     { id: 'billing', label: 'Billing', to: '/organizations/$orgId/billing' },
     { id: 'settings', label: 'Settings', to: '/organizations/$orgId/settings' },
   ]
@@ -702,7 +722,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     const tabRoutes: Record<string, string> = {
       projects: '/organizations/$orgId',
       members: '/organizations/$orgId/members',
-      domains: '/organizations/$orgId/domains',
+      domains: '/organizations/$orgId/domains/',
       billing: '/organizations/$orgId/billing',
       settings: '/organizations/$orgId/settings',
     }
@@ -724,7 +744,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     const tabRoutes: Record<string, string> = {
       projects: '/organizations/$orgId',
       members: '/organizations/$orgId/members',
-      domains: '/organizations/$orgId/domains',
+      domains: '/organizations/$orgId/domains/',
       billing: '/organizations/$orgId/billing',
       settings: '/organizations/$orgId/settings',
     }

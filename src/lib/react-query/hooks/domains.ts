@@ -158,6 +158,7 @@ export async function fetchDomainRecords(
   }
 
   const queries = [
+    Query.orderAsc('$createdAt'),
     Query.offset(page * limit),
     Query.limit(limit),
   ]
@@ -599,13 +600,13 @@ export function useDomainRecords(
 
   const dnsRecords = useMemo(() => {
     if (!recordsData?.dnsRecords) return []
-    // Sort by lock status (locked first) and creation date (newest first)
+    // Sort by lock status (locked first) and creation date (oldest first)
     return [...(recordsData.dnsRecords || [])].sort((a, b) => {
       // Locked records first
       if (a.lock && !b.lock) return -1
       if (!a.lock && b.lock) return 1
-      // Then by creation date (newest first)
-      return new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime()
+      // Then by creation date (oldest first)
+      return new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime()
     })
   }, [recordsData])
 

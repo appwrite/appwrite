@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Globe,
@@ -14,11 +14,19 @@ import {
   Pencil,
   ArrowLeft,
   List,
+  Copy,
+  Check,
 } from 'lucide-react'
 import { useDomain, useDomainRecords, useDomainZone } from '@/lib/react-query/hooks'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
@@ -32,13 +40,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
   Alert,
   AlertDescription,
   AlertTitle,
@@ -49,14 +50,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Link, useNavigate, useParams, useLocation } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { useNavigate, useParams, useLocation } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateRecordDialog } from './CreateRecordDialog'
 import { UpdateRecordDialog } from './UpdateRecordDialog'
 import { DeleteRecordDialog } from './DeleteRecordDialog'
 import { ImportZoneDialog } from './ImportZoneDialog'
+import { RetryVerificationDialog } from '../RetryVerificationDialog'
 import type { Models } from '@appwrite.io/console'
 import {
   useCreateDnsRecord,
@@ -65,8 +84,10 @@ import {
   useUpdateDomainZone,
   useRetryDomainVerification,
   usePresetRecords,
+  useUpdateDomainTeam,
+  useDeleteOrganizationDomain,
+  useOrganizations,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
 import { ConsoleHeader } from '@/components/global/layout/Header'
 import { ConsoleFooter } from '@/components/global/layout/Footer'
 import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
@@ -84,8 +105,14 @@ export function DomainDetailView() {
   const [updateRecordDialogOpen, setUpdateRecordDialogOpen] = useState(false)
   const [deleteRecordDialogOpen, setDeleteRecordDialogOpen] = useState(false)
   const [importZoneDialogOpen, setImportZoneDialogOpen] = useState(false)
+  const [retryDialogOpen, setRetryDialogOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<Models.DnsRecord | null>(null)
   const [selectedPreset, setSelectedPreset] = useState<'zoho' | 'mailgun' | 'outlook' | 'protonmail' | 'icloud' | 'google-workspace' | null>(null)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [selectedOrgId, setSelectedOrgId] = useState('')
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -354,18 +381,25 @@ export function DomainDetailView() {
   const retryVerificationMutation = useRetryDomainVerification(orgId)
 
   const handleRetryVerification = () => {
-    if (!domainId) return
+    if (!domainId || !domain) return
     retryVerificationMutation.mutate(domainId, {
       onSuccess: (updatedDomain) => {
+        // Check if verified
         const isVerified = updatedDomain.nameservers?.toLowerCase() === 'appwrite'
         if (isVerified) {
-          toast.success('Domain verification successful')
+          // Invalidate domain data to refresh the page
+          queryClient.invalidateQueries({
+            queryKey: ['domain', domainId],
+          })
+          toast.success(`${domain.domain} has been verified`)
+          setRetryDialogOpen(false)
         } else {
-          toast.success('Nameservers updated. Please wait for DNS propagation.')
+          // Still not verified - show error
+          toast.error('Domain verification failed. Please check your domain settings or try again later.')
         }
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error))
+        toast.error(getErrorMessage(error) || 'Domain verification failed. Please check your domain settings or try again later.')
       },
     })
   }
@@ -384,6 +418,101 @@ export function DomainDetailView() {
       to: '/organizations/$orgId/domains',
       params: { orgId: orgId! },
     })
+  }
+
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    toast.success('Copied to clipboard')
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  // Get organizations for transfer (excluding current)
+  const { organizations: allOrganizations, isLoading: organizationsLoading } = useOrganizations()
+  const organizations = useMemo(() => {
+    if (!allOrganizations || !domain) return []
+    
+    return allOrganizations
+      .filter(org => org.$id !== domain.teamId)
+      .map(org => ({
+        value: org.$id,
+        label: org.name,
+      }))
+  }, [allOrganizations, domain])
+
+  // Transfer domain mutation
+  const transferDomainMutation = useUpdateDomainTeam(orgId)
+
+  const handleTransferDomain = () => {
+    if (!domainId || !selectedOrgId) return
+    transferDomainMutation.mutate(
+      { domainId, teamId: selectedOrgId },
+      {
+        onSuccess: () => {
+          const selectedOrg = organizations.find(org => org.value === selectedOrgId)
+          toast.success(`${domain?.domain || 'Domain'} has been transferred to ${selectedOrg?.label || 'the selected organization'}`)
+          
+          // Invalidate domain query to refresh data
+          queryClient.invalidateQueries({
+            queryKey: ['domain', domainId],
+          })
+          
+          setTransferDialogOpen(false)
+          setSelectedOrgId('')
+          
+          // Navigate to the new organization's domains page
+          navigate({
+            to: '/organizations/$orgId/domains',
+            params: { orgId: selectedOrgId },
+          })
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error) || 'Failed to transfer domain')
+        },
+      }
+    )
+  }
+
+  // Delete domain mutation
+  const deleteDomainMutation = useDeleteOrganizationDomain(orgId)
+
+  const handleDeleteDomain = () => {
+    if (!domainId || !domain) return
+    if (deleteConfirmation !== domain.domain) {
+      toast.error('Domain name does not match')
+      return
+    }
+    deleteDomainMutation.mutate(domainId, {
+      onSuccess: () => {
+        toast.success(`${domain.domain} has been deleted`)
+        setDeleteDialogOpen(false)
+        setDeleteConfirmation('')
+        // Navigate back to domains list
+        navigate({
+          to: '/organizations/$orgId/domains',
+          params: { orgId: orgId! },
+        })
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error) || 'Failed to delete domain')
+      },
+    })
+  }
+
+  const getRecordTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      A: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      AAAA: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      CNAME: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
+      MX: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+      TXT: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20',
+      NS: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+      SRV: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20',
+      CAA: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+      HTTPS: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
+      ALIAS: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    }
+    return colors[type] || 'bg-muted text-muted-foreground border-border'
   }
 
   if (domainLoading) {
@@ -464,7 +593,7 @@ export function DomainDetailView() {
                       </div>
                       <Button
                         size="sm"
-                        onClick={handleRetryVerification}
+                        onClick={() => setRetryDialogOpen(true)}
                         disabled={retryVerificationMutation.isPending}
                         className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400 gap-1.5 cursor-pointer"
                       >
@@ -485,65 +614,67 @@ export function DomainDetailView() {
           <>
             {/* Domain Metadata Card */}
             {domain && (
-              <div className="mb-4 rounded-lg border border-border bg-card p-4">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="mb-4 rounded-lg border border-border bg-card/50">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-3 lg:grid-cols-6">
                   {/* Status */}
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Status</p>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Status</p>
                     <div className="flex items-center gap-1.5">
-                      {verificationStatus && (() => {
-                        const StatusIcon = verificationStatus.icon
-                        return (
-                          <>
-                            <StatusIcon
-                              className={cn('h-3.5 w-3.5', verificationStatus.className)}
-                            />
-                            <span
-                              className={cn(
-                                'text-[13px] font-medium',
-                                verificationStatus.isVerified
-                                  ? 'text-green-600 dark:text-green-500'
-                                  : 'text-yellow-600 dark:text-yellow-500',
-                              )}
+                      {verificationStatus && (
+                        <>
+                          <code
+                            className={cn(
+                              'text-[12px] font-mono font-medium',
+                              verificationStatus.isVerified
+                                ? 'text-green-600 dark:text-green-500'
+                                : 'text-yellow-600 dark:text-yellow-500',
+                            )}
+                          >
+                            {verificationStatus.label}
+                          </code>
+                          {!verificationStatus.isVerified && (
+                            <button
+                              onClick={() => setRetryDialogOpen(true)}
+                              className="text-[11px] text-primary hover:text-primary/80 font-medium"
                             >
-                              {verificationStatus.label}
-                            </span>
-                          </>
-                        )
-                      })()}
+                              Retry
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
 
                   {/* Registrar */}
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Registrar</p>
-                    <p className="text-[13px] text-foreground">—</p>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Registrar</p>
+                    <code className="text-[12px] font-mono text-foreground">—</code>
                   </div>
 
                   {/* Nameservers */}
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Nameservers</p>
-                    <p className="text-[13px] text-foreground">
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Nameservers</p>
+                    <code className="text-[12px] font-mono text-foreground truncate block">
                       {domain.nameservers || '—'}
-                    </p>
+                    </code>
                   </div>
 
                   {/* Expiry date */}
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Expiry date</p>
-                    <p className="text-[13px] text-foreground">—</p>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Expiry date</p>
+                    <code className="text-[12px] font-mono text-foreground">—</code>
                   </div>
 
                   {/* Auto renewal */}
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Auto renewal</p>
-                    <p className="text-[13px] text-foreground">—</p>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Auto renewal</p>
+                    <code className="text-[12px] font-mono text-foreground">—</code>
                   </div>
 
                   {/* Renewal price */}
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">Renewal price</p>
-                    <p className="text-[13px] text-foreground">—</p>
+                  <div>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Renewal price</p>
+                    <code className="text-[12px] font-mono text-foreground">—</code>
                   </div>
                 </div>
               </div>
@@ -627,7 +758,7 @@ export function DomainDetailView() {
                   style={{ backgroundColor: '#f02e65' }}
                 >
                   <Plus className="h-4 w-4" />
-                  Add Record
+                  Create Record
                 </Button>
               </div>
             </div>
@@ -638,115 +769,186 @@ export function DomainDetailView() {
               </div>
             ) : dnsRecords.length > 0 ? (
               <>
-                <div className="rounded-lg border border-border bg-card">
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[200px]">Name</TableHead>
-                        <TableHead className="w-[100px]">Type</TableHead>
+                        <TableHead className="w-[180px]">Name</TableHead>
+                        <TableHead className="w-[90px]">Type</TableHead>
                         <TableHead>Value</TableHead>
-                        <TableHead className="w-[80px]">TTL</TableHead>
-                        <TableHead className="w-[100px]">Priority</TableHead>
+                        <TableHead className="w-[70px]">TTL</TableHead>
+                        <TableHead className="w-[80px]">Priority</TableHead>
+                        <TableHead className="w-[70px]">Weight</TableHead>
+                        <TableHead className="w-[70px]">Port</TableHead>
+                        <TableHead className="w-[150px]">Comment</TableHead>
                         <TableHead className="w-[120px]">Created</TableHead>
-                        <TableHead className="w-[80px] text-right pr-4"></TableHead>
+                        <TableHead className="w-[100px] text-right pr-4"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {dnsRecords.map((record) => (
-                        <TableRow key={record.$id}>
-                          <TableCell>
-                            <span className="text-[13px] font-medium text-foreground">
-                              {record.name || '@'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-[11px]">
-                              {record.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {(() => {
-                              // Replace Appwrite placeholder values with standard tags
-                              const value = record.value
-                              if (value === 'a.a.a.a' || value === 'b:b::b:b:b') {
-                                return (
-                                  <Badge variant="secondary" className="text-[11px]">
-                                    Served by Appwrite
-                                  </Badge>
-                                )
-                              }
-                              if (value?.startsWith('0 issue "') && value?.includes('"')) {
-                                return (
-                                  <Badge variant="secondary" className="text-[11px]">
-                                    Generate by Appwrite
-                                  </Badge>
-                                )
-                              }
-                              return (
-                                <span className="text-[13px] text-muted-foreground">
-                                  {value}
-                                </span>
-                              )
-                            })()}
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-[12px] text-muted-foreground">
-                              {record.ttl}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-[12px] text-muted-foreground">
-                              {record.priority !== undefined ? record.priority : '—'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <DateTooltip
-                              date={record.$createdAt}
-                              className="text-[12px] font-medium text-muted-foreground"
-                            />
-                          </TableCell>
-                          <TableCell className="text-right pr-4">
-                            {record.lock ? (
-                              <div className="flex justify-end">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 cursor-pointer" disabled>
-                                  <Lock className="h-4 w-4 text-muted-foreground" />
+                      {dnsRecords.map((record) => {
+                        const nameValue = record.name || '@'
+                        const value = record.value
+                        const isAppwriteManaged = value === 'a.a.a.a' || value === 'b:b::b:b:b' || (value?.startsWith('0 issue "') && value?.includes('"'))
+                        const showPriority = record.type === 'MX' || record.type === 'SRV'
+                        const showSRVFields = record.type === 'SRV'
+
+                        return (
+                          <TableRow key={record.$id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2 group/name">
+                                <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+                                  {nameValue}
+                                </code>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover/name:opacity-100 transition-opacity cursor-pointer"
+                                  onClick={() => handleCopy(nameValue, `name-${record.$id}`)}
+                                >
+                                  {copiedField === `name-${record.$id}` ? (
+                                    <Check className="h-3 w-3 text-emerald-500" />
+                                  ) : (
+                                    <Copy className="h-3 w-3" />
+                                  )}
                                 </Button>
                               </div>
-                            ) : (
-                              <div className="flex justify-end">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 cursor-pointer">
-                                      <MoreHorizontal className="h-4 w-4" />
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  'text-[11px] font-medium border',
+                                  getRecordTypeColor(record.type)
+                                )}
+                              >
+                                {record.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2 max-w-[400px] group/value">
+                                {isAppwriteManaged ? (
+                                  <Badge 
+                                    variant="outline" 
+                                    className={cn(
+                                      'text-[11px] font-medium border bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+                                      'inline-flex items-center gap-1.5 px-2 py-0.5'
+                                    )}
+                                  >
+                                    {value === 'a.a.a.a' || value === 'b:b::b:b:b' 
+                                      ? 'Served by Appwrite' 
+                                      : 'Generated by Appwrite'}
+                                  </Badge>
+                                ) : (
+                                  <>
+                                    <code className="text-[12px] font-mono text-foreground break-all">
+                                      {value}
+                                    </code>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 shrink-0 opacity-0 group-hover/value:opacity-100 transition-opacity cursor-pointer"
+                                      onClick={() => handleCopy(value, `value-${record.$id}`)}
+                                    >
+                                      {copiedField === `value-${record.$id}` ? (
+                                        <Check className="h-3 w-3 text-emerald-500" />
+                                      ) : (
+                                        <Copy className="h-3 w-3" />
+                                      )}
                                     </Button>
-                                  </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setSelectedRecord(record)
-                                      setUpdateRecordDialogOpen(true)
-                                    }}
-                                  >
-                                    <Pencil className="mr-1.5 h-4 w-4" />
-                                    Update
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-destructive"
-                                    onClick={() => {
-                                      setSelectedRecord(record)
-                                      setDeleteRecordDialogOpen(true)
-                                    }}
-                                  >
-                                    <Trash2 className="mr-1.5 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                                  </>
+                                )}
                               </div>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell>
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {record.ttl}
+                              </code>
+                            </TableCell>
+                            <TableCell>
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {showPriority && record.priority !== undefined ? record.priority : '—'}
+                              </code>
+                            </TableCell>
+                            <TableCell>
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {showSRVFields && record.weight !== undefined ? record.weight : '—'}
+                              </code>
+                            </TableCell>
+                            <TableCell>
+                              <code className="text-[12px] font-mono text-muted-foreground">
+                                {showSRVFields && record.port !== undefined ? record.port : '—'}
+                              </code>
+                            </TableCell>
+                            <TableCell className="w-[150px]">
+                              {record.comment ? (
+                                <TooltipProvider delayDuration={0}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <p className="text-[12px] text-muted-foreground line-clamp-2 cursor-pointer min-w-0 break-words">
+                                        {record.comment}
+                                      </p>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-xs">
+                                      <p className="text-[12px] whitespace-pre-wrap break-words">
+                                        {record.comment}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <span className="text-[12px] text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <DateTooltip
+                                date={record.$createdAt}
+                                className="text-[12px] font-medium text-muted-foreground"
+                              />
+                            </TableCell>
+                            <TableCell className="text-right pr-4">
+                              {record.lock ? (
+                                <div className="flex justify-end">
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 cursor-pointer" disabled>
+                                    <Lock className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex justify-end">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 cursor-pointer">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedRecord(record)
+                                        setUpdateRecordDialogOpen(true)
+                                      }}
+                                    >
+                                      <Pencil className="mr-1.5 h-4 w-4" />
+                                      Update
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      onClick={() => {
+                                        setSelectedRecord(record)
+                                        setDeleteRecordDialogOpen(true)
+                                      }}
+                                    >
+                                      <Trash2 className="mr-1.5 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -770,8 +972,207 @@ export function DomainDetailView() {
             )}
           </>
         ) : (
-          <div className="py-8">
-            <p className="text-[13px] text-muted-foreground">Settings coming soon</p>
+          <div className="space-y-6">
+            {/* Transfer Domain Section */}
+            {domain && (
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">Change organization</h3>
+                </div>
+                <div className="border-t border-border" />
+                <div className="px-6 py-4">
+                  <p className="text-[13px] text-muted-foreground mb-4">
+                    Select an organization you own to move this domain.
+                  </p>
+                  <Label htmlFor="organization" className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
+                    Move to
+                  </Label>
+                  <Select value={selectedOrgId} onValueChange={setSelectedOrgId} disabled={organizationsLoading}>
+                    <SelectTrigger id="organization" className="mt-2 h-9 max-w-sm">
+                      <SelectValue placeholder={organizationsLoading ? "Loading organizations..." : "Select destination"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {organizations.length === 0 ? (
+                        <div className="px-2 py-1.5 text-[13px] text-muted-foreground">
+                          {organizationsLoading ? 'Loading...' : 'No other organizations available'}
+                        </div>
+                      ) : (
+                        organizations.map(org => (
+                          <SelectItem key={org.value} value={org.value}>
+                            {org.label}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="px-6 py-4 border-t border-border bg-muted/30">
+                  <Button
+                    size="sm"
+                    className="h-9 text-[13px]"
+                    disabled={!selectedOrgId || selectedOrgId === domain.teamId || transferDomainMutation.isPending}
+                    onClick={() => setTransferDialogOpen(true)}
+                  >
+                    Move
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Transfer Confirmation Dialog */}
+            {domain && (
+              <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+                <DialogContent className="sm:max-w-md p-0">
+                  <DialogHeader className="px-6 pt-6 text-left">
+                    <DialogTitle>Change organization</DialogTitle>
+                    <DialogDescription className="text-[13px] mt-2">
+                      Are you sure you want to move <strong>{domain.domain}</strong> to <strong>{organizations.find(org => org.value === selectedOrgId)?.label || 'the selected organization'}</strong>?
+                      <br />
+                      <br />
+                      Members who are not part of the destination organization must be invited to gain access to this domain.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      onClick={() => setTransferDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled={transferDomainMutation.isPending}
+                      onClick={handleTransferDomain}
+                    >
+                      Move
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Delete Domain Section */}
+            {domain && (
+              <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">Delete domain</h3>
+                </div>
+                <div className="border-t border-destructive/20" />
+                <div className="px-6 py-4">
+                  <p className="text-[13px] text-muted-foreground">
+                    Permanently delete this domain and all associated DNS records. This action cannot be undone.
+                  </p>
+
+                  {/* Domain Info Summary */}
+                  <div className="flex items-center gap-3 mt-4">
+                    <InitialsAvatar name={domain.domain} size="md" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-medium text-foreground truncate">
+                        {domain.domain}
+                      </p>
+                      <p className="text-[12px] text-muted-foreground">
+                        {domain.nameservers?.toLowerCase() === 'appwrite' ? 'Verified' : 'Unverified'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+                  <Dialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                      >
+                        Delete domain
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md p-0">
+                      <DialogHeader className="px-6 pt-6 text-left">
+                        <DialogTitle>
+                          Delete Domain
+                        </DialogTitle>
+                        <DialogDescription className="text-[13px] mt-2">
+                          Are you sure you want to delete{' '}
+                          {domain && (
+                            <span className="font-medium text-foreground">
+                              {domain.domain}
+                            </span>
+                          )}{' '}
+                          and all its DNS records? This action cannot be undone.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="border-t border-border" />
+                      <div className="px-6 pb-4 pt-0">
+                        <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
+                          {domain && (
+                            <div className="flex items-center gap-3">
+                              <InitialsAvatar
+                                name={domain.domain}
+                                size="sm"
+                              />
+                              <div>
+                                <p className="text-[13px] font-medium text-foreground">
+                                  {domain.domain}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {domain.nameservers?.toLowerCase() === 'appwrite' ? 'Verified' : 'Unverified'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <label className="text-[13px] text-muted-foreground">
+                          Type{' '}
+                          {domain && (
+                            <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
+                              {domain.domain}
+                            </span>
+                          )}{' '}
+                          to confirm
+                        </label>
+                        <Input
+                          value={deleteConfirmation}
+                          onChange={(e) => setDeleteConfirmation(e.target.value)}
+                          placeholder="Enter domain name"
+                          className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => {
+                            setDeleteDialogOpen(false)
+                            setDeleteConfirmation('')
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          disabled={deleteConfirmation !== domain?.domain || deleteDomainMutation.isPending}
+                          onClick={handleDeleteDomain}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            )}
           </div>
         )}
           </div>
@@ -816,6 +1217,17 @@ export function DomainDetailView() {
         onImport={handleImportZone}
         isLoading={importZoneMutation.isPending}
       />
+
+      {/* Retry Verification Dialog */}
+      {domain && (
+        <RetryVerificationDialog
+          open={retryDialogOpen}
+          onOpenChange={setRetryDialogOpen}
+          domain={domain}
+          onRetry={handleRetryVerification}
+          isLoading={retryVerificationMutation.isPending}
+        />
+      )}
     </div>
   )
 }

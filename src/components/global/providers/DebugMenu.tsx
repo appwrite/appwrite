@@ -235,7 +235,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
   // Render error trigger component to trigger error boundary
   if (showError) {
-    return <ErrorTrigger />
+    ErrorTrigger()
+    return null
   }
 
   return (
@@ -455,40 +456,40 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         <p className="text-sm font-medium">{plan.name}</p>
                       </div>
                     )}
-                    {plan.type && (
+                    {'type' in plan && plan.type && (
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
                           Plan Type
                         </label>
-                        <p className="text-sm font-medium capitalize">{plan.type}</p>
+                        <p className="text-sm font-medium capitalize">{String(plan.type)}</p>
                       </div>
                     )}
-                    {plan.tier !== undefined && (
+                    {'tier' in plan && plan.tier !== undefined && (
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
                           Tier
                         </label>
                         <p className="text-sm font-mono text-muted-foreground">
-                          {plan.tier}
+                          {String(plan.tier)}
                         </p>
                       </div>
                     )}
-                    {plan.billingPlan && (
+                    {'billingPlan' in plan && plan.billingPlan && (
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
                           Billing Plan
                         </label>
                         <p className="text-sm font-mono text-muted-foreground">
-                          {plan.billingPlan}
+                          {String(plan.billingPlan)}
                         </p>
                       </div>
                     )}
-                    {plan.currency && (
+                    {'currency' in plan && plan.currency && (
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
                           Currency
                         </label>
-                        <p className="text-sm font-medium">{plan.currency}</p>
+                        <p className="text-sm font-medium">{String(plan.currency)}</p>
                       </div>
                     )}
                     {plan.price !== undefined && (
@@ -497,18 +498,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           Price
                         </label>
                         <p className="text-sm font-medium">
-                          {plan.currency && plan.price !== undefined
+                          {'currency' in plan && plan.currency && plan.price !== undefined
                             ? `${plan.currency} ${plan.price}`
                             : plan.price}
                         </p>
                       </div>
                     )}
-                    {plan.interval && (
+                    {'interval' in plan && plan.interval && (
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
                           Billing Interval
                         </label>
-                        <p className="text-sm font-medium capitalize">{plan.interval}</p>
+                        <p className="text-sm font-medium capitalize">{String(plan.interval)}</p>
                       </div>
                     )}
                   </div>

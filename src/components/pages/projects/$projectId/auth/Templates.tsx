@@ -153,7 +153,7 @@ const EMAIL_TEMPLATE_TYPES = [
 ] as const
 
 export function Templates({ projectId }: TemplatesProps) {
-  const { data: project } = useProject(projectId)
+  const { project } = useProject(projectId)
   const { data: localeData } = useLocaleCodes()
   const queryClient = useQueryClient()
   
@@ -281,10 +281,12 @@ export function Templates({ projectId }: TemplatesProps) {
 
   // Handle form field changes
   const handleFieldChange = (
-    field: keyof typeof formData,
+    field: string,
     value: string,
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (field in formData) {
+      setFormData((prev) => ({ ...prev, [field]: value }))
+    }
   }
 
   // Handle update
@@ -439,7 +441,7 @@ export function Templates({ projectId }: TemplatesProps) {
             locale={selectedLocale}
             onLocaleChange={handleLocaleChange}
             localeCodes={localeData?.localeCodes || []}
-            template={displayTemplate}
+            template={displayTemplate || undefined}
             isLoading={showLoading}
             formData={formData}
             onFieldChange={handleFieldChange}
@@ -451,7 +453,7 @@ export function Templates({ projectId }: TemplatesProps) {
             isResetting={deleteMutation.isPending}
             onCopyVariable={handleCopyVariable}
             copiedVariable={copiedVariable}
-            variables={currentTemplateConfig.variables}
+            variables={[...currentTemplateConfig.variables]}
           />
         )}
       </div>
