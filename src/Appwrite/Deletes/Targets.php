@@ -3,9 +3,11 @@
 namespace Appwrite\Deletes;
 
 use Appwrite\Extend\Exception;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Exception\Limit as LimitException;
 
 class Targets
 {
@@ -42,12 +44,17 @@ class Targets
                         MESSAGE_TYPE_PUSH => 'pushTotal',
                         default => throw new Exception('Invalid target provider type'),
                     };
-                    $database->decreaseDocumentAttribute(
-                        'topics',
-                        $topicId,
-                        $totalAttribute,
-                        min: 0
-                    );
+
+                    try {
+                        $database->decreaseDocumentAttribute(
+                            'topics',
+                            $topicId,
+                            $totalAttribute,
+                            min: 0
+                        );
+                    } catch (LimitException $e){
+                        Console::error("delete subscribers limit reached (topicId={$topicId}): {$e->getMessage()}");
+                    }
                 }
             }
         );
