@@ -690,23 +690,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setActiveMembershipsPage(0)
   }, [membershipsSearchQuery])
 
-  // Org tabs with dynamic count
+  // Org tabs
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
     
     return [
-    { id: 'projects', label: 'Projects', count: totalProjectsCount, to: '/organizations/$orgId' },
+    { id: 'projects', label: 'Projects', to: '/organizations/$orgId' },
     {
       id: 'members',
       label: 'Members',
-      count: membershipsTotal,
       to: '/organizations/$orgId/members',
     },
     { id: 'domains', label: 'Domains', to: '/organizations/$orgId/domains/' },
     { id: 'billing', label: 'Billing', to: '/organizations/$orgId/billing' },
     { id: 'settings', label: 'Settings', to: '/organizations/$orgId/settings' },
   ]
-  }, [selectedOrg, totalProjectsCount, membershipsTotal, orgId])
+  }, [selectedOrg, orgId])
 
 
   const filteredProjectsByTeam = projectsByTeam
@@ -884,10 +883,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               {selectedOrg && (
                 <div className="flex items-center">
                   {membershipsLoading ? (
-                    // Placeholder skeleton to reserve space while loading
+                    // Placeholder skeleton to reserve space while loading - match exact structure of actual avatars
                     <div className="flex -space-x-2">
-                      <div className="relative h-8 w-8 rounded-full border-2 border-background bg-muted animate-pulse" />
-                      <div className="relative h-8 w-8 rounded-full border-2 border-background bg-muted animate-pulse" />
+                      <div className="relative rounded-full border-2 border-background" style={{ zIndex: 2 }}>
+                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                      </div>
+                      <div className="relative rounded-full border-2 border-background" style={{ zIndex: 1 }}>
+                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                      </div>
                     </div>
                   ) : memberships.length > 0 ? (
                     (() => {
@@ -985,18 +988,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )}
                 >
                   {tab.label}
-                  {tab.count !== undefined && (
-                    <span
-                      className={cn(
-                        'rounded-full px-1.5 py-0.5 text-[10px]',
-                        activeTab === tab.id
-                          ? 'bg-accent text-foreground'
-                          : 'bg-muted text-muted-foreground',
-                      )}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
                   {activeTab === tab.id && (
                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
                   )}
