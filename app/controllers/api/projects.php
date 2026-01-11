@@ -1795,6 +1795,13 @@ App::post('/v1/projects/:projectId/platforms')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        $name = \trim($name);
+        if (empty($name)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Platform name cannot be empty or whitespace only');
+        }
+
+        $key = \trim($key);
+
         $platform = new Document([
             '$id' => ID::unique(),
             '$permissions' => [
@@ -1941,6 +1948,13 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         if ($platform->isEmpty()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
+
+        $name = \trim($name);
+        if (empty($name)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Platform name cannot be empty or whitespace only');
+        }
+
+        $key = \trim($key);
 
         $platform
             ->setAttribute('name', $name)
