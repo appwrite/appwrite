@@ -101,72 +101,76 @@ export function FunctionSecurity() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Permissions Card */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Permissions</h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Choose who can execute this function
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <PermissionsEditor
-            permissions={execute}
-            onPermissionsChange={setExecute}
-            projectId={projectId}
-          />
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={arraysEqual(execute, func?.execute || []) || updateFunctionMutation.isPending}
-            onClick={handleSaveExecute}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
+    <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+        <div className="space-y-6">
+          {/* Permissions Card */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">Permissions</h3>
+              <p className="text-[13px] text-muted-foreground mt-2">
+                Choose who can execute this function
+              </p>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              <PermissionsEditor
+                permissions={execute}
+                onPermissionsChange={setExecute}
+                projectId={projectId}
+              />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={arraysEqual(execute, func?.execute || []) || updateFunctionMutation.isPending}
+                onClick={handleSaveExecute}
+              >
+                Update
+              </Button>
+            </div>
+          </div>
 
-      {/* Scopes Card */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Scopes</h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.{' '}
-            <a
-              href="https://appwrite.io/docs/advanced/platform/api-keys#scopes"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Learn more
-            </a>
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          {scopes !== null ? (
-            <ScopeEditor
-              value={scopes}
-              onChange={setScopes}
-              disabled={updateFunctionMutation.isPending}
-            />
-          ) : (
-            <p className="text-[13px] text-muted-foreground">Loading scopes...</p>
-          )}
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={!scopesChanged || scopes === null || updateFunctionMutation.isPending}
-            onClick={handleSaveScopes}
-          >
-            Update
-          </Button>
+          {/* Scopes Card */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">Scopes</h3>
+              <p className="text-[13px] text-muted-foreground mt-2">
+                Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.{' '}
+                <a
+                  href="https://appwrite.io/docs/advanced/platform/api-keys#scopes"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Learn more
+                </a>
+              </p>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              {scopes !== null ? (
+                <ScopeEditor
+                  value={scopes}
+                  onChange={setScopes}
+                  disabled={updateFunctionMutation.isPending}
+                />
+              ) : (
+                <p className="text-[13px] text-muted-foreground">Loading scopes...</p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={!scopesChanged || scopes === null || updateFunctionMutation.isPending}
+                onClick={handleSaveScopes}
+              >
+                Update
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

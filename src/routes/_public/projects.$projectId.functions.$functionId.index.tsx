@@ -43,6 +43,7 @@ export const Route = createFileRoute(
     }
 
     // Prefetch active deployment if function has a deploymentId
+    // Using ensureQueryData to wait for data before navigation completes
     if (func?.deploymentId) {
       try {
         await queryClient.ensureQueryData({
@@ -68,7 +69,8 @@ export const Route = createFileRoute(
       console.error('Error prefetching domains:', error)
     }
 
-    // Prefetch deployments for the requested page
+    // Prefetch deployments list for the requested page
+    // Using ensureQueryData to wait for data before navigation completes
     try {
       await queryClient.ensureQueryData({
         queryKey: ['deployments', 'function', projectId, functionId, pageIndex, DEPLOYMENTS_PER_PAGE, undefined],

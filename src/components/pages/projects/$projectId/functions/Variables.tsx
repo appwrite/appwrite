@@ -5,8 +5,12 @@ export function FunctionVariables() {
   const { projectId, functionId } = useParams({ strict: false })
 
   return (
-    <div className="space-y-6">
-      <FunctionVariablesCard projectId={projectId} functionId={functionId} />
+    <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+        <div className="space-y-6">
+          <FunctionVariablesCard projectId={projectId} functionId={functionId} />
+        </div>
+      </div>
     </div>
   )
 }

@@ -25,6 +25,7 @@ import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -619,17 +620,14 @@ export function BucketDetailView() {
                   />
                 </>
               ) : (
-                <div className="rounded-lg border border-border bg-card py-12 text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <File className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No files found
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    Upload your first file to this bucket
-                  </p>
-                </div>
+                <EmptyState
+                  icon={File}
+                  title="No files found"
+                  description="Upload your first file to this bucket"
+                  isEmpty={!searchValue}
+                  hasFilters={!!searchValue}
+                  variant="card"
+                />
               )
               ) : (
                 <div>
@@ -746,29 +744,25 @@ export function BucketDetailView() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-border bg-card py-12 text-center">
-                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                      <File className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <p className="mb-1 text-[14px] font-medium text-foreground">
-                      {searchValue
-                        ? `Sorry, we couldn't find '${searchValue}'`
-                        : 'No files found'}
-                    </p>
-                    <p className="text-[13px] text-muted-foreground">
-                      {searchValue
-                        ? 'Try adjusting your search'
-                        : 'Create your first file to start storing files'}
-                    </p>
+                  <div>
+                    <EmptyState
+                      icon={File}
+                      title={searchValue ? `Sorry, we couldn't find '${searchValue}'` : 'No files found'}
+                      description={searchValue ? 'Try adjusting your search' : 'Create your first file to start storing files'}
+                      isEmpty={!searchValue}
+                      hasFilters={!!searchValue}
+                      variant="card"
+                    />
                     {searchValue && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                        onClick={() => setSearchValue('')}
-                      >
-                        Clear search
-                      </Button>
+                      <div className="mt-4 text-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSearchValue('')}
+                        >
+                          Clear search
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}

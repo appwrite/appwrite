@@ -242,8 +242,10 @@ export function FunctionSettings() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Name Card */}
+    <div className="flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+        <div className="space-y-6">
+          {/* Name Card */}
       {func && (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
@@ -706,7 +708,8 @@ export function FunctionSettings() {
           </Dialog>
         </div>
       </div>
-
+        </div>
+      </div>
     </div>
   )
 }

@@ -539,8 +539,9 @@ export function FunctionDeployments() {
   }
 
   return (
-    <div ref={scrollContainerRef}>
-      <div className="space-y-6">
+    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="space-y-6">
         {isBuilding && (
           <div className="border-b border-border bg-blue-500/5">
             <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
@@ -818,14 +819,17 @@ export function FunctionDeployments() {
           </div>
         )}
 
-        {/* Deployments Table */}
+      </div>
+
+      {/* Deployments Table */}
+      <div className="mt-6">
         {deployments.length > 0 ? (
           <>
-            <div className="rounded-lg border border-border bg-card overflow-hidden">
-              <Table>
+            <div className="rounded-lg border border-border bg-card">
+            <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[50px]">
+                    <TableHead className="w-[40px]">
                       <Checkbox
                         checked={
                           (() => {
@@ -1009,7 +1013,6 @@ export function FunctionDeployments() {
                 </TableBody>
               </Table>
             </div>
-
             <Pagination
               currentPage={displayedPage + 1}
               totalItems={total}
@@ -1033,9 +1036,11 @@ export function FunctionDeployments() {
             </p>
           </div>
         )}
+        </div>
+      </div>
 
-        {/* Bulk Delete Action Bar */}
-        {selectedDeployments.size > 0 && (
+      {/* Bulk Delete Action Bar */}
+      {selectedDeployments.size > 0 && (
           <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
               <Badge variant="secondary" className="h-6 px-2.5">
@@ -1063,10 +1068,10 @@ export function FunctionDeployments() {
               </div>
             </div>
           </div>
-        )}
+      )}
 
-        {/* Runtime Limits Update Dialog */}
-        {specifications.length > 0 && (
+      {/* Runtime Limits Update Dialog */}
+      {specifications.length > 0 && (
           <Dialog open={runtimeLimitsDialogOpen} onOpenChange={setRuntimeLimitsDialogOpen}>
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 text-left">
@@ -1203,10 +1208,10 @@ export function FunctionDeployments() {
               </div>
             </DialogContent>
           </Dialog>
-        )}
+      )}
 
-        {/* Bulk Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-left">
               <DialogTitle>Delete Deployments</DialogTitle>
@@ -1233,7 +1238,6 @@ export function FunctionDeployments() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
     </div>
   )
 }

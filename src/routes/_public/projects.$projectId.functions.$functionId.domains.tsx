@@ -28,16 +28,28 @@ export const Route = createFileRoute(
       console.error('Error prefetching function data:', error)
     }
 
-    // Prefetch proxy rules for domains
+    // Prefetch proxy rules for domains (initial page, no search)
     try {
       await queryClient.ensureQueryData({
-        queryKey: ['proxy-rules', 'function', projectId, functionId, 0, DOMAINS_PER_PAGE, undefined],
-        queryFn: () => fetchFunctionDomains(projectId, functionId, 0, DOMAINS_PER_PAGE),
+        queryKey: ['proxy-rules', 'function', projectId, functionId, 0, DOMAINS_PER_PAGE, ''],
+        queryFn: () => fetchFunctionDomains(projectId, functionId, 0, DOMAINS_PER_PAGE, ''),
         staleTime: 30 * 1000,
       })
     } catch (error) {
       // Log error but don't block rendering
       console.error('Error prefetching domains:', error)
+    }
+
+    // Prefetch total count for limit checking (separate from search query)
+    try {
+      await queryClient.ensureQueryData({
+        queryKey: ['proxy-rules', 'function', projectId, functionId, 0, 1, ''],
+        queryFn: () => fetchFunctionDomains(projectId, functionId, 0, 1, ''),
+        staleTime: 30 * 1000,
+      })
+    } catch (error) {
+      // Log error but don't block rendering
+      console.error('Error prefetching domains total count:', error)
     }
   },
   component: FunctionDomains,

@@ -32,18 +32,18 @@ export function FunctionLayout() {
       if (functionIndex >= 0) {
         // Check if there's a tab segment after function ID
         // Pattern: /projects/:projectId/functions/:functionId/:tab?
-        const functionIdSegment = pathParts[functionIndex + 1]
-          if (pathParts[functionIndex + 2]) {
-            const tabFromPath = pathParts[functionIndex + 2]
-            if (['deployments', 'executions', 'domains', 'variables', 'security', 'settings'].includes(tabFromPath)) {
-              return tabFromPath
-            }
+        if (pathParts[functionIndex + 2]) {
+          const tabFromPath = pathParts[functionIndex + 2]
+          if (['deployments', 'executions', 'domains', 'variables', 'security', 'settings'].includes(tabFromPath)) {
+            return tabFromPath
           }
+        }
       }
 
     // Default to deployments for index route
     return 'deployments'
   }, [location.pathname])
+
 
   const tabs: Tab[] = useMemo(
     () => [
@@ -255,7 +255,6 @@ export function FunctionLayout() {
         tabs={tabs}
         activeTab={activeTab}
         fullWidthBorder
-        fullWidth={activeTab === 'executions'}
         searchPlaceholder={
           activeTab === 'domains'
             ? 'Search domain...'
@@ -305,17 +304,7 @@ export function FunctionLayout() {
           ) : undefined
         }
       />
-      <div
-        className={cn(
-          'flex-1 overflow-y-auto',
-          activeTab === 'executions'
-            ? 'w-full'
-            : activeTab === 'settings' || activeTab === 'security' || activeTab === 'variables'
-              ? 'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6'
-              : 'mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6',
-          activeTab === 'domains' && 'pt-4 sm:pt-6',
-        )}
-      >
+      <div className="flex-1 overflow-y-auto">
         <Outlet />
       </div>
     </div>
