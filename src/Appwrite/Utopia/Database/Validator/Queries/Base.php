@@ -122,7 +122,7 @@ class Base extends Types
         ];
 
         foreach ($internalAttributes as $attribute) {
-            $this->collection->setAttribute('attributes', $attribute, Document::SET_TYPE_APPEND);
+            //$this->collection->setAttribute('attributes', $attribute, Document::SET_TYPE_APPEND);
         }
 
         if ($this->isSelectQueryAllowed()) {
