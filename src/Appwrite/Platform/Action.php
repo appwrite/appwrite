@@ -175,7 +175,7 @@ class Action extends UtopiaAction
         $queries = $request->getParam('queries', []);
 
         $queries = Query::parseQueries($queries);
-        //$selectQueries = Query::groupByType($queries)['selections'] ?? [];
+
         $selectQueries = Query::getSelectQueries($queries);
 
         // No select queries means no filtering out
