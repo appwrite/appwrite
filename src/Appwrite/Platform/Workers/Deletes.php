@@ -428,7 +428,7 @@ class Deletes extends Action
             /** @var Database $dbForLogs */
             $dbForLogs = call_user_func($getLogsDB, $project);
 
-            $queries[] = [
+            $queries = [
                 Query::equal('period', ['1h']),
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::orderDesc('time'),

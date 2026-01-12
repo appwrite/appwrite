@@ -70,6 +70,9 @@ class V17 extends Filter
                 /** @var Query|Query[] $queries */
                 $queries = $this->parseQuery($query);
 
+                /**
+                 * select query will return as an array of select queries
+                 */
                 if ($queries instanceof Query) {
                     $queries = [$queries];
                 }
@@ -274,7 +277,7 @@ class V17 extends Filter
             case Query::TYPE_SELECT:
                 $selects = [];
                 foreach ($parsedParams[0] as $attribute) {
-                    $selects[] = Query::select($parsedParams[0], $parsedParams[1], $parsedParams[2]);
+                    $selects[] = Query::select($attribute);
                 }
 
                 return $selects;
