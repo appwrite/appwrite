@@ -17,18 +17,10 @@ class Types extends Validator
      */
     protected array $types;
 
-    /**
-     * @var array<Query>
-     */
-    protected array $queries;
-
-    /**
-     * @var QueryContext
-     */
     protected ?QueryContext $context = null;
 
     /**
-     * @param array<string> $allowedAttributes
+     * @var array<string>
      */
     protected array $allowedAttributes;
 
@@ -78,7 +70,7 @@ class Types extends Validator
                 }
 
                 if ($query->isNested()) {
-                    if (!self::isValid($query->getValues())) {
+                    if (!$this->isValid($query->getValues())) {
                         throw new \Exception('Invalid queries');
                     }
                 }
