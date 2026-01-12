@@ -333,11 +333,11 @@ export function DatabasesListView() {
             ) : viewMode === 'list' ? (
               paginatedDatabases.length > 0 ? (
                 <>
-                  <div className="rounded-lg border border-border bg-card">
+                  <div className="rounded-lg border border-border bg-card overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead className="w-[40px]">
+                        <TableRow className="hover:bg-transparent border-b border-border">
+                          <TableHead className="w-[40px] px-4">
                             <Checkbox
                               checked={
                                 paginatedDatabases.length > 0 &&
@@ -346,11 +346,21 @@ export function DatabasesListView() {
                               onCheckedChange={toggleAllDatabases}
                             />
                           </TableHead>
-                          <TableHead className="w-[180px]">Database ID</TableHead>
-                          <TableHead className="w-[200px]">Name</TableHead>
-                          <TableHead className="w-[150px]">Backups</TableHead>
-                          <TableHead className="w-[120px]">Created</TableHead>
-                          <TableHead className="w-[120px]">Updated</TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Database
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                            Status
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                            Backups
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                            Created
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                            Updated
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -358,10 +368,10 @@ export function DatabasesListView() {
                           <TableRow
                             key={db.$id}
                             className={cn(
-                              'cursor-pointer transition-colors',
+                              'cursor-pointer transition-colors border-b border-border/50',
                               selectedDatabases.has(db.$id)
                                 ? 'bg-sky-100 dark:bg-sky-950'
-                                : 'hover:bg-muted/50',
+                                : 'hover:bg-muted/30',
                             )}
                             onClick={(e) => {
                               // Don't navigate if clicking on checkbox, link, or their containers
@@ -379,81 +389,81 @@ export function DatabasesListView() {
                               })
                             }}
                           >
-                            <TableCell onClick={(e) => e.stopPropagation()}>
+                            <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
                               <Checkbox
                                 checked={selectedDatabases.has(db.$id)}
                                 onCheckedChange={() => toggleDatabase(db.$id)}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <Link
                                 to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
                                 params={{ projectId, databaseId: db.$id, tableId: '-' }}
-                                className="block"
+                                className="block group"
                               >
-                                <CopyableId id={db.$id} size="xs" />
-                              </Link>
-                            </TableCell>
-                            <TableCell>
-                              <Link
-                                to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                                params={{ projectId, databaseId: db.$id, tableId: '-' }}
-                                className="block"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <p className="text-[13px] font-medium text-foreground">
-                                    {db.name}
-                                  </p>
-                                  {db.enabled === false && (
-                                    <Badge variant="error" className="text-[11px]">
-                                      Disabled
-                                    </Badge>
-                                  )}
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                      {db.name}
+                                    </p>
+                                    <div className="mt-0.5">
+                                      <CopyableId id={db.$id} size="xs" />
+                                    </div>
+                                  </div>
                                 </div>
                               </Link>
                             </TableCell>
-                            <TableCell>
-                              <Link
-                                to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                                params={{ projectId, databaseId: db.$id, tableId: '-' }}
-                                className="block"
-                              >
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center justify-center">
+                                {db.enabled === false ? (
+                                  <Badge variant="error" className="text-[11px] font-medium border px-2 py-0.5">
+                                    Disabled
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="success" className="text-[11px] font-medium border px-2 py-0.5">
+                                    Enabled
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center justify-center">
                                 {(db as any).hasBackupPolicy ? (
-                                  <Badge variant="success" className="gap-1.5 text-[11px] font-medium">
+                                  <Badge variant="success" className="gap-1.5 text-[11px] font-medium border px-2 py-0.5">
                                     <CheckCircle2 className="h-3 w-3" />
                                     {(db as any).backupPolicyCount > 0 
                                       ? `${(db as any).backupPolicyCount} ${(db as any).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                      : (db as any).backupPolicy?.name || 'Backup Enabled'}
+                                      : (db as any).backupPolicy?.name || 'Enabled'}
                                   </Badge>
                                 ) : (
-                                  <Badge variant="warning" className="gap-1.5 text-[11px] font-medium">
+                                  <Badge variant="warning" className="gap-1.5 text-[11px] font-medium border px-2 py-0.5">
                                     <AlertCircle className="h-3 w-3" />
-                                    No backup policies
+                                    None
                                   </Badge>
                                 )}
-                              </Link>
+                              </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <Link
                                 to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
                                 params={{ projectId, databaseId: db.$id, tableId: '-' }}
-                                className="block"
+                                className="block text-right"
                               >
                                 <DateTooltip
                                   date={new Date((db as any).createdAt || new Date())}
-                                  className="text-[12px] text-muted-foreground"
+                                  className="text-[12px] text-muted-foreground font-mono"
                                 />
                               </Link>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <Link
                                 to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
                                 params={{ projectId, databaseId: db.$id, tableId: '-' }}
-                                className="block"
+                                className="block text-right"
                               >
                                 <DateTooltip
                                   date={new Date((db as any).updatedAt || (db as any).createdAt || new Date())}
-                                  className="text-[12px] text-muted-foreground"
+                                  className="text-[12px] text-muted-foreground font-mono"
                                 />
                               </Link>
                             </TableCell>
@@ -2032,11 +2042,11 @@ export function DatabaseOverview({
               </div>
             ) : paginatedTables.length > 0 ? (
               <>
-                <div className="rounded-lg border border-border bg-card">
+                <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[40px]">
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="w-[40px] px-4">
                           <Checkbox
                             checked={
                               paginatedTables.length > 0 &&
@@ -2045,11 +2055,18 @@ export function DatabaseOverview({
                             onCheckedChange={toggleAllTables}
                           />
                         </TableHead>
-                        <TableHead className="w-[180px]">Table ID</TableHead>
-                        <TableHead className="w-[200px]">Name</TableHead>
-                        <TableHead className="w-[100px]">Columns</TableHead>
-                        <TableHead className="w-[100px]">Rows</TableHead>
-                        <TableHead className="w-[100px]">Indexes</TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Table
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          Columns
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          Rows
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          Indexes
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -2057,10 +2074,10 @@ export function DatabaseOverview({
                         <TableRow
                           key={table.$id}
                           className={cn(
-                            'cursor-pointer transition-colors',
+                            'cursor-pointer transition-colors border-b border-border/50',
                             selectedTables.has(table.$id)
                               ? 'bg-sky-100 dark:bg-sky-950'
-                              : 'hover:bg-muted/50',
+                              : 'hover:bg-muted/30',
                           )}
                           onClick={(e) => {
                             // Don't navigate if clicking on checkbox, link, or their containers
@@ -2078,67 +2095,65 @@ export function DatabaseOverview({
                             })
                           }}
                         >
-                          <TableCell onClick={(e) => e.stopPropagation()}>
+                          <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
                             <Checkbox
                               checked={selectedTables.has(table.$id)}
                               onCheckedChange={() => toggleTable(table.$id)}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
                               params={{ projectId, databaseId, tableId: table.$id }}
-                              className="block"
+                              className="block group"
                             >
-                              <CopyableId id={table.$id} size="xs" />
-                            </Link>
-                          </TableCell>
-                          <TableCell>
-                            <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{ projectId, databaseId, tableId: table.$id }}
-                              className="block"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Table2 className="h-4 w-4 text-muted-foreground" />
-                                <p className="text-[13px] font-medium text-foreground">
-                                  {table.name}
-                                </p>
+                              <div className="flex items-center gap-3 min-w-0">
+                                <Table2 className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                    {table.name}
+                                  </p>
+                                  <div className="mt-0.5">
+                                    <CopyableId id={table.$id} size="xs" />
+                                  </div>
+                                </div>
                                 {table.enabled === false && (
-                                  <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                                  <Badge variant="error" className="text-[11px] font-medium border px-2 py-0.5 shrink-0">
+                                    Disabled
+                                  </Badge>
                                 )}
                               </div>
                             </Link>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
                               params={{ projectId, databaseId, tableId: table.$id }}
-                              className="block"
+                              className="block text-right"
                             >
-                              <span className="text-[13px] text-foreground">
+                              <span className="text-[12px] text-foreground font-mono">
                                 {table.columns}
                               </span>
                             </Link>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
                               params={{ projectId, databaseId, tableId: table.$id }}
-                              className="block"
+                              className="block text-right"
                             >
-                              <span className="text-[13px] text-muted-foreground">
+                              <span className="text-[12px] text-muted-foreground font-mono">
                                 {formatNumber(table.rows)}
                               </span>
                             </Link>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
                               params={{ projectId, databaseId, tableId: table.$id }}
-                              className="block"
+                              className="block text-right"
                             >
-                              <span className="text-[13px] text-muted-foreground">
+                              <span className="text-[12px] text-muted-foreground font-mono">
                                 {table.indexes}
                               </span>
                             </Link>

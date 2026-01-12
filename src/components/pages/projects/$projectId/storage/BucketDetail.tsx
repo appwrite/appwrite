@@ -405,11 +405,11 @@ export function BucketDetailView() {
             ) : viewMode === 'list' ? (
               files.length > 0 ? (
                 <>
-                  <div className="rounded-lg border border-border bg-card">
+                  <div className="rounded-lg border border-border bg-card overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead className="w-[40px]">
+                        <TableRow className="hover:bg-transparent border-b border-border">
+                          <TableHead className="w-[40px] px-4">
                             <Checkbox
                               checked={
                                 files.filter((f) => !isFilePending(f)).length > 0 &&
@@ -418,12 +418,21 @@ export function BucketDetailView() {
                               onCheckedChange={toggleAllFiles}
                             />
                           </TableHead>
-                          <TableHead className="w-[60px]">Preview</TableHead>
-                          <TableHead className="w-[200px]">File ID</TableHead>
-                          <TableHead className="w-[220px]">Filename</TableHead>
-                          <TableHead className="w-[120px]">Type</TableHead>
-                          <TableHead className="w-[100px]">Size</TableHead>
-                          <TableHead className="w-[120px]">Created</TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]">
+                            Preview
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            File
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Type
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                            Size
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                            Created
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -440,12 +449,12 @@ export function BucketDetailView() {
                             <TableRow
                               key={file.$id}
                               className={cn(
-                                pending ? '' : 'cursor-pointer transition-colors',
-                                !pending && 'hover:bg-muted/50',
+                                pending ? '' : 'cursor-pointer transition-colors border-b border-border/50',
+                                !pending && 'hover:bg-muted/30',
                                 selectedFiles.has(file.$id) && 'bg-sky-100 dark:bg-sky-950',
                               )}
                             >
-                              <TableCell onClick={(e) => e.stopPropagation()}>
+                              <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
                                 {!pending && (
                                   <Checkbox
                                     checked={selectedFiles.has(file.$id)}
@@ -453,7 +462,7 @@ export function BucketDetailView() {
                                   />
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 {pending ? (
                                   <>
                                     {file.mimeType?.startsWith('image/') && projectId && bucketId ? (
@@ -506,33 +515,21 @@ export function BucketDetailView() {
                                   </Link>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 {pending ? (
-                                  <CopyableId
-                                    id={file.$id}
-                                    className="text-[13px]"
-                                  />
-                                ) : (
-                                  <Link
-                                    to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                    params={fileLinkParams}
-                                    className="block"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <CopyableId
-                                      id={file.$id}
-                                      className="text-[13px]"
-                                    />
-                                  </Link>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {pending ? (
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-[13px] font-medium text-foreground">
-                                      {file.name}
-                                    </p>
-                                    <Badge variant="secondary" className="text-[11px]">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="truncate text-[13px] font-medium text-foreground">
+                                        {file.name}
+                                      </p>
+                                      <div className="mt-0.5">
+                                        <CopyableId
+                                          id={file.$id}
+                                          size="xs"
+                                        />
+                                      </div>
+                                    </div>
+                                    <Badge variant="secondary" className="text-[11px] font-medium border px-2 py-0.5 shrink-0">
                                       Pending
                                     </Badge>
                                   </div>
@@ -540,20 +537,28 @@ export function BucketDetailView() {
                                   <Link
                                     to="/projects/$projectId/storage/$bucketId/files/$fileId"
                                     params={fileLinkParams}
-                                    className="block"
+                                    className="block group"
                                   >
-                                    <div className="flex items-center gap-2">
-                                      <p className="text-[13px] font-medium text-foreground">
-                                        {file.name}
-                                      </p>
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                          {file.name}
+                                        </p>
+                                        <div className="mt-0.5">
+                                          <CopyableId
+                                            id={file.$id}
+                                            size="xs"
+                                          />
+                                        </div>
+                                      </div>
                                     </div>
                                   </Link>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 {pending ? (
-                                  <span className="text-[13px] text-muted-foreground">
-                                    {file.mimeType}
+                                  <span className="text-[12px] text-muted-foreground font-mono">
+                                    {file.mimeType || '-'}
                                   </span>
                                 ) : (
                                   <Link
@@ -561,44 +566,44 @@ export function BucketDetailView() {
                                     params={fileLinkParams}
                                     className="block"
                                   >
-                                    <span className="text-[13px] text-muted-foreground">
-                                      {file.mimeType}
+                                    <span className="text-[12px] text-muted-foreground font-mono">
+                                      {file.mimeType || '-'}
                                     </span>
                                   </Link>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 {pending ? (
-                                  <span className="text-[13px] text-muted-foreground">
+                                  <span className="text-[12px] text-muted-foreground font-mono text-right block">
                                     {formatBytes(file.sizeOriginal)}
                                   </span>
                                 ) : (
                                   <Link
                                     to="/projects/$projectId/storage/$bucketId/files/$fileId"
                                     params={fileLinkParams}
-                                    className="block"
+                                    className="block text-right"
                                   >
-                                    <span className="text-[13px] text-muted-foreground">
+                                    <span className="text-[12px] text-muted-foreground font-mono">
                                       {formatBytes(file.sizeOriginal)}
                                     </span>
                                   </Link>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 {pending ? (
                                   <DateTooltip
                                     date={new Date(file.$createdAt)}
-                                    className="text-[12px] text-muted-foreground"
+                                    className="text-[12px] text-muted-foreground font-mono text-right block"
                                   />
                                 ) : (
                                   <Link
                                     to="/projects/$projectId/storage/$bucketId/files/$fileId"
                                     params={fileLinkParams}
-                                    className="block"
+                                    className="block text-right"
                                   >
                                     <DateTooltip
                                       date={new Date(file.$createdAt)}
-                                      className="text-[12px] text-muted-foreground"
+                                      className="text-[12px] text-muted-foreground font-mono"
                                     />
                                   </Link>
                                 )}

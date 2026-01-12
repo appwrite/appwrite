@@ -265,11 +265,11 @@ export function StorageView() {
             </div>
           ) : paginatedBuckets.length > 0 ? (
             <>
-              <div className="rounded-lg border border-border bg-card">
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[40px]">
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="w-[40px] px-4">
                           <Checkbox
                             checked={
                               paginatedBuckets.length > 0 &&
@@ -278,10 +278,18 @@ export function StorageView() {
                             onCheckedChange={toggleAllBuckets}
                           />
                         </TableHead>
-                        <TableHead className="w-[180px]">Bucket ID</TableHead>
-                        <TableHead className="w-[200px]">Name</TableHead>
-                        <TableHead className="w-[120px]">Created</TableHead>
-                        <TableHead className="w-[120px]">Updated</TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Bucket
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                          Status
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          Created
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                          Updated
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -292,74 +300,78 @@ export function StorageView() {
                           <TableRow
                             key={bucketData.$id}
                             className={cn(
-                              'cursor-pointer transition-colors',
+                              'cursor-pointer transition-colors border-b border-border/50',
                               selectedBuckets.has(bucketData.$id)
                                 ? 'bg-sky-100 dark:bg-sky-950'
-                                : 'hover:bg-muted/50',
+                                : 'hover:bg-muted/30',
                             )}
                           >
-                            <TableCell onClick={(e) => e.stopPropagation()}>
+                            <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
                               <Checkbox
                                 checked={selectedBuckets.has(bucketData.$id)}
                                 onCheckedChange={() => toggleBucket(bucketData.$id)}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/storage/$bucketId/"
                               params={{ projectId: projectId!, bucketId: bucketData.$id }}
-                              className="block"
+                              className="block group"
                             >
-                              <CopyableId id={bucketData.$id} size="xs" />
-                            </Link>
-                          </TableCell>
-                          <TableCell>
-                            <Link
-                              to="/projects/$projectId/storage/$bucketId/"
-                              params={{ projectId: projectId!, bucketId: bucketData.$id }}
-                              className="block"
-                            >
-                              <div className="flex items-center gap-2">
-                                <p className="text-[13px] font-medium text-foreground">
-                                  {bucketData.name}
-                                </p>
-                                {isDisabled && (
-                                  <Badge variant="error" className="text-[11px]">
-                                    Disabled
-                                  </Badge>
-                                )}
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex-1 min-w-0">
+                                  <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                    {bucketData.name}
+                                  </p>
+                                  <div className="mt-0.5">
+                                    <CopyableId id={bucketData.$id} size="xs" />
+                                  </div>
+                                </div>
                               </div>
                             </Link>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
+                            <div className="flex items-center justify-center">
+                              {isDisabled ? (
+                                <Badge variant="error" className="text-[11px] font-medium border px-2 py-0.5">
+                                  Disabled
+                                </Badge>
+                              ) : (
+                                <Badge variant="success" className="text-[11px] font-medium border px-2 py-0.5">
+                                  Enabled
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/storage/$bucketId/"
                               params={{ projectId: projectId!, bucketId: bucketData.$id }}
-                              className="block"
+                              className="block text-right"
                             >
                               {bucketData.$createdAt ? (
                                 <DateTooltip
                                   date={bucketData.$createdAt}
-                                  className="text-[12px] text-muted-foreground"
+                                  className="text-[12px] text-muted-foreground font-mono"
                                 />
                               ) : (
-                                <span className="text-[12px] text-muted-foreground">N/A</span>
+                                <span className="text-[12px] text-muted-foreground/50 italic">N/A</span>
                               )}
                             </Link>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/storage/$bucketId/"
                               params={{ projectId: projectId!, bucketId: bucketData.$id }}
-                              className="block"
+                              className="block text-right"
                             >
                               {bucketData.$updatedAt ? (
                                 <DateTooltip
                                   date={bucketData.$updatedAt}
-                                  className="text-[12px] text-muted-foreground"
+                                  className="text-[12px] text-muted-foreground font-mono"
                                 />
                               ) : (
-                                <span className="text-[12px] text-muted-foreground">N/A</span>
+                                <span className="text-[12px] text-muted-foreground/50 italic">N/A</span>
                               )}
                             </Link>
                           </TableCell>
