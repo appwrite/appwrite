@@ -91,7 +91,8 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $lines = explode("\n", $data, 3);
         $request = $lines[0];
         if (count($lines) > 1) {
-            $domain = trim(explode('Host: ', $lines[1])[1]);
+            $hostParts = explode('Host: ', $lines[1] ?? '');
+            $domain = isset($hostParts[1]) ? trim($hostParts[1]) : '';
         }
 
         // Sync executions are considered risky
