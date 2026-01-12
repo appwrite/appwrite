@@ -1,13 +1,28 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { DateRange } from 'react-day-picker'
+import { startOfDay, endOfDay, subDays } from 'date-fns'
 import {
   TrendingUp,
   TrendingDown,
-  ChevronLeft,
+  ArrowLeft,
   ChevronDown,
   Globe,
   Chrome,
+  Monitor,
+  Smartphone,
+  Tablet,
+  LogIn,
+  LogOut,
+  Clock,
+  Users,
+  UserPlus,
 } from 'lucide-react'
+import { ServiceHeader, type Tab } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
+import { Button } from '@/components/ui/button'
+import { DateRangePicker } from './DateRangePicker'
+import { ComparisonSelector, type ComparisonType } from './ComparisonSelector'
 import {
   Area,
   AreaChart,
@@ -15,20 +30,14 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  RadialBarChart,
-  RadialBar,
   BarChart,
   Bar,
   Cell,
 } from 'recharts'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Map, MapMarker, MapControls, MarkerContent, MarkerPopup, COUNTRY_COORDINATES, useMap } from '@/components/ui/map'
+import { sdk } from '@/lib/appwrite/sdk'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   ChartContainer,
   ChartTooltip,
@@ -63,6 +72,33 @@ interface SourceData {
   visitors: number
 }
 
+interface ChannelData {
+  name: string
+  visitors: number
+  color: string
+}
+
+interface CampaignData {
+  name: string
+  visitors: number
+}
+
+interface RegionData {
+  region: string
+  country: string
+  flag: string
+  code: string
+  visitors: number
+}
+
+interface CityData {
+  city: string
+  country: string
+  flag: string
+  code: string
+  visitors: number
+}
+
 interface BrowserData {
   name: string
   icon: React.ReactNode
@@ -74,6 +110,30 @@ interface OSData {
   visitors: number
   color: string
   fill: string
+}
+
+interface DeviceData {
+  type: string
+  icon: React.ReactNode
+  visitors: number
+  color: string
+}
+
+interface ResolutionData {
+  resolution: string
+  visitors: number
+}
+
+interface EntryExitData {
+  path: string
+  visitors: number
+  type: 'entry' | 'exit'
+}
+
+interface HourData {
+  hour: number
+  visitors: number
+  label: string
 }
 
 // Mock data
@@ -199,6 +259,38 @@ const topSources: SourceData[] = [
   { name: 'Direct', icon: <Globe className="h-4 w-4" />, visitors: 2800 },
 ]
 
+const channels: ChannelData[] = [
+  { name: 'Organic Search', visitors: 145600, color: '#3b82f6' },
+  { name: 'Social', visitors: 94100, color: '#10b981' },
+  { name: 'Direct', visitors: 47800, color: '#f59e0b' },
+  { name: 'Referral', visitors: 26600, color: '#ef4444' },
+  { name: 'Email', visitors: 11200, color: '#8b5cf6' },
+]
+
+const campaigns: CampaignData[] = [
+  { name: 'Summer Launch 2024', visitors: 34200 },
+  { name: 'Product Update', visitors: 28900 },
+  { name: 'Blog Series', visitors: 15600 },
+  { name: 'Newsletter', visitors: 11200 },
+  { name: 'Social Campaign', visitors: 8900 },
+]
+
+const regions: RegionData[] = [
+  { region: 'South Asia', country: 'India', flag: '🇮🇳', code: 'IN', visitors: 46800 },
+  { region: 'North America', country: 'United States', flag: '🇺🇸', code: 'US', visitors: 39200 },
+  { region: 'Western Europe', country: 'Germany', flag: '🇩🇪', code: 'DE', visitors: 37100 },
+  { region: 'Western Europe', country: 'United Kingdom', flag: '🇬🇧', code: 'GB', visitors: 35500 },
+  { region: 'Western Europe', country: 'Netherlands', flag: '🇳🇱', code: 'NL', visitors: 34400 },
+]
+
+const cities: CityData[] = [
+  { city: 'Mumbai', country: 'India', flag: '🇮🇳', code: 'IN', visitors: 12400 },
+  { city: 'New York', country: 'United States', flag: '🇺🇸', code: 'US', visitors: 11200 },
+  { city: 'Berlin', country: 'Germany', flag: '🇩🇪', code: 'DE', visitors: 9800 },
+  { city: 'London', country: 'United Kingdom', flag: '🇬🇧', code: 'GB', visitors: 8900 },
+  { city: 'Amsterdam', country: 'Netherlands', flag: '🇳🇱', code: 'NL', visitors: 7600 },
+]
+
 const browsers: BrowserData[] = [
   { name: 'Chrome', icon: <Chrome className="h-4 w-4" />, visitors: 24700 },
   { name: 'Firefox', icon: <Globe className="h-4 w-4" />, visitors: 11900 },
@@ -218,6 +310,86 @@ const operatingSystems: OSData[] = [
   { name: 'iOS', visitors: 19200, color: '#ef4444', fill: '#ef4444' },
   { name: 'Android', visitors: 18900, color: '#f97316', fill: '#f97316' },
 ]
+
+const devices: DeviceData[] = [
+  {
+    type: 'Desktop',
+    icon: <Monitor className="h-4 w-4" />,
+    visitors: 124800,
+    color: '#3b82f6',
+  },
+  {
+    type: 'Mobile',
+    icon: <Smartphone className="h-4 w-4" />,
+    visitors: 89200,
+    color: '#10b981',
+  },
+  {
+    type: 'Tablet',
+    icon: <Tablet className="h-4 w-4" />,
+    visitors: 12400,
+    color: '#f59e0b',
+  },
+]
+
+const screenResolutions: ResolutionData[] = [
+  { resolution: '1920×1080', visitors: 45600 },
+  { resolution: '1366×768', visitors: 34200 },
+  { resolution: '1536×864', visitors: 28900 },
+  { resolution: '1440×900', visitors: 23400 },
+  { resolution: '1280×720', visitors: 19800 },
+  { resolution: '375×667', visitors: 15600 },
+  { resolution: '414×896', visitors: 14200 },
+  { resolution: '390×844', visitors: 12800 },
+]
+
+const entryPages: EntryExitData[] = [
+  { path: '/', visitors: 12400, type: 'entry' },
+  { path: '/page', visitors: 8900, type: 'entry' },
+  { path: '/docs', visitors: 6700, type: 'entry' },
+  { path: '/pricing', visitors: 5400, type: 'entry' },
+  { path: '/blog', visitors: 3200, type: 'entry' },
+]
+
+const exitPages: EntryExitData[] = [
+  { path: '/page/subpage', visitors: 9800, type: 'exit' },
+  { path: '/contact', visitors: 7200, type: 'exit' },
+  { path: '/blog', visitors: 5600, type: 'exit' },
+  { path: '/docs', visitors: 4100, type: 'exit' },
+  { path: '/about', visitors: 3400, type: 'exit' },
+]
+
+const peakHours: HourData[] = [
+  { hour: 0, visitors: 1200, label: '12 AM' },
+  { hour: 1, visitors: 800, label: '1 AM' },
+  { hour: 2, visitors: 600, label: '2 AM' },
+  { hour: 3, visitors: 500, label: '3 AM' },
+  { hour: 4, visitors: 400, label: '4 AM' },
+  { hour: 5, visitors: 500, label: '5 AM' },
+  { hour: 6, visitors: 800, label: '6 AM' },
+  { hour: 7, visitors: 1200, label: '7 AM' },
+  { hour: 8, visitors: 2100, label: '8 AM' },
+  { hour: 9, visitors: 3400, label: '9 AM' },
+  { hour: 10, visitors: 4200, label: '10 AM' },
+  { hour: 11, visitors: 4800, label: '11 AM' },
+  { hour: 12, visitors: 5200, label: '12 PM' },
+  { hour: 13, visitors: 5100, label: '1 PM' },
+  { hour: 14, visitors: 4900, label: '2 PM' },
+  { hour: 15, visitors: 4600, label: '3 PM' },
+  { hour: 16, visitors: 4400, label: '4 PM' },
+  { hour: 17, visitors: 3800, label: '5 PM' },
+  { hour: 18, visitors: 3200, label: '6 PM' },
+  { hour: 19, visitors: 2800, label: '7 PM' },
+  { hour: 20, visitors: 2400, label: '8 PM' },
+  { hour: 21, visitors: 2000, label: '9 PM' },
+  { hour: 22, visitors: 1600, label: '10 PM' },
+  { hour: 23, visitors: 1400, label: '11 PM' },
+]
+
+const visitorTypes = {
+  new: 89200,
+  returning: 54800,
+}
 
 // Helper functions
 function formatNumber(num: number): string {
@@ -291,7 +463,7 @@ function MetricTab({
     <button
       onClick={onClick}
       className={cn(
-        'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left transition-colors',
+        'relative flex min-w-[140px] flex-col gap-0.5 px-3 py-2.5 text-left transition-colors',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isActive
           ? 'text-foreground'
@@ -301,7 +473,7 @@ function MetricTab({
       <div className="flex items-baseline gap-2">
         <span
           className={cn(
-            'text-[20px] font-semibold tracking-tight',
+            'text-[18px] font-semibold tracking-tight tabular-nums',
             isActive ? 'text-foreground' : 'text-muted-foreground',
           )}
         >
@@ -309,7 +481,7 @@ function MetricTab({
         </span>
         <span
           className={cn(
-            'flex items-center gap-0.5 text-[11px] font-medium',
+            'flex items-center gap-0.5 text-[10px] font-semibold tabular-nums',
             isPositive
               ? isActive
                 ? 'text-emerald-500'
@@ -319,13 +491,13 @@ function MetricTab({
                 : 'text-red-500/60',
           )}
         >
-          <TrendIcon className="h-3 w-3" />
+          <TrendIcon className="h-2.5 w-2.5" />
           {Math.abs(metric.change)}%
         </span>
       </div>
       <span
         className={cn(
-          'text-[12px]',
+          'text-[11px] font-medium',
           isActive ? 'text-muted-foreground' : 'text-muted-foreground/70',
         )}
       >
@@ -381,143 +553,195 @@ function ListItem({
   )
 }
 
-// World Map Chart Component using built-in ChartContainer
-function WorldMapChart({ data }: { data: LocationData[] }) {
-  // Transform data for the bar chart
-  const chartData = data.map((item) => ({
-    country: item.country,
-    flag: item.flag,
-    visitors: item.visitors,
-    fill: '#f02e65',
-  }))
+// World Map Component using mapcn
+// Internal component that uses map context
+function MapContent({ data }: { data: LocationData[] }) {
+  const { map, isLoaded } = useMap()
 
-  const chartConfig = {
-    visitors: {
-      label: 'Visitors',
-      color: '#f02e65',
-    },
-  } satisfies ChartConfig
+  // Resize map when it becomes visible or when map loads
+  React.useEffect(() => {
+    if (!map || !isLoaded) return
+
+    const resizeMap = () => {
+      // Get the map container from the map instance
+      const container = map.getContainer()
+      if (container) {
+        const rect = container.getBoundingClientRect()
+        const isVisible = container.offsetParent !== null
+        if (isVisible && rect.width > 0 && rect.height > 0) {
+          requestAnimationFrame(() => {
+            map.resize()
+          })
+        }
+      }
+    }
+
+    // Resize when map loads
+    const handleLoad = () => {
+      setTimeout(resizeMap, 100)
+    }
+    map.on('load', handleLoad)
+
+    // Also check when tab becomes visible (using IntersectionObserver)
+    const container = map.getContainer()
+    if (container) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setTimeout(() => {
+                resizeMap()
+              }, 100)
+            }
+          })
+        },
+        { threshold: 0.1 }
+      )
+
+      observer.observe(container)
+
+      // Initial resize after a delay to ensure tab is visible
+      const initialTimeout = setTimeout(() => {
+        resizeMap()
+      }, 200)
+
+      return () => {
+        clearTimeout(initialTimeout)
+        map.off('load', handleLoad)
+        observer.disconnect()
+      }
+    }
+
+    return () => {
+      map.off('load', handleLoad)
+    }
+  }, [map, isLoaded])
+
+  // Find max visitors for marker sizing
+  const maxVisitors = Math.max(...data.map((d) => d.visitors))
+
+  // Calculate size ranges for legend
+  const minSize = 8
+  const maxSize = 20
+  const minVisitors = Math.min(...data.map((d) => d.visitors))
+  const maxVisitorsForLegend = maxVisitors
 
   return (
-    <ChartContainer config={chartConfig} className="h-[240px] w-full">
-      <BarChart
-        data={chartData}
-        layout="vertical"
-        margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
-      >
-        <XAxis type="number" hide />
-        <YAxis
-          type="category"
-          dataKey="country"
-          axisLine={false}
-          tickLine={false}
-          width={100}
-          tick={({ x, y, payload }) => {
-            const item = data.find((d) => d.country === payload.value)
+    <>
+      <MapControls position="top-right" showZoom={true} />
+      {data.map((location) => {
+        const coords = COUNTRY_COORDINATES[location.code]
+        if (!coords) return null
+
+        const [longitude, latitude] = coords
+        const size = Math.max(minSize, Math.min(maxSize, (location.visitors / maxVisitors) * maxSize))
+
             return (
-              <g transform={`translate(${x},${y})`}>
-                <text
-                  x={-8}
-                  y={0}
-                  dy={4}
-                  textAnchor="end"
-                  className="fill-foreground text-[12px]"
-                >
-                  {item?.flag} {payload.value}
-                </text>
-              </g>
-            )
-          }}
-        />
-        <ChartTooltip
-          cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
-          content={
-            <ChartTooltipContent
-              hideLabel
-              formatter={(value, _name, item) => (
+          <MapMarker
+            key={location.code}
+            longitude={longitude}
+            latitude={latitude}
+          >
+            <MarkerContent>
+              <div
+                className="relative flex cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-lg transition-transform hover:scale-110"
+                style={{
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  backgroundColor: '#f02e65',
+                }}
+              />
+            </MarkerContent>
+            <MarkerPopup closeButton={false}>
+              <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-lg">
                 <div className="flex items-center gap-2">
-                  <span>{item.payload.flag}</span>
-                  <span className="font-medium">{item.payload.country}</span>
-                  <span className="ml-auto tabular-nums">
-                    {formatNumber(value as number)}
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
+                      <img
+                        src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                        alt={`${location.country} flag`}
+                        className="h-full w-full object-cover"
+                        role="img"
+                        aria-label={`${location.country} flag`}
+                      />
+                    </div>
+                    <span className="text-[12px] font-medium">
+                      {location.country}
                   </span>
                 </div>
-              )}
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  {formatNumber(location.visitors)} visitors
+                </div>
+              </div>
+            </MarkerPopup>
+          </MapMarker>
+        )
+      })}
+      
+      {/* Legend */}
+      <div className="absolute bottom-8 left-4 rounded-lg border border-border bg-background/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+        <div className="mb-2 text-[11px] font-semibold text-foreground">
+          Visitors
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <div
+              className="rounded-full border-2 border-white shadow-sm"
+              style={{
+                width: `${minSize}px`,
+                height: `${minSize}px`,
+                backgroundColor: '#f02e65',
+              }}
             />
-          }
-        />
-        <Bar dataKey="visitors" radius={[0, 4, 4, 0]} barSize={20}>
-          {chartData.map((_entry, index) => (
-            <Cell
-              key={`cell-${index}`}
-              fill="#f02e65"
-              fillOpacity={0.2 + (0.8 * (data.length - index)) / data.length}
+            <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
+              {formatNumber(minVisitors)}
+            </span>
+          </div>
+          <div className="h-px w-4 bg-border" />
+          <div className="flex items-center gap-1.5">
+            <div
+              className="rounded-full border-2 border-white shadow-sm"
+              style={{
+                width: `${maxSize}px`,
+                height: `${maxSize}px`,
+                backgroundColor: '#f02e65',
+              }}
             />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartContainer>
+            <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
+              {formatNumber(maxVisitorsForLegend)}
+            </span>
+          </div>
+      </div>
+      </div>
+    </>
   )
 }
 
-// OS Chart using RadialBarChart
-function OSRadialChart({ data }: { data: OSData[] }) {
-  const total = data.reduce((sum, item) => sum + item.visitors, 0)
-
-  // Transform data for RadialBarChart
-  const chartData = data
-    .map((item) => ({
-      name: item.name,
-      visitors: item.visitors,
-      fill: item.fill,
-      // Calculate percentage for display
-      percentage: Math.round((item.visitors / total) * 100),
-    }))
-    .reverse() // Reverse so largest is on outside
-
-  const chartConfig: ChartConfig = {}
+function WorldMapChart({ data }: { data: LocationData[] }) {
+  // Calculate center point (average of all locations)
+  const center: [number, number] = React.useMemo(() => {
+    const coords = data
+      .map((item) => COUNTRY_COORDINATES[item.code])
+      .filter(Boolean) as [number, number][]
+    
+    if (coords.length === 0) return [0, 20]
+    
+    const avgLng = coords.reduce((sum, [lng]) => sum + lng, 0) / coords.length
+    const avgLat = coords.reduce((sum, [, lat]) => sum + lat, 0) / coords.length
+    
+    return [avgLng, avgLat]
+  }, [data])
 
   return (
-    <div className="flex items-center gap-6">
-      {/* Legend */}
-      <div className="flex flex-1 flex-col gap-1">
-        {data.map((os) => (
-          <div key={os.name} className="flex items-center gap-3 py-1">
-            <div
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: os.color }}
-            />
-            <span className="flex-1 text-[13px] text-foreground">
-              {os.name}
-            </span>
-            <span className="text-[13px] font-medium text-muted-foreground">
-              {formatNumber(os.visitors)}
-            </span>
-          </div>
-        ))}
+    <div className="relative h-full w-full p-2 flex flex-col">
+      <div className="flex-1 w-full overflow-hidden rounded-lg min-h-[400px]">
+        <Map center={center} zoom={2}>
+          <MapContent data={data} />
+        </Map>
       </div>
-
-      {/* Radial Chart */}
-      <ChartContainer config={chartConfig} className="h-[140px] w-[140px]">
-        <RadialBarChart
-          cx="50%"
-          cy="50%"
-          innerRadius="30%"
-          outerRadius="100%"
-          barSize={10}
-          data={chartData}
-          startAngle={90}
-          endAngle={-270}
-        >
-          <RadialBar
-            dataKey="visitors"
-            cornerRadius={5}
-          />
-        </RadialBarChart>
-      </ChartContainer>
     </div>
   )
 }
+
 
 // Main Component
 interface WebsiteAnalyticsDetailProps {
@@ -532,12 +756,136 @@ export function WebsiteAnalyticsDetail({
 }: WebsiteAnalyticsDetailProps) {
   const [activeTab, setActiveTab] = useState('analytics')
   const [activeMetric, setActiveMetric] = useState('unique')
-  const [dateRange, setDateRange] = useState('Last 30 days')
-  const [locationView, setLocationView] = useState<'map' | 'countries'>(
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  })
+  const [comparisonType, setComparisonType] = useState<ComparisonType>('none')
+  const [comparisonRange, setComparisonRange] = useState<DateRange | undefined>()
+  const [locationView, setLocationView] = useState<'map' | 'countries' | 'regions' | 'cities'>(
     'countries',
   )
+  const [sourcesView, setSourcesView] = useState<'channels' | 'sources' | 'campaigns'>(
+    'sources',
+  )
+  const [pagesView, setPagesView] = useState<'top' | 'entry' | 'exit'>('top')
+  const [techView, setTechView] = useState<'browsers' | 'os' | 'devices'>('browsers')
+  
+  // Chart dimension checks
+  const chartContainerRef = useRef<HTMLDivElement>(null)
+  const [chartHasDimensions, setChartHasDimensions] = useState(false)
+  const peakHoursChartRef = useRef<HTMLDivElement>(null)
+  const [peakHoursChartHasDimensions, setPeakHoursChartHasDimensions] = useState(false)
+  
+  // Check chart container dimensions
+  useEffect(() => {
+    if (!chartContainerRef.current) return
 
-  const tabs = [
+    const checkDimensions = () => {
+      if (chartContainerRef.current) {
+        const rect = chartContainerRef.current.getBoundingClientRect()
+        const computedStyle = window.getComputedStyle(chartContainerRef.current)
+        const hasSize = (
+          computedStyle.display !== 'none' &&
+          computedStyle.visibility !== 'hidden' &&
+          chartContainerRef.current.offsetParent !== null &&
+          rect.width > 0 && 
+          rect.height > 0
+        )
+        setChartHasDimensions(hasSize)
+      }
+    }
+
+    // Small delay to ensure container is in DOM
+    const timeout = setTimeout(() => {
+      checkDimensions()
+    }, 50)
+
+    // Use ResizeObserver to watch for dimension changes
+    const observer = new ResizeObserver(() => {
+      checkDimensions()
+    })
+
+    if (chartContainerRef.current) {
+      observer.observe(chartContainerRef.current)
+    }
+
+    return () => {
+      clearTimeout(timeout)
+      observer.disconnect()
+    }
+  }, [])
+
+  // Check peak hours chart container dimensions
+  useEffect(() => {
+    if (!peakHoursChartRef.current) return
+
+    const checkDimensions = () => {
+      if (peakHoursChartRef.current) {
+        const rect = peakHoursChartRef.current.getBoundingClientRect()
+        const computedStyle = window.getComputedStyle(peakHoursChartRef.current)
+        const hasSize = (
+          computedStyle.display !== 'none' &&
+          computedStyle.visibility !== 'hidden' &&
+          peakHoursChartRef.current.offsetParent !== null &&
+          rect.width > 0 && 
+          rect.height > 0
+        )
+        setPeakHoursChartHasDimensions(hasSize)
+      }
+    }
+
+    // Small delay to ensure container is in DOM
+    const timeout = setTimeout(() => {
+      checkDimensions()
+    }, 50)
+
+    // Use ResizeObserver to watch for dimension changes
+    const observer = new ResizeObserver(() => {
+      checkDimensions()
+    })
+
+    if (peakHoursChartRef.current) {
+      observer.observe(peakHoursChartRef.current)
+    }
+
+    return () => {
+      clearTimeout(timeout)
+      observer.disconnect()
+    }
+  }, [])
+  
+  // Show more states for lists with many items
+  const [showAllCountries, setShowAllCountries] = useState(false)
+  const [showAllRegions, setShowAllRegions] = useState(false)
+  const [showAllCities, setShowAllCities] = useState(false)
+  const [showAllTopPages, setShowAllTopPages] = useState(false)
+  const [showAllEntryPages, setShowAllEntryPages] = useState(false)
+  const [showAllExitPages, setShowAllExitPages] = useState(false)
+  const [showAllBrowsers, setShowAllBrowsers] = useState(false)
+  const [showAllOS, setShowAllOS] = useState(false)
+  const [showAllDevices, setShowAllDevices] = useState(false)
+  
+  // Reset show more states when switching tabs
+  React.useEffect(() => {
+    setShowAllCountries(false)
+    setShowAllRegions(false)
+    setShowAllCities(false)
+  }, [locationView])
+  
+  React.useEffect(() => {
+    setShowAllTopPages(false)
+    setShowAllEntryPages(false)
+    setShowAllExitPages(false)
+  }, [pagesView])
+  
+  React.useEffect(() => {
+    setShowAllBrowsers(false)
+    setShowAllOS(false)
+    setShowAllDevices(false)
+  }, [techView])
+
+  const tabs: Tab[] = [
     { id: 'analytics', label: 'Analytics' },
     { id: 'settings', label: 'Settings' },
   ]
@@ -548,98 +896,64 @@ export function WebsiteAnalyticsDetail({
   const maxBrowserVisitors = Math.max(...browsers.map((b) => b.visitors))
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header with back button and tabs */}
-      <div className="border-b border-border">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-          <div className="flex items-center gap-3 py-3">
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+      <ServiceHeader
+        title={
+          <div className="flex items-center gap-2">
             {onBack && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 p-0"
                 onClick={onBack}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <h1 className="text-[15px] font-medium text-foreground">
-              {websiteName}
-            </h1>
+            <span>{websiteName}</span>
           </div>
-          <div className="flex gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'relative px-3 py-2 text-[13px] font-medium transition-colors',
-                  activeTab === tab.id
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+        }
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        showFilters={false}
+        fullWidthBorder
+      />
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+      <div className="flex-1 flex flex-col">
+        <div className={cn("mx-auto w-full max-w-7xl flex-1")}>
           {activeTab === 'analytics' && (
-            <>
+            <div className="px-4 py-4 sm:px-6">
               {/* Active visitors and date range */}
-              <div className="mb-4 flex items-center justify-between">
+          <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-[13px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[12px] font-medium text-muted-foreground">
                 30 active visitors
               </span>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 gap-2 text-[13px]"
-                >
-                  {dateRange}
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setDateRange('Last 7 days')}>
-                  Last 7 days
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setDateRange('Last 30 days')}>
-                  Last 30 days
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setDateRange('Last 90 days')}>
-                  Last 90 days
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setDateRange('Last 12 months')}
-                >
-                  Last 12 months
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              <ComparisonSelector
+                dateRange={dateRange}
+                comparisonType={comparisonType}
+                onComparisonTypeChange={setComparisonType}
+                onComparisonRangeChange={setComparisonRange}
+              />
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+              />
+            </div>
           </div>
 
           {/* Metrics and Chart Card */}
-          <div className="rounded-xl border border-border bg-card">
+          <div className="rounded-lg border border-border bg-card">
             {/* Metric Tabs */}
             <div className="border-b border-border px-2">
               <div className="flex overflow-x-auto overflow-y-hidden">
                 {visitorMetrics.map((metric, index) => (
                   <div key={metric.id} className="flex shrink-0">
-                    {index > 0 && <div className="my-2.5 w-px bg-border" />}
+                    {index > 0 && <div className="my-2 w-px bg-border" />}
                     <MetricTab
                       metric={metric}
                       isActive={activeMetric === metric.id}
@@ -651,9 +965,10 @@ export function WebsiteAnalyticsDetail({
             </div>
 
             {/* Chart */}
-            <div className="p-5">
-              <div className="h-[280px] text-muted-foreground">
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="p-4">
+              <div ref={chartContainerRef} className="h-[280px] w-full text-muted-foreground">
+                {chartHasDimensions && typeof window !== 'undefined' ? (
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <AreaChart
                     data={chartData}
                     margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -725,140 +1040,956 @@ export function WebsiteAnalyticsDetail({
                     />
                   </AreaChart>
                 </ResponsiveContainer>
+                ) : null}
               </div>
             </div>
           </div>
 
-          {/* Two Column Layout: Locations + Top Pages */}
-          <div className="mt-6 grid gap-6 lg:grid-cols-2">
-            {/* Top Locations */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[14px] font-medium text-foreground">
-                  Top locations
+          {/* Two Column Layout - Plausible Style */}
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {/* Sources Card with Tabs */}
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    Traffic Sources
                 </h3>
-                <Tabs
-                  value={locationView}
-                  onValueChange={(v) =>
-                    setLocationView(v as 'map' | 'countries')
-                  }
-                >
-                  <TabsList className="h-8">
-                    <TabsTrigger value="map" className="h-6 px-3 text-[13px]">
-                      Map
+                  <Tabs value={sourcesView} onValueChange={(v) => setSourcesView(v as 'channels' | 'sources' | 'campaigns')}>
+                    <TabsList className="h-7">
+                      <TabsTrigger value="channels" className="h-5 px-2.5 text-[11px]">
+                        Channels
+                      </TabsTrigger>
+                      <TabsTrigger value="sources" className="h-5 px-2.5 text-[11px]">
+                        Sources
+                      </TabsTrigger>
+                      <TabsTrigger value="campaigns" className="h-5 px-2.5 text-[11px]">
+                        Campaigns
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </div>
+              <div className="p-4">
+                <Tabs value={sourcesView} onValueChange={(v) => setSourcesView(v as 'channels' | 'sources' | 'campaigns')}>
+                  <TabsContent value="channels" className="mt-0">
+                    <div className="space-y-0.5">
+                      {channels.map((channel, index) => {
+                        const maxChannelVisitors = Math.max(...channels.map((c) => c.visitors))
+                        const percentage = Math.round((channel.visitors / maxChannelVisitors) * 100)
+                        const share = Math.round((channel.visitors / channels.reduce((sum, c) => sum + c.visitors, 0)) * 100)
+                        return (
+                          <div
+                            key={channel.name}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
+                              style={{ width: `${percentage}%`, backgroundColor: channel.color, opacity: 0.15 }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: channel.color }} />
+                              <span className="flex-1 truncate text-[12px] font-medium text-foreground">
+                                {channel.name}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(channel.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="sources" className="mt-0">
+                    <div className="space-y-0.5">
+                      {topSources.map((source, index) => {
+                        const percentage = Math.round((source.visitors / maxSourceVisitors) * 100)
+                        const share = Math.round((source.visitors / topSources.reduce((sum, s) => sum + s.visitors, 0)) * 100)
+                        return (
+                          <div
+                            key={source.name}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                              style={{ width: `${percentage}%` }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <span className="flex h-4 w-4 items-center justify-center text-[11px] text-muted-foreground">
+                                {source.icon}
+                              </span>
+                              <span className="flex-1 truncate text-[12px] font-medium text-foreground">
+                                {source.name}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(source.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="campaigns" className="mt-0">
+                    <div className="space-y-0.5">
+                      {campaigns.map((campaign, index) => {
+                        const maxCampaignVisitors = Math.max(...campaigns.map((c) => c.visitors))
+                        const percentage = Math.round((campaign.visitors / maxCampaignVisitors) * 100)
+                        const share = Math.round((campaign.visitors / campaigns.reduce((sum, c) => sum + c.visitors, 0)) * 100)
+                        return (
+                          <div
+                            key={campaign.name}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                              style={{ width: `${percentage}%` }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                {index + 1}
+                              </span>
+                              <span className="flex-1 truncate text-[12px] font-medium text-foreground">
+                                {campaign.name}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(campaign.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+
+            {/* Top Pages Card with Tabs */}
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    Pages
+                  </h3>
+                  <Tabs value={pagesView} onValueChange={(v) => setPagesView(v as 'top' | 'entry' | 'exit')}>
+                    <TabsList className="h-7">
+                      <TabsTrigger value="top" className="h-5 px-2.5 text-[11px]">
+                        Top Pages
                     </TabsTrigger>
-                    <TabsTrigger
-                      value="countries"
-                      className="h-6 px-3 text-[13px]"
-                    >
+                      <TabsTrigger value="entry" className="h-5 px-2.5 text-[11px]">
+                        Entry Pages
+                      </TabsTrigger>
+                      <TabsTrigger value="exit" className="h-5 px-2.5 text-[11px]">
+                        Exit Pages
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              </div>
+              <div className="p-4">
+                <Tabs value={pagesView} onValueChange={(v) => setPagesView(v as 'top' | 'entry' | 'exit')}>
+                  <TabsContent value="top" className="mt-0">
+                    <div className="space-y-0.5">
+                      {(showAllTopPages ? topPages : topPages.slice(0, 15)).map((page, index) => {
+                        const percentage = Math.round((page.visitors / maxPageVisitors) * 100)
+                        const share = Math.round((page.visitors / topPages.reduce((sum, p) => sum + p.visitors, 0)) * 100)
+                        return (
+                          <div
+                            key={page.path}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                              style={{ width: `${percentage}%` }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                {index + 1}
+                              </span>
+                              <span className="flex-1 truncate font-mono text-[12px] font-medium text-foreground">
+                                {page.path}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(page.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {topPages.length > 15 && (
+                      <div className="mt-3 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllTopPages(!showAllTopPages)}
+                          className="h-7 text-[11px]"
+                        >
+                          {showAllTopPages ? (
+                            <>
+                              Show less
+                              <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                            </>
+                          ) : (
+                            <>
+                              Show more ({topPages.length - 15} more)
+                              <ChevronDown className="ml-1 h-3 w-3" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="entry" className="mt-0">
+                    <div className="space-y-0.5">
+                      {(showAllEntryPages ? entryPages : entryPages.slice(0, 15)).map((page, index) => {
+                        const maxEntryVisitors = Math.max(...entryPages.map((p) => p.visitors))
+                        const percentage = Math.round((page.visitors / maxEntryVisitors) * 100)
+                        const share = Math.round((page.visitors / entryPages.reduce((sum, p) => sum + p.visitors, 0)) * 100)
+                        return (
+                          <div
+                            key={page.path}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                              style={{ width: `${percentage}%` }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                {index + 1}
+                              </span>
+                              <span className="flex-1 truncate font-mono text-[12px] font-medium text-foreground">
+                                {page.path}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(page.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {entryPages.length > 15 && (
+                      <div className="mt-3 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllEntryPages(!showAllEntryPages)}
+                          className="h-7 text-[11px]"
+                        >
+                          {showAllEntryPages ? (
+                            <>
+                              Show less
+                              <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                            </>
+                          ) : (
+                            <>
+                              Show more ({entryPages.length - 15} more)
+                              <ChevronDown className="ml-1 h-3 w-3" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="exit" className="mt-0">
+                    <div className="space-y-0.5">
+                      {(showAllExitPages ? exitPages : exitPages.slice(0, 15)).map((page, index) => {
+                        const maxExitVisitors = Math.max(...exitPages.map((p) => p.visitors))
+                        const percentage = Math.round((page.visitors / maxExitVisitors) * 100)
+                        const share = Math.round((page.visitors / exitPages.reduce((sum, p) => sum + p.visitors, 0)) * 100)
+                        return (
+                          <div
+                            key={page.path}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                              style={{ width: `${percentage}%` }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                {index + 1}
+                              </span>
+                              <span className="flex-1 truncate font-mono text-[12px] font-medium text-foreground">
+                                {page.path}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(page.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {exitPages.length > 15 && (
+                      <div className="mt-3 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllExitPages(!showAllExitPages)}
+                          className="h-7 text-[11px]"
+                        >
+                          {showAllExitPages ? (
+                            <>
+                              Show less
+                              <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                            </>
+                          ) : (
+                            <>
+                              Show more ({exitPages.length - 15} more)
+                              <ChevronDown className="ml-1 h-3 w-3" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+
+            {/* Countries Card with Tabs */}
+            <div className="flex flex-col rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    Locations
+                  </h3>
+                  <Tabs value={locationView} onValueChange={(v) => setLocationView(v as 'map' | 'countries' | 'regions' | 'cities')}>
+                    <TabsList className="h-7">
+                      <TabsTrigger value="map" className="h-5 px-2.5 text-[11px]">
+                        Map
+                      </TabsTrigger>
+                      <TabsTrigger value="countries" className="h-5 px-2.5 text-[11px]">
                       Countries
                     </TabsTrigger>
+                      <TabsTrigger value="regions" className="h-5 px-2.5 text-[11px]">
+                        Regions
+                      </TabsTrigger>
+                      <TabsTrigger value="cities" className="h-5 px-2.5 text-[11px]">
+                        Cities
+                      </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
-
-              {locationView === 'map' ? (
-                <WorldMapChart data={locationData} />
-              ) : (
-                <div className="space-y-1">
-                  {locationData.map((location) => (
-                    <ListItem
+              </div>
+              <div className="flex-1 min-h-[400px] w-full overflow-hidden flex flex-col">
+                <Tabs value={locationView} onValueChange={(v) => setLocationView(v as 'map' | 'countries' | 'regions' | 'cities')} className="flex flex-col flex-1">
+                  <TabsContent value="map" className="mt-0 flex-1 min-h-[400px]" forceMount={false}>
+                    {locationView === 'map' ? <WorldMapChart data={locationData} /> : null}
+                  </TabsContent>
+                  <TabsContent value="countries" className="mt-0 flex-1 min-h-[400px]">
+                    <div className="h-full overflow-y-auto p-4">
+                      <div className="space-y-0.5">
+                        {(showAllCountries ? locationData : locationData.slice(0, 15)).map((location, index) => {
+                          const percentage = Math.round((location.visitors / maxLocationVisitors) * 100)
+                          return (
+                            <div
                       key={location.country}
-                      label={location.country}
-                      value={location.visitors}
-                      maxValue={maxLocationVisitors}
-                      prefix={location.flag}
-                    />
-                  ))}
+                              className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                            >
+                              <div
+                                className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                style={{ width: `${percentage}%` }}
+                              />
+                              <div className="relative flex flex-1 items-center gap-2">
+                                <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
+                                  <img
+                                    src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${location.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                    alt={`${location.country} flag`}
+                                    className="h-full w-full object-cover"
+                                    role="img"
+                                    aria-label={`${location.country} flag`}
+                                  />
                 </div>
-              )}
+                                <span className="flex-1 truncate text-[12px] font-medium text-foreground">
+                                  {location.country}
+                                </span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                    {formatNumber(location.uniqueVisitors)} unique
+                                  </span>
+                                  <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                    {formatNumber(location.visitors)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {locationData.length > 15 && (
+                        <div className="mt-3 flex justify-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowAllCountries(!showAllCountries)}
+                            className="h-7 text-[11px]"
+                          >
+                            {showAllCountries ? (
+                              <>
+                                Show less
+                                <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                              </>
+                            ) : (
+                              <>
+                                Show more ({locationData.length - 15} more)
+                                <ChevronDown className="ml-1 h-3 w-3" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="regions" className="mt-0 flex-1 min-h-[400px]">
+                    <div className="h-full overflow-y-auto p-4">
+                      <div className="space-y-0.5">
+                        {(showAllRegions ? regions : regions.slice(0, 15)).map((region, index) => {
+                          const maxRegionVisitors = Math.max(...regions.map((r) => r.visitors))
+                          const percentage = Math.round((region.visitors / maxRegionVisitors) * 100)
+                          return (
+                            <div
+                              key={`${region.region}-${region.country}`}
+                              className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                            >
+                              <div
+                                className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                style={{ width: `${percentage}%` }}
+                              />
+                              <div className="relative flex flex-1 items-center gap-2">
+                                <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
+                                  <img
+                                    src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${region.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                    alt={`${region.country} flag`}
+                                    className="h-full w-full object-cover"
+                                    role="img"
+                                    aria-label={`${region.country} flag`}
+                                  />
+                                </div>
+                                <div className="flex flex-1 flex-col">
+                                  <span className="text-[12px] font-medium text-foreground">
+                                    {region.region}
+                                  </span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {region.country}
+                                  </span>
+                                </div>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(region.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {regions.length > 15 && (
+                        <div className="mt-3 flex justify-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowAllRegions(!showAllRegions)}
+                            className="h-7 text-[11px]"
+                          >
+                            {showAllRegions ? (
+                              <>
+                                Show less
+                                <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                              </>
+                            ) : (
+                              <>
+                                Show more ({regions.length - 15} more)
+                                <ChevronDown className="ml-1 h-3 w-3" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="cities" className="mt-0 flex-1 min-h-[400px]">
+                    <div className="h-full overflow-y-auto p-4">
+                      <div className="space-y-0.5">
+                        {(showAllCities ? cities : cities.slice(0, 15)).map((city, index) => {
+                          const maxCityVisitors = Math.max(...cities.map((c) => c.visitors))
+                          const percentage = Math.round((city.visitors / maxCityVisitors) * 100)
+                          return (
+                            <div
+                              key={`${city.city}-${city.country}`}
+                              className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                            >
+                              <div
+                                className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                                style={{ width: `${percentage}%` }}
+                              />
+                              <div className="relative flex flex-1 items-center gap-2">
+                                <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
+                                  <img
+                                    src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${city.code.toLowerCase()}?width=40&height=40&quality=100&project=console`}
+                                    alt={`${city.country} flag`}
+                                    className="h-full w-full object-cover"
+                                    role="img"
+                                    aria-label={`${city.country} flag`}
+                                  />
+                                </div>
+                                <div className="flex flex-1 flex-col">
+                                  <span className="text-[12px] font-medium text-foreground">
+                                    {city.city}
+                                  </span>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {city.country}
+                                  </span>
+                                </div>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(city.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {cities.length > 15 && (
+                        <div className="mt-3 flex justify-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowAllCities(!showAllCities)}
+                            className="h-7 text-[11px]"
+                          >
+                            {showAllCities ? (
+                              <>
+                                Show less
+                                <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                              </>
+                            ) : (
+                              <>
+                                Show more ({cities.length - 15} more)
+                                <ChevronDown className="ml-1 h-3 w-3" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
 
-            {/* Top Pages */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[14px] font-medium text-foreground">
-                  Top pages
+            {/* Browsers Card with Tabs */}
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    Technology
                 </h3>
-                <button className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-                  View all
-                </button>
+                  <Tabs value={techView} onValueChange={(v) => setTechView(v as 'browsers' | 'os' | 'devices')}>
+                    <TabsList className="h-7">
+                      <TabsTrigger value="browsers" className="h-5 px-2.5 text-[11px]">
+                        Browsers
+                      </TabsTrigger>
+                      <TabsTrigger value="os" className="h-5 px-2.5 text-[11px]">
+                        Operating Systems
+                      </TabsTrigger>
+                      <TabsTrigger value="devices" className="h-5 px-2.5 text-[11px]">
+                        Devices
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
               </div>
-              <div className="space-y-1">
-                {topPages.map((page) => (
-                  <ListItem
-                    key={page.path}
-                    label={page.path}
-                    value={page.visitors}
-                    maxValue={maxPageVisitors}
-                  />
-                ))}
+              </div>
+              <div className="p-4">
+                <Tabs value={techView} onValueChange={(v) => setTechView(v as 'browsers' | 'os' | 'devices')}>
+                  <TabsContent value="browsers" className="mt-0">
+                    <div className="space-y-0.5">
+                      {(showAllBrowsers ? browsers : browsers.slice(0, 15)).map((browser, index) => {
+                        const percentage = Math.round((browser.visitors / maxBrowserVisitors) * 100)
+                        const share = Math.round((browser.visitors / browsers.reduce((sum, b) => sum + b.visitors, 0)) * 100)
+                        return (
+                          <div
+                            key={browser.name}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
+                              style={{ width: `${percentage}%` }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <span className="flex h-4 w-4 items-center justify-center text-muted-foreground">
+                                {browser.icon}
+                              </span>
+                              <span className="flex-1 truncate text-[12px] font-medium text-foreground">
+                                {browser.name}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(browser.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {browsers.length > 15 && (
+                      <div className="mt-3 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllBrowsers(!showAllBrowsers)}
+                          className="h-7 text-[11px]"
+                        >
+                          {showAllBrowsers ? (
+                            <>
+                              Show less
+                              <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                            </>
+                          ) : (
+                            <>
+                              Show more ({browsers.length - 15} more)
+                              <ChevronDown className="ml-1 h-3 w-3" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="os" className="mt-0">
+                    <div className="space-y-0.5">
+                      {(showAllOS ? operatingSystems : operatingSystems.slice(0, 15)).map((os, index) => {
+                        const total = operatingSystems.reduce((sum, o) => sum + o.visitors, 0)
+                        const percentage = Math.round((os.visitors / total) * 100)
+                        const maxOSVisitors = Math.max(...operatingSystems.map((o) => o.visitors))
+                        const barPercentage = Math.round((os.visitors / maxOSVisitors) * 100)
+                        return (
+                          <div
+                            key={os.name}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
+                              style={{ width: `${barPercentage}%`, backgroundColor: os.color, opacity: 0.15 }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: os.color }} />
+                              <span className="flex-1 truncate text-[12px] font-medium text-foreground">
+                                {os.name}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {percentage}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(os.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {operatingSystems.length > 15 && (
+                      <div className="mt-3 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllOS(!showAllOS)}
+                          className="h-7 text-[11px]"
+                        >
+                          {showAllOS ? (
+                            <>
+                              Show less
+                              <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                            </>
+                          ) : (
+                            <>
+                              Show more ({operatingSystems.length - 15} more)
+                              <ChevronDown className="ml-1 h-3 w-3" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="devices" className="mt-0">
+                    <div className="space-y-0.5">
+                      {(showAllDevices ? devices : devices.slice(0, 15)).map((device) => {
+                        const total = devices.reduce((sum, d) => sum + d.visitors, 0)
+                        const percentage = Math.round((device.visitors / total) * 100)
+                        const maxDeviceVisitors = Math.max(...devices.map((d) => d.visitors))
+                        const barPercentage = Math.round((device.visitors / maxDeviceVisitors) * 100)
+                        return (
+                          <div
+                            key={device.type}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
+                              style={{ width: `${barPercentage}%`, backgroundColor: device.color, opacity: 0.15 }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <span className="flex h-4 w-4 items-center justify-center" style={{ color: device.color }}>
+                                {device.icon}
+                              </span>
+                              <span className="flex-1 truncate text-[12px] font-medium text-foreground">
+                                {device.type}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {percentage}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(device.visitors)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {devices.length > 15 && (
+                      <div className="mt-3 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllDevices(!showAllDevices)}
+                          className="h-7 text-[11px]"
+                        >
+                          {showAllDevices ? (
+                            <>
+                              Show less
+                              <ChevronDown className="ml-1 h-3 w-3 rotate-180" />
+                            </>
+                          ) : (
+                            <>
+                              Show more ({devices.length - 15} more)
+                              <ChevronDown className="ml-1 h-3 w-3" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           </div>
 
-          {/* Three Column Layout: Sources, Browsers, OS */}
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            {/* Top Sources */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[14px] font-medium text-foreground">
-                  Top sources
+          {/* Additional Cards Row */}
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            {/* Peak Hours */}
+            <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className="border-b border-border px-4 py-2.5">
+                <h3 className="text-[13px] font-semibold text-foreground">
+                  Peak hours
                 </h3>
-                <button className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-                  View all
-                </button>
               </div>
-              <div className="space-y-1">
-                {topSources.map((source) => (
-                  <ListItem
-                    key={source.name}
-                    label={source.name}
-                    value={source.visitors}
-                    maxValue={maxSourceVisitors}
-                    icon={source.icon}
-                  />
-                ))}
+              <div className="px-4 pt-3 pb-4">
+                <div ref={peakHoursChartRef} className="h-[160px] w-full min-h-0 min-w-0">
+                  {peakHoursChartHasDimensions && typeof window !== 'undefined' ? (
+                    <ChartContainer
+                      config={{
+                        visitors: {
+                          label: 'Visitors',
+                          color: '#f02e65',
+                        },
+                      }}
+                      className="h-full w-full min-h-0 min-w-0"
+                    >
+                    <BarChart
+                      data={peakHours}
+                      margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+                    >
+                      <XAxis
+                        dataKey="label"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                          fill: 'currentColor',
+                          fontSize: 9,
+                        }}
+                        interval={3}
+                        height={20}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                          fill: 'currentColor',
+                          fontSize: 9,
+                        }}
+                        width={28}
+                        tickFormatter={(value) => {
+                          if (value >= 1000)
+                            return `${(value / 1000).toFixed(0)}k`
+                          return value.toString()
+                        }}
+                      />
+                      <ChartTooltip
+                        cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
+                        content={
+                          <ChartTooltipContent
+                            hideLabel
+                            formatter={(value) => (
+                              <span className="text-[12px] font-semibold tabular-nums">
+                                {formatNumber(value as number)} visitors
+                              </span>
+                            )}
+                          />
+                        }
+                      />
+                      <Bar
+                        dataKey="visitors"
+                        radius={[2, 2, 0, 0]}
+                        fill="#f02e65"
+                        fillOpacity={0.85}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                  ) : null}
+                </div>
               </div>
             </div>
 
-            {/* Browsers */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[14px] font-medium text-foreground">
-                  Browsers
+            {/* Visitor Types */}
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-2.5">
+                <h3 className="text-[13px] font-semibold text-foreground">
+                  Visitor types
                 </h3>
-                <button className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-                  View all
-                </button>
               </div>
-              <div className="space-y-1">
-                {browsers.map((browser) => (
-                  <ListItem
-                    key={browser.name}
-                    label={browser.name}
-                    value={browser.visitors}
-                    maxValue={maxBrowserVisitors}
-                    icon={browser.icon}
-                  />
-                ))}
+              <div className="p-4">
+                <div className="space-y-3">
+                  {[
+                    {
+                      type: 'New',
+                      visitors: visitorTypes.new,
+                      icon: <UserPlus className="h-4 w-4" />,
+                      color: '#3b82f6',
+                    },
+                    {
+                      type: 'Returning',
+                      visitors: visitorTypes.returning,
+                      icon: <Users className="h-4 w-4" />,
+                      color: '#10b981',
+                    },
+                  ].map((visitorType) => {
+                    const total =
+                      visitorTypes.new + visitorTypes.returning
+                    const percentage = Math.round(
+                      (visitorType.visitors / total) * 100,
+                    )
+                    return (
+                      <div key={visitorType.type} className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="flex h-4 w-4 items-center justify-center"
+                              style={{ color: visitorType.color }}
+                            >
+                              {visitorType.icon}
+                            </span>
+                            <span className="text-[12px] font-medium text-foreground">
+                              {visitorType.type} visitors
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                              {percentage}%
+                            </span>
+                            <span className="text-[12px] font-semibold tabular-nums text-foreground">
+                              {formatNumber(visitorType.visitors)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full transition-all"
+                            style={{
+                              width: `${percentage}%`,
+                              backgroundColor: visitorType.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
               </div>
             </div>
 
-            {/* Operating Systems */}
-            <div className="rounded-xl border border-border bg-card p-5">
-              <div className="mb-4">
-                <h3 className="text-[14px] font-medium text-foreground">
-                  Operating systems
+          {/* Goals Section */}
+          <div className="mt-4">
+            <div className="rounded-lg border border-border bg-card">
+              <div className="border-b border-border px-4 py-2.5">
+                <h3 className="text-[13px] font-semibold text-foreground">
+                  Goals
                 </h3>
               </div>
-              <OSRadialChart data={operatingSystems} />
+              <div className="p-6 text-center">
+                <p className="mb-4 text-[13px] text-muted-foreground">
+                  Measure how often visitors complete specific actions. Goals
+                  allow you to track registrations, button clicks, form
+                  completions, external link clicks, file downloads, 404 error
+                  pages and more.
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-[12px]"
+                  >
+                    Hide this report
+                  </Button>
+                  <Button size="sm" className="h-8 text-[12px]">
+                    Set up goals →
+                  </Button>
             </div>
           </div>
-            </>
+            </div>
+          </div>
+            </div>
           )}
 
           {activeTab === 'settings' && (
+            <div className="px-4 py-4 sm:px-6">
             <div className="rounded-xl border border-border bg-card p-5">
               <h3 className="mb-4 text-[14px] font-medium text-foreground">
                 Settings
@@ -866,6 +1997,7 @@ export function WebsiteAnalyticsDetail({
               <p className="text-[13px] text-muted-foreground">
                 Settings content will be displayed here.
               </p>
+              </div>
             </div>
           )}
         </div>
