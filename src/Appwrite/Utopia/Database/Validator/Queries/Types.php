@@ -106,10 +106,6 @@ class Types extends Validator
             }
 
         } catch (\Throwable $e) {
-            var_dump($e->getMessage());
-            var_dump($e->getFile());
-            var_dump($e->getLine());
-
             $this->message = $e->getMessage();
             return false;
         }
