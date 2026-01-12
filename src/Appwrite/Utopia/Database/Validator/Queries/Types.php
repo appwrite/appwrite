@@ -28,14 +28,14 @@ class Types extends Validator
     protected ?QueryContext $context = null;
 
     /**
-     * @param string[] $allowedAttributes
+     * @param array<string> $allowedAttributes
      */
     protected array $allowedAttributes;
 
     /**
      * @param array $types
      * @param QueryContext|null $context
-     * @param array $allowedAttributes
+     * @param array<string> $allowedAttributes
      */
     public function __construct(array $types = [], ?QueryContext $context = null, array $allowedAttributes = [])
     {

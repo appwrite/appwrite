@@ -89,13 +89,6 @@ class Base extends Types
             ]);
 
             $this->collection->setAttribute('attributes', $attr, Document::SET_TYPE_APPEND);
-
-            if (in_array($attribute['$id'], $allowedAttributes)) {
-                /**
-                 * todo find a way to Filter only allowed attribute, while selecting is ok
-                 */
-                //$this->collection->setAttribute('attributes', $attr, Document::SET_TYPE_APPEND);
-            }
         }
 
         $internalAttributes = [
@@ -122,7 +115,8 @@ class Base extends Types
         ];
 
         foreach ($internalAttributes as $attribute) {
-            //$this->collection->setAttribute('attributes', $attribute, Document::SET_TYPE_APPEND);
+            $this->collection->setAttribute('attributes', $attribute, Document::SET_TYPE_APPEND);
+            $allowedAttributes[] = $attribute['key'];
         }
 
         if ($this->isSelectQueryAllowed()) {
