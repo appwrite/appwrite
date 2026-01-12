@@ -78,8 +78,9 @@ class Base extends Types
 
         $collection = $collections[$collection];
 
-        $this->collection = new Document();
-        $this->collection->setAttribute('$id', $collection['$id']);
+        $this->collection = new Document([
+            '$id' => $collection['$id'],
+        ]);
 
         foreach ($collection['attributes'] as $attribute) {
             $attr = new Document([

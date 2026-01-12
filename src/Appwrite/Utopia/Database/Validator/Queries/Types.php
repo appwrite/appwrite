@@ -92,7 +92,7 @@ class Types extends Validator
                     !empty($query->getAttribute()) &&
                     !in_array($query->getAttribute(), $this->allowedAttributes)
                 ) {
-                    throw new \Exception("Invalid query: Attribute not found in schema:{$query->getAttribute()}");
+                    throw new \Exception("Invalid query: Attribute not found in schema: {$query->getAttribute()}");
                 }
             }
 
