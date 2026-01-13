@@ -94,6 +94,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { InviteMembersDialog } from './InviteMembersDialog'
 import { CreateOrganizationDialog } from './CreateOrganizationDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
 
 // Environment variables for whitelabeling
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
@@ -1428,175 +1437,187 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       </div>
                     ) : memberships.length > 0 ? (
                       <>
-                        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                          {/* Header */}
-                          <div className="flex items-center border-b border-border bg-muted/30 px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                            <div className="flex-1">Member</div>
-                            <div className="w-28 text-center">Role</div>
-                            <div className="w-20 text-center hidden sm:block">
-                              2FA
-                            </div>
-                            <div className="w-32 text-center hidden sm:block">
-                              Joined
-                            </div>
-                            <div className="w-10"></div>
-                          </div>
-
-                          {/* Member Rows */}
-                          <div className="divide-y divide-border">
-                            {memberships.map((member: TeamMember) => (
-                              <div
-                                key={member.$id}
-                                className="flex items-center px-4 py-3 transition-colors hover:bg-accent/50"
-                              >
-                                {/* Member Info */}
-                                <div className="flex flex-1 items-center gap-3 min-w-0">
-                                  <InitialsAvatar
-                                    name={member.userName || member.userEmail}
-                                    size="md"
-                                    className="shrink-0"
-                                  />
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <p className="truncate text-[13px] font-medium text-foreground">
-                                        {member.userName || member.userEmail}
-                                      </p>
-                                      {member.status === 'pending' && (
-                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                          Pending
-                                        </Badge>
+                        <div className="rounded-lg border border-border bg-card overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="hover:bg-transparent border-b border-border">
+                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                  Member
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                                  Role
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
+                                  MFA
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
+                                  Joined
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {memberships.map((member: TeamMember) => (
+                                <TableRow
+                                  key={member.$id}
+                                  className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                                >
+                                  <TableCell className="px-4 py-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <InitialsAvatar
+                                        name={member.userName || member.userEmail}
+                                        size="sm"
+                                        className="shrink-0"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <p className="truncate text-[13px] font-medium text-foreground">
+                                            {member.userName || member.userEmail}
+                                          </p>
+                                          {member.status === 'pending' && (
+                                            <Badge variant="secondary" className="text-[11px] font-medium border px-2 py-0.5 shrink-0">
+                                              Pending
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <div className="mt-0.5">
+                                          <p className="truncate text-[12px] text-muted-foreground">
+                                            {member.userEmail}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3">
+                                    <div className="flex items-center justify-center">
+                                      <Badge
+                                        variant="secondary"
+                                        className={cn(
+                                          'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
+                                        )}
+                                      >
+                                        {member.role === 'owner' && (
+                                          <Shield className="h-3 w-3" />
+                                        )}
+                                        {member.role.charAt(0).toUpperCase() +
+                                          member.role.slice(1)}
+                                      </Badge>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                    <div className="flex items-center justify-center">
+                                      {member.status === 'pending' ? (
+                                        <span className="text-muted-foreground/50 text-[12px]">—</span>
+                                      ) : member.mfaEnabled ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="flex items-center justify-center">
+                                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="text-xs">Multi-factor authentication enabled</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      ) : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="flex items-center justify-center">
+                                              <XCircle className="h-4 w-4 text-muted-foreground/40" />
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="text-xs">Multi-factor authentication not enabled</p>
+                                          </TooltipContent>
+                                        </Tooltip>
                                       )}
                                     </div>
-                                    <p className="truncate text-[12px] text-muted-foreground">
-                                      {member.userEmail}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Role Badge */}
-                                <div className="w-28 text-center">
-                                  <span
-                                    className={cn(
-                                      'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium bg-muted text-muted-foreground',
-                                    )}
-                                  >
-                                    {member.role === 'owner' && (
-                                      <Shield className="h-3 w-3" />
-                                    )}
-                                    {member.role.charAt(0).toUpperCase() +
-                                      member.role.slice(1)}
-                                  </span>
-                                </div>
-
-                                {/* 2FA Status */}
-                                <div className="w-20 text-center hidden sm:block">
-                                  {member.status === 'pending' ? (
-                                    <span className="text-muted-foreground/50">—</span>
-                                  ) : member.mfaEnabled ? (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center justify-center">
-                                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="text-xs">2FA enabled</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ) : (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center justify-center">
-                                          <XCircle className="h-4 w-4 text-muted-foreground/50" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="text-xs">2FA not enabled</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </div>
-
-                                {/* Joined Date */}
-                                <div className="w-32 text-center text-[12px] text-muted-foreground hidden sm:block">
-                                  {member.status === 'pending' ? (
-                                    <span className="text-muted-foreground/70">Invited</span>
-                                  ) : (
-                                    formatDate(member.joinedAt)
-                                  )}
-                                </div>
-
-                                {/* Actions */}
-                                <div className="w-10 text-right">
-                                  {member.status === 'pending' ? (
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                          <MoreHorizontal className="h-4 w-4" />
-                                        </button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="w-48">
-                                        <DropdownMenuItem
-                                          onClick={async () => {
-                                            try {
-                                              // Use the roles array from the member object, or fallback to single role
-                                              const roles = member.roles && member.roles.length > 0 
-                                                ? member.roles 
-                                                : [member.role]
-                                              await resendInviteMutation.mutateAsync({
-                                                membershipId: member.membershipId || member.$id,
-                                                email: member.userEmail,
-                                                roles,
-                                              })
-                                              toast.success('Invitation resent successfully')
-                                            } catch (error: any) {
-                                              toast.error(error?.message || 'Failed to resend invitation')
-                                            }
-                                          }}
-                                          disabled={resendInviteMutation.isPending}
-                                        >
-                                          <Mail className="mr-2 h-4 w-4" />
-                                          {resendInviteMutation.isPending ? 'Resending...' : 'Resend invitation'}
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  ) : (
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                          <MoreHorizontal className="h-4 w-4" />
-                                        </button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="w-48">
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            setSelectedMember(member)
-                                            const role = member.role as 'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
-                                            setSelectedRole(role)
-                                            setUpdateRoleDialogOpen(true)
-                                          }}
-                                        >
-                                          <UserCog className="mr-2 h-4 w-4" />
-                                          Update role
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            setSelectedMember(member)
-                                            setRemoveMemberDialogOpen(true)
-                                          }}
-                                          className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" />
-                                          Remove from team
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                    <div className="text-right">
+                                      {member.status === 'pending' ? (
+                                        <span className="text-[12px] text-muted-foreground/70 italic">Invited</span>
+                                      ) : (
+                                        <DateTooltip
+                                          date={new Date(member.joinedAt)}
+                                          className="text-[12px] text-muted-foreground font-mono"
+                                        />
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3">
+                                    <div className="flex items-center justify-end">
+                                      {member.status === 'pending' ? (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="w-48">
+                                            <DropdownMenuItem
+                                              onClick={async () => {
+                                                try {
+                                                  // Use the roles array from the member object, or fallback to single role
+                                                  const roles = member.roles && member.roles.length > 0 
+                                                    ? member.roles 
+                                                    : [member.role]
+                                                  await resendInviteMutation.mutateAsync({
+                                                    membershipId: member.membershipId || member.$id,
+                                                    email: member.userEmail,
+                                                    roles,
+                                                  })
+                                                  toast.success('Invitation resent successfully')
+                                                } catch (error: any) {
+                                                  toast.error(error?.message || 'Failed to resend invitation')
+                                                }
+                                              }}
+                                              disabled={resendInviteMutation.isPending}
+                                            >
+                                              <Mail className="mr-2 h-4 w-4" />
+                                              {resendInviteMutation.isPending ? 'Resending...' : 'Resend invitation'}
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      ) : (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="w-48">
+                                            <DropdownMenuItem
+                                              onClick={() => {
+                                                setSelectedMember(member)
+                                                const role = member.role as 'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
+                                                setSelectedRole(role)
+                                                setUpdateRoleDialogOpen(true)
+                                              }}
+                                            >
+                                              <UserCog className="mr-2 h-4 w-4" />
+                                              Update role
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                              onClick={() => {
+                                                setSelectedMember(member)
+                                                setRemoveMemberDialogOpen(true)
+                                              }}
+                                              className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                            >
+                                              <Trash2 className="mr-2 h-4 w-4" />
+                                              Remove from team
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
 
                         {/* Pagination for Memberships */}

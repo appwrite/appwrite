@@ -453,6 +453,22 @@ export function BucketDetailView() {
                                 !pending && 'hover:bg-muted/30',
                                 selectedFiles.has(file.$id) && 'bg-sky-100 dark:bg-sky-950',
                               )}
+                              onClick={(e) => {
+                                if (pending) return
+                                // Don't navigate if clicking on checkbox, link, or their containers
+                                const target = e.target as HTMLElement
+                                if (
+                                  target.closest('button') ||
+                                  target.closest('[role="checkbox"]') ||
+                                  target.closest('a')
+                                ) {
+                                  return
+                                }
+                                navigate({
+                                  to: '/projects/$projectId/storage/$bucketId/files/$fileId',
+                                  params: fileLinkParams,
+                                })
+                              }}
                             >
                               <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
                                 {!pending && (

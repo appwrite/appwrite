@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useLocation, Link } from '@tanstack/react-router'
+import { useParams, useLocation, Link, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   Users,
@@ -62,6 +62,7 @@ export function AuthView() {
     strict: false,
   })
   const location = useLocation()
+  const navigate = useNavigate()
   const { isDebugModeOpen } = useDebugMode()
   
   // Check if we're on a user detail route - if so, don't render this component
@@ -642,6 +643,21 @@ export function AuthView() {
                                   ? 'bg-sky-100 dark:bg-sky-950'
                                   : 'hover:bg-muted/30',
                               )}
+                              onClick={(e) => {
+                                // Don't navigate if clicking on checkbox, link, or their containers
+                                const target = e.target as HTMLElement
+                                if (
+                                  target.closest('button') ||
+                                  target.closest('[role="checkbox"]') ||
+                                  target.closest('a')
+                                ) {
+                                  return
+                                }
+                                navigate({
+                                  to: '/projects/$projectId/auth/users/$userId',
+                                  params: { projectId: projectId!, userId: user.$id },
+                                })
+                              }}
                             >
                               <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
                                 <Checkbox
@@ -1025,6 +1041,21 @@ export function AuthView() {
                                 ? 'bg-sky-100 dark:bg-sky-950'
                                 : 'hover:bg-muted/30',
                             )}
+                            onClick={(e) => {
+                              // Don't navigate if clicking on checkbox, link, or their containers
+                              const target = e.target as HTMLElement
+                              if (
+                                target.closest('button') ||
+                                target.closest('[role="checkbox"]') ||
+                                target.closest('a')
+                              ) {
+                                return
+                              }
+                              navigate({
+                                to: '/projects/$projectId/auth/teams/$teamId',
+                                params: { projectId: projectId!, teamId: team.id },
+                              })
+                            }}
                           >
                             <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
                               <Checkbox
