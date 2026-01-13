@@ -144,7 +144,7 @@ class XList extends Action
 
                     return $dbForLogs->find('stats', [
                         Query::equal('$id', $statsIds),
-                        Query::select(['value']),
+                        Query::select('value'),
                     ]);
                 });
 
