@@ -119,14 +119,9 @@ App::get('/v1/health/db')
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
-                    $cache = new Cache(new None());
-                    $db = (new UtopiaDatabase($adapter, $cache))
-                        ->setDatabase($database)
-                        ->setAuthorization($authorization);
-
                     $checkStart = \microtime(true);
 
-                    if ($db->ping()) {
+                    if ($adapter->ping()) {
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
