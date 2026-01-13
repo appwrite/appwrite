@@ -23,10 +23,14 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Adapter\Pool as CachePool;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -101,7 +105,8 @@ App::get('/v1/health/db')
     ))
     ->inject('response')
     ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
+    ->inject('authorization')
+    ->action(action: function (Response $response, Group $pools, Authorization $authorization) {
         $output = [];
         $failures = [];
 
@@ -114,10 +119,14 @@ App::get('/v1/health/db')
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
+                    $cache = new Cache(new None());
+                    $db = (new UtopiaDatabase($adapter, $cache))
+                        ->setDatabase($database)
+                        ->setAuthorization($authorization);
 
                     $checkStart = \microtime(true);
 
-                    if ($adapter->ping()) {
+                    if ($db->ping()) {
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
