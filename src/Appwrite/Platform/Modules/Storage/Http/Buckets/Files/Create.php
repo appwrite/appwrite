@@ -386,6 +386,9 @@ class Create extends Action
                 }
                 $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
+
+            // Trigger after create success hook
+            $this->afterCreateSuccess($file);
         } else {
             if ($file->isEmpty()) {
                 $doc = new Document([
@@ -447,5 +450,18 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($file, Response::MODEL_FILE);
+    }
+
+    /**
+     * Hook to run after file is created successfully
+     *
+     * @param Document $file
+     * @return void
+     */
+    protected function afterCreateSuccess(Document $file)
+    {
+        if (!($file instanceof Document)) {
+            throw new Exception('file must be an instance of document');
+        }
     }
 }
