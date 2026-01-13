@@ -51,6 +51,7 @@ class Get extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('getLogsDB')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -59,7 +60,8 @@ class Get extends Action
         Response $response,
         Database $dbForProject,
         Document $project,
-        callable $getLogsDB
+        callable $getLogsDB,
+        Authorization $authorization,
     ): void {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -75,19 +77,20 @@ class Get extends Action
 
         $statsDocId = md5('_inf_' . $metric);
 
-        $dbForLogs = call_user_func($getLogsDB, $project);
-        $storageStats = Authorization::skip(
-            fn () => $dbForLogs->getDocument(
+        $totalSize = 0;
+
+        try {
+            $dbForLogs = $getLogsDB($project);
+            $storageStats = $authorization->skip(fn () => $dbForLogs->getDocument(
                 'stats',
                 $statsDocId,
                 [Query::select(['value'])]
-            )
-        );
+            ));
 
-        /**
-         * The value can be 0 if stats were not aggregated when this request was made!
-         */
-        $totalSize = $storageStats->isEmpty() ? 0 : $storageStats->getAttribute('value', 0);
+            $totalSize = $storageStats->getAttribute('value', 0);
+        } catch (\Throwable) {
+            // Stats may not be available, default to 0
+        }
 
         $bucket->setAttribute('totalSize', $totalSize);
 

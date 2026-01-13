@@ -15,7 +15,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -337,7 +336,6 @@ class Functions extends Action
      * @param string|null $eventData
      * @param string|null $executionId
      * @return void
-     * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Conflict
