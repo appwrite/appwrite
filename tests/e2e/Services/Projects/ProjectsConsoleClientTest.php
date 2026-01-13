@@ -473,7 +473,8 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['$id', 'name'])->toString(),
+                Query::select('$id')->toString(),
+                Query::select('name')->toString(),
             ],
         ]);
 
@@ -502,7 +503,12 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['$id', 'name', 'teamId', 'description', '$createdAt', '$updatedAt'])->toString(),
+                Query::select('$id')->toString(),
+                Query::select('name')->toString(),
+                Query::select('teamId')->toString(),
+                Query::select('description')->toString(),
+                Query::select('$createdAt')->toString(),
+                Query::select('$updatedAt')->toString(),
             ],
         ]);
 
@@ -533,7 +539,9 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['$id', 'name', 'teamId'])->toString(),
+                Query::select('$id')->toString(),
+                Query::select('name')->toString(),
+                Query::select('teamId')->toString(),
                 Query::equal('name', ['Query Select Test Project'])->toString(),
             ],
         ]);
@@ -564,7 +572,8 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['$id', 'name'])->toString(),
+                Query::select('$id')->toString(),
+                Query::select('name')->toString(),
                 Query::limit(2)->toString(),
             ],
         ]);
@@ -594,7 +603,9 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['$id', 'name', 'platforms'])->toString(),
+                Query::select('$id')->toString(),
+                Query::select('name')->toString(),
+                Query::select('platforms')->toString(),
             ],
         ]);
 
@@ -623,7 +634,10 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['$id', 'name', 'webhooks', 'keys'])->toString(),
+                Query::select('$id')->toString(),
+                Query::select('name')->toString(),
+                Query::select('webhooks')->toString(),
+                Query::select('keys')->toString(),
             ],
         ]);
 
@@ -652,7 +666,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['*'])->toString(),
+                Query::select('*')->toString(),
             ],
         ]);
 
@@ -682,7 +696,8 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['$id', 'invalidAttribute'])->toString(),
+                Query::select('$id')->toString(),
+                Query::select('invalidAttribute')->toString(),
             ],
         ]);
 
