@@ -74,7 +74,7 @@ class Get extends Action
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $this->getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
+            $gitHub = $this->getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger, $authorization);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 

@@ -21,7 +21,7 @@ class Action extends PlatformAction
         return \dirname(__DIR__, 6);
     }
 
-    protected function avatarCallback(string $type, string $code, int $width, int $height, int $quality, Response $response, Authorization $authorization): void
+    protected function avatar(string $type, string $code, int $width, int $height, int $quality, Response $response): void
     {
         $code = \strtolower($code);
         $type = \strtolower($type);

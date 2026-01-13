@@ -69,7 +69,7 @@ class Get extends Action
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $this->getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger);
+            $gitHub = $this->getUserGitHub($user->getId(), $project, $dbForProject, $dbForPlatform, $logger, $authorization);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
