@@ -756,16 +756,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.33.3",
+            "version": "v4.33.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "281537d44d6c270606354e65bfa75a0969dbd629"
+                "reference": "22d28025cda0d223a2e48c2e16c5284ecc9f5402"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/281537d44d6c270606354e65bfa75a0969dbd629",
-                "reference": "281537d44d6c270606354e65bfa75a0969dbd629",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/22d28025cda0d223a2e48c2e16c5284ecc9f5402",
+                "reference": "22d28025cda0d223a2e48c2e16c5284ecc9f5402",
                 "shasum": ""
             },
             "require": {
@@ -794,9 +794,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.3"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.4"
             },
-            "time": "2026-01-09T21:49:37+00:00"
+            "time": "2026-01-12T17:58:43+00:00"
         },
         {
             "name": "league/csv",
@@ -4267,16 +4267,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.35",
+            "version": "0.33.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "82b139fb04f30045db51b0d322224f222da32313"
+                "reference": "fd835ed77e1cdf327067ce4e650cce86304e7098"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/82b139fb04f30045db51b0d322224f222da32313",
-                "reference": "82b139fb04f30045db51b0d322224f222da32313",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/fd835ed77e1cdf327067ce4e650cce86304e7098",
+                "reference": "fd835ed77e1cdf327067ce4e650cce86304e7098",
                 "shasum": ""
             },
             "require": {
@@ -4309,9 +4309,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.35"
+                "source": "https://github.com/utopia-php/http/tree/0.33.36"
             },
-            "time": "2025-12-12T08:33:52+00:00"
+            "time": "2026-01-12T07:32:29+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5014,22 +5014,22 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.8.5",
+            "version": "0.8.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "e42b6b8e44c457a7b35d8a857d7af1d67d667c58"
+                "reference": "14b00277c35a258cb263706fd4e05c50368feb4f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/e42b6b8e44c457a7b35d8a857d7af1d67d667c58",
-                "reference": "e42b6b8e44c457a7b35d8a857d7af1d67d667c58",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/14b00277c35a258cb263706fd4e05c50368feb4f",
+                "reference": "14b00277c35a258cb263706fd4e05c50368feb4f",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.33.35"
+                "utopia-php/framework": "0.33.36"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -5059,9 +5059,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.8.5"
+                "source": "https://github.com/utopia-php/swoole/tree/0.8.6"
             },
-            "time": "2025-12-15T14:03:23+00:00"
+            "time": "2026-01-12T07:57:35+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5439,16 +5439,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.10",
+            "version": "1.8.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "28217b1d722ad2b217559c3a371eafd4d070614d"
+                "reference": "936404bbcbf4cd692bac102f2912b6c97ac87215"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/28217b1d722ad2b217559c3a371eafd4d070614d",
-                "reference": "28217b1d722ad2b217559c3a371eafd4d070614d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/936404bbcbf4cd692bac102f2912b6c97ac87215",
+                "reference": "936404bbcbf4cd692bac102f2912b6c97ac87215",
                 "shasum": ""
             },
             "require": {
@@ -5484,9 +5484,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.10"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.11"
             },
-            "time": "2026-01-09T11:40:35+00:00"
+            "time": "2026-01-12T08:41:56+00:00"
         },
         {
             "name": "brianium/paratest",

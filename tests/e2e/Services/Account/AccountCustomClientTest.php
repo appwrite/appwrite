@@ -2530,14 +2530,23 @@ class AccountCustomClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $smsRequest = $this->assertLastRequest(function (array $request) use ($number) {
-            $this->assertEquals('Appwrite Mock Message Sender', $request['headers']['User-Agent']);
-            $this->assertEquals('username', $request['headers']['X-Username']);
-            $this->assertEquals('password', $request['headers']['X-Key']);
-            $this->assertEquals('POST', $request['method']);
-            $this->assertEquals('+123456789', $request['data']['from']);
-            $this->assertEquals($number, $request['data']['to']);
-        }, Scope::REQUEST_TYPE_SMS);
+        $smsRequest = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            Scope::REQUEST_TYPE_SMS,
+            [
+                'header_X-Username' => 'username',
+                'header_X-Key' => 'password',
+                'method' => 'POST',
+            ],
+            probe: function (array $request) use ($number) {
+                $this->assertEquals('Appwrite Mock Message Sender', $request['headers']['User-Agent'] ?? null);
+                $this->assertEquals('username', $request['headers']['X-Username'] ?? null);
+                $this->assertEquals('password', $request['headers']['X-Key'] ?? null);
+                $this->assertEquals('POST', $request['method'] ?? null);
+                $this->assertEquals('+123456789', $request['data']['from'] ?? null);
+                $this->assertEquals($number, $request['data']['to'] ?? null);
+            }
+        );
 
         $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
@@ -2887,15 +2896,30 @@ class AccountCustomClientTest extends Scope
 
         $tokenCreatedAt = $response['body']['$createdAt'];
 
-        $smsRequest = $this->assertLastRequest(function ($request) use ($tokenCreatedAt) {
-            $this->assertArrayHasKey('data', $request);
-            $this->assertArrayHasKey('time', $request);
-            $this->assertArrayHasKey('message', $request['data'], "Last request missing message: " . \json_encode($request));
+        $phone = $data['phone'] ?? '';
+        $smsQuery = [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ];
 
-            // Ensure we are not using token from last sms login
-            $tokenRecievedAt = $request['time'];
-            $this->assertGreaterThan($tokenCreatedAt, $tokenRecievedAt);
-        }, Scope::REQUEST_TYPE_SMS);
+        $smsRequest = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            Scope::REQUEST_TYPE_SMS,
+            $smsQuery,
+            probe: function (array $request) use ($tokenCreatedAt, $phone) {
+                $this->assertArrayHasKey('data', $request);
+                $this->assertArrayHasKey('time', $request);
+                $this->assertArrayHasKey('message', $request['data'], "Last request missing message: " . \json_encode($request));
+                if (!empty($phone)) {
+                    $this->assertEquals($phone, $request['data']['to'] ?? null);
+                }
+
+                // Ensure we are not using token from last sms login
+                $tokenRecievedAt = $request['time'];
+                $this->assertGreaterThan($tokenCreatedAt, $tokenRecievedAt);
+            }
+        );
 
         /**
          * Test for FAILURE

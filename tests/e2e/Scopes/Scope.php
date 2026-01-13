@@ -152,7 +152,7 @@ abstract class Scope extends TestCase
     }
 
     /**
-     * @deprecated Use assertLastRequest instead. Used only historically in webhook tests
+     * @deprecated Use getLastRequestForProject instead. Used only historically in webhook tests
      */
     protected function getLastRequest(): array
     {
@@ -163,31 +163,112 @@ abstract class Scope extends TestCase
      * Get the last webhook request for a specific project.
      * Polls with retry to handle parallel test race conditions.
      */
-    protected function getLastRequestForProject(string $projectId, int $maxAttempts = 10, int $delayMs = 500): array
-    {
-        $hostname = 'request-catcher-webhook';
+    protected function getLastRequestForProject(
+        string $projectId,
+        string $type = self::REQUEST_TYPE_WEBHOOK,
+        array $queryParams = [],
+        int $maxAttempts = 10,
+        int $delayMs = 500,
+        ?callable $probe = null
+    ): array {
+        $hostname = match ($type) {
+            self::REQUEST_TYPE_WEBHOOK => 'request-catcher-webhook',
+            self::REQUEST_TYPE_SMS => 'request-catcher-sms',
+            default => throw new \Exception('Invalid request catcher type.'),
+        };
+        $enforceProjectId = $type === self::REQUEST_TYPE_WEBHOOK;
+
+        if (empty($queryParams)) {
+            $queryParams = [
+                'header_X-Appwrite-Webhook-Project-Id' => $projectId,
+            ];
+        }
+
+        $query = http_build_query($queryParams);
 
         sleep(2);
 
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
-            if ($request) {
-                $request['data'] = json_decode($request['data'], true);
+            $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+            if (is_array($requests)) {
+                for ($i = count($requests) - 1; $i >= 0; $i--) {
+                    $request = $this->decodeRequestData($requests[$i]);
+                    if ($probe !== null) {
+                        try {
+                            $probe($request);
+                            return $request;
+                        } catch (\Throwable $error) {
+                            continue;
+                        }
+                    }
 
-                $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
-                if ($requestProjectId === $projectId) {
-                    return $request;
+                    if ($enforceProjectId) {
+                        $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
+                        if ($requestProjectId === $projectId) {
+                            return $request;
+                        }
+                    } else {
+                        return $request;
+                    }
                 }
             }
 
             usleep($delayMs * 1000);
         }
 
-        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
-        if ($request) {
-            $request['data'] = json_decode($request['data'], true);
+        $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+        if (is_array($requests)) {
+            for ($i = count($requests) - 1; $i >= 0; $i--) {
+                $request = $this->decodeRequestData($requests[$i]);
+                if ($probe !== null) {
+                    try {
+                        $probe($request);
+                        return $request;
+                    } catch (\Throwable $error) {
+                        continue;
+                    }
+                }
+
+                if ($enforceProjectId) {
+                    $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
+                    if ($requestProjectId === $projectId) {
+                        return $request;
+                    }
+                } else {
+                    return $request;
+                }
+            }
         }
-        return $request ?? [];
+
+        return [];
+    }
+
+    protected function decodeRequestData(array $request): array
+    {
+        if (!array_key_exists('data', $request)) {
+            return $request;
+        }
+
+        if (is_array($request['data'])) {
+            return $request;
+        }
+
+        if (!is_string($request['data']) || $request['data'] === '') {
+            return $request;
+        }
+
+        $decoded = json_decode($request['data'], true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $request['data'] = $decoded;
+            return $request;
+        }
+
+        parse_str($request['data'], $parsed);
+        if (!empty($parsed)) {
+            $request['data'] = $parsed;
+        }
+
+        return $request;
     }
 
     /**
