@@ -481,7 +481,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertGreaterThan(0, count($response['body']['projects']));
-
+var_dump($response);
         $project = $response['body']['projects'][0];
         $this->assertArrayHasKey('$id', $project);
         $this->assertArrayHasKey('name', $project);

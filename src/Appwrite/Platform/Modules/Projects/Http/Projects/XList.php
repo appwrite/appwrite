@@ -170,9 +170,7 @@ class XList extends Action
 
         $selectedAttributes = [];
         foreach ($selectQueries as $query) {
-            foreach ($query->getValues() as $value) {
-                $selectedAttributes[] = $value;
-            }
+            $selectedAttributes[] = $query->getAttribute();
         }
 
         if (\in_array('*', $selectedAttributes)) {
