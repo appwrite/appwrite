@@ -1,5 +1,22 @@
 # Change Log
 
+## 13.0.0-rc.4
+
+- Fix CLI ES module import issues
+
+## 13.0.0-rc.3
+
+- Add `Schema` class for programmatically pushing and pulling appwrite config
+- Add client side db generation using `schema.db.generate()` command
+
+## 13.0.0-rc.2
+
+- Fixes a lot of typescript errors throughout the codebase
+
+## 13.0.0-rc.1
+
+- Migrates codebase from JavaScript to TypeScript
+
 ## 12.0.1
 
 Fix type generation for `point`, `lineString` and `polygon` columns
