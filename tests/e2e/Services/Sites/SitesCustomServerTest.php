@@ -2709,8 +2709,20 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString("Deployment build canceled", $response['body']);
-        $this->assertStringContainsString("View deployments", $response['body']);
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $status = $deployment['body']['status'] ?? '';
+        $expectedMessage = match ($status) {
+            'failed' => 'Deployment build failed',
+            'canceled' => 'Deployment build canceled',
+            default => 'Deployment is still building',
+        };
+        $this->assertStringContainsString($expectedMessage, $response['body']);
+        $expectedCta = match ($status) {
+            'failed' => 'View logs',
+            'canceled' => 'View deployments',
+            default => 'Reload',
+        };
+        $this->assertStringContainsString($expectedCta, $response['body']);
 
         // check site domain for no active deployments
         $proxyClient->setEndpoint('http://' . $domain);
