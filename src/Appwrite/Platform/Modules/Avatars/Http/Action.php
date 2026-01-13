@@ -21,7 +21,7 @@ class Action extends PlatformAction
         return \dirname(__DIR__, 6);
     }
 
-    protected function avatarCallback(string $type, string $code, int $width, int $height, int $quality, Response $response): void
+    protected function avatarCallback(string $type, string $code, int $width, int $height, int $quality, Response $response, Authorization $authorization): void
     {
         $code = \strtolower($code);
         $type = \strtolower($type);
@@ -58,10 +58,10 @@ class Action extends PlatformAction
         unset($image);
     }
 
-    protected function getUserGitHub(string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, ?Logger $logger): array
+    protected function getUserGitHub(string $userId, Document $project, Database $dbForProject, Database $dbForPlatform, ?Logger $logger, Authorization $authorization): array
     {
         try {
-            $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+            $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
             $sessions = $user->getAttribute('sessions', []);
 
@@ -112,7 +112,7 @@ class Action extends PlatformAction
                         ->setAttribute('providerRefreshToken', $refreshToken)
                         ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                    Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
+                    $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
                     $dbForProject->purgeCachedDocument('users', $user->getId());
                 } catch (Throwable $err) {
@@ -120,7 +120,7 @@ class Action extends PlatformAction
                     do {
                         $previousAccessToken = $gitHubSession->getAttribute('providerAccessToken');
 
-                        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+                        $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
                         $sessions = $user->getAttribute('sessions', []);
 
                         $gitHubSession = new Document();

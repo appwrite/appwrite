@@ -53,12 +53,13 @@ class Get extends Action
             ->inject('contributors')
             ->inject('employees')
             ->inject('logger')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger)
+    public function action(string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForPlatform, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $authorization)
     {
-        $user = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $userId));
+        $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
