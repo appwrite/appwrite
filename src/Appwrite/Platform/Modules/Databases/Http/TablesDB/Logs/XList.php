@@ -60,10 +60,11 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
+            ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void
+    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -77,9 +78,12 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'database/' . $databaseId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -126,7 +130,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), UtopiaResponse::MODEL_LOG_LIST);
     }

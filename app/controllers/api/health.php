@@ -11,6 +11,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
@@ -26,6 +27,7 @@ use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -100,7 +102,8 @@ App::get('/v1/health/db')
     ))
     ->inject('response')
     ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
+    ->inject('authorization')
+    ->action(action: function (Response $response, Group $pools, Authorization $authorization) {
         $output = [];
         $failures = [];
 
@@ -113,7 +116,7 @@ App::get('/v1/health/db')
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
-
+                    $adapter->setAuthorization($authorization);
                     $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
@@ -947,18 +950,19 @@ App::get('/v1/health/queue/failed/:name')
         contentType: ContentType::JSON
     ))
     ->param('name', '', new WhiteList([
-        Event::DATABASE_QUEUE_NAME,
-        Event::DELETE_QUEUE_NAME,
-        Event::AUDITS_QUEUE_NAME,
-        Event::MAILS_QUEUE_NAME,
-        Event::FUNCTIONS_QUEUE_NAME,
-        Event::STATS_RESOURCES_QUEUE_NAME,
-        Event::STATS_USAGE_QUEUE_NAME,
-        Event::WEBHOOK_QUEUE_NAME,
-        Event::CERTIFICATES_QUEUE_NAME,
-        Event::BUILDS_QUEUE_NAME,
-        Event::MESSAGING_QUEUE_NAME,
-        Event::MIGRATIONS_QUEUE_NAME
+        System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME),
+        System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME),
+        System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME),
+        System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME),
+        System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME),
+        System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME),
+        System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME),
+        System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME),
+        System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME),
+        System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME),
+        System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME),
+        System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME),
+        System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME)
     ]), 'The name of the queue')
     ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('response')
@@ -974,6 +978,7 @@ App::get('/v1/health/queue/failed/:name')
     ->inject('queueForBuilds')
     ->inject('queueForMessaging')
     ->inject('queueForMigrations')
+    ->inject('queueForScreenshots')
     ->action(function (
         string $name,
         int|string $threshold,
@@ -989,24 +994,26 @@ App::get('/v1/health/queue/failed/:name')
         Certificate $queueForCertificates,
         Build $queueForBuilds,
         Messaging $queueForMessaging,
-        Migration $queueForMigrations
+        Migration $queueForMigrations,
+        Screenshot $queueForScreenshots,
     ) {
         $threshold = \intval($threshold);
 
         /** @var Event $queue */
         $queue = match ($name) {
-            Event::DATABASE_QUEUE_NAME => $queueForDatabase,
-            Event::DELETE_QUEUE_NAME => $queueForDeletes,
-            Event::AUDITS_QUEUE_NAME => $queueForAudits,
-            Event::MAILS_QUEUE_NAME => $queueForMails,
-            Event::FUNCTIONS_QUEUE_NAME => $queueForFunctions,
-            Event::STATS_RESOURCES_QUEUE_NAME => $queueForStatsResources,
-            Event::STATS_USAGE_QUEUE_NAME => $queueForStatsUsage,
-            Event::WEBHOOK_QUEUE_NAME => $queueForWebhooks,
-            Event::CERTIFICATES_QUEUE_NAME => $queueForCertificates,
-            Event::BUILDS_QUEUE_NAME => $queueForBuilds,
-            Event::MESSAGING_QUEUE_NAME => $queueForMessaging,
-            Event::MIGRATIONS_QUEUE_NAME => $queueForMigrations,
+            System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
+            System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $queueForDeletes,
+            System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $queueForAudits,
+            System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $queueForMails,
+            System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
+            System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $queueForStatsResources,
+            System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $queueForStatsUsage,
+            System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
+            System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $queueForCertificates,
+            System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,
+            System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME) => $queueForScreenshots,
+            System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME) => $queueForMessaging,
+            System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME) => $queueForMigrations,
         };
         $failed = $queue->getSize(failed: true);
 

@@ -178,6 +178,7 @@ class Increment extends Action
                 value: $value,
                 max: $max
             );
+            $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

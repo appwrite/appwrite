@@ -1034,7 +1034,7 @@ App::init()
    ->inject('dbForPlatform')
    ->inject('queueForCertificates')
    ->inject('platform')
-   ->inject('authorization')
+    ->inject('authorization')
    ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization) {
        $hostname = $request->getHostname();
        $cache = Config::getParam('hostnames', []);
@@ -1050,80 +1050,77 @@ App::init()
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
            $cache[$domain->get()] = false;
            Config::setParam('hostnames', $cache);
-           Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
            return;
        }
 
        if (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
-           Console::warning('Skipping SSL certificates generation on ACME challenge.');
            return;
        }
 
        // 3. Check if domain is a main domain
        if (!in_array($domain->get(), $platformHostnames)) {
-           Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
            return;
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->disable();
-       try {
-           // TODO: (@Meldiron) Remove after 1.7.x migration
-           $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-           $document = $isMd5
-               ? $dbForPlatform->getDocument('rules', md5($domain->get()))
-               : $dbForPlatform->findOne('rules', [
-                   Query::equal('domain', [$domain->get()]),
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, &$cache) {
+           try {
+               // TODO: (@Meldiron) Remove after 1.7.x migration
+               $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+               $document = $isMd5
+                   ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+                   : $dbForPlatform->findOne('rules', [
+                       Query::equal('domain', [$domain->get()]),
+                   ]);
+
+               if (!$document->isEmpty()) {
+                   return;
+               }
+
+               // 5. Create new rule
+               $owner = '';
+               $fallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
+               $funcDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+               $siteDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+
+               if (!empty($fallback) && \str_ends_with($domain->get(), $fallback)) {
+                   $funcDomain = $fallback;
+               }
+
+               if (
+                   (!empty($funcDomain) && \str_ends_with($domain->get(), $funcDomain)) ||
+                   (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))
+               ) {
+                   $owner = 'Appwrite';
+               }
+
+               $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+               $document = new Document([
+                   '$id' => $ruleId,
+                   'domain' => $domain->get(),
+                   'type' => 'api',
+                   'status' => 'verifying',
+                   'projectId' => $console->getId(),
+                   'projectInternalId' => $console->getSequence(),
+                   'search' => implode(' ', [$ruleId, $domain->get()]),
+                   'owner' => $owner,
+                   'region' => $console->getAttribute('region')
                ]);
 
-           if (!$document->isEmpty()) {
-               return;
+               $dbForPlatform->createDocument('rules', $document);
+
+               Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+               $queueForCertificates
+                   ->setDomain($document)
+                   ->setSkipRenewCheck(true)
+                   ->trigger();
+           } catch (Duplicate $e) {
+               Console::info('Certificate already exists');
+           } finally {
+               $cache[$domain->get()] = true;
+               Config::setParam('hostnames', $cache);
            }
-
-           // 5. Create new rule
-           $owner = '';
-           $fallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
-           $funcDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-           $siteDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-
-           if (!empty($fallback) && \str_ends_with($domain->get(), $fallback)) {
-               $funcDomain = $fallback;
-           }
-
-           if (
-               (!empty($funcDomain) && \str_ends_with($domain->get(), $funcDomain)) ||
-               (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))
-           ) {
-               $owner = 'Appwrite';
-           }
-
-           $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
-           $document = new Document([
-               '$id' => $ruleId,
-               'domain' => $domain->get(),
-               'type' => 'api',
-               'status' => 'verifying',
-               'projectId' => $console->getId(),
-               'projectInternalId' => $console->getSequence(),
-               'search' => implode(' ', [$ruleId, $domain->get()]),
-               'owner' => $owner,
-               'region' => $console->getAttribute('region')
-           ]);
-
-           $dbForPlatform->createDocument('rules', $document);
-
-           Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-           $queueForCertificates
-               ->setDomain($document)
-               ->setSkipRenewCheck(true)
-               ->trigger();
-       } catch (Duplicate $e) {
-           Console::info('Certificate already exists');
-       } finally {
-           $cache[$domain->get()] = true;
-           Config::setParam('hostnames', $cache);
-           $authorization->reset();
-       }
+       });
    });
 
 App::options()
@@ -1334,6 +1331,86 @@ App::error()
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('roles', $authorization->getRoles());
+
+            try {
+                /* add queries to log */
+                $queries = $request->getParam('queries', []);
+                if (!empty($queries) && is_array($queries)) {
+                    $parsedQueries = Query::parseQueries($queries);
+
+                    // format query by removing sensitive values
+                    $formatQuery = function (array $queryArray) use (&$formatQuery): ?array {
+                        $method = $queryArray['method'] ?? '';
+                        $values = $queryArray['values'] ?? [];
+                        $attribute = $queryArray['attribute'] ?? '';
+
+                        if (!is_string($method) || $method === '') {
+                            return null;
+                        }
+
+                        // logical queries - recursively format nested queries
+                        if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+                            $nested = [];
+                            foreach ($values as $nestedArray) {
+                                if (is_array($nestedArray)) {
+                                    $formatted = $formatQuery($nestedArray);
+                                    if ($formatted !== null) {
+                                        $nested[] = $formatted;
+                                    }
+                                }
+                            }
+                            return empty($nested) ? null : [$method => $nested];
+                        }
+
+                        // select - show selected attributes
+                        if ($method === Query::TYPE_SELECT) {
+                            $attributes = array_values(array_filter($values, 'is_string'));
+                            return [$method => $attributes];
+                        }
+
+                        // pagination
+                        if (in_array($method, [
+                            Query::TYPE_LIMIT,
+                            Query::TYPE_OFFSET,
+                            Query::TYPE_CURSOR_AFTER,
+                            Query::TYPE_CURSOR_BEFORE
+                        ], true)) {
+                            return [$method => []];
+                        }
+
+                        // orders
+                        if (in_array($method, [
+                            Query::TYPE_ORDER_DESC,
+                            Query::TYPE_ORDER_ASC,
+                            Query::TYPE_ORDER_RANDOM
+                        ], true)) {
+                            return [$method => !empty($attribute) ? [$attribute] : []];
+                        }
+
+                        // filter
+                        if (!empty($attribute)) {
+                            return [$method => [$attribute]];
+                        }
+
+                        // fallback
+                        return [$method => []];
+                    };
+
+                    $formattedQueries = [];
+                    foreach ($parsedQueries as $query) {
+                        $formatted = $formatQuery($query->toArray());
+                        if ($formatted !== null) {
+                            $formattedQueries[] = $formatted;
+                        }
+                    }
+
+                    if (!empty($formattedQueries)) {
+                        $log->addExtra('queries', $formattedQueries);
+                    }
+                }
+            } catch (Throwable $_) {
+                // don't fail the error handler
+            }
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {

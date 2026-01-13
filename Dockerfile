@@ -57,6 +57,7 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
+    chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
@@ -76,6 +77,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-builds && \
+    chmod +x /usr/local/bin/worker-screenshots && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \

@@ -6144,6 +6144,7 @@ trait DatabasesBase
         $this->assertEquals(200, $inc['headers']['status-code']);
         $this->assertEquals(6, $inc['body']['count']);
         $this->assertEquals($collectionId, $inc['body']['$collectionId']);
+        $this->assertEquals($databaseId, $inc['body']['$databaseId']);
 
         // Verify count = 6
         $get = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/collections/$collectionId/documents/$docId", array_merge([
@@ -6256,6 +6257,7 @@ trait DatabasesBase
         $this->assertEquals(200, $dec['headers']['status-code']);
         $this->assertEquals(9, $dec['body']['count']);
         $this->assertEquals($collectionId, $dec['body']['$collectionId']);
+        $this->assertEquals($databaseId, $dec['body']['$databaseId']);
 
         $get = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',

@@ -14,6 +14,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
@@ -21,6 +22,8 @@ use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -321,6 +324,10 @@ Server::setResource('queueForBuilds', function (Publisher $publisher) {
     return new Build($publisher);
 }, ['publisher']);
 
+Server::setResource('queueForScreenshots', function (Publisher $publisher) {
+    return new Screenshot($publisher);
+}, ['publisher']);
+
 Server::setResource('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);
@@ -466,6 +473,19 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
 Server::setResource('executor', fn () => new Executor());
 
+Server::setResource('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
+    return function (Document $project) use ($dbForPlatform, $getProjectDB) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            $adapter = new AdapterDatabase($dbForPlatform);
+            return new UtopiaAudit($adapter);
+        }
+
+        $dbForProject = $getProjectDB($project);
+        $adapter = new AdapterDatabase($dbForProject);
+        return new UtopiaAudit($adapter);
+    };
+}, ['dbForPlatform', 'getProjectDB']);
+
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
@@ -544,11 +564,6 @@ $worker
         Console::error('[Error] Message: ' . $error->getMessage());
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
-    });
-
-$worker->workerStart()
-    ->action(function () use ($workerName) {
-        Console::info("Worker $workerName  started");
     });
 
 $worker->start();
