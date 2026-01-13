@@ -550,7 +550,7 @@ class OpenAPI3 extends Format
                         break;
                     case 'Utopia\Validator\Integer':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['format'] = 'int32';
+                        $node['schema']['format'] = $validator->getFormat();
                         if (!empty($param['example'])) {
                             $node['schema']['x-example'] = $param['example'];
                         }
@@ -600,7 +600,7 @@ class OpenAPI3 extends Format
                                 $node['schema']['items']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
                             }
                             if ($validator->getType() === 'integer') {
-                                $node['schema']['items']['format'] = 'int32';
+                                $node['schema']['items']['format'] = $validator->getFormat() ?? 'int32';
                             }
                         } else {
                             $node['schema']['type'] = $validator->getType();
@@ -625,7 +625,7 @@ class OpenAPI3 extends Format
                                 $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
                             }
                             if ($validator->getType() === 'integer') {
-                                $node['format'] = 'int32';
+                                $node['schema']['format'] = $validator->getFormat() ?? 'int32';
                             }
                         }
                         break;
@@ -693,6 +693,10 @@ class OpenAPI3 extends Format
                         'description' => $node['description'],
                         'x-example' => $node['schema']['x-example'] ?? null
                     ];
+
+                    if (isset($node['schema']['format'])) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['format'] = $node['schema']['format'];
+                    }
 
                     if (isset($node['schema']['enum'])) {
                         /// If the enum flag is Set, add the enum values to the body
@@ -795,7 +799,7 @@ class OpenAPI3 extends Format
 
                     case 'integer':
                         $type = 'integer';
-                        $format = 'int32';
+                        $format = $rule['format'] ?? 'int32';
                         break;
 
                     case 'float':
