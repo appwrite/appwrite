@@ -59,12 +59,13 @@ class Get extends Action
             ->param('key', null, new Key(), 'Index Key.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $collectionId, string $key, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
