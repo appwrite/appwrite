@@ -20,7 +20,7 @@ return [
         'name' => 'Console',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'web/console.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -48,7 +48,7 @@ return [
         'name' => 'Avatars',
         'subtitle' => 'The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.',
         'description' => '/docs/services/avatars.md',
-        'controller' => 'api/avatars.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/avatars',
@@ -146,7 +146,7 @@ return [
         'name' => 'Storage',
         'subtitle' => 'The Storage service allows you to manage your project files.',
         'description' => '/docs/services/storage.md',
-        'controller' => '',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/storage',
@@ -270,9 +270,9 @@ return [
     'console' => [
         'key' => 'console',
         'name' => 'Console',
-        'subtitle' => 'The Console service allows you to interact with console relevant informations.',
+        'subtitle' => 'The Console service allows you to interact with console relevant information.',
         'description' => '',
-        'controller' => 'api/console.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',

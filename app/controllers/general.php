@@ -1328,6 +1328,86 @@ App::error()
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('roles', Authorization::getRoles());
 
+            try {
+                /* add queries to log */
+                $queries = $request->getParam('queries', []);
+                if (!empty($queries) && is_array($queries)) {
+                    $parsedQueries = Query::parseQueries($queries);
+
+                    // format query by removing sensitive values
+                    $formatQuery = function (array $queryArray) use (&$formatQuery): ?array {
+                        $method = $queryArray['method'] ?? '';
+                        $values = $queryArray['values'] ?? [];
+                        $attribute = $queryArray['attribute'] ?? '';
+
+                        if (!is_string($method) || $method === '') {
+                            return null;
+                        }
+
+                        // logical queries - recursively format nested queries
+                        if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+                            $nested = [];
+                            foreach ($values as $nestedArray) {
+                                if (is_array($nestedArray)) {
+                                    $formatted = $formatQuery($nestedArray);
+                                    if ($formatted !== null) {
+                                        $nested[] = $formatted;
+                                    }
+                                }
+                            }
+                            return empty($nested) ? null : [$method => $nested];
+                        }
+
+                        // select - show selected attributes
+                        if ($method === Query::TYPE_SELECT) {
+                            $attributes = array_values(array_filter($values, 'is_string'));
+                            return [$method => $attributes];
+                        }
+
+                        // pagination
+                        if (in_array($method, [
+                            Query::TYPE_LIMIT,
+                            Query::TYPE_OFFSET,
+                            Query::TYPE_CURSOR_AFTER,
+                            Query::TYPE_CURSOR_BEFORE
+                        ], true)) {
+                            return [$method => []];
+                        }
+
+                        // orders
+                        if (in_array($method, [
+                            Query::TYPE_ORDER_DESC,
+                            Query::TYPE_ORDER_ASC,
+                            Query::TYPE_ORDER_RANDOM
+                        ], true)) {
+                            return [$method => !empty($attribute) ? [$attribute] : []];
+                        }
+
+                        // filter
+                        if (!empty($attribute)) {
+                            return [$method => [$attribute]];
+                        }
+
+                        // fallback
+                        return [$method => []];
+                    };
+
+                    $formattedQueries = [];
+                    foreach ($parsedQueries as $query) {
+                        $formatted = $formatQuery($query->toArray());
+                        if ($formatted !== null) {
+                            $formattedQueries[] = $formatted;
+                        }
+                    }
+
+                    if (!empty($formattedQueries)) {
+                        $log->addExtra('queries', $formattedQueries);
+                    }
+                }
+            } catch (Throwable $_) {
+                // don't fail the error handler
+            }
+
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
                 /** @var \Appwrite\SDK\Method $sdk */
