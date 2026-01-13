@@ -1,5 +1,9 @@
 # Change Log
 
+## 13.0.0-rc.5
+
+- Fix push all command not working correctly
+
 ## 13.0.0-rc.4
 
 - Fix CLI ES module import issues
