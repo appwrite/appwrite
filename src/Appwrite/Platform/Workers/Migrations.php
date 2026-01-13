@@ -80,7 +80,6 @@ class Migrations extends Action
             ->inject('deviceForFiles')
             ->inject('queueForMails')
             ->inject('plan')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -98,7 +97,6 @@ class Migrations extends Action
         Device $deviceForFiles,
         Mail $queueForMails,
         array $plan,
-        Authorization $authorization,
     ): void {
         $payload = $message->getPayload() ?? [];
         $this->deviceForMigrations = $deviceForMigrations;
@@ -136,13 +134,7 @@ class Migrations extends Action
         }
 
         try {
-            $this->processMigration(
-                $migration,
-                $queueForRealtime,
-                $queueForMails,
-                $platform,
-                $authorization
-            );
+            $this->processMigration($migration, $queueForRealtime, $queueForMails, $platform);
         } finally {
             $this->dbForProject = null;
             $this->dbForPlatform = null;
@@ -153,7 +145,7 @@ class Migrations extends Action
             $this->plan = [];
             $this->sourceReport = [];
 
-            \gc_collect_cycles();
+            gc_collect_cycles();
         }
     }
 
@@ -327,7 +319,6 @@ class Migrations extends Action
         Realtime $queueForRealtime,
         Mail $queueForMails,
         array $platform,
-        Authorization $authorization,
     ): void {
         $project = $this->project;
 
@@ -444,14 +435,14 @@ class Migrations extends Action
                     $destination?->success();
                     $source?->success();
 
-                    // TODO: Move to CSV hook
+                    // todo: Move to CSV hook
                     if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
+                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
                     }
                 }
             } finally {
-                $source?->cleanup();
-                $destination?->cleanup();
+                $source?->cleanUp();
+                $destination?->cleanUp();
 
                 $transfer = null;
                 $source = null;
@@ -466,10 +457,11 @@ class Migrations extends Action
      * @param Document $project
      * @param Document $migration
      * @param Mail $queueForMails
-     * @param Realtime $queueForRealtime
-     * @param array $platform
-     * @param Authorization $authorization
      * @return void
+     * @throws AuthorizationException
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws Exception
      */
     protected function handleCSVExportComplete(
         Document $project,
@@ -477,7 +469,6 @@ class Migrations extends Action
         Mail $queueForMails,
         Realtime $queueForRealtime,
         array $platform,
-        Authorization $authorization,
     ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
@@ -491,7 +482,7 @@ class Migrations extends Action
             throw new \Exception('User ' . $userInternalId . ' not found');
         }
 
-        $bucket = $authorization->skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
+        $bucket = Authorization::skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty()) {
             throw new \Exception('Bucket not found');
         }
